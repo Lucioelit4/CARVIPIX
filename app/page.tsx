@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import CountUp from "react-countup";
 import {
   Area,
@@ -13,13 +13,13 @@ import {
 } from "recharts";
 import {
   Activity,
+  ArrowRight,
   Bell,
   Bot,
-  CalendarDays,
-  ChartNoAxesCombined,
+  CheckCircle,
+  ChevronRight,
   GraduationCap,
   LineChart,
-  Newspaper,
   ShieldCheck,
   Signal,
   Target,
@@ -28,20 +28,7 @@ import {
   Zap,
 } from "lucide-react";
 import { motion } from "framer-motion";
-
-const menuItems = [
-  "Dashboard",
-  "Alertas en Vivo",
-  "Resultados",
-  "Análisis Diario",
-  "Comunidad",
-  "Bot CARVIPIX",
-  "Gestión de Capital",
-  "Programa de Fondeo",
-  "Herramientas",
-  "Perfil",
-  "Soporte",
-];
+import TradingViewEconomicCalendar from "./components/TradingViewEconomicCalendar";
 
 const stats = [
   {
@@ -50,6 +37,7 @@ const stats = [
     prefix: "$",
     suffix: " USD",
     note: "Equity actual",
+    trend: "+3.2%",
     color: "text-[#D4AF37]",
     icon: Wallet,
   },
@@ -58,6 +46,7 @@ const stats = [
     value: 69.5,
     suffix: "%",
     note: "89 operaciones ganadoras",
+    trend: "+1.8%",
     color: "text-green-400",
     icon: Target,
   },
@@ -65,6 +54,7 @@ const stats = [
     title: "Operaciones del día",
     value: 7,
     note: "5 ganadas / 2 pérdidas",
+    trend: "+2.5%",
     color: "text-white",
     icon: Activity,
   },
@@ -72,6 +62,7 @@ const stats = [
     title: "Riesgo/Beneficio",
     value: 1.87,
     note: "Promedio operativo",
+    trend: "+0.6",
     color: "text-purple-400",
     icon: ShieldCheck,
   },
@@ -123,107 +114,79 @@ const alerts = [
 ];
 
 const quickAccess = [
-  { name: "Alertas en Vivo", icon: Zap },
-  { name: "Resultados", icon: LineChart },
-  { name: "Análisis Diario", icon: ChartNoAxesCombined },
-  { name: "Comunidad", icon: Signal },
-  { name: "Bot CARVIPIX", icon: Bot },
-  { name: "Gestión de Capital", icon: Wallet },
-  { name: "Fondeo", icon: TrendingUp },
-  { name: "Academia", icon: GraduationCap },
+  {
+    name: "Alertas en Vivo",
+    icon: Zap,
+    href: "/servicios/alertas",
+    title: "Miembro activo",
+    subtitle: "Ya tienes acceso a señales y seguimiento operativo.",
+    cta: "Ir a mis alertas",
+  },
+  {
+    name: "Resultados generales",
+    icon: LineChart,
+    href: "/servicios/resultados",
+    title: "Resultados generales",
+    subtitle: "Rendimiento global y Top 10 de miembros destacados.",
+    cta: "Ver resultados completos",
+  },
+  {
+    name: "Análisis Diario",
+    icon: Signal,
+    href: "/servicios/analisis",
+    title: "Miembro activo",
+    subtitle: "Historial de análisis, escenarios del día y registros destacados.",
+    cta: "Ver análisis del día",
+  },
+  {
+    name: "Comunidad privada",
+    icon: Wallet,
+    href: "/servicios/comunidad",
+    title: "Comunidad privada",
+    subtitle: "Chat interno estilo Telegram para seguimiento y preguntas.",
+    cta: "Entrar a comunidad",
+  },
+  {
+    name: "Bot CARVIPIX",
+    icon: Bot,
+    href: "/servicios/bot",
+    title: "Producto premium",
+    subtitle: "Bot para MT4/MT5 con pago único.",
+    cta: "Comprar Bot CARVIPIX",
+  },
+  {
+    name: "Gestión de Capital",
+    icon: TrendingUp,
+    href: "/servicios/capital",
+    title: "Invertir ahora",
+    subtitle: "Gestión manual de capital desde 1,000 hasta 1,000,000 USD.",
+    cta: "Solicitar inversión",
+  },
+  {
+    name: "Cuenta fondeada",
+    icon: Target,
+    href: "/servicios/fondeo",
+    title: "Cuenta fondeada",
+    subtitle: "Servicio para pasar pruebas de fondeo y acceder a capital.",
+    cta: "Solicitar cuenta fondeada",
+  },
+  {
+    name: "Próximamente",
+    icon: GraduationCap,
+    href: "/servicios/academia",
+    title: "Próximamente",
+    subtitle: "Formación CARVIPIX en desarrollo.",
+    cta: "Notificarme",
+  },
 ];
 
-const news = [
-  {
-    title: "Oro mantiene presión alcista mientras el dólar pierde fuerza",
-    tag: "XAUUSD",
-    time: "Hace 12 min",
-  },
-  {
-    title: "Bitcoin recupera zona clave y aumenta volumen institucional",
-    tag: "BTCUSD",
-    time: "Hace 24 min",
-  },
-  {
-    title: "Mercado atento a datos de inflación y comentarios de la FED",
-    tag: "USD",
-    time: "Hace 41 min",
-  },
-];
-
-const calendar = [
-  {
-    event: "PMI Manufacturero",
-    currency: "USD",
-    impact: "Alto",
-    time: "08:30",
-  },
-  {
-    event: "Inventarios de petróleo",
-    currency: "USD",
-    impact: "Medio",
-    time: "10:00",
-  },
-  {
-    event: "Discurso miembro FED",
-    currency: "USD",
-    impact: "Alto",
-    time: "12:30",
-  },
-];
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#05070B] text-white">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_65%_12%,rgba(212,175,55,0.18),transparent_30%),radial-gradient(circle_at_20%_90%,rgba(212,175,55,0.08),transparent_25%)]" />
 
-      <div className="relative flex min-h-screen">
-        <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-white/10 bg-[#070A0F]/95 lg:flex lg:flex-col">
-          <div className="flex h-full flex-col justify-between p-6">
-            <div>
-              <div className="mb-10 flex justify-center pt-4">
-                <Image
-                  src="/logo/logo carvipix.png"
-                  alt="CARVIPIX"
-                  width={220}
-                  height={70}
-                  priority
-                  style={{ width: "220px", height: "auto" }}
-                />
-              </div>
-
-              <nav className="space-y-2">
-                {menuItems.map((item, index) => (
-                  <div
-                    key={item}
-                    className={`group relative cursor-pointer overflow-hidden rounded-xl px-4 py-3 text-sm transition duration-300 ${
-                      index === 0
-                        ? "bg-gradient-to-r from-[#D4AF37] to-[#F5D76E] font-bold text-black shadow-lg shadow-[#D4AF37]/25"
-                        : "text-zinc-300 hover:bg-white/5 hover:text-[#D4AF37]"
-                    }`}
-                  >
-                    {index !== 0 && (
-                      <span className="absolute left-0 top-1/2 h-0 w-1 -translate-y-1/2 rounded-full bg-[#D4AF37] transition-all duration-300 group-hover:h-6" />
-                    )}
-                    <span className="relative z-10">{item}</span>
-                  </div>
-                ))}
-              </nav>
-            </div>
-
-            <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#10141D]/90 p-5 shadow-2xl shadow-[#D4AF37]/10">
-              <p className="text-sm text-zinc-400">Plan actual</p>
-              <p className="mt-2 text-xl font-bold text-[#D4AF37]">
-                CARVIPIX PRO
-              </p>
-              <button className="mt-5 w-full rounded-xl bg-[#D4AF37] py-3 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition hover:bg-[#F5D76E]">
-                Ver planes
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        <section className="flex-1 lg:ml-72">
+        <section>
           <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-white/10 bg-[#070A0F]/80 px-8 backdrop-blur-xl">
             <div className="flex items-center gap-6 text-sm">
               <p className="text-zinc-400">
@@ -301,15 +264,20 @@ export default function Home() {
                       <Icon size={20} className="text-[#D4AF37]" />
                     </div>
 
-                    <p className={`relative mt-4 text-3xl font-bold ${stat.color}`}>
-                      <CountUp
-                        end={stat.value}
-                        decimals={stat.value % 1 !== 0 ? 2 : 0}
-                        duration={1.5}
-                        prefix={stat.prefix || ""}
-                        suffix={stat.suffix || ""}
-                      />
-                    </p>
+                    <div className="relative mt-4 flex items-end justify-between gap-4">
+                      <p className={`relative text-3xl font-bold ${stat.color}`}>
+                        <CountUp
+                          end={stat.value}
+                          decimals={stat.value % 1 !== 0 ? 2 : 0}
+                          duration={1.5}
+                          prefix={stat.prefix || ""}
+                          suffix={stat.suffix || ""}
+                        />
+                      </p>
+                      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
+                        {stat.trend}
+                      </span>
+                    </div>
 
                     <p className="relative mt-2 text-sm text-zinc-500">
                       {stat.note}
@@ -323,17 +291,21 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
+                transition={{ duration: 0.55 }}
+                className="rounded-[2rem] border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
               >
-                <div className="mb-6 flex items-center justify-between">
-                  <h2 className="text-xl font-bold">Evolución de Balance</h2>
-                  <button className="rounded-xl border border-white/10 px-4 py-2 text-sm text-zinc-300">
-                    Últimos 30 días
-                  </button>
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Balance</p>
+                    <h2 className="text-2xl font-semibold text-white">Evolución de Balance</h2>
+                  </div>
+                  <div className="rounded-3xl border border-white/10 bg-[#0B1220]/85 px-4 py-3 text-sm text-zinc-300">
+                    <p className="font-semibold text-[#D4AF37]">+18.4% este mes</p>
+                    <p className="mt-1">Rendimiento demo con gestión conservadora.</p>
+                  </div>
                 </div>
 
-                <div className="h-80 rounded-xl border border-white/5 bg-black/25 p-4">
+                <div className="h-80 rounded-[1.75rem] border border-white/5 bg-black/25 p-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={balanceData}>
                       <defs>
@@ -370,129 +342,98 @@ export default function Home() {
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
+                transition={{ duration: 0.55, delay: 0.1 }}
+                className="rounded-[2rem] border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
               >
-                <h2 className="mb-6 text-xl font-bold">Alertas activas</h2>
+                <div className="mb-6 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Alertas activas</h2>
+                    <p className="mt-2 text-sm text-zinc-500">Señales premium en tiempo real</p>
+                  </div>
+                  <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-[#D4AF37]">
+                    Activo
+                  </span>
+                </div>
 
                 <div className="space-y-4">
-                  {alerts.map((alert) => (
-                    <div
-                      key={alert.asset}
-                      className="group rounded-xl border border-white/5 bg-black/25 p-4 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:shadow-lg hover:shadow-[#D4AF37]/10"
-                    >
-                      <div className="flex items-center justify-between">
-                        <p className="font-bold">{alert.asset}</p>
-                        <span className={`text-sm font-bold ${alert.color}`}>
-                          {alert.status}
-                        </span>
-                      </div>
+                  {alerts.map((alert) => {
+                    const AlertIcon = alert.type === "Compra" ? CheckCircle : ChevronRight;
 
-                      <div className="mt-4 grid grid-cols-4 gap-3 text-sm">
-                        <p className="text-zinc-500">{alert.type}</p>
-                        <p>
-                          <span className="font-semibold text-white">Entrada:</span>
-                          <br />
-                          {alert.entry}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-white">TP:</span>
-                          <br />
-                          {alert.tp}
-                        </p>
-                        <p>
-                          <span className="font-semibold text-white">SL:</span>
-                          <br />
-                          {alert.sl}
-                        </p>
+                    return (
+                      <div
+                        key={alert.asset}
+                        className="group rounded-3xl border border-white/5 bg-[#0B1220]/80 p-4 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:shadow-[#D4AF37]/10"
+                      >
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">{alert.asset}</p>
+                            <div className="mt-2 flex items-center gap-2 text-sm text-white">
+                              <AlertIcon size={14} className="text-[#D4AF37]" />
+                              {alert.type}
+                            </div>
+                          </div>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${alert.color}`}>{alert.status}</span>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-2xl bg-[#111827]/95 p-3 text-sm text-zinc-300">
+                            <p className="text-[0.69rem] uppercase tracking-[0.25em] text-zinc-500">Entrada</p>
+                            <p className="mt-2 text-white">{alert.entry}</p>
+                          </div>
+                          <div className="rounded-2xl bg-[#111827]/95 p-3 text-sm text-zinc-300">
+                            <p className="text-[0.69rem] uppercase tracking-[0.25em] text-zinc-500">TP / SL</p>
+                            <p className="mt-2 text-white">{alert.tp} / {alert.sl}</p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+
+                <Link
+                  href="/alertas"
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 px-4 py-3 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/15"
+                >
+                  Ver alertas
+                  <ArrowRight size={16} />
+                </Link>
               </motion.div>
             </div>
 
-            <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_1fr]">
-              <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6">
-                <div className="mb-5 flex items-center gap-3">
-                  <Newspaper className="text-[#D4AF37]" />
-                  <h2 className="text-2xl font-bold">Noticias del mercado</h2>
-                </div>
-
-                <div className="space-y-4">
-                  {news.map((item) => (
-                    <div
-                      key={item.title}
-                      className="rounded-xl border border-white/5 bg-black/25 p-4 transition hover:border-[#D4AF37]/30"
-                    >
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="rounded-full bg-[#D4AF37]/10 px-3 py-1 text-xs text-[#D4AF37]">
-                          {item.tag}
-                        </span>
-                        <span className="text-xs text-zinc-500">{item.time}</span>
-                      </div>
-                      <p className="font-semibold">{item.title}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6">
-                <div className="mb-5 flex items-center gap-3">
-                  <CalendarDays className="text-[#D4AF37]" />
-                  <h2 className="text-2xl font-bold">Calendario económico</h2>
-                </div>
-
-                <div className="space-y-4">
-                  {calendar.map((item) => (
-                    <div
-                      key={item.event}
-                      className="grid grid-cols-[80px_1fr_80px] items-center gap-4 rounded-xl border border-white/5 bg-black/25 p-4 transition hover:border-[#D4AF37]/30"
-                    >
-                      <p className="font-bold text-[#D4AF37]">{item.time}</p>
-                      <div>
-                        <p className="font-semibold">{item.event}</p>
-                        <p className="text-sm text-zinc-500">{item.currency}</p>
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-center text-xs ${
-                          item.impact === "Alto"
-                            ? "bg-red-500/10 text-red-400"
-                            : "bg-yellow-500/10 text-yellow-400"
-                        }`}
-                      >
-                        {item.impact}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="mt-8">
+              <TradingViewEconomicCalendar />
             </div>
 
-            <h2 className="mt-8 text-2xl font-bold">Accesos rápidos</h2>
+            <h2 className="mt-8 text-2xl font-bold">Soluciones CARVIPIX</h2>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {quickAccess.map((item) => {
                 const Icon = item.icon;
 
                 return (
-                  <div
-                    key={item.name}
+                  <Link
+                    key={item.href}
+                    href={item.href}
                     className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#10141D]/90 p-6 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:shadow-xl hover:shadow-[#D4AF37]/10"
                   >
                     <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#D4AF37]/0 blur-3xl transition duration-300 group-hover:bg-[#D4AF37]/25" />
                     <Icon className="relative mb-4 text-[#D4AF37]" />
-                    <p className="relative text-lg font-bold">{item.name}</p>
-                    <p className="relative mt-2 text-sm text-zinc-500">
-                      Acceder ahora
-                    </p>
-                  </div>
+                    <p className="relative text-lg font-bold">{item.title}</p>
+                    <p className="relative mt-2 text-sm text-zinc-400">{item.subtitle}</p>
+                    <div className="mt-5 flex items-center justify-between gap-3">
+                      <span className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">
+                        {item.name}
+                      </span>
+                      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
+                        {item.cta}
+                      </span>
+                    </div>
+                  </Link>
                 );
               })}
             </div>
           </div>
         </section>
-      </div>
     </main>
   );
 }
