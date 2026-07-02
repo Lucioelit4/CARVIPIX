@@ -45,64 +45,102 @@ export default function BotPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="mt-10 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/5 p-8"
+                className="mt-10 rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#D4AF37]/10 to-[#D4AF37]/5 p-8 shadow-2xl shadow-[#D4AF37]/20"
               >
-                <p className="text-sm uppercase text-[#D4AF37] tracking-wider">Precio</p>
-                <p className="mt-3 text-5xl font-bold text-[#D4AF37]">999.00 USD</p>
-                <p className="mt-2 text-sm text-white/60">Pago único - Acceso permanente</p>
+                <p className="text-xs uppercase text-[#D4AF37] tracking-widest font-semibold">Precio de compra</p>
+                <p className="mt-4 text-6xl font-black text-[#D4AF37]">999.00</p>
+                <p className="text-sm text-white/60 mt-1">USD - Pago único - Acceso permanente</p>
 
-                <div className="mt-6 space-y-3">
+                <div className="mt-8 space-y-3">
                   <button
                     onClick={() => setShowModal(true)}
-                    className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] text-lg"
+                    className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 text-base shadow-lg shadow-[#D4AF37]/30"
                   >
                     Comprar Bot CARVIPIX
                   </button>
-                  <button className="w-full rounded-lg border border-white/20 bg-white/5 px-6 py-4 font-semibold text-white transition hover:border-[#D4AF37]/40 hover:bg-white/10">
+                  <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
                     Ver funcionamiento demo
                   </button>
                 </div>
               </motion.div>
             </motion.div>
 
-            {/* Visual derecho - Panel futurista */}
+            {/* Visual derecho - Robot Trader Terminal */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="relative h-96 rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-8 overflow-hidden"
+              className="relative h-96 rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B111A] to-[#05070B] p-8 overflow-hidden shadow-2xl shadow-[#D4AF37]/20"
             >
-              {/* Líneas de background */}
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-[#D4AF37]/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-[#D4AF37]/5 rounded-full blur-3xl" />
+              {/* Glow effects */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-10 right-20 w-40 h-40 bg-[#D4AF37]/10 rounded-full blur-3xl animate-pulse" />
+                <div className="absolute bottom-10 left-10 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" />
+              </div>
+
+              {/* Líneas de mercado doradas */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none">
+                <div className="absolute top-1/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-[#D4AF37] via-transparent to-[#D4AF37]" />
+                <div className="absolute bottom-1/4 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent" />
               </div>
 
               {/* Contenido del panel */}
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse" />
-                  <p className="text-sm font-semibold text-[#D4AF37]">SISTEMA ACTIVO</p>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                {/* Header */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
+                  <p className="text-xs font-semibold text-[#D4AF37] uppercase tracking-wider">Sistema Activo</p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-lg bg-[#0B111A]/80 border border-white/10 p-4">
-                    <p className="text-xs text-white/50 uppercase">Rendimiento simulado</p>
-                    <p className="text-2xl font-bold text-green-400 mt-2">+12.8%</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg bg-[#0B111A]/80 border border-white/10 p-3">
-                      <p className="text-xs text-white/50">Operaciones</p>
-                      <p className="text-xl font-bold mt-1">64</p>
+                {/* Robot visual (ASCII-inspired) */}
+                <div className="flex items-center justify-center py-6">
+                  <div className="relative w-20 h-20">
+                    {/* Robot head */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 border-2 border-[#D4AF37] rounded-lg flex items-center justify-center shadow-lg shadow-[#D4AF37]/30">
+                      <div className="grid grid-cols-2 gap-1">
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                      </div>
                     </div>
-                    <div className="rounded-lg bg-[#0B111A]/80 border border-white/10 p-3">
-                      <p className="text-xs text-white/50">Win Rate</p>
-                      <p className="text-xl font-bold text-[#D4AF37] mt-1">71%</p>
-                    </div>
+                    {/* Robot body */}
+                    <div className="absolute top-14 left-1/2 -translate-x-1/2 w-8 h-8 border-2 border-[#D4AF37] rounded shadow-lg shadow-[#D4AF37]/20" />
                   </div>
+                </div>
 
-                  <p className="text-xs text-white/40 mt-4">Modo: Simulación premium</p>
+                {/* Control panels */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {[
+                    { label: "BUY", color: "border-green-400 text-green-400" },
+                    { label: "SELL", color: "border-red-400 text-red-400" },
+                    { label: "RISK", color: "border-[#D4AF37] text-[#D4AF37]" },
+                    { label: "MT5", color: "border-blue-400 text-blue-400" },
+                  ].map((btn) => (
+                    <div
+                      key={btn.label}
+                      className={`border ${btn.color} rounded px-2 py-1 text-xs font-bold text-center cursor-pointer hover:shadow-lg transition`}
+                    >
+                      {btn.label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bottom metrics */}
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                    <p className="text-white/50">Operaciones</p>
+                    <p className="font-bold text-[#D4AF37]">64</p>
+                  </div>
+                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                    <p className="text-white/50">Win Rate</p>
+                    <p className="font-bold text-green-400">71%</p>
+                  </div>
+                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                    <p className="text-white/50">Rendimiento</p>
+                    <p className="font-bold text-green-400">+12.8%</p>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -111,17 +149,17 @@ export default function BotPage() {
       </div>
 
       {/* Qué hace el bot */}
-      <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8">
+      <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="text-4xl font-bold text-center mb-12"
+          className="text-3xl font-bold text-center mb-8"
         >
           Qué hace el Bot CARVIPIX
         </motion.h2>
 
-        <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             { title: "Ejecuta reglas", icon: Zap },
             { title: "Gestiona riesgo", icon: Shield },
@@ -137,10 +175,10 @@ export default function BotPage() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="rounded-xl border border-white/10 bg-[#11161E] p-6 text-center hover:border-[#D4AF37]/40 transition"
+                className="rounded-lg border border-white/10 bg-[#11161E] p-4 text-center hover:border-[#D4AF37]/40 transition"
               >
-                <Icon className="w-8 h-8 mx-auto text-[#D4AF37] mb-4" />
-                <p className="font-semibold text-sm">{item.title}</p>
+                <Icon className="w-6 h-6 mx-auto text-[#D4AF37] mb-2" />
+                <p className="font-semibold text-xs">{item.title}</p>
               </motion.div>
             );
           })}
@@ -148,53 +186,73 @@ export default function BotPage() {
       </div>
 
       {/* Resultados Demo */}
-      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-20 sm:px-8">
+      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
           <span className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37] uppercase">
             Datos demo
           </span>
-          <h2 className="mt-6 text-4xl font-bold">Resultados Demo del Bot</h2>
+          <h2 className="mt-4 text-3xl font-bold">Resultados Demo del Bot</h2>
         </motion.div>
 
-        <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             { label: "Rendimiento", value: "+12.8%", color: "text-green-400" },
             { label: "Operaciones", value: "64", color: "text-[#D4AF37]" },
             { label: "Win Rate", value: "71%", color: "text-[#D4AF37]" },
             { label: "Drawdown", value: "5.4%", color: "text-white" },
             { label: "Estado", value: "Activo", color: "text-green-400" },
-            { label: "Modo", value: "Simulación", color: "text-white/70" },
+            { label: "Modo", value: "Demo", color: "text-white/70" },
           ].map((item, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="rounded-xl border border-white/10 bg-[#11161E] p-6 text-center hover:border-[#D4AF37]/40 transition"
+              className="rounded-lg border border-white/10 bg-[#11161E] p-4 text-center hover:border-[#D4AF37]/40 transition"
             >
-              <p className="text-xs uppercase text-zinc-400 mb-3">{item.label}</p>
-              <p className={`text-3xl font-bold ${item.color}`}>{item.value}</p>
+              <p className="text-xs uppercase text-zinc-400 mb-2">{item.label}</p>
+              <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
             </motion.div>
           ))}
         </div>
       </div>
 
       {/* Panel de Control */}
-      <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8">
-        <h2 className="text-4xl font-bold mb-12 text-center">Panel de Control Demo</h2>
+      <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
+        <h2 className="text-3xl font-bold mb-8 text-center">Panel de Control Demo</h2>
 
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-[#D4AF37]/20 bg-[#11161E]/80 p-8"
+          className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#11161E] to-[#0B111A] p-6"
         >
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          {/* Mini gráfico */}
+          <div className="mb-6 h-20 rounded-lg border border-white/10 bg-[#0B111A] p-4 relative overflow-hidden">
+            <svg className="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
+              <polyline
+                points="0,45 20,40 40,35 60,30 80,25 100,20 120,18 140,22 160,20 180,15 200,10"
+                fill="none"
+                stroke="#D4AF37"
+                strokeWidth="2"
+              />
+              <polyline
+                points="0,50 20,48 40,45 60,40 80,35 100,32 120,35 140,38 160,35 180,32 200,30"
+                fill="none"
+                stroke="#00D084"
+                strokeWidth="1"
+                opacity="0.5"
+              />
+            </svg>
+            <p className="absolute bottom-1 right-2 text-xs text-white/40">Mercado simulado</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {[
               { title: "Estado del bot", value: "Operando", status: "success" },
               { title: "Última operación", value: "XAUUSD", status: "neutral" },
@@ -202,50 +260,52 @@ export default function BotPage() {
               { title: "Mercado", value: "En seguimiento", status: "success" },
               { title: "Próxima revisión", value: "12:45 UTC", status: "neutral" },
             ].map((item, i) => (
-              <div key={i} className="rounded-lg bg-[#0B111A] border border-white/10 p-6">
-                <p className="text-xs uppercase text-zinc-400 mb-3">{item.title}</p>
-                <p className={`text-lg font-bold ${
-                  item.status === "success" ? "text-green-400" : "text-[#D4AF37]"
-                }`}>
-                  {item.value}
-                </p>
-                <div className={`mt-3 w-2 h-2 rounded-full ${
-                  item.status === "success" ? "bg-green-400" : "bg-[#D4AF37]"
-                } animate-pulse`} />
+              <div key={i} className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                <p className="text-xs uppercase text-zinc-400 mb-2">{item.title}</p>
+                <div className="flex items-center gap-2">
+                  <p className={`text-sm font-bold ${
+                    item.status === "success" ? "text-green-400" : "text-[#D4AF37]"
+                  }`}>
+                    {item.value}
+                  </p>
+                  <div className={`w-2 h-2 rounded-full ${
+                    item.status === "success" ? "bg-green-400" : "bg-[#D4AF37]"
+                  } animate-pulse`} />
+                </div>
               </div>
             ))}
           </div>
 
-          <p className="text-xs text-white/40 mt-8 text-center">
-            Simulación de demostración. El bot trabajaría automáticamente en una cuenta real conectada a MT4/MT5.
+          <p className="text-xs text-white/40 mt-6 text-center">
+            Simulación de demostración. El bot trabajaría automáticamente en MT4/MT5 conectado a una cuenta real.
           </p>
         </motion.div>
       </div>
 
       {/* Compra y Actualizaciones */}
-      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-20 sm:px-8">
-        <h2 className="text-4xl font-bold mb-12">Compra y Actualizaciones</h2>
+      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+        <h2 className="text-3xl font-bold mb-8">Compra y Actualizaciones</h2>
 
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="rounded-xl border border-white/10 bg-[#11161E] p-8"
+            className="rounded-lg border border-white/10 bg-[#11161E] p-6"
           >
-            <h3 className="text-xl font-bold mb-6">El Bot Cuesta</h3>
-            <div className="space-y-4 text-white/80">
+            <h3 className="text-lg font-bold mb-4">El Bot Cuesta</h3>
+            <div className="space-y-3 text-white/80">
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <p className="text-sm"><strong>999.00 USD pago único</strong> - Acceso permanente al bot.</p>
+                <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>999.00 USD</strong> - Acceso permanente.</p>
               </div>
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <p className="text-sm"><strong>Se compra por separado</strong> de la membresía.</p>
+                <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Compra separada</strong> de membresía.</p>
               </div>
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-green-400 flex-shrink-0" />
-                <p className="text-sm"><strong>Membresía Elite</strong> (150 USD/mes) NO incluye el bot.</p>
+                <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Elite NO incluye</strong> el bot.</p>
               </div>
             </div>
           </motion.div>
@@ -254,52 +314,69 @@ export default function BotPage() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="rounded-xl border border-white/10 bg-[#11161E] p-8"
+            className="rounded-lg border border-white/10 bg-[#11161E] p-6"
           >
-            <h3 className="text-xl font-bold mb-6">Actualizaciones</h3>
-            <div className="space-y-4 text-white/80">
+            <h3 className="text-lg font-bold mb-4">Actualizaciones</h3>
+            <div className="space-y-3 text-white/80">
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-[#D4AF37] flex-shrink-0" />
-                <p className="text-sm"><strong>Sin membresía:</strong> Conservas el bot fijo adquirido.</p>
+                <Check className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Sin membresía:</strong> Bot fijo.</p>
               </div>
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-[#D4AF37] flex-shrink-0" />
-                <p className="text-sm"><strong>Con membresía Elite:</strong> Acceso a actualizaciones continuas.</p>
+                <Check className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Con Elite:</strong> Actualizaciones continuas.</p>
               </div>
               <div className="flex gap-3">
-                <Check className="w-5 h-5 text-[#D4AF37] flex-shrink-0" />
-                <p className="text-sm"><strong>Cambios críticos de mercado:</strong> CARVIPIX puede liberar actualización sin membresía.</p>
+                <Check className="w-4 h-4 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                <p className="text-sm"><strong>Cambios críticos:</strong> Sin membresía.</p>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* FAQ */}
-      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-20 sm:px-8">
-        <h2 className="text-4xl font-bold mb-12 text-center">Preguntas Frecuentes</h2>
+      {/* Sección de operación sin pantalla */}
+      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-r from-[#11161E] to-[#0B111A] p-8 text-center"
+        >
+          <h3 className="text-2xl font-bold text-white mb-3">
+            Diseñado para operar sin estar pegado a la pantalla
+          </h3>
+          <p className="text-white/70 max-w-2xl mx-auto">
+            El bot ejecuta reglas configuradas en MT4/MT5 mientras mantiene parámetros de riesgo definidos por el usuario.
+          </p>
+        </motion.div>
+      </div>
 
-        <div className="space-y-6 max-w-3xl mx-auto">
+      {/* FAQ */}
+      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+        <h2 className="text-3xl font-bold mb-8 text-center">Preguntas Frecuentes</h2>
+
+        <div className="space-y-3 max-w-3xl mx-auto">
           {[
             {
               q: "¿Funciona en MT4 y MT5?",
-              a: "Sí. El Bot CARVIPIX está diseñado para ambas plataformas. Compatible con la mayoría de brokers.",
+              a: "Sí. Diseñado para ambas plataformas. Compatible con mayoría de brokers.",
             },
             {
               q: "¿La membresía Elite incluye el bot?",
-              a: "No. El bot es un producto separado con pago único de 999 USD. La membresía Elite (150 USD/mes) añade acceso a actualizaciones continuas.",
+              a: "No. Producto separado (999 USD). Elite (150/mes) añade actualizaciones.",
             },
             {
               q: "¿Necesito estar conectado todo el día?",
-              a: "No. El bot corre en tu servidor de MT4/MT5. Si está instalado correctamente, ejecuta reglas automáticamente.",
+              a: "No. Corre en tu servidor MT4/MT5. Ejecuta reglas automáticamente.",
             },
             {
               q: "¿Qué pasa con las actualizaciones?",
-              a: "Sin membresía conservas el bot fijo. Con Elite recibes actualizaciones continuas. Cambios críticos del mercado pueden distribuirse sin membresía.",
+              a: "Sin membresía: bot fijo. Con Elite: actualizaciones continuas. Cambios críticos sin membresía.",
             },
             {
               q: "¿El bot garantiza ganancias?",
-              a: "No. El bot automatiza reglas operativas, pero el mercado implica riesgo. Los resultados pueden variar según condiciones y uso.",
+              a: "No. Automatiza reglas pero el mercado implica riesgo. Resultados varían.",
             },
           ].map((faq, i) => (
             <motion.div
@@ -307,10 +384,10 @@ export default function BotPage() {
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.5 }}
-              className="rounded-lg border border-white/10 bg-[#11161E] p-6"
+              className="rounded-lg border border-white/10 bg-[#11161E] p-4"
             >
-              <h3 className="text-lg font-bold text-[#D4AF37] mb-3">{faq.q}</h3>
-              <p className="text-white/70 text-sm leading-relaxed">{faq.a}</p>
+              <h3 className="text-sm font-bold text-[#D4AF37] mb-2">{faq.q}</h3>
+              <p className="text-white/70 text-xs leading-relaxed">{faq.a}</p>
             </motion.div>
           ))}
         </div>
