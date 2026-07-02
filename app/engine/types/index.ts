@@ -199,3 +199,23 @@ export interface TradeOutcome {
   agentScores: AgentScore[];
   timestamp: number;
 }
+
+// ============================================
+// MARKET DATA TYPES (Datos Reales)
+// ============================================
+
+// Re-export all market data types from marketData.ts
+export type {
+  Timeframe,
+  Asset,
+  Candle,
+  Tick,
+  TechnicalIndicators,
+  MarketData,
+  DataQuality,
+  DataError,
+  ConnectionState,
+  DataConfig,
+  DataHealthStatus,
+  DataHealthResponse,
+} from './marketData';

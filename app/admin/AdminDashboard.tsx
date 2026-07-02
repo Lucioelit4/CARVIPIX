@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send } from 'lucide-react';
+import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send, Database } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminResumen from './components/AdminResumen';
@@ -16,9 +16,10 @@ import AdminUtilidades from './components/AdminUtilidades';
 import AdminProyecto from './components/AdminProyecto';
 import AdminMotor from './components/AdminMotor';
 import AdminBot from './components/AdminBot';
+import AdminDataHealth from './components/AdminDataHealth';
 import { ToastProvider } from './components/Toast';
 
-type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
+type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'datos' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
 interface TabConfig {
   id: TabType;
@@ -38,7 +39,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'usuarios', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
+    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'datos', 'usuarios', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -53,6 +54,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'proyecto', label: 'Proyecto', icon: <GitBranch className="w-5 h-5" />, component: <AdminProyecto /> },
     { id: 'motor', label: 'Motor', icon: <Zap className="w-5 h-5" />, component: <AdminMotor /> },
     { id: 'bot', label: 'Bot', icon: <Send className="w-5 h-5" />, component: <AdminBot /> },
+    { id: 'datos', label: 'Datos', icon: <Database className="w-5 h-5" />, component: <AdminDataHealth isAdmin={true} /> },
     { id: 'usuarios', label: 'Usuarios', icon: <Users className="w-5 h-5" />, component: <AdminUsuarios /> },
     { id: 'solicitudes', label: 'Solicitudes', icon: <FileText className="w-5 h-5" />, component: <AdminSolicitudes /> },
     { id: 'pagos', label: 'Pagos', icon: <DollarSign className="w-5 h-5" />, component: <AdminPagos /> },

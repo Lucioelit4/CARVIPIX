@@ -388,6 +388,57 @@ export default function AdminBot() {
         </div>
       </motion.div>
 
+      {/* Salud de Datos - Widget Rápido */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="bg-gradient-to-br from-slate-900/50 to-slate-900/20 border border-white/10 rounded-lg p-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <Activity className="w-5 h-5 text-blue-400" />
+            Salud de Datos en Tiempo Real
+          </h3>
+          <a
+            href="?tab=datos"
+            className="text-xs bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded text-blue-300 hover:bg-blue-500/30 transition"
+          >
+            Ver panel completo
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded p-3">
+            <p className="text-xs text-white/60 mb-1">Salud General</p>
+            <p className="text-2xl font-bold text-green-400">88%</p>
+            <p className="text-xs text-white/50 mt-1">Óptima</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded p-3">
+            <p className="text-xs text-white/60 mb-1">Activos Conectados</p>
+            <p className="text-2xl font-bold text-blue-400">4/4</p>
+            <p className="text-xs text-white/50 mt-1">XAUUSD, EURUSD, GBPUSD, BTCUSD</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded p-3">
+            <p className="text-xs text-white/60 mb-1">Latencia Promedio</p>
+            <p className="text-2xl font-bold text-purple-400">52ms</p>
+            <p className="text-xs text-white/50 mt-1">&lt;100ms (Bueno)</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded p-3">
+            <p className="text-xs text-white/60 mb-1">Proveedor</p>
+            <p className="text-2xl font-bold text-orange-400">DEMO</p>
+            <p className="text-xs text-white/50 mt-1">Datos ficticios realistas</p>
+          </div>
+        </div>
+
+        <p className="text-xs text-white/50 mt-4 p-3 bg-black/30 rounded">
+          ℹ️ Sistema de datos en modo lectura - Solo recepción de datos sin operaciones. Interfaz lista para conectar proveedor real cuando sea autorizado.
+        </p>
+      </motion.div>
+
       {/* Módulos del Bot */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
