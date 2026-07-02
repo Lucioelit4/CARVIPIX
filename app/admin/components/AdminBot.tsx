@@ -573,24 +573,95 @@ export default function AdminBot() {
         <h3 className="text-xl font-bold text-white mb-4">Próximas Acciones Prioritarias</h3>
         <div className="space-y-3">
           <div className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">1</div>
             <div>
-              <p className="font-semibold text-white">Integración de datos en tiempo real</p>
-              <p className="text-white/60 text-sm">Conectar feeds de mercado para pasar de datos demo a datos reales</p>
+              <p className="font-semibold text-white">Integrar datos reales en modo lectura</p>
+              <p className="text-white/60 text-sm">Conectar feeds de mercado sin ejecutar operaciones (solo análisis)</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Clock className="w-5 h-5 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">2</div>
             <div>
-              <p className="font-semibold text-white">Desarrollo de AutoBot</p>
-              <p className="text-white/60 text-sm">Motor automático para ejecución de operaciones (con validaciones críticas)</p>
+              <p className="font-semibold text-white">Validar calidad de datos</p>
+              <p className="text-white/60 text-sm">Verificar latencia, integridad y precisión de feeds en mercado real</p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Lock className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">3</div>
             <div>
-              <p className="font-semibold text-white">Validación de seguridad</p>
-              <p className="text-white/60 text-sm">Auditoría completa antes de conectar con sistemas de trading reales</p>
+              <p className="font-semibold text-white">Conectar datos reales al Trading Engine</p>
+              <p className="text-white/60 text-sm">Reemplazar datos demo con datos en vivo en análisis de agentes</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">4</div>
+            <div>
+              <p className="font-semibold text-white">Crear registro de fallos y latencia</p>
+              <p className="text-white/60 text-sm">Implementar logs avanzados para monitoreo de rendimiento del motor</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">5</div>
+            <div>
+              <p className="font-semibold text-white">Backtesting con datos históricos</p>
+              <p className="text-white/60 text-sm">Validar rendimiento del motor en mercados pasados antes de operaciones</p>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Bloqueos antes de AutoBot */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.36 }}
+        className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-6"
+      >
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+          <Lock className="w-6 h-6 text-red-400" />
+          Bloqueos Antes de AutoBot / MT4
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">Datos Reales No Conectados</p>
+              <p className="text-red-300/80 text-xs mt-1">El motor aún usa datos demo. Requerido: Integración de feeds reales</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">Backtesting No Completado</p>
+              <p className="text-red-300/80 text-xs mt-1">Sin historial de validación. Requerido: 500+ horas de backtesting</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">Validación Legal Pendiente</p>
+              <p className="text-red-300/80 text-xs mt-1">Cumplimiento regulatorio no completado. Requerido: Asesoramiento legal</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">Auditoría de Seguridad Pendiente</p>
+              <p className="text-red-300/80 text-xs mt-1">Sin validación de seguridad externa. Requerido: Auditoría de terceros</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">MT4/MT5 Bloqueado</p>
+              <p className="text-red-300/80 text-xs mt-1">Integración de brokers desactivada hasta nueva orden de administrador</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
+            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-200">Operaciones Reales Bloqueadas</p>
+              <p className="text-red-300/80 text-xs mt-1">No se ejecutarán operaciones reales en cuenta hasta autorización explícita</p>
             </div>
           </div>
         </div>
@@ -600,12 +671,12 @@ export default function AdminBot() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.34 }}
-        className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-4"
+        transition={{ delay: 0.38 }}
+        className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-4"
       >
-        <p className="text-sm text-red-200 font-semibold">🔒 Centro Privado de Administración</p>
-        <p className="mt-2 text-sm text-red-300/80">
-          Esta página solo es visible para administradores. Contiene información sensible sobre el funcionamiento interno del Bot CARVIPIX. No se expone al público.
+        <p className="text-sm text-blue-200 font-semibold">ℹ️ Información Administrativa Privada</p>
+        <p className="mt-2 text-sm text-blue-300/80">
+          Este panel es de acceso restringido solo para administradores. El Bot CARVIPIX está en Fase 1 (análisis y validación). AutoBot y MT4 permanecen bloqueados hasta que se cumplan todos los requisitos de seguridad y validación.
         </p>
       </motion.div>
     </div>

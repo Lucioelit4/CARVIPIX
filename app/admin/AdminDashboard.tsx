@@ -2,7 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import AdminResumen from './components/AdminResumen';
 import AdminUsuarios from './components/AdminUsuarios';
 import AdminSolicitudes from './components/AdminSolicitudes';
@@ -31,7 +32,21 @@ interface AdminDashboardProps {
 }
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('resumen');
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as TabType | null;
+    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'usuarios', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    router.push(`?tab=${tab}`, { scroll: false });
+  };
 
   const tabs: TabConfig[] = [
     { id: 'resumen', label: 'Resumen', icon: <BarChart3 className="w-5 h-5" />, component: <AdminResumen /> },
@@ -77,7 +92,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 font-medium text-sm border-b-2 transition whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/10'
