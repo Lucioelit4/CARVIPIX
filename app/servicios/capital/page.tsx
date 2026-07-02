@@ -55,7 +55,7 @@ export default function CapitalPage() {
               <span className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
                 Gestión Privada
               </span>
-              <h1 className="mt-6 text-5xl font-bold text-white">Capital gestionado CARVIPIX</h1>
+              <h1 className="mt-6 text-4xl md:text-5xl font-bold text-white leading-tight">Capital Gestionado <span className="text-[#D4AF37]">CARVIPIX</span></h1>
               <p className="mt-6 text-lg leading-relaxed text-white/80">
                 Asigna capital a una gestión privada con seguimiento visual, reportes claros y participación alineada a resultados.
               </p>
@@ -127,12 +127,12 @@ export default function CapitalPage() {
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { title: "Balance visual", icon: BarChart3 },
-            { title: "Reportes claros", icon: FileText },
-            { title: "Control exposición", icon: Lock },
-            { title: "Gestión disciplinada", icon: Zap },
-            { title: "Comunicación privada", icon: Clock },
-            { title: "Solo sobre utilidad", icon: TrendingUp },
+            { title: "Balance visual", desc: "Consulta evolución y movimientos.", icon: BarChart3 },
+            { title: "Reportes claros", desc: "Información por periodo.", icon: FileText },
+            { title: "Control exposición", desc: "Gestión disciplinada de riesgo.", icon: Lock },
+            { title: "Gestión disciplinada", desc: "Metodología interna supervisada.", icon: Zap },
+            { title: "Comunicación privada", desc: "Acompañamiento directo.", icon: Clock },
+            { title: "Solo sobre utilidad", desc: "CARVIPIX participa si hay utilidad.", icon: TrendingUp },
           ].map((item, i) => {
             const Icon = item.icon;
             return (
@@ -141,10 +141,11 @@ export default function CapitalPage() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className="rounded-lg border border-white/10 bg-[#11161E] p-4 text-center hover:border-[#D4AF37]/40 transition"
+                className="rounded-lg border border-white/10 bg-[#11161E] p-4 hover:border-[#D4AF37]/40 transition"
               >
                 <Icon className="w-6 h-6 mx-auto text-[#D4AF37] mb-2" />
-                <p className="font-semibold text-xs">{item.title}</p>
+                <p className="font-semibold text-xs mb-1">{item.title}</p>
+                <p className="text-xs text-white/60">{item.desc}</p>
               </motion.div>
             );
           })}
@@ -199,11 +200,21 @@ export default function CapitalPage() {
                 <span className="text-sm text-white/60">Utilidad generada (demo)</span>
                 <span className="font-bold text-green-400">1,000 USD</span>
               </div>
+              
+              <div className="flex gap-1 h-8 rounded-lg overflow-hidden my-4 border border-white/10">
+                <div className="flex-1 bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center">
+                  <span className="text-xs font-bold text-white text-center">60%</span>
+                </div>
+                <div className="flex-0 w-2/5 bg-gradient-to-r from-[#D4AF37] to-[#c19817] flex items-center justify-center">
+                  <span className="text-xs font-bold text-black text-center">40%</span>
+                </div>
+              </div>
+              
               <div className="flex justify-between items-center pb-3 border-b border-green-400/20 bg-green-400/5 px-3 py-2 rounded">
                 <span className="text-sm font-semibold text-green-400">Cliente recibe (60%)</span>
                 <span className="font-bold text-green-400">600 USD</span>
               </div>
-              <div className="flex justify-between items-center pt-2 px-3 py-2">
+              <div className="flex justify-between items-center pt-2 px-3 py-2 bg-[#D4AF37]/5 rounded">
                 <span className="text-sm font-semibold text-[#D4AF37]">CARVIPIX (40%)</span>
                 <span className="font-bold text-[#D4AF37]">400 USD</span>
               </div>
@@ -217,20 +228,26 @@ export default function CapitalPage() {
       <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <h2 className="text-3xl font-bold mb-8 text-center">Cuenta de ejemplo</h2>
 
-        <div className="rounded-lg border border-[#D4AF37]/20 bg-[#11161E] p-6">
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-6">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {[
               { label: "Capital asignado", value: "$12,500", color: "text-white" },
               { label: "Balance actual", value: "$13,920", color: "text-green-400" },
               { label: "Utilidad flotante", value: "+$1,420", color: "text-green-400" },
-              { label: "Cliente 60%", value: "$852", color: "text-[#D4AF37]" },
-              { label: "CARVIPIX 40%", value: "$568", color: "text-white/70" },
+              { label: "Cliente 60%", value: "$852", color: "text-green-400" },
+              { label: "CARVIPIX 40%", value: "$568", color: "text-[#D4AF37]" },
               { label: "Rendimiento", value: "+11.36%", color: "text-green-400" },
             ].map((item, i) => (
-              <div key={i} className="rounded-lg bg-[#0B111A] border border-white/10 p-4 text-center">
-                <p className="text-xs uppercase text-zinc-400 mb-2">{item.label}</p>
-                <p className={`text-xl font-bold ${item.color}`}>{item.value}</p>
-              </div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.4 }}
+                className="rounded-lg bg-[#0B111A]/80 border border-[#D4AF37]/20 p-4 text-center hover:border-[#D4AF37]/40 transition"
+              >
+                <p className="text-xs uppercase text-zinc-400 mb-2 font-semibold">{item.label}</p>
+                <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -302,10 +319,22 @@ export default function CapitalPage() {
         <h2 className="text-3xl font-bold mb-8">Métodos de asignación</h2>
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          {["BTC", "USDT TRC20", "USDT ERC20", "USDC"].map((method) => (
-            <div key={method} className="rounded-lg border border-white/10 bg-[#11161E] p-6 text-center">
-              <p className="font-bold text-lg text-[#D4AF37]">{method}</p>
-            </div>
+          {[
+            { name: "BTC", symbol: "₿" },
+            { name: "USDT TRC20", symbol: "⚡" },
+            { name: "USDT ERC20", symbol: "◆" },
+            { name: "USDC", symbol: "U" },
+          ].map((method) => (
+            <motion.div
+              key={method.name}
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-lg border border-white/10 bg-[#11161E] p-6 text-center hover:border-[#D4AF37]/40 transition"
+            >
+              <div className="text-4xl text-[#D4AF37] mb-2 opacity-60">{method.symbol}</div>
+              <p className="font-bold text-sm text-white">{method.name}</p>
+            </motion.div>
           ))}
         </div>
         <p className="text-xs text-white/40 text-center mt-4">Métodos demo sujetos a disponibilidad.</p>
@@ -329,6 +358,27 @@ export default function CapitalPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* CTA Final */}
+      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-16 sm:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="rounded-lg border border-[#D4AF37]/30 bg-gradient-to-r from-[#11161E] to-[#0B111A] p-8 text-center"
+        >
+          <h3 className="text-3xl font-bold mb-3">¿Listo para solicitar revisión?</h3>
+          <p className="text-white/70 mb-6 max-w-2xl mx-auto">
+            Envía una solicitud demo y revisaremos el monto, método y disponibilidad.
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
+          >
+            Solicitar inversión
+          </button>
+        </motion.div>
       </div>
 
       {/* Legal */}
