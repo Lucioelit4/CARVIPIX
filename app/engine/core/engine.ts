@@ -28,11 +28,11 @@ export class CARVIPIXEngine {
 
   constructor(config?: Partial<EngineConfig>) {
     this.config = {
-      consensusThreshold: 9, // 9 of 11 agents
-      confidenceThreshold: 70, // 70+ minimum
-      timeframesAnalyzed: ['1H', '4H', 'D'],
+      consensusThreshold: 9, // 9 de 11 agentes
+      confidenceThreshold: 70, // Mínimo 70%
+      timeframesAnalyzed: ['1H', '45M', '5M'],
       maxActiveAlerts: 10,
-      alertExpiry: 7 * 24 * 60 * 60 * 1000, // 7 days
+      alertExpiry: 7 * 24 * 60 * 60 * 1000, // 7 días
       enableLearning: true,
       ...config,
     };
@@ -70,44 +70,50 @@ export class CARVIPIXEngine {
       };
     }
 
-    // Count approvals (score >= 60) and rejections (score < 40)
+    // Verificar agentes críticos obligatorios
+    const criticalAgents = ['MarketRegimeAnalyst', 'PullbackAnalyst', 'RiskManager', 'TradeValidator'];
+    const criticalScores = agentScores.filter(s => criticalAgents.includes(s.agent));
+    const criticalApprovalCount = criticalScores.filter(s => s.score >= 60).length;
+    const hasCriticalApprovals = criticalApprovalCount >= 3; // Al menos 3 de 4 críticos
+
+    // Contar aprobaciones (score >= 60) y rechazos (score < 40)
     const approvals = agentScores.filter((s) => s.score >= 60).length;
     const rejections = agentScores.filter((s) => s.score < 40).length;
     const neutral = agentScores.filter((s) => s.score >= 40 && s.score < 60).length;
 
-    // Calculate average and confidence
+    // Calcular promedio y confianza
     const averageScore =
       agentScores.reduce((sum, s) => sum + s.score, 0) / agentScores.length;
     const overallConfidence =
       agentScores.reduce((sum, s) => sum + s.confidence, 0) /
       agentScores.length;
 
-    // DECISION LOGIC
+    // LÓGICA DE DECISIÓN
     let outcome: DecisionOutcome = 'pending';
     let reasonForDecision = '';
 
     if (
       approvals >= this.config.consensusThreshold &&
-      overallConfidence >= this.config.confidenceThreshold
+      overallConfidence >= this.config.confidenceThreshold &&
+      hasCriticalApprovals
     ) {
       outcome = 'approved';
-      reasonForDecision = `Strong consensus: ${approvals}/${agentScores.length} agents approve (>=${this.config.consensusThreshold} needed). Average confidence: ${overallConfidence.toFixed(
+      reasonForDecision = `Consenso fuerte: ${approvals}/${agentScores.length} agentes aprueban (requiere ${this.config.consensusThreshold}). Críticos: ${criticalApprovalCount}/4. Confianza: ${overallConfidence.toFixed(
         1
       )}%`;
+    } else if (!hasCriticalApprovals) {
+      outcome = 'rejected';
+      reasonForDecision = `Rechazo: Solo ${criticalApprovalCount}/4 agentes críticos aprueban. Requeridos: Market Regime, Pullback, Risk Manager, Trade Validator.`;
     } else if (rejections >= agentScores.length - this.config.consensusThreshold) {
       outcome = 'rejected';
-      reasonForDecision = `Insufficient consensus: Only ${approvals}/${agentScores.length} agents approve (need ${this.config.consensusThreshold}). Rejection count: ${rejections}. Average confidence: ${overallConfidence.toFixed(
-        1
-      )}%`;
+      reasonForDecision = `Consenso insuficiente: Solo ${approvals}/${agentScores.length} agentes aprueban (necesarios ${this.config.consensusThreshold}). Rechazos: ${rejections}.`;
     } else if (overallConfidence < this.config.confidenceThreshold) {
       outcome = 'rejected';
-      reasonForDecision = `Low confidence: ${overallConfidence.toFixed(
+      reasonForDecision = `Confianza baja: ${overallConfidence.toFixed(
         1
-      )}% < ${this.config.confidenceThreshold}% threshold. Even with ${approvals} approvals, confidence is insufficient.`;
+      )}% < ${this.config.confidenceThreshold}% requerido.`;
     } else {
-      reasonForDecision = `Mixed signals: ${approvals} approvals, ${rejections} rejections, ${neutral} neutral. Need more clarity. Confidence: ${overallConfidence.toFixed(
-        1
-      )}%`;
+      reasonForDecision = `Señales mixtas: ${approvals} aprobaciones, ${rejections} rechazos, ${neutral} neutrales.`;
     }
 
     // Update metrics
@@ -127,12 +133,12 @@ export class CARVIPIXEngine {
   }
 
   /**
-   * CREATE ALERT FROM SIGNAL
-   * Only if consensus approves
+   * CREAR ALERTA DE SEÑAL
+   * Solo si el consenso aprueba
    */
-  createAlert(signal: TradeSignal): TradeAlert | null {
-    if (signal.status !== 'approved') {
-      console.log(`Signal ${signal.id} not approved. Cannot create alert.`);
+  createAlert(signal: TradeSignal, consensusResult: ConsensusResult): TradeAlert | null {
+    if (consensusResult.outcome !== 'approved') {
+      console.log(`Señal ${signal.id} no aprobada. No se puede crear alerta.`);
       return null;
     }
 
@@ -147,7 +153,7 @@ export class CARVIPIXEngine {
       stopLossPrice: signal.stopLossPrice,
       timeframe: signal.timeframe,
       riskRewardRatio: signal.riskRewardRatio,
-      consensusResult: signal as any, // Would be actual consensus data
+      consensusResult: consensusResult,
       createdAt: Date.now(),
       reasoning: signal.primaryReason,
       tags: ['engine-generated', ...signal.agentContributions],
@@ -158,14 +164,14 @@ export class CARVIPIXEngine {
     this.metrics.totalAlertsGenerated++;
     this.metrics.activeAlerts++;
 
-    // Log decision
+    // Registrar decisión
     this.logDecision({
       symbol: signal.symbol,
       type: signal.type,
       timeframe: signal.timeframe,
-      consensus: signal as any,
+      consensus: consensusResult,
       alertCreated: alertId,
-      approved: true,
+      reason: `Alerta creada: ${alertId}`,
     });
 
     return alert;
@@ -207,16 +213,16 @@ export class CARVIPIXEngine {
   }
 
   /**
-   * LOG DECISION
-   * Every decision is recorded with full reasoning
+   * REGISTRAR DECISIÓN
+   * Cada decisión se registra con razonamiento completo
    */
   private logDecision(data: {
     symbol: string;
     type: 'compra' | 'venta';
     timeframe: string;
-    consensus: any;
+    consensus: ConsensusResult;
     alertCreated?: string;
-    approved: boolean;
+    reason: string;
   }): void {
     const entry: DecisionLogEntry = {
       id: `LOG_${Date.now()}`,
@@ -226,9 +232,7 @@ export class CARVIPIXEngine {
       timeframe: data.timeframe,
       consensus: data.consensus,
       alertCreated: data.alertCreated,
-      reason: data.approved
-        ? `Alert created: ${data.alertCreated}`
-        : 'Signal rejected - insufficient consensus',
+      reason: data.reason,
     };
 
     this.decisionLog.push(entry);

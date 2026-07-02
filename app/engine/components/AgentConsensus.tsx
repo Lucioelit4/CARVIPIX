@@ -71,8 +71,8 @@ export function AgentConsensus({ agents, outcome }: AgentConsensusProps) {
               <p className="text-xs opacity-75 mb-2 line-clamp-2">{agent.reasoning}</p>
 
               <div className="flex items-center justify-between text-xs">
-                <span>Confidence: {agent.confidence.toFixed(0)}%</span>
-                {/* Score bar */}
+                <span>Confianza: {agent.confidence.toFixed(0)}%</span>
+                {/* Barra de puntuación */}
                 <div className="w-16 h-1.5 bg-black/30 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
@@ -93,7 +93,7 @@ export function AgentConsensus({ agents, outcome }: AgentConsensusProps) {
         })}
       </div>
 
-      {/* Summary */}
+      {/* Resumen */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -102,7 +102,7 @@ export function AgentConsensus({ agents, outcome }: AgentConsensusProps) {
       >
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-xs text-white/60 mb-1">Approvals</p>
+            <p className="text-xs text-white/60 mb-1">Aprobaciones</p>
             <p className="text-2xl font-bold text-green-400">
               {agents.filter((a) => a.score >= 60).length}
             </p>
@@ -114,7 +114,7 @@ export function AgentConsensus({ agents, outcome }: AgentConsensusProps) {
             </p>
           </div>
           <div>
-            <p className="text-xs text-white/60 mb-1">Rejections</p>
+            <p className="text-xs text-white/60 mb-1">Rechazos</p>
             <p className="text-2xl font-bold text-red-400">
               {agents.filter((a) => a.score < 40).length}
             </p>

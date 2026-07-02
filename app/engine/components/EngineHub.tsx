@@ -29,25 +29,19 @@ export function EngineHub() {
   const [engine] = useState(() => {
     const e = new CARVIPIXEngine();
     
-    // Initialize with demo alerts
+    // Initialize with real consensus evaluation
     const scenarios = getDemoScenarios();
-    const approvedSignals = [scenarios.scenario1.signal, scenarios.scenario3.signal];
     
-    approvedSignals.forEach(signal => {
-      const alert = e.createAlert({
-        ...signal,
-        consensusResult: {
-          outcome: 'approved',
-          agentScores: [],
-          approvalCount: 9,
-          rejectionCount: 0,
-          consensusThreshold: 9,
-          averageScore: 80,
-          overallConfidence: 82,
-          reasonForDecision: signal.primaryReason,
-          timestamp: Date.now(),
+    // Only create alerts if consensus approves
+    [scenarios.scenario1, scenarios.scenario3].forEach(scenario => {
+      if (scenario.consensus.outcome === 'approved') {
+        const alert = e.createAlert(scenario.signal, scenario.consensus);
+        if (alert) {
+          console.log(`✅ Alerta creada: ${alert.symbol} ${alert.type}`);
         }
-      } as any);
+      } else {
+        console.log(`❌ Señal rechazada: ${scenario.signal.symbol} - ${scenario.consensus.reasonForDecision}`);
+      }
     });
     
     return e;
@@ -82,13 +76,13 @@ export function EngineHub() {
           <div className="p-2 bg-gradient-to-br from-[#D4AF37] to-[#b8940f] rounded-lg">
             <Brain className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white">CARVIPIX Trading Engine</h1>
+          <h1 className="text-3xl font-bold text-white">CARVIPIX Motor de Trading</h1>
           <div className="ml-auto flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/50 rounded-full">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-green-400 text-sm font-mono">ONLINE</span>
+            <span className="text-green-400 text-sm font-mono">EN LÍNEA</span>
           </div>
         </div>
-        <p className="text-white/60 text-sm">Professional Trading Decision Engine • Phase 1</p>
+        <p className="text-white/60 text-sm">Motor de Decisión Profesional de Trading • Fase 1</p>
       </motion.div>
 
       {/* Metrics Grid */}
@@ -100,30 +94,30 @@ export function EngineHub() {
       >
         <MetricCard
           icon={<Activity className="w-5 h-5 text-[#D4AF37]" />}
-          label="Total Alerts"
+          label="Alertas Totales"
           value={metrics.totalAlertsGenerated}
-          subtext={`${metrics.activeAlerts} active`}
+          subtext={`${metrics.activeAlerts} activas`}
           color="gold"
         />
         <MetricCard
           icon={<CheckCircle className="w-5 h-5 text-green-400" />}
-          label="Successful"
+          label="Exitosas"
           value={metrics.successfulTrades}
-          subtext={`${metrics.averageWinRate.toFixed(1)}% win rate`}
+          subtext={`${metrics.averageWinRate.toFixed(1)}% tasa ganadora`}
           color="green"
         />
         <MetricCard
           icon={<XCircle className="w-5 h-5 text-red-400" />}
-          label="Failed"
+          label="Fallidas"
           value={metrics.failedTrades}
-          subtext={`${metrics.closedAlerts} closed`}
+          subtext={`${metrics.closedAlerts} cerradas`}
           color="red"
         />
         <MetricCard
           icon={<Zap className="w-5 h-5 text-blue-400" />}
-          label="Consensus"
+          label="Consenso"
           value={`${metrics.consensusApprovalRate.toFixed(0)}%`}
-          subtext="Approval rate"
+          subtext="Tasa de aprobación"
           color="blue"
         />
       </motion.div>
@@ -135,18 +129,22 @@ export function EngineHub() {
         transition={{ delay: 0.2 }}
         className="flex gap-2 mb-8 border-b border-white/10"
       >
-        {(['overview', 'alerts', 'decisions'] as const).map((tab) => (
+        {([
+          { id: 'overview' as const, label: 'General' },
+          { id: 'alerts' as const, label: 'Alertas' },
+          { id: 'decisions' as const, label: 'Decisiones' },
+        ] as const).map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-3 font-medium text-sm transition-colors relative ${
-              activeTab === tab
+              activeTab === tab.id
                 ? 'text-[#D4AF37]'
                 : 'text-white/60 hover:text-white'
             }`}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            {activeTab === tab && (
+            {tab.label}
+            {activeTab === tab.id && (
               <motion.div
                 layoutId="activeTab"
                 className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D4AF37]"

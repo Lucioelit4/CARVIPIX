@@ -1,9 +1,9 @@
 import { EngineHub } from '../engine/components/EngineHub';
 
 export const metadata = {
-  title: 'CARVIPIX Trading Engine | Professional Analysis System',
+  title: 'CARVIPIX Motor de Trading | Sistema de Análisis Profesional',
   description:
-    'CARVIPIX Trading Engine Phase 1: 11 Agent Consensus Decision System',
+    'CARVIPIX Motor de Trading Fase 1: Sistema de Decisión por Consenso de 11 Agentes',
 };
 
 export default function EnginePagePage() {

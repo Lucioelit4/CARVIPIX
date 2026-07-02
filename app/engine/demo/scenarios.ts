@@ -1,9 +1,9 @@
 /**
  * DEMO DATA
- * Realistic sample analysis for demonstration
+ * Análisis realista de demostración con evaluación real de consenso
  */
 
-import { AgentScore, TradeSignal, TradeAlert } from '../types/index';
+import { AgentScore, TradeSignal, ConsensusResult } from '../types/index';
 import {
   analyzeMarketRegime,
   analyzeTrend,
@@ -17,13 +17,15 @@ import {
   validateTrade,
   learnFromHistory,
 } from '../agents/index';
+import { CARVIPIXEngine } from '../core/engine';
 
 /**
- * DEMO SCENARIO 1: EUR/USD Bullish Setup
- * Strong uptrend, pullback at support, good risk/reward
+ * ESCENARIO 1: EUR/USD Setup Bullish
+ * Tendencia fuerte, pullback en soporte, buen risk/reward
  */
 export function generateDemoScenario1(): {
   agents: AgentScore[];
+  consensus: ConsensusResult;
   signal: TradeSignal;
   reasoning: string;
 } {
@@ -84,7 +86,7 @@ export function generateDemoScenario1(): {
       agentAgreement: 85,
       dataQuality: 'high',
       marketConditions: 'normal',
-      timeframe: '4H',
+      timeframe: '1H',
     }),
     validateTrade({
       symbol: 'EURUSD',
@@ -101,49 +103,47 @@ export function generateDemoScenario1(): {
     }),
   ];
 
+  // Evaluar consenso real
+  const engine = new CARVIPIXEngine();
+  const consensus = engine.evaluateConsensus(agents);
+
   const signal: TradeSignal = {
     id: 'SIGNAL_EURUSD_1',
     timestamp: Date.now(),
     symbol: 'EURUSD',
     type: 'compra',
-    timeframe: '4H',
+    timeframe: '1H',
     entryPrice: 1.0960,
     takeProfitPrice: 1.1060,
     stopLossPrice: 1.0880,
-    consensusScore: 82,
-    confidenceScore: 85,
+    consensusScore: consensus.averageScore,
+    confidenceScore: consensus.overallConfidence,
     riskRewardRatio: 2.0,
-    primaryReason: 'Strong uptrend with pullback at support. Golden cross aligned. Good risk/reward.',
-    agentContributions: [
-      'MarketRegimeAnalyst',
-      'TrendAnalyst',
-      'StructureAnalyst',
-      'MomentumAnalyst',
-      'PullbackAnalyst',
-      'SessionAnalyst',
-      'RiskManager',
-      'TradeValidator',
-    ],
+    primaryReason: 'Tendencia alcista fuerte, pullback en soporte, golden cross alineado, sin noticias.',
+    agentContributions: agents
+      .filter((a) => a.score >= 60)
+      .map((a) => a.agent),
     riskWarnings: [],
-    status: 'approved',
-    approvalTimestamp: Date.now(),
+    status: consensus.outcome === 'approved' ? 'approved' : 'rejected',
+    approvalTimestamp:
+      consensus.outcome === 'approved' ? Date.now() : undefined,
   };
 
   return {
     agents,
+    consensus,
     signal,
-    reasoning: `EURUSD bullish setup: Strong uptrend (EMA20 > 50 > 200), pullback 15% at support (1.0880), 
-    momentum bullish with RSI 45, no major news, excellent R:R 2.0:1. 8/11 agents approve strongly. 
-    Ready for entry.`,
+    reasoning: `EUR/USD setup alcista: ${consensus.reasonForDecision}`,
   };
 }
 
 /**
- * DEMO SCENARIO 2: GBP/USD Rejection at Resistance
- * Agents agree this is too risky
+ * ESCENARIO 2: GBP/USD Rechazo en Resistencia
+ * Los agentes acuerdan que es demasiado riesgoso
  */
 export function generateDemoScenario2(): {
   agents: AgentScore[];
+  consensus: ConsensusResult;
   signal: TradeSignal;
   reasoning: string;
 } {
@@ -204,7 +204,7 @@ export function generateDemoScenario2(): {
       agentAgreement: 45,
       dataQuality: 'medium',
       marketConditions: 'unusual',
-      timeframe: '1H',
+      timeframe: '45M',
     }),
     validateTrade({
       symbol: 'GBPUSD',
@@ -221,45 +221,51 @@ export function generateDemoScenario2(): {
     }),
   ];
 
+  // Evaluar consenso real
+  const engine = new CARVIPIXEngine();
+  const consensus = engine.evaluateConsensus(agents);
+
   const signal: TradeSignal = {
     id: 'SIGNAL_GBPUSD_2',
     timestamp: Date.now(),
     symbol: 'GBPUSD',
     type: 'compra',
-    timeframe: '1H',
+    timeframe: '45M',
     entryPrice: 1.2795,
     takeProfitPrice: 1.2850,
     stopLossPrice: 1.2750,
-    consensusScore: 48,
-    confidenceScore: 38,
+    consensusScore: consensus.averageScore,
+    confidenceScore: consensus.overallConfidence,
     riskRewardRatio: 1.0,
-    primaryReason: 'Price at resistance, mixed signals',
-    agentContributions: [],
+    primaryReason: 'Precio en resistencia, señales mixtas',
+    agentContributions: agents
+      .filter((a) => a.score >= 60)
+      .map((a) => a.agent),
     riskWarnings: [
-      'RSI overbought at 72',
-      'No pullback observed',
-      'Major news volatility expected',
-      'Poor risk/reward 1:1',
-      'Market conditions unusual',
-      'Recent performance declining',
+      'RSI sobrecomprado en 72',
+      'Sin pullback observado',
+      'Noticias negativas esperadas',
+      'Pobre R:R 1:1',
+      'Condiciones de mercado inusuales',
+      'Desempeño reciente declinando',
     ],
-    status: 'rejected',
+    status: consensus.outcome === 'approved' ? 'approved' : 'rejected',
   };
 
   return {
     agents,
+    consensus,
     signal,
-    reasoning: `GBPUSD rejected: Overbought RSI 72, at resistance (1.2800) with no pullback, 
-    negative news causing volatility, poor R:R 1:1, recent declining performance. Only 2/11 agents approve. 
-    Insufficient consensus. Skip this trade.`,
+    reasoning: `GBP/USD rechazado: ${consensus.reasonForDecision}`,
   };
 }
 
 /**
- * DEMO SCENARIO 3: Gold Downtrend with Clean Break
+ * ESCENARIO 3: Oro (XAUUSD) Downtrend con Breakout Limpio
  */
 export function generateDemoScenario3(): {
   agents: AgentScore[];
+  consensus: ConsensusResult;
   signal: TradeSignal;
   reasoning: string;
 } {
@@ -320,7 +326,7 @@ export function generateDemoScenario3(): {
       agentAgreement: 80,
       dataQuality: 'high',
       marketConditions: 'normal',
-      timeframe: 'D',
+      timeframe: '5M',
     }),
     validateTrade({
       symbol: 'XAUUSD',
@@ -337,77 +343,42 @@ export function generateDemoScenario3(): {
     }),
   ];
 
+  // Evaluar consenso real
+  const engine = new CARVIPIXEngine();
+  const consensus = engine.evaluateConsensus(agents);
+
   const signal: TradeSignal = {
     id: 'SIGNAL_XAUUSD_3',
     timestamp: Date.now(),
     symbol: 'XAUUSD',
     type: 'venta',
-    timeframe: 'D',
+    timeframe: '5M',
     entryPrice: 1968,
     takeProfitPrice: 1920,
     stopLossPrice: 1985,
-    consensusScore: 80,
-    confidenceScore: 82,
+    consensusScore: consensus.averageScore,
+    confidenceScore: consensus.overallConfidence,
     riskRewardRatio: 2.27,
-    primaryReason: 'Clean breakout below structure. Death cross aligned. Bearish momentum.',
-    agentContributions: [
-      'MarketRegimeAnalyst',
-      'TrendAnalyst',
-      'StructureAnalyst',
-      'MomentumAnalyst',
-      'SessionAnalyst',
-      'RiskManager',
-      'TradeValidator',
-      'LearningEngine',
-    ],
+    primaryReason: 'Breakout limpio bajo estructura, death cross alineado, momentum bajista.',
+    agentContributions: agents
+      .filter((a) => a.score >= 60)
+      .map((a) => a.agent),
     riskWarnings: [],
-    status: 'approved',
-    approvalTimestamp: Date.now(),
+    status: consensus.outcome === 'approved' ? 'approved' : 'rejected',
+    approvalTimestamp:
+      consensus.outcome === 'approved' ? Date.now() : undefined,
   };
 
   return {
     agents,
+    consensus,
     signal,
-    reasoning: `XAUUSD short setup: Strong downtrend confirmed (EMA20 < 50 < 200), clean breakout below 1985, 
-    death cross aligned, bearish momentum RSI 35, session overlap (high liquidity), excellent R:R 2.27:1. 
-    9/11 agents approve. Ready for entry.`,
+    reasoning: `Oro setup bajista: ${consensus.reasonForDecision}`,
   };
 }
 
 /**
- * DEMO ALERT: Active alert from approved signal
- */
-export function generateDemoAlert(signal: TradeSignal): TradeAlert {
-  return {
-    id: `ALERT_${signal.symbol}_${Date.now()}`,
-    symbol: signal.symbol,
-    type: signal.type,
-    state: 'activa',
-    entryPrice: signal.entryPrice,
-    takeProfitPrice: signal.takeProfitPrice,
-    stopLossPrice: signal.stopLossPrice,
-    timeframe: signal.timeframe,
-    riskRewardRatio: signal.riskRewardRatio,
-    consensusResult: {
-      outcome: 'approved',
-      agentScores: [],
-      approvalCount: 9,
-      rejectionCount: 0,
-      consensusThreshold: 9,
-      averageScore: 81,
-      overallConfidence: 83,
-      reasonForDecision: signal.primaryReason,
-      timestamp: Date.now(),
-    },
-    createdAt: Date.now(),
-    reasoning: signal.primaryReason,
-    tags: ['demo', 'engine-generated', ...signal.agentContributions],
-    source: 'engine',
-  };
-}
-
-/**
- * Get all demo scenarios
+ * Obtener todos los escenarios de demostración
  */
 export function getDemoScenarios() {
   return {

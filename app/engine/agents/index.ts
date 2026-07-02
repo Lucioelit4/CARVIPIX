@@ -1,14 +1,14 @@
 /**
- * AGENT IMPLEMENTATIONS
- * 11 specialized analysis agents for trading decisions
- * Each agent: evaluates market data → returns score (0-100) + reasoning
+ * IMPLEMENTACIÓN DE AGENTES
+ * 11 agentes especializados de análisis para decisiones de trading
+ * Cada agente: evalúa datos del mercado → devuelve puntuación (0-100) + razonamiento
  */
 
 import { AgentScore, AgentType } from '../types/index';
 
 /**
- * Market Regime Analyst
- * Evaluates overall market conditions: trending vs ranging
+ * Analista de Régimen de Mercado
+ * Evalúa condiciones generales del mercado: tendencia vs rango
  */
 export function analyzeMarketRegime(params: {
   symbol: string;
@@ -16,25 +16,25 @@ export function analyzeMarketRegime(params: {
   volatility: number;
   trend: 'strong_up' | 'strong_down' | 'neutral' | 'choppy';
 }): AgentScore {
-  let score = 50; // Neutral start
+  let score = 50; // Inicio neutral
   const keyMetrics: Record<string, any> = {
     volatility: params.volatility,
     trend: params.trend,
   };
 
-  // Trending markets are better for trading
+  // Los mercados en tendencia son mejores para trading
   if (params.trend === 'strong_up' || params.trend === 'strong_down') {
     score += 25;
-    keyMetrics.verdict = 'Strong trending - favorable conditions';
+    keyMetrics.verdict = 'Tendencia fuerte - condiciones favorables';
   } else if (params.trend === 'neutral') {
     score += 10;
-    keyMetrics.verdict = 'Neutral trend - moderate conditions';
+    keyMetrics.verdict = 'Tendencia neutral - condiciones moderadas';
   } else {
     score -= 20;
-    keyMetrics.verdict = 'Choppy regime - risky';
+    keyMetrics.verdict = 'Régimen choppy - riesgoso';
   }
 
-  // Volatility evaluation
+  // Evaluación de volatilidad
   if (params.volatility < 30) {
     score += 5;
   } else if (params.volatility > 50) {
@@ -44,9 +44,9 @@ export function analyzeMarketRegime(params: {
   return {
     agent: 'MarketRegimeAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Market in ${params.trend} regime with ${params.volatility.toFixed(
+    reasoning: `Mercado en régimen ${params.trend} con volatilidad ${params.volatility.toFixed(
       1
-    )}% volatility. ${keyMetrics.verdict}`,
+    )}%. ${keyMetrics.verdict}`,
     confidence: params.trend !== 'choppy' ? 80 : 40,
     keyMetrics,
     timestamp: Date.now(),
@@ -54,8 +54,8 @@ export function analyzeMarketRegime(params: {
 }
 
 /**
- * Trend Analyst
- * Analyzes price trend direction and strength
+ * Analista de Tendencia
+ * Analiza la dirección y fuerza de la tendencia de precio
  */
 export function analyzeTrend(params: {
   symbol: string;
@@ -72,30 +72,30 @@ export function analyzeTrend(params: {
     ema50: params.ema50,
   };
 
-  // Golden cross (20 > 50 > 200) or Death cross
+  // Golden cross (20 > 50 > 200) o Death cross
   if (
     params.direction === 'up' &&
     params.ema20 > params.ema50 &&
     params.ema50 > params.ema200
   ) {
     score = 85;
-    keyMetrics.verdict = 'Strong uptrend - golden cross aligned';
+    keyMetrics.verdict = 'Tendencia alcista fuerte - golden cross alineado';
   } else if (
     params.direction === 'down' &&
     params.ema20 < params.ema50 &&
     params.ema50 < params.ema200
   ) {
     score = 85;
-    keyMetrics.verdict = 'Strong downtrend - death cross aligned';
+    keyMetrics.verdict = 'Tendencia bajista fuerte - death cross alineado';
   } else if (params.direction === 'up') {
     score = 65;
-    keyMetrics.verdict = 'Uptrend present';
+    keyMetrics.verdict = 'Tendencia alcista presente';
   } else {
     score = 65;
-    keyMetrics.verdict = 'Downtrend present';
+    keyMetrics.verdict = 'Tendencia bajista presente';
   }
 
-  // Price above/below key EMAs
+  // Precio sobre/bajo EMAs clave
   if (params.direction === 'up' && params.price > params.ema50) {
     score += 5;
   } else if (params.direction === 'down' && params.price < params.ema50) {
@@ -109,9 +109,9 @@ export function analyzeTrend(params: {
   return {
     agent: 'TrendAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `${params.direction} trend detected. ${keyMetrics.verdict}. Price ${
-      params.price > params.ema50 ? 'above' : 'below'
-    } 50 EMA.`,
+    reasoning: `Tendencia ${params.direction} detectada. ${keyMetrics.verdict}. Precio ${
+      params.price > params.ema50 ? 'por encima' : 'por debajo'
+    } de EMA 50.`,
     confidence: 85,
     keyMetrics,
     timestamp: Date.now(),
@@ -119,8 +119,8 @@ export function analyzeTrend(params: {
 }
 
 /**
- * Structure Analyst
- * Analyzes support/resistance, highs/lows
+ * Analista de Estructura
+ * Analiza soporte/resistencia, máximos/mínimos
  */
 export function analyzeStructure(params: {
   symbol: string;
@@ -136,28 +136,28 @@ export function analyzeStructure(params: {
     support: params.support,
   };
 
-  // Price near support/resistance
+  // Precio cerca de soporte/resistencia
   const distToResistance = ((params.resistance - params.price) / params.price) * 100;
   const distToSupport = ((params.price - params.support) / params.price) * 100;
 
   if (params.breakout) {
     score = 80;
-    keyMetrics.verdict = 'Breakout structure confirmed';
+    keyMetrics.verdict = 'Estructura de breakout confirmada';
   } else if (distToResistance < 2) {
     score = 75;
-    keyMetrics.verdict = 'Price near resistance - potential breakout';
+    keyMetrics.verdict = 'Precio cerca de resistencia - potencial breakout';
   } else if (distToSupport < 2) {
     score = 75;
-    keyMetrics.verdict = 'Price near support - potential bounce';
+    keyMetrics.verdict = 'Precio cerca de soporte - potencial rebote';
   } else {
     score = 55;
-    keyMetrics.verdict = 'Normal range structure';
+    keyMetrics.verdict = 'Estructura de rango normal';
   }
 
   return {
     agent: 'StructureAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Structure: S/${params.support} - P/${params.price} - R/${params.resistance}. ${keyMetrics.verdict}`,
+    reasoning: `Estructura: S/${params.support} - P/${params.price} - R/${params.resistance}. ${keyMetrics.verdict}`,
     confidence: 75,
     keyMetrics,
     timestamp: Date.now(),
@@ -165,8 +165,8 @@ export function analyzeStructure(params: {
 }
 
 /**
- * Momentum Analyst
- * Analyzes RSI, MACD, momentum indicators
+ * Analista de Momentum
+ * Analiza RSI, MACD, indicadores de momentum
  */
 export function analyzeMomentum(params: {
   symbol: string;
@@ -181,19 +181,19 @@ export function analyzeMomentum(params: {
     momentum: params.momentum,
   };
 
-  // RSI levels
+  // Niveles de RSI
   if (params.rsi < 30) {
-    score += 10; // Oversold
-    keyMetrics.rsiStatus = 'Oversold';
+    score += 10; // Sobrevendido
+    keyMetrics.rsiStatus = 'Sobrevendido';
   } else if (params.rsi > 70) {
-    score -= 10; // Overbought
-    keyMetrics.rsiStatus = 'Overbought';
+    score -= 10; // Sobrecomprado
+    keyMetrics.rsiStatus = 'Sobrecomprado';
   } else if (params.rsi < 50) {
     score += 5;
-    keyMetrics.rsiStatus = 'Bearish zone';
+    keyMetrics.rsiStatus = 'Zona bajista';
   } else {
     score += 5;
-    keyMetrics.rsiStatus = 'Bullish zone';
+    keyMetrics.rsiStatus = 'Zona alcista';
   }
 
   // Momentum
@@ -218,15 +218,15 @@ export function analyzeMomentum(params: {
     (params.momentum.includes('bearish') && params.macdHistogram < 0)
   ) {
     score += 10;
-    keyMetrics.macdAlign = 'MACD aligned with momentum';
+    keyMetrics.macdAlign = 'MACD alineado con momentum';
   }
 
   return {
     agent: 'MomentumAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `${params.momentum} momentum. RSI: ${params.rsi.toFixed(
+    reasoning: `Momentum ${params.momentum}. RSI: ${params.rsi.toFixed(
       1
-    )}. ${keyMetrics.rsiStatus}. MACD Histogram: ${params.macdHistogram.toFixed(
+    )}. ${keyMetrics.rsiStatus}. Histograma MACD: ${params.macdHistogram.toFixed(
       3
     )}.`,
     confidence: 80,
@@ -236,13 +236,13 @@ export function analyzeMomentum(params: {
 }
 
 /**
- * Pullback Analyst
- * Analyzes pullback opportunities
+ * Analista de Pullback
+ * Analiza oportunidades de pullback
  */
 export function analyzePullback(params: {
   symbol: string;
   isPullback: boolean;
-  pullbackDepth: number; // percentage
+  pullbackDepth: number; // porcentaje
   trend: 'up' | 'down';
 }): AgentScore {
   let score = 50;
@@ -255,17 +255,17 @@ export function analyzePullback(params: {
     score = 70;
     if (params.pullbackDepth < 10) {
       score += 15;
-      keyMetrics.verdict = 'Shallow pullback - very favorable';
+      keyMetrics.verdict = 'Pullback poco profundo - muy favorable';
     } else if (params.pullbackDepth < 25) {
       score += 10;
-      keyMetrics.verdict = 'Normal pullback - favorable';
+      keyMetrics.verdict = 'Pullback normal - favorable';
     } else {
       score -= 5;
-      keyMetrics.verdict = 'Deep pullback - use caution';
+      keyMetrics.verdict = 'Pullback profundo - usar precaución';
     }
   } else {
     score = 45;
-    keyMetrics.verdict = 'No clear pullback detected';
+    keyMetrics.verdict = 'Sin pullback claro detectado';
   }
 
   return {
@@ -273,8 +273,8 @@ export function analyzePullback(params: {
     score: Math.max(0, Math.min(100, score)),
     reasoning: `${
       params.isPullback
-        ? `Pullback of ${params.pullbackDepth.toFixed(1)}% in ${params.trend} trend. ${keyMetrics.verdict}`
-        : 'No pullback opportunity detected'
+        ? `Pullback de ${params.pullbackDepth.toFixed(1)}% en tendencia ${params.trend}. ${keyMetrics.verdict}`
+        : 'Sin oportunidad de pullback detectada'
     }`,
     confidence: params.isPullback ? 75 : 50,
     keyMetrics,
@@ -283,8 +283,8 @@ export function analyzePullback(params: {
 }
 
 /**
- * Session Analyst
- * Analyzes trading session (Asian, European, US, Overlap)
+ * Analista de Sesión
+ * Analiza sesión de trading (Asian, European, US, Overlap)
  */
 export function analyzeSession(params: {
   symbol: string;
@@ -297,25 +297,25 @@ export function analyzeSession(params: {
     session: params.currentSession,
   };
 
-  // Overlaps are best for volatility
+  // Solapamientos son mejores para volatilidad
   if (params.currentSession === 'overlap') {
     score = 80;
-    keyMetrics.verdict = 'Session overlap - high volatility expected';
+    keyMetrics.verdict = 'Solapamiento de sesión - alta volatilidad esperada';
   } else if (
     params.currentSession === 'european' ||
     params.currentSession === 'us'
   ) {
     score = 70;
-    keyMetrics.verdict = `${params.currentSession} session - good liquidity`;
+    keyMetrics.verdict = `Sesión ${params.currentSession} - buena liquidez`;
   } else {
     score = 55;
-    keyMetrics.verdict = 'Asian session - moderate activity';
+    keyMetrics.verdict = 'Sesión asiática - actividad moderada';
   }
 
   return {
     agent: 'SessionAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Currently in ${params.currentSession} session. ${keyMetrics.verdict}`,
+    reasoning: `Actualmente en sesión ${params.currentSession}. ${keyMetrics.verdict}`,
     confidence: 70,
     keyMetrics,
     timestamp: Date.now(),
@@ -323,8 +323,8 @@ export function analyzeSession(params: {
 }
 
 /**
- * News Analyst
- * Evaluates economic news, events, sentiment
+ * Analista de Noticias
+ * Evalúa noticias económicas, eventos, sentimiento
  */
 export function analyzeNews(params: {
   symbol: string;
@@ -340,22 +340,22 @@ export function analyzeNews(params: {
 
   if (!params.hasMajorNews) {
     score = 70;
-    keyMetrics.verdict = 'No major news - stable trading environment';
+    keyMetrics.verdict = 'Sin noticias importantes - entorno de trading estable';
   } else {
     if (params.newsImpact === 'positive') {
       score = 65;
-      keyMetrics.verdict = 'Positive news - potential upside';
+      keyMetrics.verdict = 'Noticias positivas - potencial al alza';
     } else if (params.newsImpact === 'negative') {
       score = 35;
-      keyMetrics.verdict = 'Negative news - caution advised';
+      keyMetrics.verdict = 'Noticias negativas - precaución recomendada';
     } else {
       score = 50;
-      keyMetrics.verdict = 'Neutral news - mixed signals';
+      keyMetrics.verdict = 'Noticias neutrales - señales mixtas';
     }
 
     if (params.volatilityExpected) {
-      score -= 10; // Extra risk
-      keyMetrics.volatilityWarning = 'High volatility expected';
+      score -= 10; // Riesgo extra
+      keyMetrics.volatilityWarning = 'Alta volatilidad esperada';
     }
   }
 
@@ -364,9 +364,9 @@ export function analyzeNews(params: {
     score: Math.max(0, Math.min(100, score)),
     reasoning: `${
       params.hasMajorNews
-        ? `Major news detected: ${params.newsImpact}. ${keyMetrics.verdict}`
+        ? `Noticia importante detectada: ${params.newsImpact}. ${keyMetrics.verdict}`
         : keyMetrics.verdict
-    }${params.volatilityExpected ? ' Extra volatility expected.' : ''}`,
+    }${params.volatilityExpected ? ' Volatilidad extra esperada.' : ''}`,
     confidence: params.hasMajorNews ? 60 : 85,
     keyMetrics,
     timestamp: Date.now(),
@@ -374,15 +374,15 @@ export function analyzeNews(params: {
 }
 
 /**
- * Risk Manager
- * Evaluates risk/reward ratio, position sizing
+ * Gestor de Riesgo
+ * Evalúa relaciones riesgo/recompensa, dimensionamiento de posiciones
  */
 export function analyzeRisk(params: {
   symbol: string;
   entryPrice: number;
   stopLossPrice: number;
   takeProfitPrice: number;
-  accountRisk: number; // percentage per trade
+  accountRisk: number; // porcentaje por operación
 }): AgentScore {
   let score = 50;
   const riskPoints = Math.abs(params.entryPrice - params.stopLossPrice);
@@ -396,34 +396,34 @@ export function analyzeRisk(params: {
     accountRisk: params.accountRisk,
   };
 
-  // Good risk/reward is 2:1 or better
+  // Buen R:R es 2:1 o mejor
   if (riskRewardRatio >= 2.0) {
     score = 85;
-    keyMetrics.verdict = 'Excellent risk/reward ratio';
+    keyMetrics.verdict = 'Excelente relación riesgo/recompensa';
   } else if (riskRewardRatio >= 1.5) {
     score = 75;
-    keyMetrics.verdict = 'Good risk/reward ratio';
+    keyMetrics.verdict = 'Buena relación riesgo/recompensa';
   } else if (riskRewardRatio >= 1.0) {
     score = 55;
-    keyMetrics.verdict = 'Acceptable risk/reward ratio';
+    keyMetrics.verdict = 'Relación riesgo/recompensa aceptable';
   } else {
     score = 20;
-    keyMetrics.verdict = 'Poor risk/reward ratio - avoid';
+    keyMetrics.verdict = 'Relación riesgo/recompensa pobre - evitar';
   }
 
-  // Account risk check
+  // Verificación de riesgo de cuenta
   if (params.accountRisk > 3) {
     score -= 20;
-    keyMetrics.accountRiskWarning = 'Position size too large';
+    keyMetrics.accountRiskWarning = 'Tamaño de posición demasiado grande';
   } else if (params.accountRisk <= 1) {
     score += 5;
-    keyMetrics.accountRiskNote = 'Conservative position sizing';
+    keyMetrics.accountRiskNote = 'Dimensionamiento conservador';
   }
 
   return {
     agent: 'RiskManager',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Risk/Reward: 1:${riskRewardRatio.toFixed(2)}. Account risk: ${params.accountRisk.toFixed(
+    reasoning: `R:R: 1:${riskRewardRatio.toFixed(2)}. Riesgo de cuenta: ${params.accountRisk.toFixed(
       2
     )}%. ${keyMetrics.verdict}`,
     confidence: 90,
@@ -433,11 +433,11 @@ export function analyzeRisk(params: {
 }
 
 /**
- * Confidence Scoring
- * Meta-analysis: how confident are we in other agents?
+ * Puntuación de Confianza
+ * Meta-análisis: ¿Qué tan confiados estamos en los otros agentes?
  */
 export function scoreConfidence(params: {
-  agentAgreement: number; // 0-100, how much agents agree
+  agentAgreement: number; // 0-100, cuánto acuerdan los agentes
   dataQuality: 'high' | 'medium' | 'low';
   marketConditions: 'normal' | 'unusual' | 'chaotic';
   timeframe: string;
@@ -449,39 +449,39 @@ export function scoreConfidence(params: {
     marketConditions: params.marketConditions,
   };
 
-  // Agent agreement weight
+  // Peso de acuerdo entre agentes
   score = Math.min(100, Math.max(20, params.agentAgreement));
 
-  // Data quality adjustment
+  // Ajuste de calidad de datos
   if (params.dataQuality === 'high') {
     score += 15;
   } else if (params.dataQuality === 'low') {
     score -= 20;
   }
 
-  // Market conditions
+  // Condiciones de mercado
   if (params.marketConditions === 'chaotic') {
     score -= 25;
-    keyMetrics.verdict = 'Chaotic conditions - low confidence';
+    keyMetrics.verdict = 'Condiciones caóticas - confianza baja';
   } else if (params.marketConditions === 'unusual') {
     score -= 10;
-    keyMetrics.verdict = 'Unusual conditions - moderate confidence';
+    keyMetrics.verdict = 'Condiciones inusuales - confianza moderada';
   } else {
-    keyMetrics.verdict = 'Normal conditions - good confidence';
+    keyMetrics.verdict = 'Condiciones normales - buena confianza';
   }
 
-  // Timeframe consideration
+  // Consideración de timeframe
   if (params.timeframe === 'D') {
     score += 5;
-    keyMetrics.timeframeNote = 'Daily timeframe more reliable';
+    keyMetrics.timeframeNote = 'Timeframe diario más confiable';
   }
 
   return {
     agent: 'ConfidenceScoring',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Overall confidence assessment: Agent agreement ${params.agentAgreement.toFixed(
+    reasoning: `Evaluación general de confianza: Acuerdo de agentes ${params.agentAgreement.toFixed(
       0
-    )}%. Data ${params.dataQuality}. Market ${params.marketConditions}. ${keyMetrics.verdict}`,
+    )}%. Datos ${params.dataQuality}. Mercado ${params.marketConditions}. ${keyMetrics.verdict}`,
     confidence: Math.min(100, Math.max(30, score - 10)),
     keyMetrics,
     timestamp: Date.now(),
@@ -489,15 +489,15 @@ export function scoreConfidence(params: {
 }
 
 /**
- * Trade Validator
- * Final checks before trade is taken
+ * Validador de Operación
+ * Verificaciones finales antes de ejecutar la operación
  */
 export function validateTrade(params: {
   symbol: string;
   hasAllRequiredData: boolean;
   noFundamentalEvents: boolean;
   priceActionClean: boolean;
-  entrySureAdjustment: number; // pips to adjust
+  entrySureAdjustment: number; // pips para ajustar
 }): AgentScore {
   let score = 50;
   const keyMetrics: Record<string, any> = {
@@ -510,29 +510,29 @@ export function validateTrade(params: {
     score += 20;
   } else {
     score -= 30;
-    keyMetrics.verdict = 'Missing critical data';
+    keyMetrics.verdict = 'Datos críticos faltantes';
   }
 
   if (params.noFundamentalEvents) {
     score += 15;
   } else {
     score -= 15;
-    keyMetrics.verdict = 'Fundamental event risk';
+    keyMetrics.verdict = 'Riesgo de evento fundamental';
   }
 
   if (params.priceActionClean) {
     score += 20;
   } else {
     score -= 20;
-    keyMetrics.verdict = 'Price action unclear';
+    keyMetrics.verdict = 'Acción de precio poco clara';
   }
 
   return {
     agent: 'TradeValidator',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Trade validation: Data ${
+    reasoning: `Validación de operación: Datos ${
       params.hasAllRequiredData ? '✓' : '✗'
-    }, Fundamentals ${params.noFundamentalEvents ? '✓' : '✗'}, Price Action ${
+    }, Fundamentales ${params.noFundamentalEvents ? '✓' : '✗'}, Acción de Precio ${
       params.priceActionClean ? '✓' : '✗'
     }.`,
     confidence: 85,
@@ -542,13 +542,13 @@ export function validateTrade(params: {
 }
 
 /**
- * Learning Engine
- * Adapts based on historical performance
+ * Motor de Aprendizaje
+ * Se adapta según el desempeño histórico
  */
 export function learnFromHistory(params: {
   winRate: number; // 0-100
   totalTrades: number;
-  profitFactor: number; // avg win / avg loss
+  profitFactor: number; // ganancia promedio / pérdida promedio
   recentPerformance: 'improving' | 'stable' | 'declining';
 }): AgentScore {
   let score = 50;
@@ -558,48 +558,48 @@ export function learnFromHistory(params: {
     profitFactor: params.profitFactor.toFixed(2),
   };
 
-  // Win rate evaluation
+  // Evaluación de tasa de ganancia
   if (params.winRate > 60) {
     score = 80;
-    keyMetrics.winRateVerdict = 'Excellent track record';
+    keyMetrics.winRateVerdict = 'Historial excelente';
   } else if (params.winRate > 55) {
     score = 70;
-    keyMetrics.winRateVerdict = 'Good track record';
+    keyMetrics.winRateVerdict = 'Historial bueno';
   } else if (params.winRate > 50) {
     score = 55;
-    keyMetrics.winRateVerdict = 'Acceptable track record';
+    keyMetrics.winRateVerdict = 'Historial aceptable';
   } else if (params.totalTrades < 10) {
     score = 50;
-    keyMetrics.winRateVerdict = 'Insufficient data';
+    keyMetrics.winRateVerdict = 'Datos insuficientes';
   } else {
     score = 35;
-    keyMetrics.winRateVerdict = 'Negative track record';
+    keyMetrics.winRateVerdict = 'Historial negativo';
   }
 
-  // Profit factor
+  // Factor de ganancia
   if (params.profitFactor > 1.5) {
     score += 15;
   } else if (params.profitFactor < 0.8) {
     score -= 15;
   }
 
-  // Recent performance trend
+  // Tendencia de desempeño reciente
   if (params.recentPerformance === 'improving') {
     score += 10;
-    keyMetrics.trend = 'Improving';
+    keyMetrics.trend = 'Mejorando';
   } else if (params.recentPerformance === 'declining') {
     score -= 15;
-    keyMetrics.trend = 'Declining';
+    keyMetrics.trend = 'Declinando';
   } else {
-    keyMetrics.trend = 'Stable';
+    keyMetrics.trend = 'Estable';
   }
 
   return {
     agent: 'LearningEngine',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Historical: ${params.winRate.toFixed(1)}% win rate, ${params.totalTrades} trades. Profit factor: ${params.profitFactor.toFixed(
+    reasoning: `Histórico: ${params.winRate.toFixed(1)}% tasa ganadora, ${params.totalTrades} operaciones. Factor de ganancia: ${params.profitFactor.toFixed(
       2
-    )}. Trend: ${keyMetrics.trend}. ${keyMetrics.winRateVerdict}`,
+    )}. Tendencia: ${keyMetrics.trend}. ${keyMetrics.winRateVerdict}`,
     confidence: params.totalTrades > 30 ? 85 : 50,
     keyMetrics,
     timestamp: Date.now(),
