@@ -11,9 +11,11 @@ const stats = [
 ];
 
 export default function AlertStats() {
+  const safeStats = stats ?? [];
+
   return (
     <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-      {stats.map((stat) => {
+      {safeStats.map((stat) => {
         const Icon = stat.icon;
 
         return (

@@ -8,6 +8,8 @@ const history = [
 ];
 
 export default function AlertHistory() {
+  const safeHistory = history ?? [];
+
   return (
     <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6">
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -21,7 +23,7 @@ export default function AlertHistory() {
       </div>
 
       <div className="space-y-4">
-        {history.map((item) => (
+        {safeHistory.map((item) => (
           <div
             key={`${item.activo}-${item.fecha}`}
             className="rounded-3xl border border-white/10 bg-black/20 p-4 transition hover:border-[#D4AF37]/30"
