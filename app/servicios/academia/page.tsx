@@ -3,33 +3,35 @@
 import BackToDashboard from "../../components/BackToDashboard";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { BookOpen, Target, Shield, Brain, TrendingUp, Check, X } from "lucide-react";
+import { BookOpen, Target, Shield, Brain, TrendingUp, Check, X, CheckCircle, AlertCircle } from "lucide-react";
+import { validateAcademiaForm } from "@/app/lib/form-validators";
+import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 export default function ServiciosAcademiaPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ nombre: "", correo: "" });
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = () => {
-    if (!formData.nombre.trim() || !formData.correo.trim()) {
-      setError("Por favor completa todos los campos.");
+    const validationErrors = validateAcademiaForm(formData);
+    
+    if (validationErrors.length > 0) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setErrors(errorMap);
       return;
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.correo)) {
-      setError("Por favor ingresa un correo válido.");
-      return;
-    }
-
-    setError("");
+    
+    setErrors({});
     setSubmitted(true);
     setTimeout(() => {
+      setSubmitted(false);
       setShowModal(false);
       setFormData({ nombre: "", correo: "" });
-      setSubmitted(false);
-    }, 2000);
+    }, 2500);
   };
 
   const modules = [
@@ -202,27 +204,26 @@ export default function ServiciosAcademiaPage() {
 
         {/* Disclaimer */}
         <div className="rounded-lg border border-white/10 bg-white/5 p-6 text-center">
-          <p className="text-xs text-zinc-500 leading-relaxed">
-            La Academia CARVIPIX está en desarrollo. El contenido será liberado gradualmente en Q3 2026. Los usuarios registrados en lista de espera tendrán acceso prioritario. El trading implica riesgo; CARVIPIX no garantiza resultados.
-          </p>
+          <DisclaimerNote variant="academy" className="justify-center" />
         </div>
       </div>
 
       {/* Modal Notificarme */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0B1220]/95 p-8 shadow-2xl backdrop-blur-sm mx-4"
+            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0B1220]/95 p-8 shadow-2xl backdrop-blur-sm"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-white">Únete a la Lista</h2>
               <button
                 onClick={() => {
                   setShowModal(false);
-                  setError("");
+                  setErrors({});
                 }}
                 className="rounded-full p-1 hover:bg-white/10 transition"
               >
@@ -236,55 +237,109 @@ export default function ServiciosAcademiaPage() {
                 animate={{ opacity: 1 }}
                 className="text-center py-8"
               >
-                <div className="mb-4 flex justify-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="mb-4 flex justify-center"
+                >
                   <div className="rounded-full bg-green-500/20 p-3">
-                    <Check size={32} className="text-green-400" />
+                    <CheckCircle size={32} className="text-green-400" />
                   </div>
-                </div>
+                </motion.div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   ¡Registro Confirmado!
                 </h3>
-                <p className="text-zinc-300">
+                <p className="text-zinc-300 mb-6">
                   Recibirás actualizaciones sobre CARVIPIX Academia en tu correo.
                 </p>
+                <button
+                  onClick={() => {
+                    setSubmitted(false);
+                    setShowModal(false);
+                    setFormData({ nombre: "", correo: "" });
+                  }}
+                  className="w-full rounded-lg bg-[#D4AF37] px-4 py-3 font-bold text-black transition hover:bg-[#F5DEB3]"
+                >
+                  Entendido
+                </button>
               </motion.div>
             ) : (
               <div className="space-y-4">
+                {/* Nombre */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    errors.nombre ? "text-red-400" : "text-zinc-300"
+                  }`}>
                     Nombre completo
                   </label>
                   <input
                     type="text"
                     value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, nombre: e.target.value });
+                      if (errors.nombre) setErrors({ ...errors, nombre: "" });
+                    }}
                     placeholder="Abraham B."
-                    className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none transition"
+                    className={`w-full rounded-lg bg-white/5 border px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      errors.nombre
+                        ? "border-red-500/50 focus:border-red-400"
+                        : "border-white/10 focus:border-[#D4AF37]"
+                    }`}
                   />
+                  {errors.nombre && (
+                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.nombre}
+                    </p>
+                  )}
                 </div>
 
+                {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-zinc-300 mb-2">
+                  <label className={`block text-sm font-medium mb-2 ${
+                    errors.correo ? "text-red-400" : "text-zinc-300"
+                  }`}>
                     Correo electrónico
                   </label>
                   <input
                     type="email"
                     value={formData.correo}
-                    onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+                    onChange={(e) => {
+                      setFormData({ ...formData, correo: e.target.value });
+                      if (errors.correo) setErrors({ ...errors, correo: "" });
+                    }}
                     placeholder="tu@email.com"
-                    className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none transition"
+                    className={`w-full rounded-lg bg-white/5 border px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      errors.correo
+                        ? "border-red-500/50 focus:border-red-400"
+                        : "border-white/10 focus:border-[#D4AF37]"
+                    }`}
                   />
+                  {errors.correo && (
+                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.correo}
+                    </p>
+                  )}
                 </div>
 
-                {error && (
-                  <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3">
-                    <p className="text-sm text-red-400">{error}</p>
+                {Object.keys(errors).length > 0 && (
+                  <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 flex gap-3">
+                    <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-red-400 font-semibold mb-1">Hay errores en el formulario</p>
+                      <ul className="text-xs text-red-400/80 space-y-0.5">
+                        {Object.values(errors).map((err, i) => (
+                          <li key={i}>• {err}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 )}
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full rounded-lg bg-[#D4AF37] px-4 py-3 font-bold text-black transition hover:bg-[#F5DEB3] shadow-lg shadow-[#D4AF37]/30 mt-6"
+                  className="w-full rounded-lg bg-[#D4AF37] px-4 py-3 font-bold text-black transition hover:bg-[#F5DEB3] shadow-lg shadow-[#D4AF37]/30 mt-6 disabled:opacity-50"
+                  disabled={Object.keys(errors).length > 0}
                 >
                   Confirmar Registro
                 </button>

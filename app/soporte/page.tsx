@@ -16,6 +16,8 @@ import {
   Radio,
 } from 'lucide-react';
 import { getDailyBriefing, getTradingSuggestions } from '@/app/lib/data-helpers';
+import { validateTicketForm } from '@/app/lib/form-validators';
+import DisclaimerNote from '@/app/components/DisclaimerNote';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -37,6 +39,7 @@ export default function SoportePage() {
     prioridad: 'Normal',
     mensaje: '',
   });
+  const [ticketErrors, setTicketErrors] = useState<{ [key: string]: string }>({});
   const [ticketMessage, setTicketMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -113,8 +116,18 @@ export default function SoportePage() {
 
   // Crear ticket demo
   const handleCreateTicket = () => {
-    if (!ticketForm.mensaje.trim()) return;
+    const validationErrors = validateTicketForm(ticketForm);
+    
+    if (validationErrors.length > 0) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setTicketErrors(errorMap);
+      return;
+    }
 
+    setTicketErrors({});
     setTicketMessage('✓ Ticket demo creado correctamente. ID: TK-26070112345');
     setTicketForm({ categoria: 'Alertas', prioridad: 'Normal', mensaje: '' });
     setTimeout(() => setTicketMessage(''), 4000);
@@ -191,7 +204,9 @@ export default function SoportePage() {
           <div>
             <h3 className="text-2xl font-bold mb-2">Asistente CARVIPIX</h3>
             <p className="text-[#D4AF37] font-semibold mb-1">Disponible 24/7</p>
-            <p className="text-sm text-white/60">Vista demo lista para integración IA.</p>
+            <div className="mt-2">
+              <DisclaimerNote variant="support" />
+            </div>
           </div>
         </motion.div>
 
@@ -304,25 +319,39 @@ export default function SoportePage() {
           </div>
 
           {ticketMessage && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-6 text-sm text-green-400">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-6 text-sm text-green-400 flex items-center gap-2"
+            >
+              <CheckCircle2 size={16} />
               {ticketMessage}
-            </div>
+            </motion.div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Categoría */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                ticketErrors.categoria ? "text-red-400" : "text-white/70"
+              }`}>
                 Categoría
               </label>
               <select
                 value={ticketForm.categoria}
-                onChange={(e) =>
+                onChange={(e) => {
                   setTicketForm((prev) => ({
                     ...prev,
                     categoria: e.target.value,
-                  }))
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-[#D4AF37] outline-none"
+                  }));
+                  if (ticketErrors.categoria) setTicketErrors({ ...ticketErrors, categoria: "" });
+                }}
+                className={`w-full border rounded-lg px-4 py-2 text-white focus:outline-none transition-colors ${
+                  ticketErrors.categoria
+                    ? "bg-red-500/10 border-red-500/30 focus:border-red-400"
+                    : "bg-white/5 border-white/10 focus:border-[#D4AF37]"
+                }`}
               >
                 <option>Alertas</option>
                 <option>Bot</option>
@@ -331,50 +360,96 @@ export default function SoportePage() {
                 <option>Técnico</option>
                 <option>Otros</option>
               </select>
+              {ticketErrors.categoria && (
+                <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                  <AlertCircle size={12} /> {ticketErrors.categoria}
+                </p>
+              )}
             </div>
 
+            {/* Prioridad */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
+              <label className={`block text-sm font-medium mb-2 ${
+                ticketErrors.prioridad ? "text-red-400" : "text-white/70"
+              }`}>
                 Prioridad
               </label>
               <select
                 value={ticketForm.prioridad}
-                onChange={(e) =>
+                onChange={(e) => {
                   setTicketForm((prev) => ({
                     ...prev,
                     prioridad: e.target.value,
-                  }))
-                }
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-[#D4AF37] outline-none"
+                  }));
+                  if (ticketErrors.prioridad) setTicketErrors({ ...ticketErrors, prioridad: "" });
+                }}
+                className={`w-full border rounded-lg px-4 py-2 text-white focus:outline-none transition-colors ${
+                  ticketErrors.prioridad
+                    ? "bg-red-500/10 border-red-500/30 focus:border-red-400"
+                    : "bg-white/5 border-white/10 focus:border-[#D4AF37]"
+                }`}
               >
                 <option>Baja</option>
                 <option>Normal</option>
                 <option>Alta</option>
                 <option>Urgente</option>
               </select>
+              {ticketErrors.prioridad && (
+                <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                  <AlertCircle size={12} /> {ticketErrors.prioridad}
+                </p>
+              )}
             </div>
           </div>
 
+          {/* Mensaje */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-white/70 mb-2">
+            <label className={`block text-sm font-medium mb-2 ${
+              ticketErrors.mensaje ? "text-red-400" : "text-white/70"
+            }`}>
               Mensaje
             </label>
             <textarea
               value={ticketForm.mensaje}
-              onChange={(e) =>
+              onChange={(e) => {
                 setTicketForm((prev) => ({
                   ...prev,
                   mensaje: e.target.value,
-                }))
-              }
-              placeholder="Describe tu problema..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none transition-colors h-28 resize-none"
+                }));
+                if (ticketErrors.mensaje) setTicketErrors({ ...ticketErrors, mensaje: "" });
+              }}
+              placeholder="Describe tu problema con al menos 10 caracteres..."
+              className={`w-full border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition-colors h-28 resize-none ${
+                ticketErrors.mensaje
+                  ? "bg-red-500/10 border-red-500/30 focus:border-red-400"
+                  : "bg-white/5 border-white/10 focus:border-[#D4AF37]"
+              }`}
             />
+            {ticketErrors.mensaje && (
+              <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                <AlertCircle size={12} /> {ticketErrors.mensaje}
+              </p>
+            )}
           </div>
+
+          {Object.keys(ticketErrors).length > 0 && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 flex gap-3 mb-6">
+              <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-red-400 font-semibold mb-1">Hay errores en el formulario</p>
+                <ul className="text-xs text-red-400/80 space-y-0.5">
+                  {Object.values(ticketErrors).map((err, i) => (
+                    <li key={i}>• {err}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
 
           <button
             onClick={handleCreateTicket}
-            className="bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all"
+            className="bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
+            disabled={Object.keys(ticketErrors).length > 0}
           >
             Crear ticket demo
           </button>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check, Zap, BarChart3, Shield, Clock, Bot as BotIcon, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 export default function BotPage() {
   const [showModal, setShowModal] = useState(false);
@@ -395,9 +396,9 @@ export default function BotPage() {
 
       {/* Footer Legal */}
       <div className="border-t border-white/10 text-center py-12">
-        <p className="text-xs text-white/40 max-w-2xl mx-auto">
-          Vista demo. El Bot CARVIPIX automatiza reglas operativas y no garantiza resultados específicos. El trading implica riesgo. Consulta nuestros términos y condiciones antes de comprar.
-        </p>
+        <div className="max-w-2xl mx-auto">
+          <DisclaimerNote variant="bot" className="justify-center" />
+        </div>
       </div>
 
       {/* Modal de Compra */}

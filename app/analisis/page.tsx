@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Search, X, TrendingUp, TrendingDown, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 export default function AnalisisPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -515,9 +516,7 @@ export default function AnalisisPage() {
 
             {/* Disclaimer */}
             <div className="rounded-lg bg-white/5 border border-white/10 px-4 py-3">
-              <p className="text-xs text-white/50 text-center">
-                Este análisis es demostrativo. El trading implica riesgo significativo. Los resultados históricos no garantizan rendimientos futuros.
-              </p>
+              <DisclaimerNote variant="risk" />
             </div>
 
             {/* Botón de cierre */}

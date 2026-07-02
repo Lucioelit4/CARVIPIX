@@ -1,23 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, CheckCircle, FileText, ClipboardList, Zap, Shield, TrendingUp } from "lucide-react";
+import { X, Check, CheckCircle, FileText, ClipboardList, Zap, Shield, TrendingUp, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { validateFondeoForm } from "@/app/lib/form-validators";
+import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 export default function FondeoPage() {
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", company: "FTMO", agreed: false });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.email || !formData.agreed) {
-      setError("Por favor completa todos los campos y acepta los términos.");
+    const validationErrors = validateFondeoForm(formData);
+    
+    if (validationErrors.length > 0) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setErrors(errorMap);
       return;
     }
-    setError("");
-    alert("Solicitud enviada. CARVIPIX se contactará pronto.");
-    setShowModal(false);
-    setFormData({ name: "", email: "", company: "FTMO", agreed: false });
+    
+    setErrors({});
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setShowModal(false);
+      setFormData({ name: "", email: "", company: "FTMO", agreed: false });
+    }, 2500);
   };
 
   return (
@@ -281,9 +294,9 @@ export default function FondeoPage() {
 
       {/* Legal */}
       <div className="border-t border-white/10 text-center py-12">
-        <p className="text-xs text-white/40 max-w-2xl mx-auto">
-          Vista demo. CARVIPIX no es empresa de fondeo ni garantiza aprobación. El servicio consiste en gestión y seguimiento del proceso de evaluación con empresas externas. La aprobación depende de reglas, condiciones y desempeño requerido por la empresa seleccionada.
-        </p>
+        <div className="max-w-2xl mx-auto">
+          <DisclaimerNote variant="payment" className="justify-center" />
+        </div>
       </div>
 
       {/* Modal */}
@@ -294,83 +307,176 @@ export default function FondeoPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
             className="bg-[#11161E] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#D4AF37]">Solicitar revisión</h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setError("");
-                }}
-                className="text-white/40 hover:text-white transition"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none"
-              />
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none"
-              />
-              <select
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none"
-              >
-                <option>FTMO</option>
-                <option>TopTier Trader</option>
-                <option>Otra empresa</option>
-              </select>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.agreed}
-                  onChange={(e) => setFormData({ ...formData, agreed: e.target.checked })}
-                  className="mt-1 w-4 h-4"
-                />
-                <span className="text-sm text-white/70">
-                  Entiendo que la aprobación depende de reglas externas de la empresa seleccionada.
-                </span>
-              </label>
-            </div>
-
-            {error && (
-              <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-                <p className="text-sm text-red-400">{error}</p>
+            {submitted ? (
+              <div className="text-center py-8">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-16 h-16 rounded-full bg-green-400/20 flex items-center justify-center mx-auto mb-4"
+                >
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-white mb-2">¡Solicitud enviada!</h3>
+                <p className="text-white/70 mb-4">CARVIPIX evaluará tu perfil y se contactará para revisar compatibilidad con programas de fondeo.</p>
+                <button
+                  onClick={() => {
+                    setSubmitted(false);
+                    setShowModal(false);
+                    setFormData({ name: "", email: "", company: "FTMO", agreed: false });
+                  }}
+                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-3 font-bold text-black transition hover:bg-[#f5d76e]"
+                >
+                  Entendido
+                </button>
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#D4AF37]">Solicitar revisión</h2>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setErrors({});
+                    }}
+                    className="text-white/40 hover:text-white transition"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  {/* Nombre */}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Nombre completo"
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (errors.name) setErrors({ ...errors, name: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                        errors.name
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="Correo electrónico"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        if (errors.email) setErrors({ ...errors, email: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                        errors.email
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Empresa */}
+                  <div>
+                    <select
+                      value={formData.company}
+                      onChange={(e) => {
+                        setFormData({ ...formData, company: e.target.value });
+                        if (errors.company) setErrors({ ...errors, company: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
+                        errors.company
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    >
+                      <option>FTMO</option>
+                      <option>TopTier Trader</option>
+                      <option>Otra empresa</option>
+                    </select>
+                  </div>
+
+                  {/* Checkbox de términos */}
+                  <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-lg border ${
+                    errors.agreed
+                      ? "bg-red-500/10 border-red-500/30"
+                      : "bg-white/5 border-white/10"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={formData.agreed}
+                      onChange={(e) => {
+                        setFormData({ ...formData, agreed: e.target.checked });
+                        if (errors.agreed) setErrors({ ...errors, agreed: "" });
+                      }}
+                      className="mt-1 w-4 h-4"
+                    />
+                    <span className={`text-sm ${errors.agreed ? "text-red-400" : "text-white/70"}`}>
+                      Entiendo que la aprobación depende de reglas externas de la empresa seleccionada.
+                    </span>
+                  </label>
+                  {errors.agreed && (
+                    <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                      <AlertCircle size={12} /> {errors.agreed}
+                    </p>
+                  )}
+                </div>
+
+                {Object.keys(errors).length > 0 && (
+                  <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 flex gap-3">
+                    <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-red-400 font-semibold mb-1">Hay errores en el formulario</p>
+                      <ul className="text-xs text-red-400/80 space-y-0.5">
+                        {Object.values(errors).map((err, i) => (
+                          <li key={i}>• {err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSubmit}
+                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3 disabled:opacity-50"
+                  disabled={Object.keys(errors).length > 0}
+                >
+                  Enviar solicitud demo
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setErrors({});
+                  }}
+                  className="w-full rounded-lg border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-white/30"
+                >
+                  Cancelar
+                </button>
+
+                <p className="text-xs text-white/40 text-center mt-6">
+                  Esto es una demostración. CARVIPIX se contactará para revisar compatibilidad.
+                </p>
+              </>
             )}
-
-            <button
-              onClick={handleSubmit}
-              className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3"
-            >
-              Enviar solicitud demo
-            </button>
-
-            <button
-              onClick={() => {
-                setShowModal(false);
-                setError("");
-              }}
-              className="w-full rounded-lg border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-white/30"
-            >
-              Cancelar
-            </button>
-
-            <p className="text-xs text-white/40 text-center mt-6">
-              Esto es una demostración. CARVIPIX se contactará para revisar compatibilidad.
-            </p>
           </motion.div>
         </div>
       )}

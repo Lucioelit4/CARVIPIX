@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { X, Check, TrendingUp, BarChart3, Lock, Clock, FileText, Zap } from "lucide-react";
+import { X, Check, TrendingUp, BarChart3, Lock, Clock, FileText, Zap, AlertCircle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { LineChart, Line, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { validateCapitalForm } from "@/app/lib/form-validators";
+import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 const capitalData = [
   { month: "Ene", value: 10000 },
@@ -24,21 +26,28 @@ export default function CapitalPage() {
   const [showModal, setShowModal] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", amount: "", method: "USDT TRC20" });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = () => {
-    if (!formData.amount || parseInt(formData.amount) < 10000) {
-      setError("El monto mínimo para gestión de capital es 10,000 USD.");
+    const validationErrors = validateCapitalForm(formData);
+    
+    if (validationErrors.length > 0) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setErrors(errorMap);
       return;
     }
-    if (!formData.name || !formData.email) {
-      setError("Por favor completa todos los campos.");
-      return;
-    }
-    setError("");
-    alert("Solicitud enviada. CARVIPIX se contactará pronto.");
-    setShowModal(false);
-    setFormData({ name: "", email: "", amount: "", method: "USDT TRC20" });
+    
+    setErrors({});
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setShowModal(false);
+      setFormData({ name: "", email: "", amount: "", method: "USDT TRC20" });
+    }, 2500);
   };
 
   return (
@@ -386,9 +395,9 @@ export default function CapitalPage() {
 
       {/* Legal */}
       <div className="border-t border-white/10 text-center py-12">
-        <p className="text-xs text-white/40 max-w-2xl mx-auto">
-          Vista demo. La gestión de capital implica riesgo y los resultados pueden variar. CARVIPIX no garantiza rendimientos específicos. La participación del 40% aplica únicamente sobre utilidades generadas bajo los términos publicados.
-        </p>
+        <div className="max-w-2xl mx-auto">
+          <DisclaimerNote variant="capital" className="justify-center" />
+        </div>
       </div>
 
       {/* Modal Ver cómo funciona */}
@@ -489,9 +498,7 @@ export default function CapitalPage() {
 
             {/* Disclaimer */}
             <div className="rounded-lg bg-white/5 border border-white/10 px-4 py-3 mb-6">
-              <p className="text-xs text-white/50 text-center">
-                Vista demo. La gestión de capital implica riesgo y los resultados pueden variar. Los rendimientos pasados no garantizan resultados futuros.
-              </p>
+              <DisclaimerNote variant="capital" />
             </div>
 
             {/* Botón */}
@@ -505,7 +512,7 @@ export default function CapitalPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal Solicitud */}
       {showModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <motion.div
@@ -513,90 +520,184 @@ export default function CapitalPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
             className="bg-[#11161E] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-[#D4AF37]">Solicitar inversión</h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  setError("");
-                }}
-                className="text-white/40 hover:text-white transition"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="space-y-4 mb-6">
-              <input
-                type="text"
-                placeholder="Nombre completo"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none"
-              />
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none"
-              />
-              <input
-                type="number"
-                placeholder="Monto (mínimo 10,000 USD)"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none"
-              />
-              <select
-                value={formData.method}
-                onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                className="w-full bg-[#0B111A] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none"
-              >
-                <option>BTC</option>
-                <option>USDT TRC20</option>
-                <option>USDT ERC20</option>
-                <option>USDC</option>
-              </select>
-              <label className="flex items-start gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="mt-1 w-4 h-4"
-                  defaultChecked
-                />
-                <span className="text-sm text-white/70">
-                  Entiendo que los resultados pueden variar según condiciones de mercado.
-                </span>
-              </label>
-            </div>
-
-            {error && (
-              <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-                <p className="text-sm text-red-400">{error}</p>
+            {submitted ? (
+              <div className="text-center py-8">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-16 h-16 rounded-full bg-green-400/20 flex items-center justify-center mx-auto mb-4"
+                >
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                </motion.div>
+                <h3 className="text-xl font-bold text-white mb-2">¡Solicitud enviada!</h3>
+                <p className="text-white/70 mb-4">CARVIPIX se contactará pronto para confirmar los detalles de tu inversión.</p>
+                <button
+                  onClick={() => {
+                    setSubmitted(false);
+                    setShowModal(false);
+                    setFormData({ name: "", email: "", amount: "", method: "USDT TRC20" });
+                  }}
+                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-3 font-bold text-black transition hover:bg-[#f5d76e]"
+                >
+                  Entendido
+                </button>
               </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-[#D4AF37]">Solicitar inversión</h2>
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setErrors({});
+                    }}
+                    className="text-white/40 hover:text-white transition"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  {/* Nombre */}
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Nombre completo"
+                      value={formData.name}
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (errors.name) setErrors({ ...errors, name: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                        errors.name
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="Correo electrónico"
+                      value={formData.email}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        if (errors.email) setErrors({ ...errors, email: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                        errors.email
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Monto */}
+                  <div>
+                    <input
+                      type="number"
+                      placeholder="Monto (mínimo 10,000 USD)"
+                      value={formData.amount}
+                      onChange={(e) => {
+                        setFormData({ ...formData, amount: e.target.value });
+                        if (errors.amount) setErrors({ ...errors, amount: "" });
+                      }}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                        errors.amount
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    />
+                    {errors.amount && (
+                      <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                        <AlertCircle size={12} /> {errors.amount}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Método */}
+                  <div>
+                    <select
+                      value={formData.method}
+                      onChange={(e) => setFormData({ ...formData, method: e.target.value })}
+                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
+                        errors.method
+                          ? "border-red-500/50 focus:border-red-400"
+                          : "border-white/10 focus:border-[#D4AF37]"
+                      }`}
+                    >
+                      <option>BTC</option>
+                      <option>USDT TRC20</option>
+                      <option>USDT ERC20</option>
+                      <option>USDC</option>
+                    </select>
+                  </div>
+
+                  {/* Checkbox de términos */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-1 w-4 h-4"
+                      defaultChecked
+                    />
+                    <span className="text-sm text-white/70">
+                      Entiendo que los resultados pueden variar según condiciones de mercado.
+                    </span>
+                  </label>
+                </div>
+
+                {Object.keys(errors).length > 0 && (
+                  <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 flex gap-3">
+                    <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm text-red-400 font-semibold mb-1">Hay errores en el formulario</p>
+                      <ul className="text-xs text-red-400/80 space-y-0.5">
+                        {Object.values(errors).map((err, i) => (
+                          <li key={i}>• {err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSubmit}
+                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3 disabled:opacity-50"
+                  disabled={Object.keys(errors).length > 0}
+                >
+                  Enviar solicitud demo
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setErrors({});
+                  }}
+                  className="w-full rounded-lg border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-white/30"
+                >
+                  Cancelar
+                </button>
+
+                <p className="text-xs text-white/40 text-center mt-6">
+                  Esto es una demostración. CARVIPIX se contactará para confirmar detalles.
+                </p>
+              </>
             )}
-
-            <button
-              onClick={handleSubmit}
-              className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3"
-            >
-              Enviar solicitud demo
-            </button>
-
-            <button
-              onClick={() => {
-                setShowModal(false);
-                setError("");
-              }}
-              className="w-full rounded-lg border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-white/30"
-            >
-              Cancelar
-            </button>
-
-            <p className="text-xs text-white/40 text-center mt-6">
-              Esto es una demostración. CARVIPIX se contactará para confirmar detalles.
-            </p>
           </motion.div>
         </div>
       )}

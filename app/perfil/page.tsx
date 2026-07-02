@@ -2,49 +2,72 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3 } from 'lucide-react';
+import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3, AlertCircle, RotateCcw } from 'lucide-react';
 import { getCurrentUser } from '@/app/lib/data-helpers';
+import { validateProfileForm } from '@/app/lib/form-validators';
+
+const PROFILE_STORAGE_KEY = 'carvipix_profile_data';
+const PREFERENCES_STORAGE_KEY = 'carvipix_preferences_data';
+
+const DEFAULT_USER_DATA = {
+  nombre: 'Abraham B.',
+  correo: 'abraham@example.com',
+  telefono: '+1 (555) 123-4567',
+  pais: 'Estados Unidos',
+  idioma: 'Español',
+  zonaHoraria: 'UTC-5',
+};
+
+const DEFAULT_PREFERENCES = {
+  activosFavoritos: ['Oro', 'Forex', 'Crypto'],
+  riesgoPreferido: 'Moderado',
+  sesionFavorita: 'Nueva York',
+  notificaciones: true,
+};
 
 export default function PerfilPage() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+  const [profileErrors, setProfileErrors] = useState<{ [key: string]: string }>({});
+  const [isLoaded, setIsLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [userData, setUserData] = useState({
-    nombre: 'Abraham B.',
-    correo: 'abraham@example.com',
-    telefono: '+1 (555) 123-4567',
-    pais: 'Estados Unidos',
-    idioma: 'Español',
-    zonaHoraria: 'UTC-5',
-  });
+  const [userData, setUserData] = useState(DEFAULT_USER_DATA);
+  const [preferencias, setPreferencias] = useState(DEFAULT_PREFERENCES);
 
-  const [preferencias, setPreferencias] = useState({
-    activosFavoritos: ['Oro', 'Forex', 'Crypto'],
-    riesgoPreferido: 'Moderado',
-    sesionFavorita: 'Nueva York',
-    notificaciones: true,
-  });
-
-  // Load user data from modules on mount
+  // Load user data from localStorage and modules on mount
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadProfileData = async () => {
       try {
-        const user = await getCurrentUser();
-        if (user) {
-          setUserData(prev => ({
-            ...prev,
-            nombre: `${user.nombre} ${user.apellido}`,
-            correo: user.email,
-          }));
+        // Try to load from localStorage first
+        const savedUserData = localStorage.getItem(PROFILE_STORAGE_KEY);
+        const savedPreferences = localStorage.getItem(PREFERENCES_STORAGE_KEY);
+
+        if (savedUserData) {
+          setUserData(JSON.parse(savedUserData));
+        } else {
+          // If no localStorage, try to load from modules
+          const user = await getCurrentUser();
+          if (user) {
+            setUserData(prev => ({
+              ...prev,
+              nombre: `${user.nombre} ${user.apellido}`,
+              correo: user.email,
+            }));
+          }
+        }
+
+        if (savedPreferences) {
+          setPreferencias(JSON.parse(savedPreferences));
         }
       } catch (error) {
         console.log("Usando datos demo de perfil");
       }
+      setIsLoaded(true);
     };
 
-    loadUserData();
+    loadProfileData();
   }, []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,14 +82,55 @@ export default function PerfilPage() {
   };
 
   const handleSaveChanges = () => {
+    const validationErrors = validateProfileForm({
+      nombre: userData.nombre,
+      correo: userData.correo,
+      telefono: userData.telefono,
+    });
+    
+    if (validationErrors.length > 0) {
+      const errorMap = validationErrors.reduce((acc, err) => {
+        acc[err.field] = err.message;
+        return acc;
+      }, {} as { [key: string]: string });
+      setProfileErrors(errorMap);
+      return;
+    }
+
+    // Save to localStorage
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(userData));
+    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferencias));
+
+    setProfileErrors({});
     setSaveMessage('✓ Perfil actualizado en modo demo.');
     setTimeout(() => setSaveMessage(''), 3000);
     setEditMode(false);
   };
 
+  const handleRestoreDefaults = () => {
+    setUserData(DEFAULT_USER_DATA);
+    setPreferencias(DEFAULT_PREFERENCES);
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
+    localStorage.removeItem(PREFERENCES_STORAGE_KEY);
+    setProfileErrors({});
+    setSaveMessage('✓ Datos de perfil restaurados.');
+    setTimeout(() => setSaveMessage(''), 3000);
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setUserData((prev) => ({ ...prev, [field]: value }));
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-[#05070B] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/60">Cargando perfil...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#05070B] text-white">
@@ -191,17 +255,27 @@ export default function PerfilPage() {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold">Datos personales</h3>
-            <button
-              onClick={() => setEditMode(!editMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                editMode
-                  ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                  : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30'
-              }`}
-            >
-              {editMode ? <X size={18} /> : <Edit2 size={18} />}
-              {editMode ? 'Cancelar' : 'Editar'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRestoreDefaults}
+                title="Restaurar datos demo"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 transition-all text-sm"
+              >
+                <RotateCcw size={16} />
+                Restaurar
+              </button>
+              <button
+                onClick={() => setEditMode(!editMode)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  editMode
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30'
+                }`}
+              >
+                {editMode ? <X size={18} /> : <Edit2 size={18} />}
+                {editMode ? 'Cancelar' : 'Editar'}
+              </button>
+            </div>
           </div>
 
           {saveMessage && (
@@ -213,28 +287,55 @@ export default function PerfilPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             {Object.entries(userData).map(([key, value]) => (
               <div key={key}>
-                <label className="block text-sm font-medium text-white/70 mb-2 capitalize">
+                <label className={`block text-sm font-medium mb-2 capitalize ${
+                  profileErrors[key] ? "text-red-400" : "text-white/70"
+                }`}>
                   {key.replace(/([A-Z])/g, ' $1')}
                 </label>
                 <input
                   type={key === 'correo' ? 'email' : 'text'}
                   value={value}
-                  onChange={(e) => handleInputChange(key, e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange(key, e.target.value);
+                    if (profileErrors[key]) setProfileErrors({ ...profileErrors, [key]: "" });
+                  }}
                   disabled={!editMode}
                   className={`w-full px-4 py-2 rounded-lg border transition-all ${
                     editMode
-                      ? 'bg-white/5 border-white/20 text-white focus:border-[#D4AF37] outline-none'
+                      ? profileErrors[key]
+                        ? "bg-red-500/10 border-red-500/30 text-white focus:border-red-400 outline-none"
+                        : "bg-white/5 border-white/20 text-white focus:border-[#D4AF37] outline-none"
                       : 'bg-white/5 border-white/10 text-white/70 cursor-not-allowed'
                   }`}
                 />
+                {editMode && profileErrors[key] && (
+                  <p className="text-xs text-red-400 mt-1 flex items-center gap-1">
+                    <AlertCircle size={12} /> {profileErrors[key]}
+                  </p>
+                )}
               </div>
             ))}
           </div>
 
+          {Object.keys(profileErrors).length > 0 && editMode && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 flex gap-3 mb-6">
+              <AlertCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-red-400 font-semibold mb-1">Hay errores en el formulario</p>
+                <ul className="text-xs text-red-400/80 space-y-0.5">
+                  {Object.values(profileErrors).map((err, i) => (
+                    <li key={i}>• {err}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {editMode && (
             <button
               onClick={handleSaveChanges}
-              className="flex items-center gap-2 bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all"
+              className="flex items-center gap-2 bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
+              disabled={Object.keys(profileErrors).length > 0}
             >
               <Save size={18} />
               Guardar cambios

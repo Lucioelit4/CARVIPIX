@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, TrendingUp, Zap, Clock } from 'lucide-react';
+import DisclaimerNote from '@/app/components/DisclaimerNote';
 
 export default function HerramientasPage() {
   const [activeTab, setActiveTab] = useState('riesgo');
@@ -74,8 +75,8 @@ export default function HerramientasPage() {
         </motion.div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-xs text-white/40">
-          <p>Vista demo. Estas herramientas son de apoyo operativo y usan cálculos aproximados.</p>
+        <div className="mt-12 text-center">
+          <DisclaimerNote variant="demo" className="justify-center" />
         </div>
       </div>
     </div>
