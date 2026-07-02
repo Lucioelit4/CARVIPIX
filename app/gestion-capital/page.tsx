@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Send, TrendingUp, Lock, Shield, RefreshCw, ArrowDown, ArrowUp, X, CheckCircle2, FileText, ShieldCheck, Activity, MessageCircle, BarChart3 } from 'lucide-react';
+import { Send, TrendingUp, Lock, Shield, RefreshCw, ArrowDown, ArrowUp, X, CheckCircle2 } from 'lucide-react';
 
-export default function CapitalPage() {
+export default function GestionCapitalPage() {
   const [showModal, setShowModal] = useState(false);
   const [scrollToMovements, setScrollToMovements] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
@@ -34,9 +34,9 @@ export default function CapitalPage() {
 
   const cryptoMethods = [
     { name: 'Bitcoin', symbol: 'BTC', icon: '₿' },
-    { name: 'Tether USD', symbol: 'USDT', icon: '₮', network: 'TRC20' },
-    { name: 'Tether USD', symbol: 'USDT', icon: '₮', network: 'ERC20' },
+    { name: 'Tether USD', symbol: 'USDT', icon: '₮', network: 'TRC20/ERC20' },
     { name: 'USD Coin', symbol: 'USDC', icon: '₵', network: 'ERC20' },
+    { name: 'Ethereum', symbol: 'ETH', icon: 'Ξ' },
   ];
 
   return (
@@ -60,8 +60,8 @@ export default function CapitalPage() {
             <div className="flex flex-wrap gap-3">
               {[
                 { label: 'Vista demo', color: 'bg-[#D4AF37]/10 text-[#D4AF37]' },
-                { label: 'Asignación en crypto', color: 'bg-white/5 text-white/70' },
-                { label: 'Seguimiento privado', color: 'bg-white/5 text-white/70' },
+                { label: 'Asignación en crypto', color: 'bg-blue-500/10 text-blue-400' },
+                { label: 'Seguimiento privado', color: 'bg-purple-500/10 text-purple-400' },
                 { label: 'Control de riesgo', color: 'bg-green-500/10 text-green-400' },
               ].map((badge, i) => (
                 <motion.div
@@ -89,12 +89,12 @@ export default function CapitalPage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8"
         >
           {[
-            { label: 'Capital asignado', value: `$${capitalAsignado.toLocaleString()}`, icon: '💰', color: 'from-white/5 to-white/2' },
-            { label: 'Balance actual', value: `$${balanceActual.toLocaleString()}`, icon: '📊', color: 'from-white/5 to-white/2' },
+            { label: 'Capital asignado', value: `$${capitalAsignado.toLocaleString()}`, icon: '💰', color: 'from-blue-600/20 to-blue-400/5' },
+            { label: 'Balance actual', value: `$${balanceActual.toLocaleString()}`, icon: '📊', color: 'from-purple-600/20 to-purple-400/5' },
             { label: 'Rendimiento demo', value: `+${rendimiento}%`, icon: '📈', color: 'from-green-600/20 to-green-400/5', highlight: true },
-            { label: 'Estado', value: 'Gestión activa', icon: '✅', color: 'from-white/5 to-white/2' },
-            { label: 'Riesgo operativo', value: 'Moderado', icon: '⚠️', color: 'from-white/5 to-white/2' },
-            { label: 'Última actualización', value: 'hace 2 min', icon: '🕐', color: 'from-white/5 to-white/2' },
+            { label: 'Estado', value: 'Gestión activa', icon: '✅', color: 'from-emerald-600/20 to-emerald-400/5' },
+            { label: 'Riesgo operativo', value: 'Moderado', icon: '⚠️', color: 'from-orange-600/20 to-orange-400/5' },
+            { label: 'Última actualización', value: 'hace 2 min', icon: '🕐', color: 'from-cyan-600/20 to-cyan-400/5' },
           ].map((metric, i) => (
             <motion.div
               key={i}
@@ -160,8 +160,8 @@ export default function CapitalPage() {
           <h2 className="text-2xl font-bold mb-8">Cómo funciona</h2>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {[
-              { step: '1', title: 'Solicita asignación', desc: 'Abre una solicitud de asignación' },
-              { step: '2', title: 'Selecciona crypto', desc: 'Elige tu método de asignación' },
+              { step: '1', title: 'Solicita asignación', desc: 'Abre una solicitud de inversión' },
+              { step: '2', title: 'Selecciona crypto', desc: 'Elige tu método de pago' },
               { step: '3', title: 'Confirma asignación', desc: 'Valida y confirma el depósito' },
               { step: '4', title: 'Gestión interna', desc: 'CARVIPIX aplica metodología' },
               { step: '5', title: 'Visualiza resultados', desc: 'Sigue balance y movimientos' },
@@ -284,12 +284,12 @@ export default function CapitalPage() {
           <h2 className="text-2xl font-bold mb-6">Seguridad y confianza</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[
-              { icon: Lock, title: 'Seguimiento privado del balance', desc: 'Acceso exclusivo a tu gestor y datos' },
-              { icon: FileText, title: 'Reportes claros por período', desc: 'Información transparente y detallada' },
-              { icon: ShieldCheck, title: 'Control de exposición', desc: 'Límites definidos para cada operación' },
-              { icon: Activity, title: 'Gestión disciplinada', desc: 'Metodología interna CARVIPIX supervisada' },
-              { icon: MessageCircle, title: 'Comunicación directa', desc: 'Equipo disponible para consultas' },
-              { icon: BarChart3, title: 'Monitoreo operativo', desc: 'Supervisión constante del capital asignado' },
+              { icon: '🔒', title: 'Seguimiento privado del balance', desc: 'Acceso exclusivo a tu gestor y datos' },
+              { icon: '📋', title: 'Reportes claros por período', desc: 'Información transparente y detallada' },
+              { icon: '⚡', title: 'Control de exposición', desc: 'Límites definidos para cada operación' },
+              { icon: '✅', title: 'Gestión disciplinada', desc: 'Metodología interna CARVIPIX probada' },
+              { icon: '💬', title: 'Comunicación directa', desc: 'Equipo disponible para consultas' },
+              { icon: '📊', title: 'Monitoreo operativo', desc: 'Supervisión constante del capital asignado' },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -298,7 +298,7 @@ export default function CapitalPage() {
                 transition={{ delay: 0.9 + i * 0.05 }}
                 className="flex gap-4"
               >
-                <item.icon className="w-6 h-6 text-[#D4AF37] flex-shrink-0 mt-1" />
+                <span className="text-3xl flex-shrink-0">{item.icon}</span>
                 <div>
                   <h3 className="font-bold mb-1">{item.title}</h3>
                   <p className="text-sm text-white/60">{item.desc}</p>
@@ -328,7 +328,7 @@ export default function CapitalPage() {
           className="border-t border-white/10 pt-8 text-xs text-white/40"
         >
           <p className="leading-relaxed">
-            <strong className="text-white/50">Vista demo.</strong> La gestión de capital implica riesgo y los resultados pueden variar. CARVIPIX no garantiza rendimientos específicos. Los servicios reales de asignación, custodia, pagos o gestión de fondos requieren términos publicados y validación legal previa.
+            <strong className="text-white/50">Vista demo.</strong> La gestión de capital implica riesgo y los resultados pueden variar. CARVIPIX no garantiza rendimientos específicos. Los servicios reales de asignación, custodia, pagos o gestión de fondos requieren términos publicados y validación legal previa. El usuario reconoce que el trading implica riesgo y que los resultados pasados no garantizan resultados futuros. CARVIPIX ofrece herramientas, contenido y servicios informativos/operativos bajo los términos publicados, sin garantizar rendimientos específicos.
           </p>
         </motion.div>
       </div>

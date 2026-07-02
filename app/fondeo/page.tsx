@@ -1,100 +1,318 @@
-import BackToDashboard from "../components/BackToDashboard";
-import { DollarSign, Flag, Shield } from "lucide-react";
+'use client';
+
+import { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { X, CheckCircle2, DollarSign, Calendar, Building2, Zap } from 'lucide-react';
 
 export default function FondeoPage() {
+  const [showModal, setShowModal] = useState(false);
+  const termsRef = useRef<HTMLDivElement>(null);
+
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
-      <div className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
-        <BackToDashboard />        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-              Servicio de Fondeo
+    <div className="min-h-screen bg-[#05070B] text-white">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16 md:py-20">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-[#D4AF37]">
+              Pase de cuenta fondeada
+            </h1>
+            <p className="text-lg md:text-xl text-white/70 mb-8 max-w-3xl">
+              CARVIPIX gestiona el proceso para buscar una cuenta fondeada de alto capital con evaluación, seguimiento y control operativo.
             </p>
-            <h1 className="mt-5 text-4xl font-bold text-[#D4AF37]">Gestión de prueba de fondeo</h1>
-            <p className="mt-4 max-w-2xl text-zinc-400">
-              CARVIPIX no es una empresa de fondeo. Ofrecemos gestión del proceso para pasar pruebas de fondeo.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-xl shadow-[#D4AF37]/10">
-            <p className="text-sm text-zinc-400">Pago único</p>
-            <p className="mt-2 text-3xl font-bold text-[#D4AF37]">5,000 USD</p>
-            <p className="mt-1 text-sm text-zinc-500">Gestión completa del proceso.</p>
-          </div>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-3">
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20">
-            <div className="flex items-center gap-3 text-[#D4AF37]">
-              <DollarSign size={22} />
-              <span className="text-sm uppercase tracking-[0.16em]">Inversión</span>
+            
+            {/* Badges */}
+            <div className="flex flex-wrap gap-3">
+              {[
+                { label: 'Pago único', color: 'bg-[#D4AF37]/10 text-[#D4AF37]' },
+                { label: 'FTMO / TopTier', color: 'bg-white/5 text-white/70' },
+                { label: 'Capital objetivo 200K', color: 'bg-white/5 text-white/70' },
+                { label: 'Gestión del proceso', color: 'bg-green-500/10 text-green-400' },
+              ].map((badge, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${badge.color}`}
+                >
+                  {badge.label}
+                </motion.div>
+              ))}
             </div>
-            <p className="mt-6 text-3xl font-bold text-white">Pago único</p>
-            <p className="mt-3 text-sm text-zinc-400">5,000 USD para gestionar la prueba de fondeo.</p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20">
-            <div className="flex items-center gap-3 text-[#D4AF37]">
-              <Flag size={22} />
-              <span className="text-sm uppercase tracking-[0.16em]">Objetivo</span>
-            </div>
-            <p className="mt-6 text-3xl font-bold text-[#D4AF37]">200,000 USD</p>
-            <p className="mt-3 text-sm text-zinc-400">Capital fondeado objetivo al completar la prueba.</p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20">
-            <div className="flex items-center gap-3 text-[#D4AF37]">
-              <Shield size={22} />
-              <span className="text-sm uppercase tracking-[0.16em]">Alcance</span>
-            </div>
-            <p className="mt-6 text-3xl font-bold text-white">FTMO + TopTier</p>
-            <p className="mt-3 text-sm text-zinc-400">Otras empresas solo bajo revisión de políticas.</p>
-          </div>
-        </div>
-
-        <div className="mt-10 grid gap-6 xl:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20">
-            <h2 className="text-xl font-bold text-white">Cómo funciona</h2>
-            <p className="mt-4 text-zinc-400">
-              Gestión del proceso para pasar pruebas de fondeo. Al completar el proceso, se entregan las credenciales al cliente para usar la cuenta fondeada.
-            </p>
-            <ul className="mt-6 space-y-4 text-sm text-zinc-300">
-              <li>1. Selección de la empresa: FTMO o TopTier.</li>
-              <li>2. Revisión de políticas y documentación.</li>
-              <li>3. Gestión de la cuenta de prueba y seguimiento.</li>
-              <li>4. Entrega de credenciales al cliente al aprobar la evaluación.</li>
-            </ul>
-          </div>
-
-          <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20">
-            <h2 className="text-xl font-bold text-white">Duración estimada</h2>
-            <p className="mt-4 text-zinc-400">
-              El proceso suele durar entre 1 mes y 1 mes y medio, según la empresa y el desempeño durante la evaluación.
-            </p>
-            <div className="mt-6 space-y-4 rounded-3xl border border-white/10 bg-black/20 p-5">
-              <div>
-                <p className="text-sm text-zinc-400">Pase avanzado</p>
-                <p className="mt-2 text-2xl font-bold text-[#D4AF37]">5,000 USD</p>
-              </div>
-              <div>
-                <p className="text-sm text-zinc-400">Capital objetivo</p>
-                <p className="mt-2 text-2xl font-bold text-[#D4AF37]">200,000 USD</p>
-              </div>
-              <div>
-                <p className="text-sm text-zinc-400">Compatibilidad</p>
-                <p className="mt-2 text-base text-white">Se puede combinar con alertas CARVIPIX.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-10 rounded-3xl border border-white/10 bg-[#0B1220]/90 p-6 shadow-2xl shadow-black/20">
-          <h2 className="text-xl font-bold text-white">Términos y condiciones</h2>
-          <p className="mt-4 text-sm text-zinc-400 leading-relaxed">
-            CARVIPIX no es empresa de fondeo. Ofrecemos un servicio de gestión para ayudar en pruebas de fondeo con FTMO y TopTier. Otras empresas se aceptan solo tras revisión de sus políticas para confirmar que permiten gestión por terceros.
-          </p>
-          <p className="mt-4 text-sm text-zinc-400 leading-relaxed">
-            El capital fondeado se ofrece a modo de gestión de cuentas de prueba y la entrega de credenciales al cliente se realiza una vez superada la evaluación. Las utilidades no son fijas y el desempeño depende de las condiciones de mercado y la evolución de la prueba.
-          </p>
+          </motion.div>
         </div>
       </div>
-    </main>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Service Card + Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+          {/* Main Service Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="lg:col-span-1 bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-2xl p-8 backdrop-blur-sm"
+          >
+            <h2 className="text-2xl font-bold mb-2">Servicio completo</h2>
+            <p className="text-3xl font-bold text-[#D4AF37] mb-2">5,000 USD</p>
+            <p className="text-sm text-white/70 mb-6">Pago único por gestión del proceso</p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="w-full bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-xl hover:bg-[#E5C158] transition-all shadow-lg"
+            >
+              Solicitar revisión
+            </button>
+          </motion.div>
+
+          {/* Metrics */}
+          {[
+            { label: 'Capital objetivo', value: '200,000 USD', icon: '💰' },
+            { label: 'Duración estimada', value: '30 a 45 días', icon: '⏱️' },
+            { label: 'Empresas compatibles', value: 'FTMO + TopTier', icon: '🏢' },
+          ].map((metric, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + i * 0.1 }}
+              className="bg-[#0B111A] border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
+            >
+              <p className="text-white/60 text-sm font-medium mb-3">{metric.label}</p>
+              <p className="text-2xl font-bold text-white mb-2">{metric.value}</p>
+              <p className="text-2xl">{metric.icon}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Qué incluye */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+        >
+          <h2 className="text-2xl font-bold mb-8">Qué incluye</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              'Revisión inicial del perfil',
+              'Selección de empresa compatible',
+              'Análisis de reglas de la prueba',
+              'Gestión y seguimiento del proceso',
+              'Reporte de avance',
+              'Entrega de credenciales al aprobar',
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 + i * 0.05 }}
+                className="flex gap-4"
+              >
+                <CheckCircle2 className="w-5 h-5 text-[#D4AF37] flex-shrink-0 mt-0.5" />
+                <p className="text-white/80">{item}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Proceso */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+        >
+          <h2 className="text-2xl font-bold mb-8">Proceso</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {[
+              { step: '1', title: 'Solicitas revisión', desc: 'Envías tu solicitud' },
+              { step: '2', title: 'Seleccionamos empresa', desc: 'Compatible con tu perfil' },
+              { step: '3', title: 'Confirmamos reglas', desc: 'Validamos condiciones' },
+              { step: '4', title: 'Gestión de evaluación', desc: 'Seguimiento del proceso' },
+              { step: '5', title: 'Entrega de credenciales', desc: 'Al aprobar la evaluación' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 + i * 0.1 }}
+                className="text-center"
+              >
+                <div className="bg-[#D4AF37] text-[#05070B] rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg mx-auto mb-3">
+                  {item.step}
+                </div>
+                <h3 className="font-semibold mb-1 text-sm">{item.title}</h3>
+                <p className="text-xs text-white/60">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Empresas Disponibles */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+        >
+          <h2 className="text-2xl font-bold mb-8">Empresas disponibles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { name: 'FTMO', desc: 'Empresa de evaluación reconocida' },
+              { name: 'TopTier Trader', desc: 'Empresa de evaluación reconocida' },
+              { name: 'Otra empresa', desc: 'Disponible solo si sus políticas permiten gestión por terceros' },
+            ].map((company, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + i * 0.1 }}
+                className={`p-6 rounded-xl border-2 transition-all ${
+                  i < 2
+                    ? 'border-[#D4AF37] bg-[#D4AF37]/5'
+                    : 'border-white/10 bg-white/5'
+                }`}
+              >
+                <h3 className="font-bold text-lg mb-2">{company.name}</h3>
+                <p className="text-sm text-white/70">{company.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Resultado Esperado */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+        >
+          <h2 className="text-2xl font-bold mb-4">Resultado esperado</h2>
+          <p className="text-white/70 leading-relaxed">
+            Al completar exitosamente la evaluación, el cliente recibe las credenciales de una cuenta fondeada para operar capital objetivo de hasta 200,000 USD, sujeto a reglas de la empresa seleccionada.
+          </p>
+        </motion.div>
+
+        {/* Botones */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex-1 bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-xl hover:bg-[#E5C158] transition-all shadow-lg"
+          >
+            Solicitar revisión
+          </button>
+          <button className="flex-1 border border-[#D4AF37] text-[#D4AF37] font-bold py-3 px-6 rounded-xl hover:bg-[#D4AF37]/10 transition-all" onClick={() => {
+            termsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}>
+            Ver términos
+          </button>
+        </div>
+
+        {/* Legal Footer */}
+        <motion.div
+          ref={termsRef}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="border-t border-white/10 pt-8 text-xs text-white/40"
+        >
+          <p className="leading-relaxed">
+            <strong className="text-white/50">Nota importante:</strong> CARVIPIX no es empresa de fondeo ni garantiza aprobación. El servicio consiste en gestión y seguimiento del proceso de evaluación con empresas externas. La aprobación depende de las reglas, condiciones y desempeño requerido por la empresa seleccionada. Otras empresas se revisan únicamente si sus políticas permiten gestión por terceros.
+          </p>
+        </motion.div>
+      </div>
+
+      {/* Modal - Solicitar Revisión */}
+      {showModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-[#0B111A] border border-white/20 rounded-2xl p-8 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">Solicitar revisión</h2>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-white/60 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">Nombre</label>
+                <input
+                  type="text"
+                  placeholder="Tu nombre completo"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Correo electrónico</label>
+                <input
+                  type="email"
+                  placeholder="tu@email.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Empresa preferida</label>
+                <select className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-[#D4AF37] outline-none">
+                  <option value="">Selecciona una opción</option>
+                  <option>FTMO</option>
+                  <option>TopTier Trader</option>
+                  <option>Otra empresa</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Capital objetivo</label>
+                <input
+                  type="text"
+                  value="200,000 USD"
+                  disabled
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white/60 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-6 text-xs text-white/70">
+              <p>✓ Esta es una solicitud demo. Los datos reales requieren validación.</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="flex-1 border border-white/20 text-white font-bold py-2 rounded-lg hover:bg-white/5 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  alert('✓ Solicitud de revisión enviada (demo). En producción, requiere validación completa.');
+                }}
+                className="flex-1 bg-[#D4AF37] text-[#05070B] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition"
+              >
+                Enviar solicitud
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </div>
   );
 }

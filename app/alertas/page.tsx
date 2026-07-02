@@ -166,6 +166,7 @@ export default function AlertasPage() {
                 <p className="max-w-xl text-lg leading-8 text-zinc-400">
                   Miembro PRO activo: acceso habilitado a señales premium. Recibe entradas, zonas de protección, objetivos y seguimiento operativo en una sala privada.
                 </p>
+                <p className="mt-2 text-xs text-zinc-400">Entrada = precio sugerido | Protección (SL) = límite de riesgo | Objetivo (TP) = zona de ganancia</p>
               </div>
             </div>
 

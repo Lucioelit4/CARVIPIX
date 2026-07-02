@@ -11,33 +11,33 @@ export default function AlertHistory() {
   const safeHistory = history ?? [];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-6">
-      <div className="mb-5 flex items-center justify-between gap-4">
+    <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold">Historial reciente</h2>
-          <p className="mt-1 text-sm text-zinc-400">Últimas operaciones cerradas para seguimiento del rendimiento.</p>
+          <h2 className="text-lg font-bold">Historial reciente</h2>
+          <p className="mt-1 text-xs text-zinc-400">Últimas operaciones cerradas.</p>
         </div>
-        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-[#D4AF37]">
+        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#D4AF37]">
           Último 7 días
         </span>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {safeHistory.map((item) => (
           <div
             key={`${item.activo}-${item.fecha}`}
-            className="rounded-3xl border border-white/10 bg-black/20 p-4 transition hover:border-[#D4AF37]/30"
+            className="rounded-2xl border border-white/10 bg-black/20 p-3 transition hover:border-[#D4AF37]/30"
           >
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-semibold text-white">{item.activo}</p>
-                <p className="text-sm text-zinc-400">{item.fecha}</p>
+                <p className="text-xs text-zinc-400">{item.fecha}</p>
               </div>
               <div className="text-right">
                 <p className={`font-semibold ${item.resultado === "Ganada" ? "text-green-400" : "text-red-400"}`}>
                   {item.resultado}
                 </p>
-                <p className="text-sm text-zinc-400">{item.pips}</p>
+                <p className="text-xs text-zinc-400">{item.pips}</p>
               </div>
             </div>
           </div>
