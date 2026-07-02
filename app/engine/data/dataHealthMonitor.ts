@@ -2,6 +2,7 @@
  * Monitor de salud de datos
  * Monitorea continuamente la calidad de conexión y datos
  * Registra problemas, latencia, actualizaciones incompletas
+ * Incluye sistema de alertas y recuperación automática
  */
 
 import {
@@ -13,6 +14,8 @@ import {
 } from '../types/marketData';
 import { DataProvider } from './dataProvider';
 import { DataValidator } from './dataValidator';
+import { DataAlertManager, getDataAlertManager } from './dataAlertManager';
+import { PerformanceMonitor, getPerformanceMonitor } from './performanceMonitor';
 
 /**
  * Estadísticas de monitoreo
@@ -33,16 +36,21 @@ interface MonitoringStats {
 export class DataHealthMonitor {
   private provider: DataProvider;
   private validator: DataValidator;
+  private alertManager: DataAlertManager;
+  private performanceMonitor: PerformanceMonitor;
   private isMonitoring: boolean = false;
   private monitoringInterval: NodeJS.Timeout | null = null;
   private stats: Map<string, MonitoringStats> = new Map();
   private errorLog: DataError[] = [];
   private maxErrorLog: number = 500;
   private checkInterval: number = 5000; // 5 segundos
+  private disconnectionTimeouts: Map<string, number> = new Map(); // Tracking de desconexiones
 
   constructor(provider: DataProvider, validator: DataValidator) {
     this.provider = provider;
     this.validator = validator;
+    this.alertManager = getDataAlertManager();
+    this.performanceMonitor = getPerformanceMonitor();
     this.initializeStats();
   }
 
@@ -128,8 +136,13 @@ export class DataHealthMonitor {
       const stats = this.stats.get(key);
       if (!stats) return;
 
-      // Obtener datos de mercado
-      const marketData = await this.provider.getMarketData(asset, timeframe);
+      // Medir performance
+      const marketData = await this.performanceMonitor.measureAsync(
+        `getMarketData[${asset}/${timeframe}]`,
+        () => this.provider.getMarketData(asset, timeframe),
+        asset,
+        timeframe
+      );
 
       if (!marketData) {
         // Registrar error de conexión
@@ -144,7 +157,57 @@ export class DataHealthMonitor {
         this.addError(error);
         stats.errorsDetected++;
         stats.uptime = Math.max(0, stats.uptime - 5);
+
+        // Crear alerta de desconexión
+        const disconnectKey = key;
+        const previousDisconnectTime = this.disconnectionTimeouts.get(disconnectKey);
+        
+        if (!previousDisconnectTime || Date.now() - previousDisconnectTime > 30000) {
+          // Solo alertar cada 30 segundos por desconexión
+          this.alertManager.createAlert({
+            asset,
+            timeframe,
+            level: 'error',
+            title: 'Desconexión de Datos',
+            message: `Imposible obtener datos para ${asset}/${timeframe}. Reintentando recuperación...`,
+            actionRequired: true,
+          });
+
+          this.disconnectionTimeouts.set(disconnectKey, Date.now());
+
+          // Intentar recuperación automática
+          const canRetry = this.alertManager.recordRecoveryAttempt(asset, timeframe);
+          if (canRetry) {
+            console.log(
+              `[DataHealthMonitor] Intentando recuperar conexión para ${asset}/${timeframe}`
+            );
+          } else {
+            // Máximo de intentos alcanzado
+            this.alertManager.createAlert({
+              asset,
+              timeframe,
+              level: 'critical',
+              title: 'Fallo Crítico de Conexión',
+              message: `${asset}/${timeframe} no se recupera después de múltiples intentos`,
+              actionRequired: true,
+            });
+          }
+        }
         return;
+      }
+
+      // Conexión recuperada
+      if (this.disconnectionTimeouts.has(key)) {
+        this.disconnectionTimeouts.delete(key);
+        this.alertManager.resetRecoveryAttempts(asset, timeframe);
+        this.alertManager.createAlert({
+          asset,
+          timeframe,
+          level: 'info',
+          title: 'Conexión Recuperada',
+          message: `Datos de ${asset}/${timeframe} recuperados exitosamente`,
+          actionRequired: false,
+        });
       }
 
       // Validar datos recibidos
@@ -154,6 +217,19 @@ export class DataHealthMonitor {
         // Registrar errores de validación
         validation.errors.forEach((error) => this.addError(error));
         stats.errorsDetected += validation.errors.length;
+
+        // Crear alertas por errores críticos de validación
+        const criticalErrors = validation.errors.filter((e) => e.severity === 'error');
+        if (criticalErrors.length > 0) {
+          this.alertManager.createAlert({
+            asset,
+            timeframe,
+            level: 'warning',
+            title: 'Errores de Validación',
+            message: `${criticalErrors.length} errores de validación en datos de ${asset}/${timeframe}`,
+            actionRequired: false,
+          });
+        }
       }
 
       // Actualizar estadísticas
@@ -178,6 +254,16 @@ export class DataHealthMonitor {
           severity: 'warning',
         };
         this.addError(error);
+
+        // Alerta de latencia
+        this.alertManager.createAlert({
+          asset,
+          timeframe,
+          level: 'warning',
+          title: 'Latencia Elevada',
+          message: `Latencia: ${latency}ms (umbral: ${criteria.maxLatencyMs}ms)`,
+          actionRequired: false,
+        });
       }
 
       // Verificar completitud de datos
@@ -191,6 +277,16 @@ export class DataHealthMonitor {
           severity: 'warning',
         };
         this.addError(error);
+
+        // Alerta de incompletitud
+        this.alertManager.createAlert({
+          asset,
+          timeframe,
+          level: 'warning',
+          title: 'Datos Incompletos',
+          message: `Completitud: ${marketData.quality.completeness.toFixed(1)}% (mínimo: ${criteria.minCompleteness}%)`,
+          actionRequired: false,
+        });
       }
 
       // Verificar frescura de datos
@@ -204,6 +300,16 @@ export class DataHealthMonitor {
           severity: 'warning',
         };
         this.addError(error);
+
+        // Alerta de retraso
+        this.alertManager.createAlert({
+          asset,
+          timeframe,
+          level: 'warning',
+          title: 'Datos Retrasados',
+          message: `Retraso: ${marketData.quality.freshness}ms (máximo: ${criteria.maxFreshnessMs}ms)`,
+          actionRequired: false,
+        });
       }
 
       // Aumentar uptime si todo está bien
@@ -217,6 +323,16 @@ export class DataHealthMonitor {
         stats.errorsDetected++;
         stats.uptime = Math.max(0, stats.uptime - 10);
       }
+
+      // Crear alerta de excepción
+      this.alertManager.createAlert({
+        asset,
+        timeframe,
+        level: 'error',
+        title: 'Excepción en Monitoreo',
+        message: `Error al verificar datos de ${asset}/${timeframe}`,
+        actionRequired: true,
+      });
     }
   }
 
@@ -393,6 +509,63 @@ export class DataHealthMonitor {
       this.stopMonitoring();
       this.startMonitoring();
     }
+  }
+
+  /**
+   * Obtener estadísticas de alertas
+   */
+  getAlertStats() {
+    return this.alertManager.getStats();
+  }
+
+  /**
+   * Obtener alertas recientes
+   */
+  getRecentAlerts(limit: number = 20) {
+    return this.alertManager.getRecentAlerts(limit);
+  }
+
+  /**
+   * Obtener alertas críticas sin resolver
+   */
+  getCriticalAlerts() {
+    const stats = this.alertManager.getStats();
+    return stats.criticalAlerts;
+  }
+
+  /**
+   * Obtener estadísticas de performance
+   */
+  getPerformanceStats() {
+    return this.performanceMonitor.getStats();
+  }
+
+  /**
+   * Obtener performance por componente
+   */
+  getComponentPerformance() {
+    return this.performanceMonitor.getComponentPerformance();
+  }
+
+  /**
+   * Obtener operaciones lentas
+   */
+  getSlowOperations(thresholdMs: number = 1000) {
+    return this.performanceMonitor.getSlowOperations(thresholdMs);
+  }
+
+  /**
+   * Obtener health check completo
+   */
+  getHealthCheck() {
+    return this.performanceMonitor.getHealthCheck();
+  }
+
+  /**
+   * Obtener resumen de performance
+   */
+  getPerformanceSummary(): string {
+    return this.performanceMonitor.getSummary();
   }
 }
 
