@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check, CheckCircle, FileText, ClipboardList, Zap, Shield, TrendingUp, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { validateFondeoForm } from "@/app/lib/form-validators";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
 
@@ -68,12 +69,12 @@ export default function FondeoPage() {
               </div>
 
               <div className="mt-8 space-y-3">
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30"
+                <Link
+                  href="/checkout?product=fondeo"
+                  className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-center"
                 >
                   Solicitar revisión
-                </button>
+                </Link>
                 <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
                   Ver proceso
                 </button>
@@ -283,12 +284,12 @@ export default function FondeoPage() {
           <p className="text-white/70 mb-6 max-w-2xl mx-auto">
             Solicita revisión y CARVIPIX evaluará tu perfil para compatibilidad con empresas de fondeo.
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
+          <Link
+            href="/checkout?product=fondeo"
+            className="inline-block rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
           >
             Solicitar revisión
-          </button>
+          </Link>
         </motion.div>
       </div>
 

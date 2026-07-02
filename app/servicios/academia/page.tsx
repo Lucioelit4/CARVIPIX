@@ -3,6 +3,7 @@
 import BackToDashboard from "../../components/BackToDashboard";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import Link from "next/link";
 import { BookOpen, Target, Shield, Brain, TrendingUp, Check, X, CheckCircle, AlertCircle } from "lucide-react";
 import { validateAcademiaForm } from "@/app/lib/form-validators";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
@@ -194,12 +195,12 @@ export default function ServiciosAcademiaPage() {
           <p className="text-zinc-300 max-w-2xl mx-auto mb-8">
             Sé de los primeros en acceder a CARVIPIX Academia. Recibirás actualizaciones de desarrollo, oportunidades de testeo y ofertas especiales.
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#F5DEB3] shadow-lg shadow-[#D4AF37]/30"
+          <Link
+            href="/checkout?product=academia"
+            className="inline-block rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#F5DEB3] shadow-lg shadow-[#D4AF37]/30"
           >
             Registrarse Ahora
-          </button>
+          </Link>
         </motion.div>
 
         {/* Disclaimer */}

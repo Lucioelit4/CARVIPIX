@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check, TrendingUp, BarChart3, Lock, Clock, FileText, Zap, AlertCircle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { LineChart, Line, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
 import { validateCapitalForm } from "@/app/lib/form-validators";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
@@ -83,12 +84,12 @@ export default function CapitalPage() {
               </div>
 
               <div className="mt-8 space-y-3">
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30"
+                <Link
+                  href="/checkout?product=capital"
+                  className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-center"
                 >
                   Solicitar inversión
-                </button>
+                </Link>
                 <button
                   onClick={() => setShowHowItWorks(true)}
                   className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
@@ -384,12 +385,12 @@ export default function CapitalPage() {
           <p className="text-white/70 mb-6 max-w-2xl mx-auto">
             Envía una solicitud demo y revisaremos el monto, método y disponibilidad.
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
+          <Link
+            href="/checkout?product=capital"
+            className="inline-block rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
           >
             Solicitar inversión
-          </button>
+          </Link>
         </motion.div>
       </div>
 

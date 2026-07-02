@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Check, Zap, BarChart3, Shield, Clock, Bot as BotIcon, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
 
 export default function BotPage() {
@@ -53,12 +54,12 @@ export default function BotPage() {
                 <p className="text-sm text-white/60 mt-1">USD - Pago único - Acceso permanente</p>
 
                 <div className="mt-8 space-y-3">
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 text-base shadow-lg shadow-[#D4AF37]/30"
+                  <Link
+                    href="/checkout?product=bot"
+                    className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 text-base shadow-lg shadow-[#D4AF37]/30 text-center"
                   >
                     Comprar Bot CARVIPIX
-                  </button>
+                  </Link>
                   <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
                     Ver funcionamiento demo
                   </button>
