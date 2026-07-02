@@ -26,6 +26,10 @@ import {
   TrendingUp,
   Wallet,
   Zap,
+  BarChart3,
+  Users,
+  CreditCard,
+  BookOpen,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TradingViewEconomicCalendar from "./components/TradingViewEconomicCalendar";
@@ -115,68 +119,49 @@ const alerts = [
 
 const quickAccess = [
   {
-    name: "Alertas en Vivo",
-    icon: Zap,
-    href: "/servicios/alertas",
-    title: "Miembro activo",
-    subtitle: "Ya tienes acceso a señales y seguimiento operativo.",
-    cta: "Ir a mis alertas",
-  },
-  {
-    name: "Resultados generales",
-    icon: LineChart,
+    name: "Resultados",
+    icon: BarChart3,
     href: "/servicios/resultados",
-    title: "Resultados generales",
-    subtitle: "Rendimiento global y Top 10 de miembros destacados.",
-    cta: "Ver resultados completos",
-  },
-  {
-    name: "Análisis Diario",
-    icon: Signal,
-    href: "/servicios/analisis",
-    title: "Miembro activo",
-    subtitle: "Historial de análisis, escenarios del día y registros destacados.",
-    cta: "Ver análisis del día",
-  },
-  {
-    name: "Comunidad privada",
-    icon: Wallet,
-    href: "/servicios/comunidad",
-    title: "Comunidad privada",
-    subtitle: "Chat interno estilo Telegram para seguimiento y preguntas.",
-    cta: "Entrar a comunidad",
+    badge: "Transparencia",
+    shortText: "Mira el rendimiento general.",
+    buttonText: "Ver resultados",
+    price: null,
   },
   {
     name: "Bot CARVIPIX",
     icon: Bot,
     href: "/servicios/bot",
-    title: "Producto premium",
-    subtitle: "Bot para MT4/MT5 con pago único.",
-    cta: "Comprar Bot CARVIPIX",
+    badge: "Premium",
+    shortText: "Automatización para MT4/MT5.",
+    buttonText: "Comprar bot",
+    price: "Pago único 999 USD",
   },
   {
     name: "Gestión de Capital",
     icon: TrendingUp,
     href: "/servicios/capital",
-    title: "Invertir ahora",
-    subtitle: "Gestión manual de capital desde 1,000 hasta 1,000,000 USD.",
-    cta: "Solicitar inversión",
+    badge: "Privado",
+    shortText: "Seguimiento de capital asignado.",
+    buttonText: "Solicitar acceso",
+    price: null,
   },
   {
-    name: "Cuenta fondeada",
-    icon: Target,
+    name: "Cuenta Fondeada",
+    icon: CreditCard,
     href: "/servicios/fondeo",
-    title: "Cuenta fondeada",
-    subtitle: "Servicio para pasar pruebas de fondeo y acceder a capital.",
-    cta: "Solicitar cuenta fondeada",
+    badge: "Alto capital",
+    shortText: "Objetivo hasta 200K.",
+    buttonText: "Solicitar revisión",
+    price: "Servicio 5,000 USD",
   },
   {
-    name: "Próximamente",
-    icon: GraduationCap,
+    name: "Academia",
+    icon: BookOpen,
     href: "/servicios/academia",
-    title: "Próximamente",
-    subtitle: "Formación CARVIPIX en desarrollo.",
-    cta: "Notificarme",
+    badge: "Próximamente",
+    shortText: "Formación CARVIPIX.",
+    buttonText: "Notificarme",
+    price: null,
   },
 ];
 
@@ -404,9 +389,12 @@ export default function Home() {
               <TradingViewEconomicCalendar />
             </div>
 
-            <h2 className="mt-8 text-2xl font-bold">Soluciones CARVIPIX</h2>
+            <div className="mt-8 mb-6">
+              <h2 className="text-2xl font-bold mb-2">Soluciones CARVIPIX</h2>
+              <p className="text-white/60 text-sm">Elige tu siguiente ventaja dentro de CARVIPIX.</p>
+            </div>
 
-            <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {quickAccess.map((item) => {
                 const Icon = item.icon;
 
@@ -414,20 +402,37 @@ export default function Home() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#10141D]/90 p-6 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/50 hover:shadow-xl hover:shadow-[#D4AF37]/10"
+                    className="group relative flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-[#0B111A] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl hover:shadow-[#D4AF37]/20 cursor-pointer"
                   >
-                    <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-[#D4AF37]/0 blur-3xl transition duration-300 group-hover:bg-[#D4AF37]/25" />
-                    <Icon className="relative mb-4 text-[#D4AF37]" />
-                    <p className="relative text-lg font-bold">{item.title}</p>
-                    <p className="relative mt-2 text-sm text-zinc-400">{item.subtitle}</p>
-                    <div className="mt-5 flex items-center justify-between gap-3">
-                      <span className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">
-                        {item.name}
-                      </span>
-                      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
-                        {item.cta}
+                    {/* Glow effect */}
+                    <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#D4AF37]/0 blur-3xl transition-all duration-300 group-hover:bg-[#D4AF37]/30" />
+                    
+                    {/* Badge */}
+                    <div className="relative flex items-center justify-between mb-4">
+                      <Icon className="w-7 h-7 text-[#D4AF37]" />
+                      <span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/30">
+                        {item.badge}
                       </span>
                     </div>
+                    
+                    {/* Title */}
+                    <h3 className="relative text-lg font-bold text-white mb-2">{item.name}</h3>
+                    
+                    {/* Description */}
+                    <p className="relative text-sm text-white/70 mb-4">{item.shortText}</p>
+                    
+                    {/* Price if exists */}
+                    {item.price && (
+                      <p className="relative text-xs text-[#D4AF37] font-semibold mb-4">{item.price}</p>
+                    )}
+                    
+                    {/* Spacer */}
+                    <div className="relative flex-1" />
+                    
+                    {/* Button */}
+                    <button className="relative w-full bg-[#D4AF37] text-[#05070B] font-bold py-2.5 px-4 rounded-lg hover:bg-[#E5C158] transition-colors duration-200 text-sm">
+                      {item.buttonText}
+                    </button>
                   </Link>
                 );
               })}
