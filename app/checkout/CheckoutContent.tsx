@@ -9,7 +9,7 @@ const PRODUCTS = {
   bot: {
     name: 'Bot CARVIPIX Pro',
     description: 'Automatización de operaciones con reglas personalizadas',
-    price: 299,
+    price: 999.00,
     currency: 'USD',
     type: 'one-time',
     benefits: [
