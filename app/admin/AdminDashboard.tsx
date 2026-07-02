@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch } from 'lucide-react';
+import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap } from 'lucide-react';
 import { useState } from 'react';
 import AdminResumen from './components/AdminResumen';
 import AdminUsuarios from './components/AdminUsuarios';
@@ -13,9 +13,10 @@ import AdminSoporte from './components/AdminSoporte';
 import AdminConfiguracion from './components/AdminConfiguracion';
 import AdminUtilidades from './components/AdminUtilidades';
 import AdminProyecto from './components/AdminProyecto';
+import AdminMotor from './components/AdminMotor';
 import { ToastProvider } from './components/Toast';
 
-type TabType = 'resumen' | 'proyecto' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
+type TabType = 'resumen' | 'proyecto' | 'motor' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
 interface TabConfig {
   id: TabType;
@@ -34,6 +35,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const tabs: TabConfig[] = [
     { id: 'resumen', label: 'Resumen', icon: <BarChart3 className="w-5 h-5" />, component: <AdminResumen /> },
     { id: 'proyecto', label: 'Proyecto', icon: <GitBranch className="w-5 h-5" />, component: <AdminProyecto /> },
+    { id: 'motor', label: 'Motor', icon: <Zap className="w-5 h-5" />, component: <AdminMotor /> },
     { id: 'usuarios', label: 'Usuarios', icon: <Users className="w-5 h-5" />, component: <AdminUsuarios /> },
     { id: 'solicitudes', label: 'Solicitudes', icon: <FileText className="w-5 h-5" />, component: <AdminSolicitudes /> },
     { id: 'pagos', label: 'Pagos', icon: <DollarSign className="w-5 h-5" />, component: <AdminPagos /> },

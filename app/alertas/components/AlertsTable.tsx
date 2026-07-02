@@ -111,33 +111,20 @@ export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTabl
                       {alert.tipo === "Compra" ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                       {alert.tipo}
                     </span>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        alert.plan === "ELITE"
-                          ? "bg-[#D4AF37]/10 text-[#D4AF37]"
-                          : "bg-white/5 text-zinc-200"
-                      }`}
-                    >
-                      {alert.plan}
-                    </span>
                   </div>
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                   <div className="rounded-3xl bg-[#131923]/90 p-2">
                     <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">Entrada</p>
                     <p className="mt-1 text-sm font-semibold text-white overflow-hidden text-ellipsis min-w-0">{alert.entrada}</p>
                   </div>
                   <div className="rounded-3xl bg-[#131923]/90 p-2">
-                    <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">Protección (SL)</p>
+                    <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">SL</p>
                     <p className="mt-1 text-sm font-semibold text-red-400 overflow-hidden text-ellipsis min-w-0">{alert.sl}</p>
                   </div>
                   <div className="rounded-3xl bg-[#131923]/90 p-2">
-                    <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">Objetivo (TP)</p>
+                    <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">TP</p>
                     <p className="mt-1 text-sm font-semibold text-green-400 overflow-hidden text-ellipsis min-w-0">{alert.tp}</p>
-                  </div>
-                  <div className="rounded-3xl bg-[#131923]/90 p-2">
-                    <p className="text-[9px] uppercase tracking-[0.16em] text-zinc-500">Riesgo/Beneficio</p>
-                    <p className="mt-1 text-sm font-semibold text-[#D4AF37] overflow-hidden text-ellipsis min-w-0">{alert.rr}</p>
                   </div>
                 </div>
 
