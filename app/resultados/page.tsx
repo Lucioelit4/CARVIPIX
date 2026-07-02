@@ -1,7 +1,7 @@
 "use client";
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Download, TrendingUp } from "lucide-react";
+import { Download, TrendingUp, Zap, Target, AlertCircle, Scale } from "lucide-react";
 
 const monthlyData = [
   { month: "Ene", value: 100 },
@@ -70,18 +70,27 @@ export default function ResultadosPage() {
       <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
         <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { label: "Ganancia mensual", value: "+18.4%", color: "text-green-400" },
-            { label: "Win Rate", value: "72.4%", color: "text-blue-400" },
-            { label: "Operaciones cerradas", value: "186", color: "text-white" },
-            { label: "Drawdown máximo", value: "6.8%", color: "text-yellow-400" },
-            { label: "Riesgo/Beneficio", value: "1.92", color: "text-[#D4AF37]" },
-            { label: "Mejor activo del mes", value: "XAUUSD", color: "text-purple-400" },
-          ].map((metric, i) => (
-            <div key={i} className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-5 hover:border-[#D4AF37]/30 transition">
-              <p className="text-xs uppercase text-white/50 tracking-wide">{metric.label}</p>
-              <p className={`mt-4 text-2xl font-bold ${metric.color}`}>{metric.value}</p>
-            </div>
-          ))}
+            { label: "Ganancia mensual", value: "+18.4%", color: "text-[#00D084]", icon: TrendingUp },
+            { label: "Win Rate", value: "72.4%", color: "text-[#D4AF37]", icon: Zap },
+            { label: "Operaciones cerradas", value: "186", color: "text-white", icon: Target },
+            { label: "Drawdown máximo", value: "6.8%", color: "text-[#D4AF37]", icon: AlertCircle },
+            { label: "Riesgo/Beneficio", value: "1.92", color: "text-[#D4AF37]", icon: Scale },
+            { label: "Mejor activo del mes", value: "XAUUSD", color: "text-white", icon: TrendingUp },
+          ].map((metric, i) => {
+            const IconComponent = metric.icon;
+            return (
+              <div 
+                key={i} 
+                className="relative rounded-xl border border-white/10 bg-[#11161E] p-6 hover:border-[#D4AF37]/40 hover:shadow-lg hover:shadow-[#D4AF37]/10 transition duration-300"
+              >
+                <div className="absolute top-4 right-4 text-[#D4AF37]/40">
+                  <IconComponent size={18} />
+                </div>
+                <p className="text-xs uppercase text-zinc-400 tracking-wider">{metric.label}</p>
+                <p className={`mt-4 text-2xl font-bold ${metric.color}`}>{metric.value}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
