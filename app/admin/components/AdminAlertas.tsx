@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Clock, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAdminData, updateAlerta, createAlerta } from '@/app/admin/lib/admin-helpers';
 import { useToast } from './Toast';
+import DetailModal from './DetailModal';
 
 interface Alerta {
   id: string;
@@ -20,6 +21,8 @@ interface Alerta {
 export default function AdminAlertas() {
   const [showCreate, setShowCreate] = useState(false);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [selectedAlerta, setSelectedAlerta] = useState<Alerta | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ symbol: '', tipo: 'Compra', entrada: '', tp: '', sl: '' });
   const { showToast } = useToast();
 
@@ -232,6 +235,16 @@ export default function AdminAlertas() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-1 flex-wrap">
+                      <button
+                        onClick={() => {
+                          setSelectedAlerta(alerta);
+                          setIsModalOpen(true);
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-white/10 text-white hover:bg-white/20 transition flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Ver
+                      </button>
                       {alerta.estado !== 'ganada' && (
                         <button
                           onClick={() => handleUpdateAlerta(alerta.id, 'ganada')}
@@ -276,6 +289,76 @@ export default function AdminAlertas() {
           Crea alertas demo y gestiona su estado. Los cambios se guardan en localStorage de la sesión del administrador.
         </p>
       </motion.div>
+
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Detalles de Alerta"
+      >
+        {selectedAlerta && (
+          <div className="space-y-6">
+            {/* ID y Estado */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-white/60 mb-1">ID de Alerta</p>
+                <p className="font-mono text-sm text-[#D4AF37]">{selectedAlerta.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Estado</p>
+                <span className={`text-xs font-bold px-2 py-1 rounded capitalize w-fit block flex items-center gap-1 ${getEstadoColor(selectedAlerta.estado)}`}>
+                  {getEstadoIcon(selectedAlerta.estado)}
+                  {selectedAlerta.estado}
+                </span>
+              </div>
+            </div>
+
+            {/* Símbolo */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Símbolo del Activo</p>
+              <p className="text-white font-semibold text-lg">{selectedAlerta.symbol}</p>
+            </div>
+
+            {/* Tipo */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Tipo de Operación</p>
+              <p className="text-white bg-white/5 px-3 py-2 rounded">{selectedAlerta.tipo} {getTipoIcon(selectedAlerta.tipo)}</p>
+            </div>
+
+            {/* Precios */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-xs text-white/60 mb-1">Entrada</p>
+                <p className="text-white font-semibold">{selectedAlerta.entrada}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Target Profit (TP)</p>
+                <p className="text-green-400 font-semibold">{selectedAlerta.tp}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Stop Loss (SL)</p>
+                <p className="text-red-400 font-semibold">{selectedAlerta.sl}</p>
+              </div>
+            </div>
+
+            {/* Riesgo */}
+            <div>
+              <p className="text-xs text-white/60 mb-2">Análisis de Riesgo</p>
+              <div className="bg-white/5 rounded p-3 text-sm text-white/70 space-y-1">
+                <p>• Entrada: <span className="text-white">{selectedAlerta.entrada}</span></p>
+                <p>• Riesgo potencial: Hasta SL en <span className="text-red-400">{selectedAlerta.sl}</span></p>
+                <p>• Ganancia potencial: Hasta TP en <span className="text-green-400">{selectedAlerta.tp}</span></p>
+              </div>
+            </div>
+
+            {/* Fecha */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Fecha de Creación</p>
+              <p className="text-white/70">{selectedAlerta.fecha}</p>
+            </div>
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

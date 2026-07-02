@@ -1,8 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Search, MoreVertical } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Eye } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import DetailModal from './DetailModal';
 
 interface User {
   id: string;
@@ -15,19 +16,26 @@ interface User {
 
 export default function AdminUsuarios() {
   const [search, setSearch] = useState('');
+  const [users, setUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const demoUsers: User[] = [
-    { id: '#1247', name: 'Juan Pérez', email: 'juan@email.com', plan: 'PRO', status: 'activo', registered: '2026-06-15' },
-    { id: '#1246', name: 'María García', email: 'maria@email.com', plan: 'ELITE', status: 'activo', registered: '2026-06-10' },
-    { id: '#1245', name: 'Carlos López', email: 'carlos@email.com', plan: 'Free', status: 'activo', registered: '2026-06-08' },
-    { id: '#1244', name: 'Ana Martínez', email: 'ana@email.com', plan: 'PRO', status: 'inactivo', registered: '2026-05-20' },
-    { id: '#1243', name: 'Roberto Silva', email: 'roberto@email.com', plan: 'ELITE', status: 'activo', registered: '2026-05-15' },
-    { id: '#1242', name: 'Laura Gómez', email: 'laura@email.com', plan: 'Free', status: 'suspendido', registered: '2026-05-10' },
-    { id: '#1241', name: 'Miguel Torres', email: 'miguel@email.com', plan: 'PRO', status: 'activo', registered: '2026-04-28' },
-    { id: '#1240', name: 'Sofia Ruiz', email: 'sofia@email.com', plan: 'ELITE', status: 'activo', registered: '2026-04-15' },
-  ];
+  useEffect(() => {
+    // Load users from localStorage or use demo data
+    const demoUsers: User[] = [
+      { id: '#1247', name: 'Juan Pérez', email: 'juan@email.com', plan: 'PRO', status: 'activo', registered: '2026-06-15' },
+      { id: '#1246', name: 'María García', email: 'maria@email.com', plan: 'ELITE', status: 'activo', registered: '2026-06-10' },
+      { id: '#1245', name: 'Carlos López', email: 'carlos@email.com', plan: 'Free', status: 'activo', registered: '2026-06-08' },
+      { id: '#1244', name: 'Ana Martínez', email: 'ana@email.com', plan: 'PRO', status: 'inactivo', registered: '2026-05-20' },
+      { id: '#1243', name: 'Roberto Silva', email: 'roberto@email.com', plan: 'ELITE', status: 'activo', registered: '2026-05-15' },
+      { id: '#1242', name: 'Laura Gómez', email: 'laura@email.com', plan: 'Free', status: 'suspendido', registered: '2026-05-10' },
+      { id: '#1241', name: 'Miguel Torres', email: 'miguel@email.com', plan: 'PRO', status: 'activo', registered: '2026-04-28' },
+      { id: '#1240', name: 'Sofia Ruiz', email: 'sofia@email.com', plan: 'ELITE', status: 'activo', registered: '2026-04-15' },
+    ];
+    setUsers(demoUsers);
+  }, []);
 
-  const filteredUsers = demoUsers.filter(
+  const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
@@ -111,8 +119,15 @@ export default function AdminUsuarios() {
                   </td>
                   <td className="px-6 py-4 text-sm text-white/60">{user.registered}</td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 rounded hover:bg-white/10 transition">
-                      <MoreVertical className="w-4 h-4 text-white/40" />
+                    <button
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 rounded hover:bg-white/10 transition flex items-center gap-1 text-white text-sm"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Ver
                     </button>
                   </td>
                 </tr>
@@ -136,7 +151,7 @@ export default function AdminUsuarios() {
       >
         <div className="rounded-lg border border-white/10 bg-white/5 p-4">
           <p className="text-xs text-white/60 mb-2">Total usuarios</p>
-          <p className="text-2xl font-bold text-white">1,247</p>
+          <p className="text-2xl font-bold text-white">{users.length}</p>
         </div>
         <div className="rounded-lg border border-white/10 bg-white/5 p-4">
           <p className="text-xs text-white/60 mb-2">Activos hoy</p>
@@ -147,6 +162,70 @@ export default function AdminUsuarios() {
           <p className="text-2xl font-bold text-[#D4AF37]">87</p>
         </div>
       </motion.div>
+
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Perfil de Usuario"
+      >
+        {selectedUser && (
+          <div className="space-y-6">
+            {/* ID y Plan */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-white/60 mb-1">ID de Usuario</p>
+                <p className="font-mono text-sm text-[#D4AF37]">{selectedUser.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Plan</p>
+                <span className={`text-xs font-bold px-2 py-1 rounded w-fit block ${getPlanColor(selectedUser.plan)}`}>
+                  {selectedUser.plan}
+                </span>
+              </div>
+            </div>
+
+            {/* Nombre */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Nombre</p>
+              <p className="text-white font-semibold text-lg">{selectedUser.name}</p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Correo Electrónico</p>
+              <p className="text-white font-mono text-sm">{selectedUser.email}</p>
+            </div>
+
+            {/* Estado */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Estado de Cuenta</p>
+              <span className={`text-xs font-bold px-3 py-1 rounded capitalize w-fit block ${getStatusColor(selectedUser.status)}`}>
+                {selectedUser.status}
+              </span>
+            </div>
+
+            {/* Fecha de Registro */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Fecha de Registro</p>
+              <p className="text-white/70">{selectedUser.registered}</p>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-white/10" />
+
+            {/* Información */}
+            <div>
+              <p className="text-xs text-white/60 mb-2">Información de Cuenta</p>
+              <div className="bg-white/5 rounded p-3 text-sm text-white/70 space-y-2">
+                <p>• Tipo de plan: <span className="text-white font-semibold">{selectedUser.plan}</span></p>
+                <p>• Estado: <span className="text-white font-semibold capitalize">{selectedUser.status}</span></p>
+                <p>• Miembro desde: <span className="text-white font-semibold">{selectedUser.registered}</span></p>
+              </div>
+            </div>
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }

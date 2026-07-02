@@ -1,10 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getAdminData, updatePago } from '@/app/admin/lib/admin-helpers';
 import { useToast } from './Toast';
+import DetailModal from './DetailModal';
 
 interface Pago {
   id: string;
@@ -19,6 +20,8 @@ interface Pago {
 export default function AdminPagos() {
   const [search, setSearch] = useState('');
   const [pagos, setPagos] = useState<Pago[]>([]);
+  const [selectedPago, setSelectedPago] = useState<Pago | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -121,6 +124,16 @@ export default function AdminPagos() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-1 flex-wrap">
+                      <button
+                        onClick={() => {
+                          setSelectedPago(pago);
+                          setIsModalOpen(true);
+                        }}
+                        className="px-2 py-1 text-xs rounded bg-white/10 text-white hover:bg-white/20 transition flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Ver
+                      </button>
                       {pago.estado !== 'completado' && (
                         <button
                           onClick={() => handleUpdatePago(pago.id, 'completado')}
@@ -182,6 +195,74 @@ export default function AdminPagos() {
           </p>
         </div>
       </motion.div>
+
+      {/* Detail Modal */}
+      <DetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Detalles del Pago"
+      >
+        {selectedPago && (
+          <div className="space-y-6">
+            {/* ID y Estado */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-white/60 mb-1">Número de Orden</p>
+                <p className="font-mono text-sm text-[#D4AF37]">{selectedPago.id}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Estado</p>
+                <span className={`text-xs font-bold px-2 py-1 rounded capitalize w-fit block ${getEstadoColor(selectedPago.estado)}`}>
+                  {selectedPago.estado}
+                </span>
+              </div>
+            </div>
+
+            {/* Cliente */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Cliente</p>
+              <p className="text-white font-semibold">{selectedPago.cliente}</p>
+            </div>
+
+            {/* Producto */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Producto</p>
+              <p className="text-white">{selectedPago.producto}</p>
+            </div>
+
+            {/* Monto */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Monto</p>
+              <p className="text-[#D4AF37] font-semibold text-lg">{selectedPago.monto}</p>
+            </div>
+
+            {/* Método de Pago */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Método de Pago</p>
+              <p className="text-white bg-white/5 px-3 py-2 rounded">{selectedPago.metodo}</p>
+            </div>
+
+            {/* Fecha */}
+            <div>
+              <p className="text-xs text-white/60 mb-1">Fecha y Hora</p>
+              <p className="text-white/70">{selectedPago.fecha}</p>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-white/10" />
+
+            {/* Notas */}
+            <div>
+              <p className="text-xs text-white/60 mb-2">Detalles de Transacción</p>
+              <div className="bg-white/5 rounded p-3 text-sm text-white/70 space-y-1">
+                <p>• Transacción demo para demostración</p>
+                <p>• Los datos se guardan en localStorage</p>
+                <p>• Sin conexión a gateway real de pagos</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </DetailModal>
     </div>
   );
 }
