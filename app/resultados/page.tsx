@@ -66,9 +66,9 @@ export default function ResultadosPage() {
         </div>
       </div>
 
-      {/* Métricas Laterales */}
-      <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      {/* Métricas Horizontales */}
+      <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
+        <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             { label: "Ganancia mensual", value: "+18.4%", color: "text-green-400" },
             { label: "Win Rate", value: "72.4%", color: "text-blue-400" },
@@ -77,37 +77,44 @@ export default function ResultadosPage() {
             { label: "Riesgo/Beneficio", value: "1.92", color: "text-[#D4AF37]" },
             { label: "Mejor activo del mes", value: "XAUUSD", color: "text-purple-400" },
           ].map((metric, i) => (
-            <div key={i} className="rounded-lg border border-white/10 bg-[#0B111A] p-4">
-              <p className="text-xs uppercase text-white/60">{metric.label}</p>
-              <p className={`mt-3 text-2xl font-bold ${metric.color}`}>{metric.value}</p>
+            <div key={i} className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-5 hover:border-[#D4AF37]/30 transition">
+              <p className="text-xs uppercase text-white/50 tracking-wide">{metric.label}</p>
+              <p className={`mt-4 text-2xl font-bold ${metric.color}`}>{metric.value}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Gráfica Grande */}
+      {/* Gráfica Grande - Ancho Completo */}
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
-        <div className="rounded-lg border border-white/10 bg-[#0B111A] p-6">
-          <div className="mb-4 flex items-start justify-between">
+        <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+          <div className="mb-6 flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold">Evolución de resultados</h2>
-              <p className="mt-1 text-sm text-white/60">Vista previa con datos simulados.</p>
+              <p className="mt-2 text-sm text-white/50">Vista previa con datos simulados.</p>
             </div>
-            <TrendingUp className="text-[#D4AF37]" size={24} />
+            <TrendingUp className="text-[#D4AF37]" size={28} />
           </div>
-          <div className="h-80">
+          <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyData}>
-                <CartesianGrid stroke="#1a2535" />
-                <XAxis dataKey="month" stroke="#9CA3AF" />
-                <YAxis stroke="#9CA3AF" />
-                <Tooltip />
+              <LineChart data={monthlyData} margin={{ top: 16, right: 32, left: 0, bottom: 0 }}>
+                <CartesianGrid stroke="#1a2535" strokeDasharray="0" />
+                <XAxis dataKey="month" stroke="#9CA3AF" style={{ fontSize: "12px" }} />
+                <YAxis stroke="#9CA3AF" style={{ fontSize: "12px" }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "#0B111A", 
+                    border: "1px solid #D4AF37/30",
+                    borderRadius: "8px"
+                  }}
+                />
                 <Line
                   type="monotone"
                   dataKey="value"
                   stroke="#D4AF37"
                   strokeWidth={3}
-                  dot={{ fill: "#D4AF37", r: 4 }}
+                  dot={{ fill: "#D4AF37", r: 5 }}
+                  activeDot={{ r: 7 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -115,33 +122,33 @@ export default function ResultadosPage() {
         </div>
       </div>
 
-      {/* Secciones Inferiores */}
-      <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
+      {/* Secciones Inferiores - Dos Columnas */}
+      <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Top 10 Miembros */}
-          <div className="rounded-lg border border-white/10 bg-[#0B111A] p-6">
-            <h2 className="mb-6 text-2xl font-bold">Top 10 miembros</h2>
+          <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+            <h2 className="mb-8 text-2xl font-bold">Top 10 miembros</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-white/10 text-xs uppercase text-white/60">
+                <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
-                    <th className="pb-3 font-semibold">#</th>
-                    <th className="pb-3 font-semibold">Miembro</th>
-                    <th className="pb-3 font-semibold">Plan</th>
-                    <th className="pb-3 font-semibold">Rendimiento</th>
-                    <th className="pb-3 font-semibold">Ops</th>
-                    <th className="pb-3 font-semibold">Racha</th>
+                    <th className="pb-4 font-semibold">#</th>
+                    <th className="pb-4 font-semibold">Miembro</th>
+                    <th className="pb-4 font-semibold">Plan</th>
+                    <th className="pb-4 font-semibold">Rendimiento</th>
+                    <th className="pb-4 font-semibold">Ops</th>
+                    <th className="pb-4 font-semibold">Racha</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {topMembers.map((member) => (
-                    <tr key={member.pos} className="hover:bg-white/5">
-                      <td className="py-3 font-bold text-[#D4AF37]">{member.pos}</td>
-                      <td className="py-3">{member.name}</td>
-                      <td className="py-3 text-xs text-white/70">{member.plan}</td>
-                      <td className="py-3 font-semibold text-green-400">{member.perf}</td>
-                      <td className="py-3 text-white/70">{member.ops}</td>
-                      <td className="py-3 text-white/70">{member.streak}d</td>
+                    <tr key={member.pos} className="hover:bg-white/5 transition">
+                      <td className="py-4 font-bold text-[#D4AF37]">{member.pos}</td>
+                      <td className="py-4 font-medium">{member.name}</td>
+                      <td className="py-4 text-xs font-medium text-white/60">{member.plan}</td>
+                      <td className="py-4 font-semibold text-green-400">{member.perf}</td>
+                      <td className="py-4 text-white/70">{member.ops}</td>
+                      <td className="py-4 text-white/70">{member.streak}d</td>
                     </tr>
                   ))}
                 </tbody>
@@ -150,40 +157,40 @@ export default function ResultadosPage() {
           </div>
 
           {/* Últimas Operaciones */}
-          <div className="rounded-lg border border-white/10 bg-[#0B111A] p-6">
-            <h2 className="mb-6 text-2xl font-bold">Últimas operaciones cerradas</h2>
+          <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+            <h2 className="mb-8 text-2xl font-bold">Últimas operaciones cerradas</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-white/10 text-xs uppercase text-white/60">
+                <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
-                    <th className="pb-3 font-semibold">Fecha</th>
-                    <th className="pb-3 font-semibold">Activo</th>
-                    <th className="pb-3 font-semibold">Tipo</th>
-                    <th className="pb-3 font-semibold">Resultado</th>
-                    <th className="pb-3 font-semibold">Pips / %</th>
+                    <th className="pb-4 font-semibold">Fecha</th>
+                    <th className="pb-4 font-semibold">Activo</th>
+                    <th className="pb-4 font-semibold">Tipo</th>
+                    <th className="pb-4 font-semibold">Resultado</th>
+                    <th className="pb-4 font-semibold">Pips / %</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {recentTrades.map((trade, i) => (
-                    <tr key={i} className="hover:bg-white/5">
-                      <td className="py-3 text-white/70">{trade.date}</td>
-                      <td className="py-3 font-semibold">{trade.asset}</td>
-                      <td className="py-3 text-white/70">{trade.type}</td>
-                      <td className="py-3">
+                    <tr key={i} className="hover:bg-white/5 transition">
+                      <td className="py-4 text-white/70">{trade.date}</td>
+                      <td className="py-4 font-medium">{trade.asset}</td>
+                      <td className="py-4 text-white/70">{trade.type}</td>
+                      <td className="py-4">
                         <span
-                          className={`inline-block rounded px-2 py-1 text-xs font-semibold ${
+                          className={`inline-flex rounded px-3 py-1 text-xs font-semibold ${
                             trade.status === "success"
-                              ? "bg-green-400/20 text-green-400"
+                              ? "bg-green-400/15 text-green-400"
                               : trade.status === "loss"
-                                ? "bg-red-400/20 text-red-400"
-                                : "bg-gray-400/20 text-gray-300"
+                                ? "bg-red-400/15 text-red-400"
+                                : "bg-gray-400/15 text-gray-300"
                           }`}
                         >
                           {trade.result}
                         </span>
                       </td>
                       <td
-                        className={`py-3 font-semibold ${
+                        className={`py-4 font-semibold ${
                           trade.status === "success"
                             ? "text-green-400"
                             : trade.status === "loss"
@@ -203,7 +210,7 @@ export default function ResultadosPage() {
       </div>
 
       {/* Footer pequeño */}
-      <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8 text-center">
+      <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 text-center border-t border-white/5 mt-8">
         <p className="text-xs text-white/40">
           Vista demo. Los datos reales se conectarán desde tu cuenta CARVIPIX cuando se integre la API.
         </p>
