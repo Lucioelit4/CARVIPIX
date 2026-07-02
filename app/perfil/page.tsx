@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3 } from 'lucide-react';
+import { getCurrentUser } from '@/app/lib/data-helpers';
 
 export default function PerfilPage() {
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -25,6 +26,26 @@ export default function PerfilPage() {
     sesionFavorita: 'Nueva York',
     notificaciones: true,
   });
+
+  // Load user data from modules on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          setUserData(prev => ({
+            ...prev,
+            nombre: `${user.nombre} ${user.apellido}`,
+            correo: user.email,
+          }));
+        }
+      } catch (error) {
+        console.log("Usando datos demo de perfil");
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -15,6 +15,7 @@ import {
   Ticket,
   Radio,
 } from 'lucide-react';
+import { getDailyBriefing, getTradingSuggestions } from '@/app/lib/data-helpers';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -39,6 +40,31 @@ export default function SoportePage() {
   const [ticketMessage, setTicketMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Load AI support data from modules on mount
+  useEffect(() => {
+    const loadAIData = async () => {
+      try {
+        const briefing = await getDailyBriefing();
+        const suggestions = await getTradingSuggestions();
+        
+        if (briefing) {
+          // Agregar briefing como mensaje inicial del asistente
+          setMessages(prev => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: `📋 Briefing del día:\n${briefing.content.substring(0, 200)}...`,
+            },
+          ]);
+        }
+      } catch (error) {
+        console.log("Usando datos demo de soporte");
+      }
+    };
+
+    loadAIData();
+  }, []);
+
   // Auto-scroll al final del chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -47,39 +73,6 @@ export default function SoportePage() {
   // Generar respuestas demo según palabras clave
   const generateDemoResponse = (query: string): string => {
     const lowerQuery = query.toLowerCase();
-
-    if (
-      lowerQuery.includes('alerta') ||
-      lowerQuery.includes('vivo') ||
-      lowerQuery.includes('señal')
-    ) {
-      return 'Tus alertas se encuentran en la sección Alertas en Vivo. Ahí puedes revisar entrada, SL, TP, estado y detalle operativo. Puedes filtrar por estado, activo o crear nuevas alertas.';
-    }
-
-    if (lowerQuery.includes('bot') || lowerQuery.includes('automatización')) {
-      return 'El Bot CARVIPIX es un producto premium de automatización. La sección Bot muestra funcionamiento, precio, actualizaciones y estado demo. Próximamente podrás integrarlo con tu cuenta.';
-    }
-
-    if (
-      lowerQuery.includes('pago') ||
-      lowerQuery.includes('membresía') ||
-      lowerQuery.includes('plan') ||
-      lowerQuery.includes('precio')
-    ) {
-      return 'Puedes revisar tus planes desde Ver planes o desde tu perfil. Los pagos reales se integrarán en una fase posterior. Actualmente tienes acceso a todas las funciones en modo demo.';
-    }
-
-    if (
-      lowerQuery.includes('capital') ||
-      lowerQuery.includes('balance') ||
-      lowerQuery.includes('gestión')
-    ) {
-      return 'La Gestión de Capital muestra balance, movimientos y asignación demo. Los datos reales se conectarán en una fase posterior. Ahí puedes simular operaciones y ver tendencias.';
-    }
-
-    if (lowerQuery.includes('fondeo') || lowerQuery.includes('evaluación')) {
-      return 'El servicio de Fondeo gestiona el proceso de evaluación con empresas externas como FTMO y TopTier, sujeto a reglas de cada empresa. Puedes revisar el proceso completo en la sección Fondeo.';
-    }
 
     return 'Entiendo tu consulta. Esta es una respuesta demo; cuando conectemos la IA real podrá revisar documentación interna y guiarte paso a paso. ¿Hay algo más en lo que pueda orientarte?';
   };

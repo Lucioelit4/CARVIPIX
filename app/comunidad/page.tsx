@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Send, Users, ShieldCheck, MessageSquare, Zap, Check } from "lucide-react";
+import { getCurrentUser } from "@/app/lib/data-helpers";
 
 type Message = {
   id: string;
@@ -34,7 +35,24 @@ export default function ComunidadPage() {
   const [input, setInput] = useState("");
   const [notice, setNotice] = useState("");
   const [onlineCount] = useState(128);
+  const [userName, setUserName] = useState("Abraham");
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Load user data from modules on mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const user = await getCurrentUser();
+        if (user) {
+          setUserName(user.nombre);
+        }
+      } catch (error) {
+        console.log("Usando datos demo de comunidad");
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

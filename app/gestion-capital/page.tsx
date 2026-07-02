@@ -1,19 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Send, TrendingUp, Lock, Shield, RefreshCw, ArrowDown, ArrowUp, X, CheckCircle2 } from 'lucide-react';
+import { getCapitalAccount, getCapitalMovements, getCapitalMonthlyReports } from '@/app/lib/data-helpers';
 
 export default function GestionCapitalPage() {
   const [showModal, setShowModal] = useState(false);
   const [scrollToMovements, setScrollToMovements] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string | null>(null);
 
-  const capitalAsignado = 12500;
-  const balanceActual = 13180;
+  const [capitalAsignado, setCapitalAsignado] = useState(12500);
+  const [balanceActual, setBalanceActual] = useState(13180);
+  
   const ganancia = balanceActual - capitalAsignado;
   const rendimiento = ((ganancia / capitalAsignado) * 100).toFixed(2);
+
+  // Load capital data from modules on mount
+  useEffect(() => {
+    const loadCapitalData = async () => {
+      try {
+        const account = await getCapitalAccount();
+        const movements = await getCapitalMovements();
+        
+        if (account) {
+          setCapitalAsignado(account.initialCapital);
+          setBalanceActual(account.currentBalance);
+        }
+      } catch (error) {
+        console.log("Usando datos demo de capital");
+      }
+    };
+
+    loadCapitalData();
+  }, []);
 
   const chartData = [
     { mes: 'Día 1', balance: 12500 },
