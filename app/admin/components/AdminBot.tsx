@@ -20,7 +20,9 @@ import {
   Gauge,
   Lock,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { generateMockDataHealth } from '../utils/mockDataHealth';
+import type { DataHealthResponse } from '../../engine/types/marketData';
 
 interface Modulo {
   id: string;
@@ -38,6 +40,20 @@ interface ChecklistItem {
 
 export default function AdminBot() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [dataHealth, setDataHealth] = useState<DataHealthResponse | null>(null);
+
+  // Cargar datos de salud de datos
+  useEffect(() => {
+    const loadDataHealth = () => {
+      const data = generateMockDataHealth();
+      setDataHealth(data);
+    };
+    loadDataHealth();
+    
+    // Actualizar cada 5 segundos para mantener datos frescos
+    const interval = setInterval(loadDataHealth, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const modulos: Modulo[] = [
     {
@@ -408,31 +424,56 @@ export default function AdminBot() {
           </a>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded p-3">
-            <p className="text-xs text-white/60 mb-1">Salud General</p>
-            <p className="text-2xl font-bold text-green-400">88%</p>
-            <p className="text-xs text-white/50 mt-1">Óptima</p>
-          </div>
+        {dataHealth ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded p-3">
+                <p className="text-xs text-white/60 mb-1">Salud General</p>
+                <p className="text-2xl font-bold text-green-400">{Math.round(dataHealth.status.overallHealth)}%</p>
+                <p className="text-xs text-white/50 mt-1">
+                  {dataHealth.status.overallHealth >= 90 ? 'Óptima' : dataHealth.status.overallHealth >= 80 ? 'Buena' : 'Regular'}
+                </p>
+              </div>
 
-          <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded p-3">
-            <p className="text-xs text-white/60 mb-1">Activos Conectados</p>
-            <p className="text-2xl font-bold text-blue-400">4/4</p>
-            <p className="text-xs text-white/50 mt-1">XAUUSD, EURUSD, GBPUSD, BTCUSD</p>
-          </div>
+              <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded p-3">
+                <p className="text-xs text-white/60 mb-1">Activos Conectados</p>
+                <p className="text-2xl font-bold text-blue-400">{dataHealth.status.activeAssets}/4</p>
+                <p className="text-xs text-white/50 mt-1">{dataHealth.status.connectedAssets.join(', ')}</p>
+              </div>
 
-          <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded p-3">
-            <p className="text-xs text-white/60 mb-1">Latencia Promedio</p>
-            <p className="text-2xl font-bold text-purple-400">52ms</p>
-            <p className="text-xs text-white/50 mt-1">&lt;100ms (Bueno)</p>
-          </div>
+              <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded p-3">
+                <p className="text-xs text-white/60 mb-1">Latencia Promedio</p>
+                <p className="text-2xl font-bold text-purple-400">{Math.round(dataHealth.status.avgLatency)}ms</p>
+                <p className="text-xs text-white/50 mt-1">&lt;100ms (Bueno)</p>
+              </div>
 
-          <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded p-3">
-            <p className="text-xs text-white/60 mb-1">Proveedor</p>
-            <p className="text-2xl font-bold text-orange-400">DEMO</p>
-            <p className="text-xs text-white/50 mt-1">Datos ficticios realistas</p>
+              <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded p-3">
+                <p className="text-xs text-white/60 mb-1">Proveedor</p>
+                <p className="text-2xl font-bold text-orange-400">{dataHealth.status.dataProvider.toUpperCase()}</p>
+                <p className="text-xs text-white/50 mt-1">Modo: Lectura</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-sm border-t border-white/10 pt-4">
+              <div>
+                <p className="text-white/60 text-xs">Uptime</p>
+                <p className="text-white font-semibold">{Math.round(dataHealth.status.uptime)}%</p>
+              </div>
+              <div>
+                <p className="text-white/60 text-xs">Errores Activos</p>
+                <p className="text-white font-semibold">{dataHealth.status.totalErrors}</p>
+              </div>
+              <div>
+                <p className="text-white/60 text-xs">Última Actualización</p>
+                <p className="text-white font-semibold text-xs">{new Date(dataHealth.status.lastUpdate).toLocaleTimeString()}</p>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-4">
+            <p className="text-white/60 text-sm">Cargando datos de salud...</p>
+          </div>
+        )}
 
         <p className="text-xs text-white/50 mt-4 p-3 bg-black/30 rounded">
           ℹ️ Sistema de datos en modo lectura - Solo recepción de datos sin operaciones. Interfaz lista para conectar proveedor real cuando sea autorizado.
