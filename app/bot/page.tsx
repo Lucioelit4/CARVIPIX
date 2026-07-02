@@ -1,20 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Cpu, Rocket, HelpCircle, ShieldCheck, TrendingUp } from "lucide-react";
+import { getBotInstances, getBotLicense } from "@/app/lib/data-helpers";
 
 export default function BotPage() {
   const [buying, setBuying] = useState(false);
-
-  const demoMetrics = {
+  const [demoMetrics, setDemoMetrics] = useState({
     rendimiento: "+12.8%",
     operaciones: 64,
     winrate: "71%",
     drawdown: "5.4%",
     estado: "Bot activo",
     seguridad: "Gestión por reglas",
-  };
+  });
+
+  // Load bot data from modules on mount
+  useEffect(() => {
+    const loadBotData = async () => {
+      try {
+        const license = await getBotLicense();
+        const instances = await getBotInstances();
+
+        if (license && instances && instances.length > 0) {
+          const firstInstance = instances[0];
+          setDemoMetrics({
+            rendimiento: `+${firstInstance.stats.profitLoss.toFixed(1)} USD`,
+            operaciones: firstInstance.stats.totalTrades,
+            winrate: `${(firstInstance.stats.winRate * 100).toFixed(1)}%`,
+            drawdown: "5.4%",
+            estado: "Bot activo",
+            seguridad: "Gestión por reglas",
+          });
+        }
+      } catch (error) {
+        console.log("Usando datos demo del bot");
+      }
+    };
+
+    loadBotData();
+  }, []);
 
   const buy = () => {
     setBuying(true);

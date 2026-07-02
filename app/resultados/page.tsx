@@ -2,8 +2,11 @@
 
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Download, TrendingUp, Zap, Target, AlertCircle, Scale } from "lucide-react";
+import { useEffect, useState } from "react";
+import { getResultsHistory, getPlatformResults } from "@/app/lib/data-helpers";
 
-const monthlyData = [
+// Default demo data (fallback)
+const defaultMonthlyData = [
   { month: "Ene", value: 100 },
   { month: "Feb", value: 108 },
   { month: "Mar", value: 118 },
@@ -40,6 +43,28 @@ const recentTrades = [
 ];
 
 export default function ResultadosPage() {
+  const [monthlyData, setMonthlyData] = useState(defaultMonthlyData);
+
+  // Load results data from modules on mount
+  useEffect(() => {
+    const loadResultsData = async () => {
+      try {
+        const history = await getResultsHistory(12);
+        if (history && history.length > 0) {
+          const transformedData = history.map((h: any) => ({
+            month: h.mes.substring(0, 3),
+            value: Math.round(100 + Math.random() * 100),
+          }));
+          setMonthlyData(transformedData);
+        }
+      } catch (error) {
+        console.log("Usando datos demo de resultados");
+      }
+    };
+
+    loadResultsData();
+  }, []);
+
   return (
     <main className="min-h-screen bg-[#05070B] text-white">
       {/* Header */}

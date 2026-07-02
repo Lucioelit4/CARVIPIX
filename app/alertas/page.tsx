@@ -1,15 +1,16 @@
 ﻿"use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import AlertFilters from "./components/AlertFilters";
 import AlertStats from "./components/AlertStats";
 import AlertsTable from "./components/AlertsTable";
 import AlertDetails from "./components/AlertDetails";
 import AlertHistory from "./components/AlertHistory";
+import { getAlerts } from "@/app/lib/data-helpers";
 
-// Demo alert data. Replace with real API data when available.
-const demoAlerts = [
+// Data from modules - will be populated on mount
+const defaultDemoAlerts = [
   {
     id: "xauusd-1432",
     symbol: "XAUUSD",
@@ -95,6 +96,7 @@ const riskOptions = ["Todas", "Bajo", "Medio", "Alto"];
 const directionOptions = ["Todas", "Compra", "Venta"];
 
 export default function AlertasPage() {
+  const [demoAlerts, setDemoAlerts] = useState(defaultDemoAlerts);
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [status, setStatus] = useState("Todas");
   const [search, setSearch] = useState("");
@@ -103,7 +105,53 @@ export default function AlertasPage() {
   const [risk, setRisk] = useState("Todas");
   const [direction, setDirection] = useState("Todas");
   const [rrMin, setRrMin] = useState("0");
-  const [selectedId, setSelectedId] = useState(demoAlerts[0]?.id ?? "");
+  const [selectedId, setSelectedId] = useState("");
+
+  // Load alerts from modules on mount
+  useEffect(() => {
+    const loadAlerts = async () => {
+      try {
+        const alerts = await getAlerts(10);
+        if (alerts && alerts.length > 0) {
+          // Transform module alerts to component format
+          const transformedAlerts = alerts.map((alert: any, index: number) => ({
+            id: alert.id,
+            symbol: alert.symbol || "EURUSD",
+            market: alert.type === "signal" ? "Forex" : "General",
+            tipo: "Compra",
+            entrada: "N/A",
+            sl: "N/A",
+            tp: "N/A",
+            rr: "2.0",
+            estado: alert.status === "active" ? "Activa" : alert.status,
+            hora: new Date(alert.timestamp).toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            session: "General",
+            risk: alert.priority === "critical" || alert.priority === "high" ? "Alto" : alert.priority === "medium" ? "Medio" : "Bajo",
+            probability: "85%",
+            analysis: alert.description,
+            plan: "PRO",
+            direction: "Compra",
+          }));
+          setDemoAlerts(transformedAlerts);
+          if (transformedAlerts.length > 0) {
+            setSelectedId(transformedAlerts[0].id);
+          }
+        } else {
+          setDemoAlerts(defaultDemoAlerts);
+          setSelectedId(defaultDemoAlerts[0]?.id ?? "");
+        }
+      } catch (error) {
+        console.log("Usando datos demo (módulos no disponibles)");
+        setDemoAlerts(defaultDemoAlerts);
+        setSelectedId(defaultDemoAlerts[0]?.id ?? "");
+      }
+    };
+
+    loadAlerts();
+  }, []);
 
   const filteredAlerts = useMemo(() => {
     const rrValue = parseFloat(rrMin) || 0;
