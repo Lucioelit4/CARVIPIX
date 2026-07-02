@@ -22,6 +22,7 @@ const capitalData = [
 
 export default function CapitalPage() {
   const [showModal, setShowModal] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", amount: "", method: "USDT TRC20" });
   const [error, setError] = useState("");
 
@@ -79,7 +80,9 @@ export default function CapitalPage() {
                 >
                   Solicitar inversión
                 </button>
-                <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
+                <button
+                  onClick={() => setShowHowItWorks(true)}
+                  className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
                   Ver cómo funciona
                 </button>
               </div>
@@ -387,6 +390,120 @@ export default function CapitalPage() {
           Vista demo. La gestión de capital implica riesgo y los resultados pueden variar. CARVIPIX no garantiza rendimientos específicos. La participación del 40% aplica únicamente sobre utilidades generadas bajo los términos publicados.
         </p>
       </div>
+
+      {/* Modal Ver cómo funciona */}
+      {showHowItWorks && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowHowItWorks(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="bg-[#11161E] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-3xl font-bold text-[#D4AF37]">Ver cómo funciona</h2>
+              <button
+                onClick={() => setShowHowItWorks(false)}
+                className="text-white/40 hover:text-white transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* 5 Pasos */}
+            <div className="space-y-6 mb-8">
+              {[
+                {
+                  step: 1,
+                  title: "Solicitud de inversión",
+                  desc: "Completas el formulario con tu nombre, correo, monto (10k-1M USD) y método de pago en crypto."
+                },
+                {
+                  step: 2,
+                  title: "Revisión y confirmación",
+                  desc: "CARVIPIX valida tu solicitud, confirma disponibilidad y te contacta con detalles del proceso."
+                },
+                {
+                  step: 3,
+                  title: "Asignación en crypto",
+                  desc: "Transfieres el capital en BTC, USDT u otra cripto soportada. Tu dinero es recibido en cuenta de gestión."
+                },
+                {
+                  step: 4,
+                  title: "Gestión privada",
+                  desc: "CARVIPIX aplica su metodología operativa. Tienes seguimiento visual y reportes periódicos privados."
+                },
+                {
+                  step: 5,
+                  title: "Reportes y seguimiento",
+                  desc: "Accedes a balance actual, evolución, utilidades y movimientos. Recibes participación del 60% en utilidades generadas."
+                },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  className="rounded-lg border border-white/10 bg-[#0B111A] p-5"
+                >
+                  <div className="flex gap-4">
+                    <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
+                      <span className="font-bold text-[#D4AF37]">{item.step}</span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-white mb-1">{item.title}</p>
+                      <p className="text-sm text-white/70">{item.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Información clave */}
+            <div className="border-t border-white/10 pt-6 mb-6">
+              <h3 className="text-lg font-bold mb-4 text-white">Información clave</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                  <p className="text-xs text-white/60 mb-2">Montos permitidos</p>
+                  <p className="text-xl font-bold text-[#D4AF37]">10,000 - 1,000,000 USD</p>
+                </div>
+                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                  <p className="text-xs text-white/60 mb-2">Tu participación</p>
+                  <p className="text-xl font-bold text-green-400">60% de utilidades</p>
+                </div>
+                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                  <p className="text-xs text-white/60 mb-2">CARVIPIX participa</p>
+                  <p className="text-xl font-bold text-[#D4AF37]">40% solo sobre utilidades</p>
+                </div>
+                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                  <p className="text-xs text-white/60 mb-2">Tu capital inicial</p>
+                  <p className="text-xl font-bold text-white">Sin cobros, siempre tuyo</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="rounded-lg bg-white/5 border border-white/10 px-4 py-3 mb-6">
+              <p className="text-xs text-white/50 text-center">
+                Vista demo. La gestión de capital implica riesgo y los resultados pueden variar. Los rendimientos pasados no garantizan resultados futuros.
+              </p>
+            </div>
+
+            {/* Botón */}
+            <button
+              onClick={() => setShowHowItWorks(false)}
+              className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30"
+            >
+              Entendido
+            </button>
+          </motion.div>
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (
