@@ -219,3 +219,19 @@ export type {
   DataHealthStatus,
   DataHealthResponse,
 } from './marketData';
+
+// ============================================
+// REAL DATA PROVIDER TYPES
+// ============================================
+
+// Re-export real data provider types
+export type {
+  RealProviderConnectionState,
+  LatencyStats,
+  ConnectionEvent,
+  ProviderOperationLog,
+  RealProviderConfig,
+  RealProviderState,
+  ProviderCredentials,
+  ProviderHealthCheck,
+} from './realDataProvider';

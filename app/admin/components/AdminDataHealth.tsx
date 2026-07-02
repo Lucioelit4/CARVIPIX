@@ -462,6 +462,53 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
         </p>
       </motion.div>
 
+      {/* PROVEEDOR DE DATOS REAL */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="bg-gradient-to-br from-orange-900/30 to-orange-900/10 border border-orange-500/30 rounded-lg p-6"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-orange-400" />
+            Integración de Proveedor Real
+          </h3>
+          <span className="px-3 py-1 bg-orange-500/20 border border-orange-500/30 rounded text-xs text-orange-300">
+            PENDIENTE DE CONFIGURACIÓN
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-black/30 rounded p-3 border border-white/10">
+            <p className="text-xs text-white/60 mb-2">Estado Actual</p>
+            <p className="text-white font-semibold">Proveedor DEMO activo</p>
+            <p className="text-xs text-orange-400 mt-1">La API real aún no está configurada</p>
+          </div>
+
+          <div className="bg-black/30 rounded p-3 border border-white/10">
+            <p className="text-xs text-white/60 mb-2">Próximo Paso</p>
+            <p className="text-white font-semibold">Configurar .env.local</p>
+            <p className="text-xs text-blue-400 mt-1">Ver .env.example para variables</p>
+          </div>
+        </div>
+
+        <div className="bg-black/50 rounded p-4 border border-white/5">
+          <p className="text-xs text-white/80 font-mono mb-2">Pasos para conectar API real:</p>
+          <ol className="text-xs text-white/60 space-y-1 list-decimal list-inside">
+            <li>Copiar .env.example a .env.local</li>
+            <li>Configurar NEXT_PUBLIC_DATA_PROVIDER (alpha-vantage, oanda, ninjatrader)</li>
+            <li>Agregar DATA_API_KEY y credenciales en .env.local</li>
+            <li>Reiniciar servidor (npm run dev)</li>
+            <li>Verificar conexión en este panel</li>
+          </ol>
+        </div>
+
+        <p className="text-xs text-orange-400/80 mt-4 p-3 bg-orange-900/20 rounded border border-orange-500/20">
+          ⚠️ NOTA: No poner claves reales en archivos que se suban a Git. Usar solo .env.local (ignorado por Git).
+        </p>
+      </motion.div>
+
       {/* PIE DE PÁGINA */}
       <div className="text-center text-xs text-white/50 p-4 border-t border-white/10">
         <p>Panel de Monitoreo en Modo Lectura - Solo recepción de datos sin operaciones</p>
