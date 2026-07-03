@@ -43,3 +43,38 @@ export {
   type AssetPerformanceStats,
   type PerformanceReport,
 } from './performance';
+
+// Cache Manager
+export {
+  CacheManager,
+  getCacheManager,
+  resetCacheManager,
+} from '../cache/cacheManager';
+export type {
+  CacheMetadata,
+  CacheStatus,
+  CacheStats,
+  CandleData,
+  CacheWriteResult,
+  CacheReadResult,
+  CacheClearResult,
+  Asset as CacheAsset,
+  Timeframe as CacheTimeframe,
+} from '../cache/types';
+
+// Batch Processor
+export {
+  BatchProcessor,
+  getBatchProcessor,
+  resetBatchProcessor,
+} from '../batch/batchProcessor';
+export type {
+  BatchConfig,
+  BatchJob,
+  BatchProgress,
+  BatchResult,
+  BatchSummary,
+  BatchError,
+  BatchWarning,
+  BatchQueueStats,
+} from '../batch/types';
