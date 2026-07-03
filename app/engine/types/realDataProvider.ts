@@ -47,7 +47,7 @@ export interface ProviderOperationLog {
  * Configuración del proveedor real
  */
 export interface RealProviderConfig {
-  provider: 'alpha-vantage' | 'oanda' | 'ninjatrader' | 'custom';
+  provider: 'alpha-vantage' | 'oanda' | 'ninjatrader' | 'twelve_data' | 'custom';
   apiKey?: string;
   apiSecret?: string;
   baseUrl?: string;
