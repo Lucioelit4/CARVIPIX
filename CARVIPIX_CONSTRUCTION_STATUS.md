@@ -12,58 +12,71 @@
 CARVIPIX Strategy v1.1
 │
 ├─── TrendValidator 1H
-│    └─ Status: ✅ COMPLETE (4 conditions, penalty configurable)
+│    └─ Status: 🟡 FUNCIONAL v1.1 / PROVISIONAL / PENDIENTE DE VALIDACIÓN LOCAL
 │
 ├─── PullbackValidator 45M
-│    └─ Status: 🔄 STRUCTURE READY (pending configuration)
+│    └─ Status: 🔄 ESTRUCTURA LISTA (parámetros pendientes)
 │
 ├─── EntryValidator 5M
-│    └─ Status: 🚫 NOT STARTED (pending Pullback completion)
+│    └─ Status: 🚫 BLOQUEADO (await Pullback completion)
 │
-└─── SignalScoring System
-     └─ Status: 🚫 NOT STARTED (pending Entry completion)
+├─── SignalScoring System
+│    └─ Status: 🚫 BLOQUEADO (await Entry completion)
+│
+├─── Data Integration
+│    └─ Status: 🚫 PENDIENTE
+│
+├─── Backtesting Local
+│    └─ Status: 🚫 PENDIENTE
+│
+├─── MT4/MT5 Integration
+│    └─ Status: 🚫 PENDIENTE
+│
+└─── AutoBot Trading
+     └─ Status: 🚫 PENDIENTE
 ```
 
 ---
 
-## ✅ Phase 1: TrendValidator v1.1 - COMPLETE
+## ✅ Phase 1: TrendValidator v1.1 - FUNCIONAL / PROVISIONAL
 
 ### Implementation Status
 
 **File:** `app/engine/strategy/trendValidation.ts`
 
-**4 Conditions:**
-1. ✅ Price vs EMA200 (bullish/bearish/neutral)
-2. ✅ EMA Order (20>50>200 or reverse strict)
-3. ✅ EMA Slope (both positive or both negative over 5 candles)
-4. ✅ Structure (HH+HL or LL+LH simple swings)
+**Status Real:**
+🟡 **FUNCIONAL v1.1** - Lógica real implementada, sin placeholders  
+🔧 **PROVISIONAL** - Thresholds sin validación local  
+⏳ **PENDIENTE DE VALIDACIÓN LOCAL** - No validado con datos históricos completos en computadora local
 
-**Direction Logic:**
-✅ BUY if bullishScore > bearishScore  
-✅ SELL if bearishScore > bullishScore  
-✅ NEUTRAL if equal
+### What Works
 
-**Confidence Calculation:**
-✅ Formula: `effectiveConditions = confirming - (contradicting × penalty)`  
-✅ Levels: A+ (4.0), A (3.0), B (2.0), C (≤1.0)
+✅ 4 conditions implemented (real logic, no placeholders)  
+✅ Direction voting system (BUY/SELL/NEUTRAL)  
+✅ Confidence calculation with formula  
+✅ TypeScript compilation (3.5s)  
+✅ Professional documentation  
+✅ Configurable penalty system  
 
-**Configuration:**
-🔧 Penalty: PROVISIONAL (0.50 default, configurable via `trendValidatorConfig.ts`)
+### What's Pending
 
-**Testing:**
-✅ Tested on 250 real hourly candles (XAUUSD June 2026)  
-✅ 3 penalty values (0.25, 0.50, 0.75) compared  
-✅ All produce identical results (parameter is stable)
+⏳ **Local Historical Validation** - Need to run on full historical data locally  
+⏳ **Threshold Confirmation** - Current thresholds need real-world validation  
+⏳ **Performance Metrics** - Need to measure signal quality on live data  
 
-**Documentation:**
-- [TREND_VALIDATOR_v1_1_SPEC.md](app/engine/strategy/TREND_VALIDATOR_v1_1_SPEC.md) - Full specification
-- [PENALTY_CONFIGURATION_ANALYSIS.md](app/engine/strategy/PENALTY_CONFIGURATION_ANALYSIS.md) - Penalty testing
+### Testing Done
 
-**Status:** ✅ READY FOR INTEGRATION
+✅ Tested on 250 hourly candles (XAUUSD June 2026)  
+✅ 3 penalty values compared (0.25, 0.50, 0.75)  
+✅ Code compiles and runs  
+
+⏳ **NOT YET:** Full historical validation (pending local environment)
+
+**Status:** 🟡 FUNCIONAL / PROVISIONAL / PENDIENTE VALIDACIÓN LOCAL
 
 ---
 
-## 🔄 Phase 2: PullbackValidator 45M - STRUCTURE ONLY
+## 🔄 Phase 2: PullbackValidator 45M - ESTRUCTURA LISTA
 
 ### Current Status
 
@@ -71,6 +84,11 @@ CARVIPIX Strategy v1.1
 - `app/engine/strategy/pullbackValidator.ts` - Main class (structure, all methods PENDING)
 - `app/engine/strategy/pullbackValidatorConfig.ts` - Configuration placeholder (all values PENDING)
 - [PULLBACK_VALIDATOR_45M_SPEC.md](app/engine/strategy/PULLBACK_VALIDATOR_45M_SPEC.md) - Requirements spec
+
+**Estado Real:**
+🏗️ **ESTRUCTURA LISTA** - Professional scaffolding complete  
+⚙️ **PARÁMETROS PENDIENTES** - 7 configuration questions unanswered  
+🚫 **LÓGICA NO IMPLEMENTADA** - All methods stubbed with PENDING warnings  
 
 ### What's Ready
 
@@ -81,6 +99,7 @@ CARVIPIX Strategy v1.1
 ✅ Admin diagnostics stub  
 ✅ Professional structure  
 ✅ TypeScript compiles (3.5s)
+✅ All 7 requirements documented
 
 ### What's PENDING - 7 Configuration Questions
 
@@ -145,54 +164,60 @@ Should rules differ by market conditions?
 
 ### NOT Implemented
 
-🚫 Pullback detection logic  
-🚫 Depth calculation  
-🚫 EMA validation  
-🚫 Volume confirmation  
-🚫 Confirmation level assignment  
-🚫 All diagnostic calculations
+🚫 Pullback detection logic (all methods PENDING)  
+🚫 Depth calculation (awaiting requirements)  
+🚫 EMA validation (awaiting requirements)  
+🚫 Volume confirmation (awaiting requirements)  
+🚫 Confirmation level assignment (awaiting requirements)  
+🚫 Diagnostic calculations (awaiting requirements)  
 
-**Reason:** Awaiting configuration requirements
+**Reason:** Awaiting answers to 7 configuration questions
 
-**Status:** 🔄 STRUCTURE READY - BLOCKED ON REQUIREMENTS
+**Status:** 🏗️ ESTRUCTURA LISTA / ⚙️ PARÁMETROS PENDIENTES / 🚫 LÓGICA PENDIENTE
 
 ---
 
-## 🚫 Phase 3: EntryValidator 5M - NOT STARTED
+## 🚫 Phase 3: EntryValidator 5M - BLOQUEADO
 
 ### Status
-- Requirements: NOT DEFINED
-- Spec: NOT WRITTEN
-- Structure: NOT CREATED
-- Blocked by: Pullback must be complete
+- Requirements: NO DEFINIDAS
+- Spec: NO ESCRITA
+- Structure: NO CREADA
+- Bloqueado por: Pullback debe estar completo
 
-### Expected Scope
+**Estado Real:**
+🚫 **BLOQUEADO** - Waiting for Pullback v1.1 to be fully defined  
+
+### Scope Esperado
 
 - Detect 5M entry candles within pullback zone
 - Validate entry setup (breakout, reversal, etc.)
 - Likely requires: price action, volume, momentum
 - Output: entry signals with confirmation level
 
-**Status:** 🚫 BLOCKED - Awaiting Pullback completion
+**Status:** 🚫 BLOQUEADO - Awaiting Pullback completion
 
 ---
 
-## 🚫 Phase 4: Signal Scoring System - NOT STARTED
+## 🚫 Phase 4: Signal Scoring System - BLOQUEADO
 
 ### Status
-- Requirements: NOT DEFINED
-- Spec: NOT WRITTEN
-- Structure: NOT CREATED
-- Blocked by: Entry must be complete
+- Requirements: NO DEFINIDAS
+- Spec: NO ESCRITA
+- Structure: NO CREADA
+- Bloqueado por: Entry debe estar completo
 
-### Expected Scope
+**Estado Real:**
+🚫 **BLOQUEADO** - Waiting for Entry validator to be complete  
+
+### Scope Esperado
 
 - Aggregate signals from 1H/45M/5M
 - Calculate overall trade probability
 - Expected: 7-10 components (trend, pullback, entry, volume, etc.)
 - Output: final signal quality score + final direction
 
-**Status:** 🚫 BLOCKED - Awaiting Entry completion
+**Status:** 🚫 BLOQUEADO - Awaiting Entry completion
 
 ---
 
@@ -310,32 +335,122 @@ Structure SignalScoring class
 
 ---
 
-## 🔒 Current Restrictions
+## 🔒 Fase Actual & Restricciones
 
-### During Construction Phase
+### Estado de Cada Componente
 
-🚫 NO backtesting (awaiting config)  
-🚫 NO parameter optimization  
-🚫 NO large dataset tests  
-🚫 NO live trading  
-🚫 NO deployed signals  
-🚫 NO hardcoded parameters  
-🚫 NO invented thresholds  
+| Componente | Status | Detalles |
+|-----------|--------|---------|
+| TrendValidator 1H | 🟡 FUNCIONAL | Lógica real, provisional, pendiente validación local |
+| PullbackValidator 45M | 🏗️ ESTRUCTURA | Scaffolding listo, parámetros pendientes, lógica PENDING |
+| EntryValidator 5M | 🚫 BLOQUEADO | Aguardando Pullback |
+| SignalScoring | 🚫 BLOQUEADO | Aguardando Entry |
+| Data Integration | 🚫 PENDIENTE | Sin especificación |
+| Backtesting Local | 🚫 PENDIENTE | Sin especificación |
+| MT4/MT5 Broker | 🚫 PENDIENTE | Sin especificación |
+| AutoBot Trading | 🚫 PENDIENTE | Sin especificación |
 
-### What's Allowed
+### Durante Fase Construcción
 
-✅ Structure building  
-✅ Type definitions  
-✅ Config design  
-✅ Documentation  
-✅ Unit tests (structure only)  
-✅ Build validation  
-✅ Admin diagnostics  
-✅ Requirement gathering  
+🚫 **PROHIBIDO:**
+- Backtesting (no hay parámetros finales)
+- Parameter optimization
+- Large dataset tests
+- Live trading
+- Deployed signals
+- Hardcoded parameters
+- Invented thresholds
+
+✅ **PERMITIDO:**
+- Structure building
+- Type definitions
+- Config design
+- Documentation
+- Unit tests (structure only)
+- Build validation
+- Admin diagnostics
+- Requirement gathering
+
+### Datos Históricos (Local)
+
+🚫 **No testear aún:**
+- NO correr backtest en XAUUSD completo
+- NO correlacionar con datos broker
+- NO validar spreads/slippage
+- NO optimizar thresholds
+
+⏳ **Pendiente:**
+- Setup local environment
+- Load complete historical data
+- Validate TrendValidator on real data
+- Then move to other phases  
 
 ---
 
-## 📊 Diagnostic / Admin Panel
+## 📊 Estado para Admin Dashboard
+
+**Este es el estado REAL sin porcentajes engañosos:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CARVIPIX v1.1 STATUS                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│ ⚙️  STRATEGY ENGINE                                           │
+│ ├─ TrendValidator 1H                                        │
+│ │  Status: 🟡 FUNCIONAL / PROVISIONAL / PENDIENTE VALIDACIÓN│
+│ │  ├─ Lógica: ✅ Implementada (4 conditions)               │
+│ │  ├─ Compila: ✅ TypeScript 3.5s                          │
+│ │  ├─ Docs: ✅ Completa                                     │
+│ │  ├─ Config: 🔧 Penalty 0.50 configurable                 │
+│ │  └─ Test: ✅ 250 candles (pending local validation)       │
+│ │                                                            │
+│ ├─ PullbackValidator 45M                                    │
+│ │  Status: 🏗️ ESTRUCTURA / ⚙️ PARÁMETROS PENDIENTES          │
+│ │  ├─ Tipos: ✅ Definidos                                    │
+│ │  ├─ Interfaces: ✅ Completas                              │
+│ │  ├─ Métodos: 🚫 PENDING (0 implementado)                  │
+│ │  ├─ Config: ⚙️ 7 preguntas sin responder                  │
+│ │  └─ Bloqueado: Awaiting configuration requirements        │
+│ │                                                            │
+│ ├─ EntryValidator 5M                                        │
+│ │  Status: 🚫 BLOQUEADO                                      │
+│ │  └─ Bloqueado: Await Pullback completion                  │
+│ │                                                            │
+│ └─ SignalScoring                                            │
+│    Status: 🚫 BLOQUEADO                                      │
+│    └─ Bloqueado: Await Entry completion                     │
+│                                                              │
+│ 📊 DATA & VALIDATION                                         │
+│ ├─ Data Integration: 🚫 PENDIENTE (sin spec)                │
+│ ├─ Backtesting Local: 🚫 PENDIENTE (sin spec)               │
+│ ├─ MT4/MT5 Broker: 🚫 PENDIENTE (sin spec)                  │
+│ └─ AutoBot Trading: 🚫 PENDIENTE (sin spec)                │
+│                                                              │
+│ 🔨 BUILD STATUS                                              │
+│ ├─ TypeScript: ✅ Compiling (3.5s)                          │
+│ ├─ Type Errors: ✅ 0                                         │
+│ ├─ Warnings: ✅ 0                                            │
+│ └─ Git Commits: ✅ 3 (penalty test + pullback + status)     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Explicación de Estados
+
+| Estado | Significado | Acción |
+|--------|-----------|--------|
+| 🟡 FUNCIONAL | Código real, sin placeholders | Usar, pero validar en local |
+| 🔧 PROVISIONAL | Parámetro recomendado, no final | Sujeto a cambio |
+| ⏳ PENDIENTE VALIDACIÓN | Código listo, no testeado aún | Validar en ambiente local |
+| 🏗️ ESTRUCTURA | Scaffolding profesional listo | Aguardando lógica |
+| ⚙️ PARÁMETROS | Placeholders, requiere config | Responder preguntas |
+| 🚫 BLOQUEADO | No puede avanzar sin dependencia | Esperar fase anterior |
+| 🚫 PENDIENTE | No especificado aún | Requerimientos no definidos |
+
+---
+
+## 📋 Diagnostic / Admin Panel
 
 **Location:** `getPullbackValidatorDiagnostic()`, `getPullbackRequirements()`
 
