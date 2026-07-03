@@ -30,6 +30,7 @@ import {
 } from '../../engine/backtesting/runBacktest';
 import CSVDataLoader from './CSVDataLoader';
 import LargeFileDataLoader from './LargeFileDataLoader';
+import MultiDatasetLoader from './MultiDatasetLoader';
 
 type TradeType = 'BUY' | 'SELL';
 
@@ -45,6 +46,7 @@ export default function BacktestExecutor() {
   // Datos CSV
   const [csvCandles, setCSVCandles] = useState<Candle[] | undefined>(undefined);
   const [csvError, setCSVError] = useState<string>('');
+  const [multiDatasetInfo, setMultiDatasetInfo] = useState<any>(null);
 
   // Metadatos del dataset
   const datasetInfo = useMemo(() => {
@@ -174,12 +176,27 @@ export default function BacktestExecutor() {
 
   return (
     <div className="space-y-6">
+      {/* Cargador de Múltiples Datasets */}
+      <MultiDatasetLoader
+        onDataLoaded={(candles, metadata) => {
+          setCSVCandles(candles);
+          setMultiDatasetInfo(metadata);
+          setCSVError('');
+        }}
+        onError={(error) => {
+          setCSVError(error);
+          setCSVCandles(undefined);
+          setMultiDatasetInfo(null);
+        }}
+      />
+
       {/* Cargador de Datos CSV - Small Files */}
       <CSVDataLoader
         asset={asset}
         timeframe={timeframe}
         onDataLoaded={(candles) => {
           setCSVCandles(candles);
+          setMultiDatasetInfo(null);
           setCSVError('');
         }}
         onError={(error) => {
@@ -195,16 +212,70 @@ export default function BacktestExecutor() {
         timeframe={timeframe}
         onDataLoaded={(candles) => {
           setCSVCandles(candles);
+          setMultiDatasetInfo(null);
           setCSVError('');
         }}
         onError={(error) => {
           setCSVError(error);
           setCSVCandles(undefined);
+          setMultiDatasetInfo(null);
         }}
       />
 
-      {/* Indicador de Datos Reales vs Demo */}
-      {datasetInfo ? (
+      {/* Indicador de Datos Reales - Multi-Mes */}
+      {multiDatasetInfo ? (
+        <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-600/60 rounded-lg p-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <Database className="w-6 h-6 text-purple-400 mt-1" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-purple-300 mb-3">📊 Dataset Combinado - Multi-Mes</h4>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm mb-3">
+                <div>
+                  <p className="text-slate-400">Velas Totales</p>
+                  <p className="text-purple-200 font-semibold">{multiDatasetInfo.totalCandles.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Meses</p>
+                  <p className="text-purple-200 font-semibold">{multiDatasetInfo.months.length}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Inicio</p>
+                  <p className="text-purple-200 font-semibold text-xs">
+                    {new Date(multiDatasetInfo.startDate).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Fin</p>
+                  <p className="text-purple-200 font-semibold text-xs">
+                    {new Date(multiDatasetInfo.endDate).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Calidad</p>
+                  <p className="text-purple-200 font-semibold">{multiDatasetInfo.qualityPercent}%</p>
+                </div>
+              </div>
+              {multiDatasetInfo.months.length > 0 && (
+                <div>
+                  <p className="text-slate-400 text-xs mb-2">Meses incluidos:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {multiDatasetInfo.months.map((month: string) => (
+                      <span
+                        key={month}
+                        className="px-2 py-1 bg-purple-700/40 text-purple-300 rounded text-xs font-medium"
+                      >
+                        {month}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : datasetInfo ? (
         <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-600/60 rounded-lg p-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
@@ -242,7 +313,7 @@ export default function BacktestExecutor() {
             <Calendar className="w-5 h-5 text-slate-500 mt-1 flex-shrink-0" />
             <div>
               <p className="text-slate-300">Se usarán datos demo generados localmente (últimos 30 días)</p>
-              <p className="text-slate-500 text-sm mt-1">Carga un archivo CSV para usar datos reales HistData</p>
+              <p className="text-slate-500 text-sm mt-1">Carga un archivo CSV o múltiples datasets para usar datos reales HistData</p>
             </div>
           </div>
         </div>
@@ -517,7 +588,38 @@ export default function BacktestExecutor() {
           </div>
 
           {/* Información del Dataset Utilizado */}
-          {datasetInfo && (
+          {multiDatasetInfo ? (
+            <div className="bg-purple-900/20 border border-purple-700/50 rounded-lg p-4">
+              <p className="text-purple-300 text-sm font-semibold mb-3">
+                ✅ Backtest con Dataset Combinado - {multiDatasetInfo.totalCandles.toLocaleString()} velas reales
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-3">
+                <div>
+                  <p className="text-slate-400">Meses</p>
+                  <p className="text-purple-200 font-semibold">{multiDatasetInfo.months.length}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Inicio</p>
+                  <p className="text-purple-200 font-semibold">
+                    {new Date(multiDatasetInfo.startDate).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Fin</p>
+                  <p className="text-purple-200 font-semibold">
+                    {new Date(multiDatasetInfo.endDate).toLocaleDateString('es-ES')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Calidad</p>
+                  <p className="text-purple-200 font-semibold">{multiDatasetInfo.qualityPercent}%</p>
+                </div>
+              </div>
+              <p className="text-slate-300 text-xs">
+                {multiDatasetInfo.months.join(', ')}
+              </p>
+            </div>
+          ) : datasetInfo ? (
             <div className="bg-emerald-900/20 border border-emerald-700/50 rounded-lg p-4">
               <p className="text-emerald-300 text-sm font-semibold mb-2">
                 ✅ Backtest ejecutado con {datasetInfo.count.toLocaleString()} velas reales de HistData
@@ -527,8 +629,7 @@ export default function BacktestExecutor() {
                 {datasetInfo.endDate.toLocaleDateString('es-ES')}
               </p>
             </div>
-          )}
-          {!datasetInfo && (
+          ) : (
             <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
               <p className="text-slate-300 text-sm">
                 📊 Backtest ejecutado con datos demo generados (últimos 30 días)
