@@ -1,9 +1,10 @@
 import Image from "next/image";
+import AdminNavButton from "./components/AdminNavButton";
 
 export default function Header() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 border-b border-white/10 bg-[#0F1117]/75 backdrop-blur-2xl">
-      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-8">
+      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-8 gap-4">
         <a href="#" className="flex items-center transition duration-300 hover:scale-105">
           <Image
             src="/logo/logo carvipix.png"
@@ -22,9 +23,12 @@ export default function Header() {
           <a href="#" className="transition hover:text-[#D4AF37]">Resultados</a>
         </nav>
 
-        <button className="rounded-full bg-[#D4AF37] px-8 py-3.5 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-300 hover:scale-105 hover:bg-[#f0c94a]">
-          Comenzar
-        </button>
+        <div className="flex items-center gap-4">
+          <AdminNavButton />
+          <button className="rounded-full bg-[#D4AF37] px-8 py-3.5 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-300 hover:scale-105 hover:bg-[#f0c94a]">
+            Comenzar
+          </button>
+        </div>
       </div>
     </header>
   );

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from './AdminDashboard';
+import AdminGuard from '@/app/components/AdminGuard';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,9 +53,13 @@ export default function AdminPage() {
     );
   }
 
-  return isAuthenticated ? (
-    <AdminDashboard onLogout={handleLogout} />
-  ) : (
-    <AdminLogin onLogin={handleLogin} />
+  return (
+    <AdminGuard>
+      {isAuthenticated ? (
+        <AdminDashboard onLogout={handleLogout} />
+      ) : (
+        <AdminLogin onLogin={handleLogin} />
+      )}
+    </AdminGuard>
   );
 }
