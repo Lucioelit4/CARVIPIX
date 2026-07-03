@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { CARVIPIXCard, colors, spacing, typography, borders } from "../../design-system";
+
 const history = [
   { activo: "XAUUSD", resultado: "Ganada", pips: "+68 pips", fecha: "Hoy 11:20" },
   { activo: "BTCUSD", resultado: "Ganada", pips: "+420 pts", fecha: "Hoy 09:45" },
@@ -11,38 +13,51 @@ export default function AlertHistory() {
   const safeHistory = history ?? [];
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <CARVIPIXCard variant="elevated" padding="16">
+      <div style={{ marginBottom: spacing[12], display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing[12] }}>
         <div>
-          <h2 className="text-lg font-bold">Historial reciente</h2>
-          <p className="mt-1 text-xs text-zinc-400">Últimas operaciones cerradas.</p>
+          <h2 style={{ fontSize: typography.sizes.lg, fontWeight: typography.weights.bold, color: colors.white.pure }}>Historial reciente</h2>
+          <p style={{ marginTop: spacing[8], fontSize: typography.sizes.xs, color: colors.white.secondary }}>Últimas operaciones cerradas.</p>
         </div>
-        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-[#D4AF37]">
+        <span style={{ borderRadius: '9999px', border: `1px solid rgba(212, 175, 55, 0.3)`, backgroundColor: `rgba(212, 175, 55, 0.1)`, paddingLeft: spacing[8], paddingRight: spacing[8], paddingTop: spacing[4], paddingBottom: spacing[4], fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: colors.gold.primary }}>
           Último 7 días
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[8] }}>
         {safeHistory.map((item) => (
           <div
             key={`${item.activo}-${item.fecha}`}
-            className="rounded-2xl border border-white/10 bg-black/20 p-3 transition hover:border-[#D4AF37]/30"
+            style={{
+              borderRadius: borders.radius.xl,
+              border: `1px solid rgba(255, 255, 255, 0.1)`,
+              backgroundColor: `rgba(0, 0, 0, 0.2)`,
+              padding: spacing[12],
+              transition: 'all 200ms ease',
+              cursor: 'pointer',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = `rgba(212, 175, 55, 0.3)`;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLDivElement).style.borderColor = `rgba(255, 255, 255, 0.1)`;
+            }}
           >
-            <div className="flex items-center justify-between gap-3">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: spacing[12] }}>
               <div>
-                <p className="font-semibold text-white">{item.activo}</p>
-                <p className="text-xs text-zinc-400">{item.fecha}</p>
+                <p style={{ fontWeight: typography.weights.semibold, color: colors.white.pure }}>{item.activo}</p>
+                <p style={{ fontSize: typography.sizes.xs, color: colors.white.secondary }}>{item.fecha}</p>
               </div>
-              <div className="text-right">
-                <p className={`font-semibold ${item.resultado === "Ganada" ? "text-green-400" : "text-red-400"}`}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontWeight: typography.weights.semibold, color: item.resultado === "Ganada" ? '#86EFAC' : '#F87171' }}>
                   {item.resultado}
                 </p>
-                <p className="text-xs text-zinc-400">{item.pips}</p>
+                <p style={{ fontSize: typography.sizes.xs, color: colors.white.secondary }}>{item.pips}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </CARVIPIXCard>
   );
 }

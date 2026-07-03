@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal } from "lucide-react";
+import { CARVIPIXCard, CARVIPIXButton, colors, spacing, typography, borders } from "../../design-system";
 
 interface AlertFiltersProps {
   categories?: string[];
@@ -59,55 +60,140 @@ export default function AlertFilters({
   const safeDirectionOptions = directionOptions ?? ["Todas", "Compra", "Venta"];
 
   return (
-    <div className="space-y-6 rounded-[2rem] border border-white/10 bg-[#10141D]/90 p-6 shadow-xl shadow-[#D4AF37]/10">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-[0.24em] text-zinc-500">Filtros rápidos</p>
-          <h2 className="mt-3 text-2xl font-semibold">Encuentra tu señal ideal</h2>
+    <CARVIPIXCard variant="elevated" padding="24">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[16], justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[12] }}>
+          <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.24em', color: colors.white.secondary }}>Filtros rápidos</p>
+          <h2 style={{ marginTop: spacing[12], fontSize: '1.5rem', fontWeight: typography.weights.semibold, color: colors.white.pure }}>Encuentra tu señal ideal</h2>
         </div>
         <button
           type="button"
           onClick={onToggleAdvanced}
-          className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-5 py-3 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/15"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: spacing[8],
+            borderRadius: '9999px',
+            border: `1px solid rgba(212, 175, 55, 0.2)`,
+            backgroundColor: `rgba(212, 175, 55, 0.1)`,
+            paddingLeft: spacing[16],
+            paddingRight: spacing[16],
+            paddingTop: spacing[12],
+            paddingBottom: spacing[12],
+            fontSize: typography.sizes.sm,
+            fontWeight: typography.weights.semibold,
+            color: colors.gold.primary,
+            cursor: 'pointer',
+            transition: 'all 200ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.target as HTMLButtonElement).style.backgroundColor = `rgba(212, 175, 55, 0.15)`;
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLButtonElement).style.backgroundColor = `rgba(212, 175, 55, 0.1)`;
+          }}
         >
           <SlidersHorizontal size={18} />
           {advancedOpen ? "Ocultar filtros avanzados" : "Filtros avanzados"}
         </button>
       </div>
 
-      <div className="flex flex-wrap gap-3">
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[12], marginTop: spacing[24] }}>
         {safeCategories.map((item) => (
           <button
             key={item}
             type="button"
             onClick={() => onCategoryChange(item)}
-            className={`rounded-full px-4 py-2 text-xs font-semibold transition duration-300 ${
-              activeCategory === item
-                ? "bg-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/30"
-                : "border border-white/10 bg-[#0A0F16] text-zinc-300 hover:border-[#D4AF37]/40 hover:bg-[#D4AF37]/10 hover:text-[#D4AF37]"
-            }`}
+            style={{
+              borderRadius: '9999px',
+              paddingLeft: spacing[16],
+              paddingRight: spacing[16],
+              paddingTop: spacing[8],
+              paddingBottom: spacing[8],
+              fontSize: typography.sizes.xs,
+              fontWeight: typography.weights.semibold,
+              transition: 'all 200ms ease',
+              border: activeCategory === item ? 'none' : `1px solid rgba(255, 255, 255, 0.1)`,
+              backgroundColor: activeCategory === item ? colors.gold.primary : `rgba(10, 15, 22, 1)`,
+              color: activeCategory === item ? colors.black.pure : colors.white.secondary,
+              cursor: 'pointer',
+              boxShadow: activeCategory === item ? `0 0 20px rgba(212, 175, 55, 0.3)` : 'none',
+            }}
+            onMouseEnter={(e) => {
+              if (activeCategory !== item) {
+                (e.target as HTMLButtonElement).style.borderColor = `rgba(212, 175, 55, 0.4)`;
+                (e.target as HTMLButtonElement).style.backgroundColor = `rgba(212, 175, 55, 0.1)`;
+                (e.target as HTMLButtonElement).style.color = colors.gold.primary;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeCategory !== item) {
+                (e.target as HTMLButtonElement).style.borderColor = `rgba(255, 255, 255, 0.1)`;
+                (e.target as HTMLButtonElement).style.backgroundColor = `rgba(10, 15, 22, 1)`;
+                (e.target as HTMLButtonElement).style.color = colors.white.secondary;
+              }
+            }}
           >
             {item}
           </button>
         ))}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.7fr_auto]">
-        <label className="relative block">
-          <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500" />
+      <div style={{ marginTop: spacing[24], display: 'grid', gap: spacing[16], gridTemplateColumns: 'minmax(0, 1.7fr) auto' }}>
+        <label style={{ position: 'relative', display: 'block' }}>
+          <Search size={18} style={{ position: 'absolute', left: spacing[16], top: '50%', transform: 'translateY(-50%)', color: colors.white.secondary }} />
           <input
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Buscar activo..."
-            className="w-full rounded-2xl border border-white/10 bg-[#0A0F16] py-4 pl-14 pr-5 text-white outline-none transition focus:border-[#D4AF37]"
+            style={{
+              width: '100%',
+              borderRadius: borders.radius.xl,
+              border: `1px solid rgba(255, 255, 255, 0.1)`,
+              backgroundColor: `rgba(10, 15, 22, 1)`,
+              paddingTop: spacing[16],
+              paddingBottom: spacing[16],
+              paddingLeft: spacing[56],
+              paddingRight: spacing[16],
+              color: colors.white.pure,
+              fontSize: typography.sizes.base,
+              outline: 'none',
+              transition: 'all 200ms ease',
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLInputElement).style.borderColor = colors.gold.primary;
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLInputElement).style.borderColor = `rgba(255, 255, 255, 0.1)`;
+            }}
           />
         </label>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div style={{ display: 'grid', gap: spacing[12], gridTemplateColumns: 'repeat(2, 1fr)' }}>
           <select
             value={status}
             onChange={(event) => onStatusChange(event.target.value)}
-            className="w-full rounded-2xl border border-white/10 bg-[#0A0F16] px-3 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]"
+            style={{
+              width: '100%',
+              borderRadius: borders.radius.xl,
+              border: `1px solid rgba(255, 255, 255, 0.1)`,
+              backgroundColor: `rgba(10, 15, 22, 1)`,
+              paddingLeft: spacing[12],
+              paddingRight: spacing[12],
+              paddingTop: spacing[12],
+              paddingBottom: spacing[12],
+              fontSize: typography.sizes.sm,
+              color: colors.white.pure,
+              outline: 'none',
+              transition: 'all 200ms ease',
+              cursor: 'pointer',
+            }}
+            onFocus={(e) => {
+              (e.target as HTMLSelectElement).style.borderColor = colors.gold.primary;
+            }}
+            onBlur={(e) => {
+              (e.target as HTMLSelectElement).style.borderColor = `rgba(255, 255, 255, 0.1)`;
+            }}
           >
             {safeStatusOptions.map((item) => (
               <option key={item} value={item}>
@@ -118,7 +204,28 @@ export default function AlertFilters({
           <button
             type="button"
             onClick={onClear}
-            className="rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#D4AF37] transition hover:bg-[#D4AF37]/20"
+            style={{
+              borderRadius: borders.radius.xl,
+              border: `1px solid rgba(212, 175, 55, 0.3)`,
+              backgroundColor: `rgba(212, 175, 55, 0.1)`,
+              paddingLeft: spacing[16],
+              paddingRight: spacing[16],
+              paddingTop: spacing[12],
+              paddingBottom: spacing[12],
+              fontSize: typography.sizes.xs,
+              fontWeight: typography.weights.semibold,
+              textTransform: 'uppercase',
+              letterSpacing: '0.15em',
+              color: colors.gold.primary,
+              cursor: 'pointer',
+              transition: 'all 200ms ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = `rgba(212, 175, 55, 0.2)`;
+            }}
+            onMouseLeave={(e) => {
+              (e.target as HTMLButtonElement).style.backgroundColor = `rgba(212, 175, 55, 0.1)`;
+            }}
           >
             Limpiar
           </button>
@@ -129,22 +236,37 @@ export default function AlertFilters({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0B1019]/95 p-5"
+          style={{
+            marginTop: spacing[24],
+            borderRadius: borders.radius.lg,
+            border: `1px solid rgba(212, 175, 55, 0.2)`,
+            backgroundColor: `rgba(11, 16, 25, 0.95)`,
+            padding: spacing[16],
+          }}
         >
-          <div className="grid gap-4 xl:grid-cols-2">
-            <div className="space-y-4 rounded-3xl border border-white/10 bg-[#090D14]/90 p-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Sesión</p>
-              <div className="flex flex-wrap gap-2">
+          <div style={{ display: 'grid', gap: spacing[16], gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[16], borderRadius: borders.radius.lg, border: `1px solid rgba(255, 255, 255, 0.1)`, backgroundColor: `rgba(9, 13, 20, 0.9)`, padding: spacing[16] }}>
+              <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>Sesión</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[8] }}>
                 {safeSessionOptions.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => onSessionChange(item)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      session === item
-                        ? "bg-[#D4AF37] text-black"
-                        : "border border-white/10 bg-[#10141D] text-zinc-300 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-                    }`}
+                    style={{
+                      borderRadius: '9999px',
+                      paddingLeft: spacing[16],
+                      paddingRight: spacing[16],
+                      paddingTop: spacing[8],
+                      paddingBottom: spacing[8],
+                      fontSize: typography.sizes.sm,
+                      fontWeight: typography.weights.semibold,
+                      transition: 'all 200ms ease',
+                      border: session === item ? 'none' : `1px solid rgba(255, 255, 255, 0.1)`,
+                      backgroundColor: session === item ? colors.gold.primary : `rgba(16, 20, 29, 1)`,
+                      color: session === item ? colors.black.pure : colors.white.secondary,
+                      cursor: 'pointer',
+                    }}
                   >
                     {item}
                   </button>
@@ -152,41 +274,57 @@ export default function AlertFilters({
               </div>
             </div>
 
-            <div className="space-y-4 rounded-3xl border border-white/10 bg-[#090D14]/90 p-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Riesgo</p>
-              <div className="flex flex-wrap gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[16], borderRadius: borders.radius.lg, border: `1px solid rgba(255, 255, 255, 0.1)`, backgroundColor: `rgba(9, 13, 20, 0.9)`, padding: spacing[16] }}>
+              <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>Riesgo</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[8] }}>
                 {safeRiskOptions.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => onRiskChange(item)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      risk === item
-                        ? "bg-[#D4AF37] text-black"
-                        : "border border-white/10 bg-[#10141D] text-zinc-300 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-                    }`}
+                    style={{
+                      borderRadius: '9999px',
+                      paddingLeft: spacing[16],
+                      paddingRight: spacing[16],
+                      paddingTop: spacing[8],
+                      paddingBottom: spacing[8],
+                      fontSize: typography.sizes.sm,
+                      fontWeight: typography.weights.semibold,
+                      transition: 'all 200ms ease',
+                      border: risk === item ? 'none' : `1px solid rgba(255, 255, 255, 0.1)`,
+                      backgroundColor: risk === item ? colors.gold.primary : `rgba(16, 20, 29, 1)`,
+                      color: risk === item ? colors.black.pure : colors.white.secondary,
+                      cursor: 'pointer',
+                    }}
                   >
                     {item}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <div className="space-y-4 rounded-3xl border border-white/10 bg-[#090D14]/90 p-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Dirección</p>
-              <div className="flex flex-wrap gap-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[16], borderRadius: borders.radius.lg, border: `1px solid rgba(255, 255, 255, 0.1)`, backgroundColor: `rgba(9, 13, 20, 0.9)`, padding: spacing[16] }}>
+              <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>Dirección</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[8] }}>
                 {safeDirectionOptions.map((item) => (
                   <button
                     key={item}
                     type="button"
                     onClick={() => onDirectionChange(item)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      direction === item
-                        ? "bg-[#D4AF37] text-black"
-                        : "border border-white/10 bg-[#10141D] text-zinc-300 hover:border-[#D4AF37]/30 hover:text-[#D4AF37]"
-                    }`}
+                    style={{
+                      borderRadius: '9999px',
+                      paddingLeft: spacing[16],
+                      paddingRight: spacing[16],
+                      paddingTop: spacing[8],
+                      paddingBottom: spacing[8],
+                      fontSize: typography.sizes.sm,
+                      fontWeight: typography.weights.semibold,
+                      transition: 'all 200ms ease',
+                      border: direction === item ? 'none' : `1px solid rgba(255, 255, 255, 0.1)`,
+                      backgroundColor: direction === item ? colors.gold.primary : `rgba(16, 20, 29, 1)`,
+                      color: direction === item ? colors.black.pure : colors.white.secondary,
+                      cursor: 'pointer',
+                    }}
                   >
                     {item}
                   </button>
@@ -194,24 +332,43 @@ export default function AlertFilters({
               </div>
             </div>
 
-            <div className="space-y-4 rounded-3xl border border-white/10 bg-[#090D14]/90 p-4">
-              <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">RR mínimo</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[16], borderRadius: borders.radius.lg, border: `1px solid rgba(255, 255, 255, 0.1)`, backgroundColor: `rgba(9, 13, 20, 0.9)`, padding: spacing[16] }}>
+              <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>RR mínimo</p>
               <input
                 type="number"
                 min="0"
                 step="0.1"
                 value={rrMin}
                 onChange={(event) => onRrMinChange(event.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-[#10141D] px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]"
+                style={{
+                  width: '100%',
+                  borderRadius: borders.radius.xl,
+                  border: `1px solid rgba(255, 255, 255, 0.1)`,
+                  backgroundColor: `rgba(16, 20, 29, 1)`,
+                  paddingLeft: spacing[16],
+                  paddingRight: spacing[16],
+                  paddingTop: spacing[12],
+                  paddingBottom: spacing[12],
+                  fontSize: typography.sizes.sm,
+                  color: colors.white.pure,
+                  outline: 'none',
+                  transition: 'all 200ms ease',
+                }}
+                onFocus={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = colors.gold.primary;
+                }}
+                onBlur={(e) => {
+                  (e.target as HTMLInputElement).style.borderColor = `rgba(255, 255, 255, 0.1)`;
+                }}
               />
             </div>
           </div>
 
-          <p className="mt-4 text-sm text-zinc-400">
+          <p style={{ marginTop: spacing[16], fontSize: typography.sizes.sm, color: colors.white.secondary }}>
             Los filtros avanzados son demostrativos y actualizan la selección de alertas en tiempo real.
           </p>
         </motion.div>
       ) : null}
-    </div>
+    </CARVIPIXCard>
   );
 }
