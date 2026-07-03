@@ -6,9 +6,15 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Loader, TrendingUp } from 'lucide-react';
 import { Candle, Asset, Timeframe } from '../../engine/types/marketData';
 import { parseCSVContent, validateCandleData } from '../../engine/backtesting/csvImporter';
+import {
+  convertToMultipleTimeframes,
+  validateCandlesForConversion,
+  MultiTimeframeResult,
+} from '../../engine/backtesting/timeframeConverter';
+import TimeframeAnalyzer from './TimeframeAnalyzer';
 
 interface CSVDataLoaderProps {
   asset: Asset;
@@ -27,6 +33,8 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
     startDate: string;
     endDate: string;
   } | null>(null);
+  const [multiTimeframeResult, setMultiTimeframeResult] = useState<MultiTimeframeResult | null>(null);
+  const [showAnalyzer, setShowAnalyzer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   /**
@@ -40,6 +48,8 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
     setStatus('loading');
     setMessage('Leyendo archivo CSV...');
     setStats(null);
+    setMultiTimeframeResult(null);
+    setShowAnalyzer(false);
 
     try {
       const content = await file.text();
@@ -62,6 +72,12 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
         console.warn('CSV Warnings:', validation.warnings);
       }
 
+      // Validar para conversión multi-timeframe
+      const conversionValidation = validateCandlesForConversion(candles, timeframe);
+      if (conversionValidation.warnings.length > 0) {
+        console.warn('Conversion warnings:', conversionValidation.warnings);
+      }
+
       // Procesar estadísticas
       const startDate = new Date(candles[0].timestamp).toLocaleString();
       const endDate = new Date(candles[candles.length - 1].timestamp).toLocaleString();
@@ -71,6 +87,14 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
         startDate,
         endDate,
       });
+
+      // Convertir a múltiples timeframes
+      try {
+        const multiResult = convertToMultipleTimeframes(candles, timeframe);
+        setMultiTimeframeResult(multiResult);
+      } catch (convertError) {
+        console.warn('Multi-timeframe conversion failed:', convertError);
+      }
 
       setStatus('success');
       setMessage(`✓ Cargados ${candles.length} candles`);
@@ -91,13 +115,15 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
     setStatus('loading');
     setMessage('Cargando datos de ejemplo...');
     setStats(null);
+    setMultiTimeframeResult(null);
+    setShowAnalyzer(false);
 
     try {
       const response = await fetch('/sample-data/XAUUSD_M1_sample.csv');
       if (!response.ok) throw new Error('No se pudo cargar el archivo de ejemplo');
 
       const content = await response.text();
-      const candles = parseCSVContent(content, asset, timeframe);
+      const candles = parseCSVContent(content, 'XAUUSD', '5M'); // Sample es M1, pero lo marcamos como base
 
       const validation = validateCandleData(candles);
       if (!validation.isValid) {
@@ -112,6 +138,14 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
         startDate,
         endDate,
       });
+
+      // Convertir a múltiples timeframes
+      try {
+        const multiResult = convertToMultipleTimeframes(candles, '5M');
+        setMultiTimeframeResult(multiResult);
+      } catch (convertError) {
+        console.warn('Multi-timeframe conversion failed:', convertError);
+      }
 
       setStatus('success');
       setMessage(`✓ Ejemplo cargado: ${candles.length} candles`);
@@ -132,6 +166,8 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
     setStatus('idle');
     setMessage('');
     setStats(null);
+    setMultiTimeframeResult(null);
+    setShowAnalyzer(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -217,6 +253,17 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
           </div>
         )}
 
+        {/* Multi-Timeframe Analyzer Toggle */}
+        {multiTimeframeResult && (
+          <button
+            onClick={() => setShowAnalyzer(!showAnalyzer)}
+            className="w-full py-2 px-4 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded transition text-sm flex items-center justify-center gap-2"
+          >
+            <TrendingUp className="w-4 h-4" />
+            {showAnalyzer ? '▼ Ocultar' : '▶ Mostrar'} Análisis Multi-Timeframe
+          </button>
+        )}
+
         {/* Clear Button */}
         {stats && (
           <button
@@ -239,6 +286,9 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
           <strong>Ejemplo:</strong> 2026.06.02 00:05:00,2543.85,2543.95,2543.65,2543.75,12
         </p>
       </div>
+
+      {/* Multi-Timeframe Analyzer */}
+      {showAnalyzer && <TimeframeAnalyzer result={multiTimeframeResult} isLoading={isLoading} />}
     </div>
   );
 }
