@@ -3,11 +3,18 @@
 /**
  * Multi-Dataset Loader - Combina múltiples CSV HistData
  * Detecta, carga y fusiona datasets de múltiples meses
+ * 
+ * Arquitectura:
+ * - Web Worker: Parsing pesado en background thread
+ * - IndexedDB Cache: Evita reprocesamiento
+ * - Streaming: Procesa en chunks sin saturar UI
  */
 
 import React, { useState, useEffect } from 'react';
 import { Database, Plus, X, AlertCircle, CheckCircle } from 'lucide-react';
 import { Candle } from '../../engine/types/marketData';
+import { useCSVParserWorker } from '../../hooks/useCSVParserWorker';
+import { datasetCache } from '../../lib/localDatasetCache';
 
 interface DatasetFile {
   name: string;
@@ -39,62 +46,122 @@ export default function MultiDatasetLoader({
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<string>('');
   const [combinedData, setCombinedData] = useState<CombinedDataset | null>(null);
+  const { parseCSVLines, isLoading: workerLoading, cleanup } = useCSVParserWorker();
+
+  useEffect(() => {
+    return () => cleanup();
+  }, [cleanup]);
 
   // Cargar todos los datasets disponibles y combinarlos
   const handleLoadAll = async () => {
     setIsLoading(true);
-    setMessage('Detectando archivos y combinando datasets...');
+    setMessage('Detectando archivos disponibles...');
 
     try {
-      const response = await fetch('/api/datasets/list');
-      const files: DatasetFile[] = await response.json();
+      const response = await fetch('/api/datasets?action=list');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to list datasets: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const files: DatasetFile[] = data.files || [];
 
       if (files.length === 0) {
         throw new Error('No hay archivos HistData disponibles');
       }
 
-      // Cargar todos los archivos
+      setMessage(`Encontrados ${files.length} archivos. Cargando...`);
+
+      // Cargar y parsear archivos usando Web Worker
       const allCandles: Candle[] = [];
       const candlesByMonth: Record<string, number> = {};
       const months: string[] = [];
-      let duplicatesFound = 0;
+      let totalDuplicates = 0;
 
       for (const file of files) {
-        setMessage(`Cargando ${file.name}...`);
-
-        const fileResponse = await fetch(`/api/datasets/load?file=${encodeURIComponent(file.path)}`);
-        const fileData = await fileResponse.json();
-
-        if (fileData.candles) {
-          allCandles.push(...fileData.candles);
-          const monthKey = `${file.year}-${file.month}`;
-          candlesByMonth[monthKey] = fileData.candles.length;
-          months.push(monthKey);
-
-          if (fileData.duplicates) {
-            duplicatesFound += fileData.duplicates;
+        try {
+          // Verificar cache
+          const cached = await datasetCache.get(file.name);
+          
+          if (cached) {
+            setMessage(`[Cache] ${file.name} - ${cached.candles.length} velas`);
+            allCandles.push(...cached.candles);
+            const monthKey = `${file.year}-${file.month}`;
+            candlesByMonth[monthKey] = cached.candles.length;
+            months.push(monthKey);
+            continue;
           }
+
+          setMessage(`Descargando ${file.name}...`);
+          
+          // Fetch del archivo desde public/datasets/
+          const csvResponse = await fetch(`/datasets/${file.name}`);
+          if (!csvResponse.ok) {
+            console.warn(`Archivo no accesible: ${file.name}`);
+            continue;
+          }
+          
+          const csvText = await csvResponse.text();
+          const lines = csvText.trim().split('\n');
+
+          setMessage(`Parseando ${file.name} con Worker... (${lines.length} líneas)`);
+
+          // Parsear en Web Worker (no bloquea UI)
+          const candles = await parseCSVLines(
+            lines,
+            'XAUUSD',
+            '5M',
+            (progress) => {
+              if (progress.type === 'progress') {
+                const percent = Math.round(
+                  ((progress.parsed || 0) / (progress.total || 1)) * 100
+                );
+                setMessage(
+                  `Parseando ${file.name}... ${percent}% (${progress.parsed}/${progress.total})`
+                );
+              }
+            }
+          );
+
+          // Guardar en cache para próximas sesiones
+          const monthKey = `${file.year}-${file.month}`;
+          await datasetCache.set({
+            filename: file.name,
+            candles,
+            metadata: {
+              totalLines: lines.length,
+              validCandles: candles.length,
+              duplicates: 0,
+            },
+          });
+
+          allCandles.push(...candles);
+          candlesByMonth[monthKey] = candles.length;
+          months.push(monthKey);
+        } catch (fileError) {
+          console.error(`Error loading ${file.name}:`, fileError);
+          // Continuar con otros archivos
         }
       }
 
       if (allCandles.length === 0) {
-        throw new Error('No se pudieron cargar datos de los archivos');
+        throw new Error('No se pudieron cargar datos válidos');
       }
 
-      // Combinar: deduplicar por timestamp + ordenar
-      setMessage('Eliminando duplicados y ordenando...');
+      // Combinar: deduplicar + ordenar
+      setMessage('Deduplicando y ordenando...');
 
       const seen = new Set<number>();
       const uniqueCandles = allCandles.filter((candle) => {
         if (seen.has(candle.timestamp)) {
-          duplicatesFound++;
+          totalDuplicates++;
           return false;
         }
         seen.add(candle.timestamp);
         return true;
       });
 
-      // Ordenar por timestamp
       uniqueCandles.sort((a, b) => a.timestamp - b.timestamp);
 
       // Calcular metadatos
@@ -107,7 +174,7 @@ export default function MultiDatasetLoader({
         endDate,
         months: [...new Set(months)].sort(),
         candlesByMonth,
-        duplicatesCleaned: duplicatesFound,
+        duplicatesCleaned: totalDuplicates,
         qualityPercent: Math.round(
           ((uniqueCandles.length / (allCandles.length || 1)) * 100)
         ),
@@ -115,7 +182,7 @@ export default function MultiDatasetLoader({
 
       setCombinedData(metadata);
       setMessage(
-        `✓ Dataset combinado: ${uniqueCandles.length.toLocaleString()} velas de ${months.length} meses`
+        `✓ Dataset combinado: ${uniqueCandles.length.toLocaleString()} velas`
       );
       onDataLoaded(uniqueCandles, metadata);
     } catch (error) {

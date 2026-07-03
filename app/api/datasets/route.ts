@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { parseHistDataRealLine, validateSingleCandle } from '@/app/engine/backtesting/csvImporter';
-import { Candle } from '@/app/engine/types/marketData';
 
 // GET /api/datasets?action=list  or  /api/datasets?action=load&file=...
 export async function GET(request: NextRequest) {
@@ -11,19 +9,13 @@ export async function GET(request: NextRequest) {
 
   if (action === 'list') {
     return listDatasets();
-  } else if (action === 'load') {
-    const file = searchParams.get('file');
-    if (!file) {
-      return NextResponse.json({ error: 'File parameter required' }, { status: 400 });
-    }
-    return loadDataset(file);
   }
 
   return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
 }
 
 /**
- * Listar todos los archivos HistData disponibles
+ * Listar todos los archivos HistData disponibles - SOLO METADATOS
  */
 async function listDatasets() {
   try {
@@ -57,11 +49,15 @@ async function listDatasets() {
           return null;
         }
 
+        const filePath = path.join(dataDir, f);
+        const stat = fs.statSync(filePath);
+
         return {
           name: f,
-          path: path.join(dataDir, f),
+          path: filePath,
           month,
           year,
+          size: stat.size,
         };
       })
       .filter((f) => f !== null);
@@ -70,46 +66,5 @@ async function listDatasets() {
   } catch (error) {
     console.error('Error listing datasets:', error);
     return NextResponse.json({ error: 'Failed to list datasets' }, { status: 500 });
-  }
-}
-
-/**
- * Cargar un dataset específico
- */
-async function loadDataset(filePath: string) {
-  try {
-    if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
-    }
-
-    // Leer archivo línea por línea
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const lines = content.trim().split('\n');
-
-    const candles: Candle[] = [];
-    let duplicates = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      try {
-        const candle = parseHistDataRealLine(lines[i], 'XAUUSD', '5M');
-        const validation = validateSingleCandle(candle);
-
-        if (validation.valid) {
-          candles.push(candle);
-        }
-      } catch (e) {
-        // Ignorar líneas malformadas
-        console.warn(`Skipping malformed line ${i + 1}`);
-      }
-    }
-
-    return NextResponse.json({
-      candles,
-      duplicates: duplicates,
-      count: candles.length,
-    });
-  } catch (error) {
-    console.error('Error loading dataset:', error);
-    return NextResponse.json({ error: 'Failed to load dataset' }, { status: 500 });
   }
 }
