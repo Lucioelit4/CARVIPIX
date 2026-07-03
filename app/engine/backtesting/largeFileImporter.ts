@@ -9,6 +9,7 @@ import {
   parseCSVLine, 
   validateSingleCandle,
   parseHistDataLine,
+  parseHistDataRealLine,
   parseStandardCSVLine 
 } from './csvImporter';
 
@@ -58,10 +59,10 @@ function isZipFile(buffer: ArrayBuffer): boolean {
 }
 
 /**
- * Detectar el formato de CSV por su contenido
- * Retorna 'histdata', 'standard', o 'unknown'
+ * Detectar el formato de CSV por su contenido y separadores
+ * Retorna 'histdata_real', 'histdata', 'standard', o 'unknown'
  */
-function detectCSVFormat(firstLine: string): 'histdata' | 'standard' | 'unknown' {
+function detectCSVFormat(firstLine: string): 'histdata_real' | 'histdata' | 'standard' | 'unknown' {
   const line = firstLine.toLowerCase().trim();
   
   // Header detection
@@ -69,16 +70,28 @@ function detectCSVFormat(firstLine: string): 'histdata' | 'standard' | 'unknown'
   if (line.includes('date') && line.includes('time')) return 'standard';
   
   // Pattern detection for data (si no hay header)
-  const parts = line.split(',');
   
-  // HistData: YYYY.MM.DD HH:MM:SS,Open,High,Low,Close,Volume (6 columnas)
-  // Patrón: primero tiene puntos (fecha YYYY.MM.DD)
-  if (parts.length === 6 && parts[0].includes('.') && parts[0].includes(' ')) {
+  // HistData REAL: YYYYMMDD HHMMSS;Open;High;Low;Close;Volume
+  // Patrón: contiene punto y coma y formato YYYYMMDD HHMMSS
+  if (firstLine.includes(';')) {
+    const parts = firstLine.split(';');
+    if (parts.length === 6) {
+      const dateTimePart = parts[0].trim();
+      // Validar que sea YYYYMMDD HHMMSS
+      if (dateTimePart.match(/^\d{8}\s\d{6}$/)) {
+        return 'histdata_real';
+      }
+    }
+  }
+  
+  // HistData con comas: YYYY.MM.DD HH:MM:SS,Open,High,Low,Close,Volume
+  const partsComma = firstLine.split(',');
+  if (partsComma.length === 6 && partsComma[0].includes('.') && partsComma[0].includes(' ')) {
     return 'histdata';
   }
   
   // Standard: Date,Time,Open,High,Low,Close,Volume (7 columnas)
-  if (parts.length === 7 && parts[1].match(/^\d{2}:\d{2}:\d{2}/)) {
+  if (partsComma.length === 7 && partsComma[1].match(/^\d{2}:\d{2}:\d{2}/)) {
     return 'standard';
   }
   
@@ -160,7 +173,7 @@ export async function importLargeCSVFile(
   let buffer = '';
   let lineNumber = 0;
   let lastTimestamp: number | null = null;
-  let detectedFormat: 'histdata' | 'standard' | 'unknown' = 'unknown';
+  let detectedFormat: 'histdata_real' | 'histdata' | 'standard' | 'unknown' = 'unknown';
   let headerSkipped = false;
   const seenTimestamps = new Set<number>();
 
@@ -205,7 +218,9 @@ export async function importLargeCSVFile(
             // Intentar parsear según formato detectado
             let candle: Candle;
             
-            if (detectedFormat === 'histdata') {
+            if (detectedFormat === 'histdata_real') {
+              candle = parseHistDataRealLine(line, asset, timeframe);
+            } else if (detectedFormat === 'histdata') {
               candle = parseHistDataLine(line, asset, timeframe);
             } else if (detectedFormat === 'standard') {
               candle = parseStandardCSVLine(line, asset, timeframe);
@@ -291,7 +306,9 @@ export async function importLargeCSVFile(
       lineNumber++;
       try {
         let candle: Candle;
-        if (detectedFormat === 'histdata') {
+        if (detectedFormat === 'histdata_real') {
+          candle = parseHistDataRealLine(buffer.trim(), asset, timeframe);
+        } else if (detectedFormat === 'histdata') {
           candle = parseHistDataLine(buffer.trim(), asset, timeframe);
         } else if (detectedFormat === 'standard') {
           candle = parseStandardCSVLine(buffer.trim(), asset, timeframe);
@@ -363,30 +380,38 @@ function parseCSVLineWithDetection(
   line: string,
   asset: Asset,
   timeframe: Timeframe,
-  format: 'histdata' | 'standard' | 'auto',
+  format: 'histdata_real' | 'histdata' | 'standard' | 'auto',
   lineNumber?: number
 ): Candle {
-  const parts = line.split(',');
+  const partsComma = line.split(',');
+  const partsSemi = line.split(';');
   
   if (format === 'auto') {
     // Detectar automáticamente
-    if (parts.length === 6 && parts[0].includes('.') && parts[0].includes(' ')) {
+    if (partsSemi.length === 6 && partsSemi[0].trim().match(/^\d{8}\s\d{6}$/)) {
+      format = 'histdata_real';
+    } else if (partsComma.length === 6 && partsComma[0].includes('.') && partsComma[0].includes(' ')) {
       format = 'histdata';
-    } else if (parts.length === 7 && parts[1].match(/^\d{2}:\d{2}:\d{2}/)) {
+    } else if (partsComma.length === 7 && partsComma[1].match(/^\d{2}:\d{2}:\d{2}/)) {
       format = 'standard';
     } else {
-      throw new Error(`No se pudo detectar formato. Columnas: ${parts.length}${lineNumber ? ` (línea ${lineNumber})` : ''}`);
+      throw new Error(`No se pudo detectar formato. Separadores: ${partsComma.length} (,) vs ${partsSemi.length} (;)${lineNumber ? ` (línea ${lineNumber})` : ''}`);
     }
   }
 
-  if (format === 'histdata') {
-    if (parts.length !== 6) {
-      throw new Error(`HistData requiere 6 columnas, encontradas: ${parts.length}`);
+  if (format === 'histdata_real') {
+    if (partsSemi.length !== 6) {
+      throw new Error(`HistData REAL requiere 6 columnas con punto y coma, encontradas: ${partsSemi.length}`);
+    }
+    return parseHistDataRealLine(line, asset, timeframe);
+  } else if (format === 'histdata') {
+    if (partsComma.length !== 6) {
+      throw new Error(`HistData requiere 6 columnas, encontradas: ${partsComma.length}`);
     }
     return parseHistDataLine(line, asset, timeframe);
   } else {
-    if (parts.length !== 7) {
-      throw new Error(`Formato Standard requiere 7 columnas, encontradas: ${parts.length}`);
+    if (partsComma.length !== 7) {
+      throw new Error(`Formato Standard requiere 7 columnas, encontradas: ${partsComma.length}`);
     }
     return parseStandardCSVLine(line, asset, timeframe);
   }

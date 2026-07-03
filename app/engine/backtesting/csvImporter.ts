@@ -1,15 +1,29 @@
 /**
  * CSV Importer for Historical Market Data
- * Supports HistData.com format and standard OHLCV CSV files
+ * Supports multiple HistData.com formats and standard OHLCV CSV files
  */
 
 import { Candle, Asset, Timeframe } from '../types/marketData';
 
 /**
- * HistData format: DateTime,Open,High,Low,Close,Volume
+ * HistData format with commas: DateTime,Open,High,Low,Close,Volume
  * Example: 2026.06.02 00:05:00,2543.85,2543.95,2543.65,2543.75,12
  */
 export interface HistDataRow {
+  dateTime: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+/**
+ * HistData REAL format with semicolons: YYYYMMDD HHMMSS;Open;High;Low;Close;Volume
+ * Example: 20260601 000000;4516.105;4517.645;4515.495;4516.925;0
+ * No header line
+ */
+export interface HistDataRealRow {
   dateTime: string;
   open: number;
   high: number;
@@ -106,6 +120,51 @@ export function parseHistDataLine(line: string, asset: Asset, timeframe: Timefra
   const time = dateTimeParts[1];
 
   const timestamp = parseDateTime(year, month, day, time);
+
+  return {
+    timestamp,
+    open: parseFloat(parts[1].trim()),
+    high: parseFloat(parts[2].trim()),
+    low: parseFloat(parts[3].trim()),
+    close: parseFloat(parts[4].trim()),
+    volume: parseInt(parts[5].trim(), 10),
+    asset,
+    timeframe,
+    complete: true,
+  };
+}
+
+/**
+ * Parse HistData REAL format line: 20260601 000000;4516.105;4517.645;4515.495;4516.925;0
+ * Format: YYYYMMDD HHMMSS;Open;High;Low;Close;Volume (with semicolons, no header)
+ */
+export function parseHistDataRealLine(line: string, asset: Asset, timeframe: Timeframe): Candle {
+  const parts = line.split(';');
+  if (parts.length < 6) {
+    throw new Error(`Expected 6 columns separated by semicolons, got ${parts.length}`);
+  }
+
+  const dateTimeParts = parts[0].trim().split(' ');
+  if (dateTimeParts.length !== 2) {
+    throw new Error(`Invalid DateTime format: ${parts[0]}. Expected YYYYMMDD HHMMSS`);
+  }
+
+  const dateStr = dateTimeParts[0]; // YYYYMMDD
+  const timeStr = dateTimeParts[1]; // HHMMSS
+
+  if (dateStr.length !== 8 || timeStr.length !== 6) {
+    throw new Error(`Invalid date/time format: ${dateStr} ${timeStr}. Expected YYYYMMDD HHMMSS`);
+  }
+
+  const year = parseInt(dateStr.substring(0, 4), 10);
+  const month = parseInt(dateStr.substring(4, 6), 10);
+  const day = parseInt(dateStr.substring(6, 8), 10);
+
+  const hour = parseInt(timeStr.substring(0, 2), 10);
+  const minute = parseInt(timeStr.substring(2, 4), 10);
+  const second = parseInt(timeStr.substring(4, 6), 10);
+
+  const timestamp = parseDateTime(year, month, day, `${hour}:${minute}:${second}`);
 
   return {
     timestamp,
