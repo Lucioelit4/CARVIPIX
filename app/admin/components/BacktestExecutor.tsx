@@ -18,7 +18,7 @@ import {
   Percent,
   ChevronDown,
 } from 'lucide-react';
-import { Asset, Timeframe } from '../../engine/types/marketData';
+import { Asset, Timeframe, Candle } from '../../engine/types/marketData';
 import {
   runDemoBacktest,
   validateBacktestParams,
@@ -26,6 +26,7 @@ import {
   DemoBacktestParams,
   DemoBacktestExecution,
 } from '../../engine/backtesting/runBacktest';
+import CSVDataLoader from './CSVDataLoader';
 
 type TradeType = 'BUY' | 'SELL';
 
@@ -37,6 +38,10 @@ export default function BacktestExecutor() {
   const [riskPerTrade, setRiskPerTrade] = useState(0.5);
   const [minConsensus, setMinConsensus] = useState(7);
   const [daysBack, setDaysBack] = useState(30);
+
+  // Datos CSV
+  const [csvCandles, setCSVCandles] = useState<Candle[] | undefined>(undefined);
+  const [csvError, setCSVError] = useState<string>('');
 
   // Estado de ejecución
   const [execution, setExecution] = useState<DemoBacktestExecution | null>(null);
@@ -69,6 +74,7 @@ export default function BacktestExecutor() {
       riskPerTrade,
       minConsensus,
       daysBack,
+      csvCandles, // Pasar datos CSV si están disponibles
     });
 
     if (!validation.valid) {
@@ -89,6 +95,7 @@ export default function BacktestExecutor() {
         riskPerTrade,
         minConsensus,
         daysBack,
+        csvCandles, // Pasar datos CSV al backtesting
       },
       (exec) => {
         setExecution(exec);
@@ -137,6 +144,21 @@ export default function BacktestExecutor() {
 
   return (
     <div className="space-y-6">
+      {/* Cargador de Datos CSV */}
+      <CSVDataLoader
+        asset={asset}
+        timeframe={timeframe}
+        onDataLoaded={(candles) => {
+          setCSVCandles(candles);
+          setCSVError('');
+        }}
+        onError={(error) => {
+          setCSVError(error);
+          setCSVCandles(undefined);
+        }}
+        isLoading={isRunning}
+      />
+
       {/* Panel de Controles */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-bold text-white">🎮 Parámetros Demo</h3>

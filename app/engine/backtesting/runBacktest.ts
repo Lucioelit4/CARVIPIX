@@ -4,7 +4,7 @@
  * No realiza operaciones reales
  */
 
-import { Asset, Timeframe } from '../types/marketData';
+import { Asset, Timeframe, Candle } from '../types/marketData';
 import { BacktestConfig, BacktestResult } from '../types/backtesting';
 import { generateBacktestData } from './historicalData';
 import { BacktestEngine } from './backtestEngine';
@@ -16,6 +16,7 @@ export interface DemoBacktestParams {
   riskPerTrade: number;
   minConsensus: number;
   daysBack?: number;
+  csvCandles?: Candle[]; // Datos CSV opcionalmente cargados
 }
 
 export interface DemoBacktestExecution {
@@ -45,22 +46,30 @@ export async function runDemoBacktest(
   try {
     if (onProgress) onProgress(execution);
 
-    // Generar datos históricos demo
+    // Generar datos históricos demo o usar CSV cargados
     execution.status = 'running';
     execution.progress = 10;
     if (onProgress) onProgress(execution);
 
-    const daysBack = params.daysBack || 30;
-    const now = Date.now();
-    const startDate = now - daysBack * 24 * 60 * 60 * 1000;
-    const endDate = now;
+    let historicalCandles: Candle[];
 
-    const historicalCandles = generateBacktestData(
-      params.asset,
-      params.timeframe,
-      startDate,
-      endDate
-    );
+    if (params.csvCandles && params.csvCandles.length > 0) {
+      // Usar datos CSV cargados
+      historicalCandles = params.csvCandles;
+    } else {
+      // Generar datos demo
+      const daysBack = params.daysBack || 30;
+      const now = Date.now();
+      const startDate = now - daysBack * 24 * 60 * 60 * 1000;
+      const endDate = now;
+
+      historicalCandles = generateBacktestData(
+        params.asset,
+        params.timeframe,
+        startDate,
+        endDate
+      );
+    }
 
     if (!historicalCandles || historicalCandles.length === 0) {
       throw new Error('No se pudieron generar datos históricos demo');
@@ -70,6 +79,9 @@ export async function runDemoBacktest(
     if (onProgress) onProgress(execution);
 
     // Crear configuración de backtest
+    const startDate = historicalCandles[0].timestamp;
+    const endDate = historicalCandles[historicalCandles.length - 1].timestamp;
+
     const config: BacktestConfig = {
       id: `demo-${Date.now()}`,
       asset: params.asset,
