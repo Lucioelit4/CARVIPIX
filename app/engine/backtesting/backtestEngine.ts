@@ -15,6 +15,7 @@ import {
   BacktestError,
   BacktestWarning,
   BacktestReport,
+  SignalDiagnostics,
 } from '../types/backtesting';
 import {
   analyzeMarketRegime,
@@ -48,6 +49,18 @@ export class BacktestEngine {
   private performanceTracker: PerformanceTracker;
   private isShortSample: boolean = false; // Flag para samples cortos
   private adjustedConsensusThreshold: number = 0; // Threshold ajustado para samples cortos
+
+  // Diagnóstico de señales
+  private diagnostics = {
+    candlesEvaluated: 0,
+    candidateSignals: 0,
+    rejectionReasons: {} as Record<string, number>,
+    allScores: [] as number[],
+    agentStats: {} as Record<string, { approved: number; rejected: number; scores: number[] }>,
+    consensus9Trades: 0,
+    consensus8Trades: 0,
+    consensus7Trades: 0,
+  };
 
   constructor(config: BacktestConfig) {
     this.config = config;
@@ -111,6 +124,9 @@ export class BacktestEngine {
         this.balanceHistory
       );
 
+      // Compilar diagnósticos
+      const diagnostics = this.compileDiagnostics();
+
       // Generar reporte
       const result: BacktestResult = {
         id: this.config.id,
@@ -122,6 +138,7 @@ export class BacktestEngine {
         warnings: this.warnings,
         completedAt: Date.now(),
         duration: Date.now() - this.status.startTime,
+        diagnostics,
       };
 
       this.status.status = 'completed';
@@ -195,14 +212,58 @@ export class BacktestEngine {
       // Solo procesar velas completas
       if (!candle.complete) return;
 
+      // Contar vela evaluada
+      this.diagnostics.candlesEvaluated++;
+
       // Simular indicadores técnicos
       const indicators = this.simulateIndicators(index);
 
       // Ejecutar 11 agentes
       const agentScores = this.runAgents(candle, indicators);
 
-      // Evaluar consenso
+      // Registrar scores para diagnóstico
+      agentScores.forEach((score) => {
+        this.diagnostics.allScores.push(score.score);
+        if (!this.diagnostics.agentStats[score.agent]) {
+          this.diagnostics.agentStats[score.agent] = { approved: 0, rejected: 0, scores: [] };
+        }
+        this.diagnostics.agentStats[score.agent].scores.push(score.score);
+      });
+
+      // Evaluar consenso y registrar razones de rechazo
       const consensus = this.evaluateConsensus(agentScores);
+
+      // Contar candidato inicial
+      this.diagnostics.candidateSignals++;
+
+      // Simular aprobación/rechazo por umbral
+      const scoreThreshold = this.isShortSample ? 50 : 60;
+      agentScores.forEach((score) => {
+        if (score.score >= scoreThreshold) {
+          this.diagnostics.agentStats[score.agent].approved++;
+        } else {
+          this.diagnostics.agentStats[score.agent].rejected++;
+          if (!this.diagnostics.rejectionReasons[score.agent]) {
+            this.diagnostics.rejectionReasons[score.agent] = 0;
+          }
+          this.diagnostics.rejectionReasons[score.agent]++;
+        }
+      });
+
+      // Simular consensos 9, 8, 7
+      const approvalCount = agentScores.filter((s) => s.score >= scoreThreshold).length;
+      if (approvalCount >= 9) this.diagnostics.consensus9Trades++;
+      if (approvalCount >= 8) this.diagnostics.consensus8Trades++;
+      if (approvalCount >= 7) this.diagnostics.consensus7Trades++;
+
+      // Si consenso rechazado, registrar razón
+      if (!consensus.approved) {
+        const reason = `Consenso insuficiente (${approvalCount}/${this.adjustedConsensusThreshold})`;
+        if (!this.diagnostics.rejectionReasons[reason]) {
+          this.diagnostics.rejectionReasons[reason] = 0;
+        }
+        this.diagnostics.rejectionReasons[reason]++;
+      }
 
       // Si consenso aprobado y no hay operaciones abiertas
       let tradesGenerated = 0;
@@ -620,6 +681,61 @@ export class BacktestEngine {
         severity: 'warning',
       });
     }
+  }
+
+  /**
+   * Compilar diagnósticos de señales
+   */
+  private compileDiagnostics() {
+    // Calcular distribución de scores
+    const distribution: Record<number, number> = {};
+    this.diagnostics.allScores.forEach((score) => {
+      const roundedScore = Math.round(score / 10) * 10;
+      distribution[roundedScore] = (distribution[roundedScore] || 0) + 1;
+    });
+
+    // Ordenar rechazos por count
+    const sortedRejections = Object.entries(this.diagnostics.rejectionReasons)
+      .map(([reason, count]) => ({
+        reason,
+        count,
+        percentage: (count / Math.max(1, this.diagnostics.candidateSignals)) * 100,
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Compilar estadísticas de agentes
+    const agentStats: Record<string, { approved: number; rejected: number; avgScore: number }> = {};
+    Object.entries(this.diagnostics.agentStats).forEach(([agent, stats]) => {
+      agentStats[agent] = {
+        approved: stats.approved,
+        rejected: stats.rejected,
+        avgScore: stats.scores.length > 0 ? stats.scores.reduce((a, b) => a + b, 0) / stats.scores.length : 0,
+      };
+    });
+
+    const diagnostics: SignalDiagnostics = {
+      candlesEvaluated: this.diagnostics.candlesEvaluated,
+      candidateSignals: this.diagnostics.candidateSignals,
+      rejectionReasons: this.diagnostics.rejectionReasons,
+      top5Rejections: sortedRejections,
+      scoreDistribution: {
+        min: Math.min(...this.diagnostics.allScores, 0),
+        max: Math.max(...this.diagnostics.allScores, 0),
+        average: this.diagnostics.allScores.length > 0
+          ? this.diagnostics.allScores.reduce((a, b) => a + b, 0) / this.diagnostics.allScores.length
+          : 0,
+        distribution,
+      },
+      agentStats,
+      consensusComparison: {
+        consensus9: this.diagnostics.consensus9Trades,
+        consensus8: this.diagnostics.consensus8Trades,
+        consensus7: this.diagnostics.consensus7Trades,
+      },
+    };
+
+    return diagnostics;
   }
 
   /**

@@ -60,6 +60,28 @@ export interface BacktestTrade {
 /**
  * Resultado completo del backtest
  */
+/**
+ * Diagnóstico de señales para debugging
+ */
+export interface SignalDiagnostics {
+  candlesEvaluated: number;
+  candidateSignals: number;
+  rejectionReasons: Record<string, number>;
+  top5Rejections: Array<{ reason: string; count: number; percentage: number }>;
+  scoreDistribution: {
+    min: number;
+    max: number;
+    average: number;
+    distribution: Record<number, number>; // score -> count
+  };
+  agentStats: Record<string, { approved: number; rejected: number; avgScore: number }>;
+  consensusComparison: {
+    consensus9: number; // Trades si umbral fuera 9
+    consensus8: number; // Trades si umbral fuera 8
+    consensus7: number; // Trades si umbral fuera 7
+  };
+}
+
 export interface BacktestResult {
   id: string;
   config: BacktestConfig;
@@ -70,6 +92,7 @@ export interface BacktestResult {
   warnings: BacktestWarning[];
   completedAt: number;
   duration: number; // ms de ejecución
+  diagnostics?: SignalDiagnostics; // Optional diagnostic data
 }
 
 /**

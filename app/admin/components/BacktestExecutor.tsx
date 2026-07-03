@@ -31,6 +31,7 @@ import {
 import CSVDataLoader from './CSVDataLoader';
 import LargeFileDataLoader from './LargeFileDataLoader';
 import MultiDatasetLoader from './MultiDatasetLoader';
+import SignalDiagnosticsPanel from './SignalDiagnosticsPanel';
 
 type TradeType = 'BUY' | 'SELL';
 
@@ -67,6 +68,7 @@ export default function BacktestExecutor() {
   const [execution, setExecution] = useState<DemoBacktestExecution | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [authorizeLargeTest, setAuthorizeLargeTest] = useState(false);
 
   // Interfaz
   const [expandedTrade, setExpandedTrade] = useState<number | null>(null);
@@ -86,6 +88,14 @@ export default function BacktestExecutor() {
 
   // Ejecutar backtest
   const handleRunBacktest = async () => {
+    // Validar autorización para datasets grandes
+    if (csvCandles && csvCandles.length > 200000 && !authorizeLargeTest) {
+      setValidationErrors([
+        `Dataset muy grande (${(csvCandles.length / 1000).toFixed(0)}k velas). Requiere autorización explícita en el panel de diagnóstico.`,
+      ]);
+      return;
+    }
+
     // Validar
     const validation = validateBacktestParams({
       asset,
@@ -753,6 +763,18 @@ export default function BacktestExecutor() {
         <div className="bg-red-900/30 border border-red-600/50 rounded-lg p-4">
           <p className="text-red-300 font-bold mb-2">❌ Error en la ejecución</p>
           <p className="text-red-200 text-sm">{execution.error}</p>
+        </div>
+      )}
+
+      {/* Panel de Diagnóstico de Señales */}
+      {result && (
+        <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-4">
+          <h3 className="font-bold text-white mb-4">🔍 Diagnóstico de Señales Rechazadas</h3>
+          <SignalDiagnosticsPanel
+            diagnostics={result.diagnostics}
+            authorizeLargeTest={authorizeLargeTest}
+            onAuthorizeLargeTest={setAuthorizeLargeTest}
+          />
         </div>
       )}
 
