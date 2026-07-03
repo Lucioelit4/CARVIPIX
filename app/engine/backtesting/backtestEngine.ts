@@ -30,6 +30,7 @@ import {
   learnFromHistory,
 } from '../agents/index';
 import { calculateBacktestMetrics } from './calculations';
+import { PerformanceTracker } from './performance';
 
 /**
  * Motor de backtesting privado
@@ -44,10 +45,12 @@ export class BacktestEngine {
   private balanceHistory: number[] = [];
   private candles: Candle[] = [];
   private activeTrades: Map<string, BacktestTrade> = new Map();
+  private performanceTracker: PerformanceTracker;
 
   constructor(config: BacktestConfig) {
     this.config = config;
     this.currentBalance = config.initialBalance;
+    this.performanceTracker = new PerformanceTracker();
     this.status = {
       id: config.id,
       status: 'pending',
@@ -195,10 +198,22 @@ export class BacktestEngine {
       const consensus = this.evaluateConsensus(agentScores);
 
       // Si consenso aprobado y no hay operaciones abiertas
+      let tradesGenerated = 0;
       if (consensus.approved && this.activeTrades.size === 0) {
         // Generar señal de entrada
         this.processEntrySignal(candle, agentScores, consensus.averageScore);
+        tradesGenerated = 1;
       }
+
+      // Registrar rendimiento
+      this.performanceTracker.recordCandleProcessed(
+        candle.asset,
+        candle.timeframe,
+        agentScores.length, // agent calls
+        true, // consensus evaluated
+        consensus.approved, // consensus approved
+        tradesGenerated
+      );
 
       // Registrar en historial
       this.status.tradesProcessed++;
@@ -670,5 +685,12 @@ export class BacktestEngine {
       ].filter((r) => r),
       generatedAt: Date.now(),
     };
+  }
+
+  /**
+   * Obtener reporte de rendimiento del motor
+   */
+  getPerformanceReport() {
+    return this.performanceTracker.generateReport();
   }
 }
