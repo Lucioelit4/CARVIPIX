@@ -2,9 +2,12 @@
  * CARVIPIX Trend Validation System v1.1
  * Lógica REAL bullish/bearish por separado
  * Retorna BUY, SELL o NEUTRAL (no simple metCount)
+ * 
+ * v1.1.1: Penalización de contradicción configurable
  */
 
 import { TrendValidation, TrendCondition, TrendConfidenceLevel, OrderDirection } from '../trading/tradingEngine';
+import { getTrendValidatorConfig } from './trendValidatorConfig';
 
 // Tipos internos para scoring bullish/bearish
 interface ConditionEvaluation {
@@ -17,6 +20,23 @@ interface ConditionEvaluation {
  * Evaluador de tendencia - v1.1 REAL
  */
 export class TrendValidator {
+  // Configuración de penalización (puede ser sobrescrita para testing)
+  private static contradictionPenalty = getTrendValidatorConfig().contradictionPenalty;
+
+  /**
+   * Establecer penalización de contradicción para testing
+   */
+  static setContradictionPenalty(penalty: number) {
+    TrendValidator.contradictionPenalty = penalty;
+  }
+
+  /**
+   * Obtener penalización actual
+   */
+  static getContradictionPenalty(): number {
+    return TrendValidator.contradictionPenalty;
+  }
+
   /**
    * Evalúa tendencia usando 4 condiciones
    * Retorna: BUY, SELL o NEUTRAL basado en bullishScore vs bearishScore
@@ -334,9 +354,10 @@ export class TrendValidator {
   /**
    * Determina nivel de confianza basado en scores bullish/bearish
    * 
-   * v1.1 FIX: Cuenta condiciones confirmando la dirección
-   * Penaliza condiciones que contradicen
-   * Resultado: A+/A/B/C basado en alineación real, no solo maxScore
+   * v1.1.1 FIX: Penalización de contradicción CONFIGURABLE
+   * Cuenta condiciones confirmando la dirección
+   * Penaliza condiciones que contradicen (factor configurable)
+   * Resultado: A+/A/B/C basado en alineación real
    */
   private static determineConfidenceLevel(
     bullishScore: number,
@@ -364,9 +385,9 @@ export class TrendValidator {
       contradictingConditions = bullishConditions;
     }
 
-    // Calcular confianza: confirming - (contradicting * 0.5)
-    // Penalización suave: cada contradicción reduce 0.5 puntos
-    const effectiveConditions = confirmingConditions - contradictingConditions * 0.5;
+    // Calcular confianza: confirming - (contradicting * penalty)
+    // Penalización configurable: cuánto reducir por contradicción
+    const effectiveConditions = confirmingConditions - contradictingConditions * TrendValidator.contradictionPenalty;
 
     // Asignar nivel basado en confianza efectiva
     if (effectiveConditions >= 4) {
