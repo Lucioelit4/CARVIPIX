@@ -43,6 +43,10 @@ export interface TrendValidation {
   // Score agregado (0-100)
   totalScore: number;
   
+  // v1.1: scores bullish/bearish para transparencia en decisión
+  bullishScore?: number;
+  bearishScore?: number;
+  
   // Detalles por condición
   priceVsEMA200: {
     met: boolean;
