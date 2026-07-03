@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-03T04:21:46.191Z",
+  "timestamp": "2026-07-03T04:26:50.468Z",
   "dataSource": "XAUUSD M1 June 2026",
   "period": "1 month",
   "statistics": {
@@ -8,9 +8,9 @@
     "sellCount": 179,
     "neutralCount": 20,
     "confidenceA_Plus": 56,
-    "confidenceA": 95,
-    "confidenceB": 0,
-    "confidenceC": 99,
+    "confidenceA": 57,
+    "confidenceB": 62,
+    "confidenceC": 75,
     "buyExamples": [
       {
         "timestamp": 1781258400000,

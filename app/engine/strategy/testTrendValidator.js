@@ -185,19 +185,37 @@ function validateTrend(params) {
     direction = 'SELL';
   }
 
-  // Confianza
-  let confidenceLevel = 'C';
-  const maxScore = Math.max(bullishScore, bearishScore);
-  const difference = Math.abs(bullishScore - bearishScore);
+  // Confianza: cuenta condiciones confirmando vs contradiciendo
+  let confirmingConditions;
+  let contradictingConditions;
 
-  if (direction !== 'NEUTRAL') {
-    if (maxScore >= 100) {
-      confidenceLevel = 'A+';
-    } else if (maxScore >= 75) {
-      confidenceLevel = difference > 25 ? 'A' : 'B';
-    } else if (maxScore >= 50) {
-      confidenceLevel = 'C';
-    }
+  if (direction === 'BUY') {
+    confirmingConditions = bullishScore / 25;
+    contradictingConditions = bearishScore / 25;
+  } else if (direction === 'SELL') {
+    confirmingConditions = bearishScore / 25;
+    contradictingConditions = bullishScore / 25;
+  } else {
+    confirmingConditions = 0;
+    contradictingConditions = 0;
+  }
+
+  // Calcular confianza efectiva: confirming - (contradicting * 0.5)
+  const effectiveConditions = confirmingConditions - contradictingConditions * 0.5;
+
+  // Asignar nivel basado en confianza efectiva
+  if (direction === 'NEUTRAL') {
+    confidenceLevel = 'C';
+  } else if (effectiveConditions >= 4) {
+    confidenceLevel = 'A+';
+  } else if (effectiveConditions >= 3) {
+    confidenceLevel = 'A';
+  } else if (effectiveConditions >= 2) {
+    confidenceLevel = 'B';
+  } else if (effectiveConditions >= 1) {
+    confidenceLevel = 'C';
+  } else {
+    confidenceLevel = 'C';
   }
 
   return {

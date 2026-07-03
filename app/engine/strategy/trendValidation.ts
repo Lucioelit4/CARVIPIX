@@ -333,33 +333,55 @@ export class TrendValidator {
 
   /**
    * Determina nivel de confianza basado en scores bullish/bearish
+   * 
+   * v1.1 FIX: Cuenta condiciones confirmando la dirección
+   * Penaliza condiciones que contradicen
+   * Resultado: A+/A/B/C basado en alineación real, no solo maxScore
    */
   private static determineConfidenceLevel(
     bullishScore: number,
     bearishScore: number,
     direction: OrderDirection | 'NEUTRAL'
   ): TrendConfidenceLevel {
-    // Si hay contradicción importante (scores cercanos), baja confianza
-    const difference = Math.abs(bullishScore - bearishScore);
-
     if (direction === 'NEUTRAL') {
       return 'C'; // Neutral siempre es baja confianza
     }
 
-    // Máximo score posible = 4 condiciones × 25 puntos = 100
-    // Dividir por 25 para escala 0-4
-    const maxScore = Math.max(bullishScore, bearishScore) / 25;
+    // Convertir scores a "condiciones met" (cada 25 puntos = 1 condición)
+    const bullishConditions = bullishScore / 25;
+    const bearishConditions = bearishScore / 25;
 
-    if (maxScore >= 4) {
-      return 'A+'; // 4/4 condiciones
+    // Determinar qué condiciones confirman vs contradicen
+    let confirmingConditions: number;
+    let contradictingConditions: number;
+
+    if (direction === 'BUY') {
+      confirmingConditions = bullishConditions;
+      contradictingConditions = bearishConditions;
+    } else {
+      // direction === 'SELL'
+      confirmingConditions = bearishConditions;
+      contradictingConditions = bullishConditions;
     }
-    if (maxScore >= 3) {
-      return difference > 25 ? 'A' : 'B'; // 3/4 o más, pero si hay mucha diferencia
+
+    // Calcular confianza: confirming - (contradicting * 0.5)
+    // Penalización suave: cada contradicción reduce 0.5 puntos
+    const effectiveConditions = confirmingConditions - contradictingConditions * 0.5;
+
+    // Asignar nivel basado en confianza efectiva
+    if (effectiveConditions >= 4) {
+      return 'A+'; // 4/4 sin contradicciones
     }
-    if (maxScore >= 2) {
-      return 'C'; // 2/4 o menos
+    if (effectiveConditions >= 3) {
+      return 'A'; // 3/4 o 3.5/4 con contradicción menor
     }
-    return 'C';
+    if (effectiveConditions >= 2) {
+      return 'B'; // 2/4 o 2.5/4 con contradicciones
+    }
+    if (effectiveConditions >= 1) {
+      return 'C'; // 1 o 1.5 - muy débil
+    }
+    return 'C'; // 0 o menor - sin señal
   }
 
   /**
