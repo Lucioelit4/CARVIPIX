@@ -1,0 +1,139 @@
+{
+  "timestamp": "2026-07-03T04:21:46.191Z",
+  "dataSource": "XAUUSD M1 June 2026",
+  "period": "1 month",
+  "statistics": {
+    "totalCandles": 250,
+    "buyCount": 51,
+    "sellCount": 179,
+    "neutralCount": 20,
+    "confidenceA_Plus": 56,
+    "confidenceA": 95,
+    "confidenceB": 0,
+    "confidenceC": 99,
+    "buyExamples": [
+      {
+        "timestamp": 1781258400000,
+        "date": "20260612",
+        "hour": 4,
+        "direction": "BUY",
+        "confidenceLevel": "C",
+        "bullishScore": 50,
+        "bearishScore": 25,
+        "price": 4219.395,
+        "ema20": 4173.603036567773,
+        "ema50": 4169.561319771836,
+        "ema200": 4338.547393554481
+      },
+      {
+        "timestamp": 1781262000000,
+        "date": "20260612",
+        "hour": 5,
+        "direction": "BUY",
+        "confidenceLevel": "C",
+        "bullishScore": 50,
+        "bearishScore": 25,
+        "price": 4221.635,
+        "ema20": 4178.177509275604,
+        "ema50": 4171.603424878823,
+        "ema200": 4337.384086155928
+      },
+      {
+        "timestamp": 1781283600000,
+        "date": "20260612",
+        "hour": 11,
+        "direction": "BUY",
+        "confidenceLevel": "C",
+        "bullishScore": 50,
+        "bearishScore": 25,
+        "price": 4211.675,
+        "ema20": 4188.821504420802,
+        "ema50": 4178.028523363519,
+        "ema200": 4329.483549676154
+      }
+    ],
+    "sellExamples": [
+      {
+        "timestamp": 1781215200000,
+        "date": "20260611",
+        "hour": 16,
+        "direction": "SELL",
+        "confidenceLevel": "C",
+        "bullishScore": 25,
+        "bearishScore": 50,
+        "price": 4212.005,
+        "ema20": 4123.958910046212,
+        "ema50": 4153.01997381164,
+        "ema200": 4354.628057437811
+      },
+      {
+        "timestamp": 1781222400000,
+        "date": "20260611",
+        "hour": 18,
+        "direction": "SELL",
+        "confidenceLevel": "C",
+        "bullishScore": 25,
+        "bearishScore": 50,
+        "price": 4242.838,
+        "ema20": 4135.280728137049,
+        "ema50": 4156.542249348438,
+        "ema200": 4353.515718557833
+      },
+      {
+        "timestamp": 1781226000000,
+        "date": "20260611",
+        "hour": 19,
+        "direction": "SELL",
+        "confidenceLevel": "C",
+        "bullishScore": 25,
+        "bearishScore": 50,
+        "price": 4219.625,
+        "ema20": 4143.313515933521,
+        "ema50": 4159.016082707323,
+        "ema200": 4352.183472602033
+      }
+    ],
+    "neutralExamples": [
+      {
+        "timestamp": 1781240400000,
+        "date": "20260611",
+        "hour": 23,
+        "direction": "NEUTRAL",
+        "confidenceLevel": "C",
+        "bullishScore": 50,
+        "bearishScore": 50,
+        "price": 4196.885,
+        "ema20": 4160.505397288024,
+        "ema50": 4164.428322982163,
+        "ema200": 4346.0484482193
+      },
+      {
+        "timestamp": 1781254800000,
+        "date": "20260612",
+        "hour": 3,
+        "direction": "NEUTRAL",
+        "confidenceLevel": "C",
+        "bullishScore": 25,
+        "bearishScore": 25,
+        "price": 4194.295,
+        "ema20": 4168.782829890697,
+        "ema50": 4167.527292007421,
+        "ema200": 4339.744905047491
+      },
+      {
+        "timestamp": 1781287200000,
+        "date": "20260612",
+        "hour": 12,
+        "direction": "NEUTRAL",
+        "confidenceLevel": "C",
+        "bullishScore": 25,
+        "bearishScore": 25,
+        "price": 4215.755,
+        "ema20": 4191.386599237869,
+        "ema50": 4179.507993035538,
+        "ema200": 4328.351922316193
+      }
+    ]
+  },
+  "note": "Structure v1.1 uses simple swing comparison: HH+HL (BUY), LH+LL (SELL). NOT institutional BOS/CHoCH yet."
+}
