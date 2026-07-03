@@ -14,6 +14,7 @@ import {
 import {
   Activity,
   ArrowRight,
+  AlertCircle,
   Bell,
   Bot,
   CheckCircle,
@@ -51,7 +52,7 @@ const stats = [
     suffix: "%",
     note: "89 operaciones ganadoras",
     trend: "+1.8%",
-    color: "text-green-400",
+    color: "text-white",
     icon: Target,
   },
   {
@@ -67,7 +68,7 @@ const stats = [
     value: 1.87,
     note: "Promedio operativo",
     trend: "+0.6",
-    color: "text-purple-400",
+    color: "text-[#D4AF37]",
     icon: ShieldCheck,
   },
 ];
@@ -208,27 +209,51 @@ export default function Home() {
 
           <div className="p-8">
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-8 flex items-center justify-between gap-6"
+              transition={{ duration: 0.6 }}
+              className="mb-16 space-y-8"
             >
+              {/* Badge superior */}
               <div>
-                <h1 className="text-4xl font-bold text-[#D4AF37]">
-                  Bienvenido a CARVIPIX
-                </h1>
-                <p className="mt-2 text-zinc-400">
-                  Tu ventaja en el mercado empieza aquí.
+                <p className="text-xs uppercase tracking-[0.24em] text-[#D4AF37] font-semibold">
+                  Sistema de Trading Automatizado
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4 shadow-2xl shadow-black/30">
-                <p className="text-sm text-zinc-400">Renovación</p>
-                <p className="font-bold">18/07/2026</p>
+              {/* Título principal con propuesta de valor */}
+              <div>
+                <h1 className="text-5xl md:text-6xl font-bold text-white leading-[1.15]">
+                  Precisión en Cada
+                  <span className="block text-[#D4AF37]">Movimiento</span>
+                </h1>
+              </div>
+
+              {/* Descripción específica */}
+              <p className="text-base text-white/70 max-w-2xl leading-relaxed">
+                Sistema profesional de análisis de mercado con detección automática 
+                de giros significativos. Diseñado para traders que buscan decisiones 
+                basadas en estructura de mercado, no en intuición.
+              </p>
+
+              {/* Stats de autoridad */}
+              <div className="grid grid-cols-3 gap-6 pt-4 sm:gap-8">
+                <div>
+                  <p className="text-3xl sm:text-4xl font-bold text-white">Profesional</p>
+                  <p className="text-xs text-white/60 mt-2">Análisis estructurado</p>
+                </div>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-bold text-[#D4AF37]">Confiable</p>
+                  <p className="text-xs text-white/60 mt-2">Backtesting real</p>
+                </div>
+                <div>
+                  <p className="text-3xl sm:text-4xl font-bold text-white">Exclusivo</p>
+                  <p className="text-xs text-white/60 mt-2">Acceso limitado</p>
+                </div>
               </div>
             </motion.div>
 
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               {stats.map((stat, index) => {
                 const Icon = stat.icon;
 
@@ -238,15 +263,15 @@ export default function Home() {
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, delay: index * 0.08 }}
-                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/20 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/40 hover:shadow-[#D4AF37]/10"
+                    className="group relative overflow-hidden rounded-2xl border border-[#D4AF37]/20 bg-[#10141D]/90 p-8 shadow-lg shadow-black/15 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/60 hover:shadow-lg hover:shadow-[#D4AF37]/25"
                   >
-                    <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#D4AF37]/0 blur-3xl transition duration-300 group-hover:bg-[#D4AF37]/20" />
+                    <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#D4AF37]/0 blur-3xl transition duration-300 group-hover:bg-[#D4AF37]/25" />
 
                     <div className="relative flex items-center justify-between">
                       <p className="text-xs uppercase tracking-wide text-zinc-500">
                         {stat.title}
                       </p>
-                      <Icon size={20} className="text-[#D4AF37]" />
+                      <Icon size={28} className="text-[#D4AF37]" />
                     </div>
 
                     <div className="relative mt-4 flex items-end justify-between gap-4">
@@ -259,7 +284,7 @@ export default function Home() {
                           suffix={stat.suffix || ""}
                         />
                       </p>
-                      <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-2 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
+                      <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
                         {stat.trend}
                       </span>
                     </div>
@@ -272,25 +297,37 @@ export default function Home() {
               })}
             </div>
 
-            <div className="mt-6 grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+            <div className="mt-8 grid gap-6 lg:grid-cols-[1.45fr_1fr]">
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55 }}
-                className="rounded-[2rem] border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
+                className="rounded-2xl border border-[#D4AF37]/20 bg-[#10141D]/90 p-8 shadow-lg shadow-black/15"
               >
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                {/* Disclaimer */}
+                <div className="rounded-lg border-l-4 border-[#D4AF37] bg-[#D4AF37]/5 p-4 mb-6 flex gap-3 items-start">
+                  <AlertCircle size={20} className="text-[#D4AF37] mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Balance</p>
-                    <h2 className="text-2xl font-semibold text-white">Evolución de Balance</h2>
-                  </div>
-                  <div className="rounded-3xl border border-white/10 bg-[#0B1220]/85 px-4 py-3 text-sm text-zinc-300">
-                    <p className="font-semibold text-[#D4AF37]">+18.4% este mes</p>
-                    <p className="mt-1">Rendimiento demo con gestión conservadora.</p>
+                    <p className="text-sm font-semibold text-white">Datos de demostración</p>
+                    <p className="text-xs text-white/70 mt-1">
+                      Este balance es simulado para propósitos educativos. 
+                      Los resultados históricos no garantizan rendimiento futuro.
+                    </p>
                   </div>
                 </div>
 
-                <div className="h-80 rounded-[1.75rem] border border-white/5 bg-black/25 p-4">
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Balance Demo</p>
+                    <h2 className="text-2xl font-semibold text-white mt-2">Evolución de Balance</h2>
+                  </div>
+                  <div className="rounded-lg border border-[#D4AF37]/20 bg-[#0B1220]/85 px-4 py-3 text-sm text-zinc-300">
+                    <p className="font-semibold text-[#D4AF37]">+18.4% este mes</p>
+                    <p className="mt-1 text-xs">Rendimiento demo</p>
+                  </div>
+                </div>
+
+                <div className="h-80 rounded-xl border border-white/5 bg-black/25 p-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={balanceData}>
                       <defs>
@@ -328,15 +365,15 @@ export default function Home() {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.1 }}
-                className="rounded-[2rem] border border-white/10 bg-[#10141D]/90 p-6 shadow-2xl shadow-black/30"
+                className="rounded-2xl border border-[#D4AF37]/20 bg-[#10141D]/90 p-8 shadow-lg shadow-black/15"
               >
                 <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold text-white">Alertas activas</h2>
-                    <p className="mt-2 text-sm text-zinc-500">Señales premium en tiempo real</p>
+                    <h2 className="text-2xl font-semibold text-white">Alertas Activas</h2>
+                    <p className="mt-2 text-sm text-zinc-500">Señales de demostración</p>
                   </div>
                   <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-[#D4AF37]">
-                    Activo
+                    Demo
                   </span>
                 </div>
 
@@ -347,13 +384,13 @@ export default function Home() {
                     return (
                       <div
                         key={alert.asset}
-                        className="group rounded-3xl border border-white/5 bg-[#0B1220]/80 p-4 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:shadow-[#D4AF37]/10"
+                        className="group rounded-xl border border-white/5 bg-[#0B1220]/80 p-4 transition duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/30 hover:shadow-lg hover:shadow-[#D4AF37]/15"
                       >
                         <div className="flex items-center justify-between gap-4">
                           <div>
                             <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">{alert.asset}</p>
                             <div className="mt-2 flex items-center gap-2 text-sm text-white">
-                              <AlertIcon size={14} className="text-[#D4AF37]" />
+                              <AlertIcon size={16} className="text-[#D4AF37]" />
                               {alert.type}
                             </div>
                           </div>
@@ -361,11 +398,11 @@ export default function Home() {
                         </div>
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-2xl bg-[#111827]/95 p-3 text-sm text-zinc-300">
+                          <div className="rounded-lg bg-[#111827]/95 p-3 text-sm text-zinc-300">
                             <p className="text-[0.69rem] uppercase tracking-[0.25em] text-zinc-500">Entrada</p>
                             <p className="mt-2 text-white">{alert.entry}</p>
                           </div>
-                          <div className="rounded-2xl bg-[#111827]/95 p-3 text-sm text-zinc-300">
+                          <div className="rounded-lg bg-[#111827]/95 p-3 text-sm text-zinc-300">
                             <p className="text-[0.69rem] uppercase tracking-[0.25em] text-zinc-500">TP / SL</p>
                             <p className="mt-2 text-white">{alert.tp} / {alert.sl}</p>
                           </div>
@@ -377,10 +414,10 @@ export default function Home() {
 
                 <Link
                   href="/alertas"
-                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37] bg-[#D4AF37]/10 px-4 py-3 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/15"
+                  className="mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[#D4AF37] bg-[#D4AF37]/10 px-6 py-4 text-sm font-bold text-[#D4AF37] hover:bg-[#D4AF37]/20 hover:border-[#D4AF37]/80 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#D4AF37]/30 transition-all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)"
                 >
-                  Ver alertas
-                  <ArrowRight size={16} />
+                  Ver todas las alertas
+                  <ArrowRight size={18} />
                 </Link>
               </motion.div>
             </div>
@@ -389,12 +426,12 @@ export default function Home() {
               <TradingViewEconomicCalendar />
             </div>
 
-            <div className="mt-8 mb-6">
-              <h2 className="text-2xl font-bold mb-2">Soluciones CARVIPIX</h2>
-              <p className="text-white/60 text-sm">Elige tu siguiente ventaja dentro de CARVIPIX.</p>
+            <div className="mt-12 mb-8">
+              <h2 className="text-3xl font-bold mb-3">Herramientas Profesionales</h2>
+              <p className="text-white/60 text-sm">Acceso inmediato a soluciones premium.</p>
             </div>
 
-            <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
               {quickAccess.map((item) => {
                 const Icon = item.icon;
 
@@ -402,15 +439,15 @@ export default function Home() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group relative flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-[#0B111A] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37] hover:shadow-xl hover:shadow-[#D4AF37]/20 cursor-pointer"
+                    className="group relative flex flex-col h-full overflow-hidden rounded-2xl border border-[#D4AF37]/20 bg-[#0B111A] p-6 transition-all duration-300 hover:-translate-y-1 hover:border-[#D4AF37]/60 hover:shadow-lg hover:shadow-[#D4AF37]/25 cursor-pointer"
                   >
                     {/* Glow effect */}
                     <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[#D4AF37]/0 blur-3xl transition-all duration-300 group-hover:bg-[#D4AF37]/30" />
                     
                     {/* Badge */}
                     <div className="relative flex items-center justify-between mb-4">
-                      <Icon className="w-7 h-7 text-[#D4AF37]" />
-                      <span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-2.5 py-1 rounded-full border border-[#D4AF37]/30">
+                      <Icon className="w-8 h-8 text-[#D4AF37]" />
+                      <span className="text-xs font-bold text-[#D4AF37] bg-[#D4AF37]/10 px-3 py-1 rounded-lg border border-[#D4AF37]/30">
                         {item.badge}
                       </span>
                     </div>
@@ -419,7 +456,7 @@ export default function Home() {
                     <h3 className="relative text-lg font-bold text-white mb-2">{item.name}</h3>
                     
                     {/* Description */}
-                    <p className="relative text-sm text-white/70 mb-4">{item.shortText}</p>
+                    <p className="relative text-sm text-white/70 mb-4 leading-relaxed">{item.shortText}</p>
                     
                     {/* Price if exists */}
                     {item.price && (
@@ -430,7 +467,7 @@ export default function Home() {
                     <div className="relative flex-1" />
                     
                     {/* Button */}
-                    <button className="relative w-full bg-[#D4AF37] text-[#05070B] font-bold py-2.5 px-4 rounded-lg hover:bg-[#E5C158] transition-colors duration-200 text-sm">
+                    <button className="relative w-full bg-[#D4AF37] text-[#05070B] font-bold py-3.5 px-4 rounded-lg hover:bg-[#E5C158] hover:scale-105 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#D4AF37]/40 active:scale-95 transition-all 200ms cubic-bezier(0.34, 1.56, 0.64, 1) text-sm">
                       {item.buttonText}
                     </button>
                   </Link>
