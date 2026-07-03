@@ -84,7 +84,7 @@ export function parseCSVContent(csvContent: string, asset: Asset, timeframe: Tim
 /**
  * Parse HistData format line: 2026.06.02 00:05:00,2543.85,2543.95,2543.65,2543.75,12
  */
-function parseHistDataLine(line: string, asset: Asset, timeframe: Timeframe): Candle {
+export function parseHistDataLine(line: string, asset: Asset, timeframe: Timeframe): Candle {
   const parts = line.split(',');
   if (parts.length < 6) {
     throw new Error(`Expected 6 columns, got ${parts.length}`);
@@ -123,7 +123,7 @@ function parseHistDataLine(line: string, asset: Asset, timeframe: Timeframe): Ca
 /**
  * Parse Standard CSV format line: 2026-06-02,00:05:00,2543.85,2543.95,2543.65,2543.75,12
  */
-function parseStandardCSVLine(line: string, asset: Asset, timeframe: Timeframe): Candle {
+export function parseStandardCSVLine(line: string, asset: Asset, timeframe: Timeframe): Candle {
   const parts = line.split(',');
   if (parts.length < 7) {
     throw new Error(`Expected 7 columns, got ${parts.length}`);
@@ -160,7 +160,7 @@ function parseStandardCSVLine(line: string, asset: Asset, timeframe: Timeframe):
  * Parse date and time components into milliseconds timestamp
  * Time format: HH:MM:SS
  */
-function parseDateTime(year: number, month: number, day: number, time: string): number {
+export function parseDateTime(year: number, month: number, day: number, time: string): number {
   const timeParts = time.split(':');
   if (timeParts.length !== 3) {
     throw new Error(`Invalid time format: ${time}`);

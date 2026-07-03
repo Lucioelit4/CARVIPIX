@@ -5,7 +5,12 @@
  */
 
 import { Candle, Asset, Timeframe } from '../types/marketData';
-import { parseCSVLine, validateSingleCandle } from './csvImporter';
+import { 
+  parseCSVLine, 
+  validateSingleCandle,
+  parseHistDataLine,
+  parseStandardCSVLine 
+} from './csvImporter';
 
 export interface ImportProgress {
   bytesProcessed: number;
@@ -44,6 +49,43 @@ export const IMPORT_CONFIG = {
 };
 
 /**
+ * Detectar si un archivo es ZIP por su firma mágica
+ */
+function isZipFile(buffer: ArrayBuffer): boolean {
+  const view = new Uint8Array(buffer);
+  // Firma ZIP: 504B0304 (PK\x03\x04)
+  return view.length >= 4 && view[0] === 0x50 && view[1] === 0x4b && view[2] === 0x03 && view[3] === 0x04;
+}
+
+/**
+ * Detectar el formato de CSV por su contenido
+ * Retorna 'histdata', 'standard', o 'unknown'
+ */
+function detectCSVFormat(firstLine: string): 'histdata' | 'standard' | 'unknown' {
+  const line = firstLine.toLowerCase().trim();
+  
+  // Header detection
+  if (line.includes('datetime')) return 'histdata';
+  if (line.includes('date') && line.includes('time')) return 'standard';
+  
+  // Pattern detection for data (si no hay header)
+  const parts = line.split(',');
+  
+  // HistData: YYYY.MM.DD HH:MM:SS,Open,High,Low,Close,Volume (6 columnas)
+  // Patrón: primero tiene puntos (fecha YYYY.MM.DD)
+  if (parts.length === 6 && parts[0].includes('.') && parts[0].includes(' ')) {
+    return 'histdata';
+  }
+  
+  // Standard: Date,Time,Open,High,Low,Close,Volume (7 columnas)
+  if (parts.length === 7 && parts[1].match(/^\d{2}:\d{2}:\d{2}/)) {
+    return 'standard';
+  }
+  
+  return 'unknown';
+}
+
+/**
  * Validar que el archivo no sea demasiado grande
  */
 export function validateFileSize(fileSizeBytes: number): {
@@ -71,6 +113,7 @@ export function validateFileSize(fileSizeBytes: number): {
 
 /**
  * Importar archivo CSV en chunks con progreso
+ * Soporta: CSV directo o ZIP con CSV adentro
  */
 export async function importLargeCSVFile(
   file: File,
@@ -78,6 +121,19 @@ export async function importLargeCSVFile(
   timeframe: Timeframe,
   onProgress?: (progress: ImportProgress) => void
 ): Promise<ImportStatistics> {
+  // Detectar si es ZIP por extensión y primeros bytes
+  const isZip = file.name.toLowerCase().endsWith('.zip') || await checkIfZipFile(file);
+  
+  if (isZip) {
+    throw new Error(
+      `El archivo es un ZIP. Descarga la librería o descomprime manualmente: \n` +
+      `1. Abre el ZIP (${file.name})\n` +
+      `2. Extrae el archivo .CSV\n` +
+      `3. Carga el CSV directamente en CARVIPIX\n` +
+      `Archivos CSV soportados: HistData (XAUUSD_M1_*.csv) o Standard (Date,Time,O,H,L,C,V)`
+    );
+  }
+
   const startTime = Date.now();
   const totalBytes = file.size;
   
@@ -104,6 +160,8 @@ export async function importLargeCSVFile(
   let buffer = '';
   let lineNumber = 0;
   let lastTimestamp: number | null = null;
+  let detectedFormat: 'histdata' | 'standard' | 'unknown' = 'unknown';
+  let headerSkipped = false;
   const seenTimestamps = new Set<number>();
 
   const reader = file.stream().getReader();
@@ -129,16 +187,40 @@ export async function importLargeCSVFile(
           lineNumber++;
           
           if (!line.trim()) continue; // Saltar líneas vacías
-          if (lineNumber === 1 && line.toLowerCase().includes('datetime')) continue; // Saltar header
+          
+          // Primera línea: detectar formato y header
+          if (lineNumber === 1) {
+            detectedFormat = detectCSVFormat(line);
+            
+            // Saltar header si es evidente
+            if (line.toLowerCase().includes('datetime') || 
+                line.toLowerCase().includes('date') ||
+                line.toLowerCase().includes('open')) {
+              headerSkipped = true;
+              continue;
+            }
+          }
           
           try {
-            const candle = parseCSVLine(line, asset, timeframe, lineNumber);
+            // Intentar parsear según formato detectado
+            let candle: Candle;
+            
+            if (detectedFormat === 'histdata') {
+              candle = parseHistDataLine(line, asset, timeframe);
+            } else if (detectedFormat === 'standard') {
+              candle = parseStandardCSVLine(line, asset, timeframe);
+            } else {
+              // Fallback: detectar por patrón
+              candle = parseCSVLineWithDetection(line, asset, timeframe, 'auto', lineNumber);
+            }
             
             // Validar candle
             const validation = validateSingleCandle(candle);
             if (!validation.valid) {
-              stats.invalidLines.push(`L${lineNumber}: ${validation.errors.join(', ')}`);
-              stats.invalidLines = stats.invalidLines.slice(0, 10); // Guardar máximo 10
+              stats.invalidLines.push(
+                `L${lineNumber}: ${validation.errors.slice(0, 2).join(', ')}`
+              );
+              stats.invalidLines = stats.invalidLines.slice(0, 10);
               continue;
             }
 
@@ -148,26 +230,6 @@ export async function importLargeCSVFile(
               continue;
             }
             seenTimestamps.add(candle.timestamp);
-
-            // Detectar precio inválido (OHLC lógica)
-            if (candle.high < candle.low || 
-                candle.close < candle.low || 
-                candle.close > candle.high ||
-                candle.open < candle.low ||
-                candle.open > candle.high) {
-              stats.invalidPricesCount++;
-              continue;
-            }
-
-            // Detectar gaps (brecha > 2 horas para la mayoría de assets)
-            if (lastTimestamp !== null) {
-              const timeDiffHours = (candle.timestamp - lastTimestamp) / (1000 * 60 * 60);
-              if (timeframe === '5M' && timeDiffHours > 2) {
-                stats.gapCount++;
-              } else if (timeframe === '1H' && timeDiffHours > 24) {
-                stats.gapCount++;
-              }
-            }
 
             // Detectar fechas fuera de orden
             if (lastTimestamp !== null && candle.timestamp < lastTimestamp) {
@@ -198,7 +260,7 @@ export async function importLargeCSVFile(
           if (lineNumber % IMPORT_CONFIG.linesPerBatch === 0 && onProgress) {
             const elapsedMs = Date.now() - startTime;
             const percentComplete = Math.round((bytesProcessed / totalBytes) * 100);
-            const estimatedTotalMs = elapsedMs / (bytesProcessed / totalBytes);
+            const estimatedTotalMs = bytesProcessed > 0 ? elapsedMs / (bytesProcessed / totalBytes) : 0;
             const estimatedRemainingMs = estimatedTotalMs - elapsedMs;
 
             onProgress({
@@ -225,26 +287,40 @@ export async function importLargeCSVFile(
     }
 
     // Procesar línea final si existe
-    if (buffer.trim()) {
+    if (buffer.trim() && lineNumber > 0) {
       lineNumber++;
       try {
-        const candle = parseCSVLine(buffer.trim(), asset, timeframe, lineNumber);
+        let candle: Candle;
+        if (detectedFormat === 'histdata') {
+          candle = parseHistDataLine(buffer.trim(), asset, timeframe);
+        } else if (detectedFormat === 'standard') {
+          candle = parseStandardCSVLine(buffer.trim(), asset, timeframe);
+        } else {
+          candle = parseCSVLineWithDetection(buffer.trim(), asset, timeframe, 'auto', lineNumber);
+        }
+
         const validation = validateSingleCandle(candle);
-        if (validation.valid) {
+        if (validation.valid && !seenTimestamps.has(candle.timestamp)) {
           stats.candles.push(candle);
           stats.validCandles++;
         }
       } catch (error) {
-        if (stats.invalidLines.length < 10) {
-          stats.invalidLines.push(
-            `L${lineNumber}: ${error instanceof Error ? error.message : 'Error desconocido'}`
-          );
-        }
+        // Ignorar error en última línea
       }
     }
 
-    stats.totalLines = lineNumber;
+    stats.totalLines = lineNumber - (headerSkipped ? 1 : 0);
     stats.dataQuality = stats.totalLines > 0 ? (stats.validCandles / stats.totalLines) * 100 : 0;
+
+    // Validar que se importaron datos
+    if (stats.validCandles === 0) {
+      throw new Error(
+        `No se pudieron importar candles válidos.\n` +
+        `Detectado formato: ${detectedFormat}\n` +
+        `Líneas procesadas: ${lineNumber}\n` +
+        `Errores: ${stats.invalidLines.join('; ')}`
+      );
+    }
 
     // Reporte final
     if (onProgress) {
@@ -267,6 +343,52 @@ export async function importLargeCSVFile(
     return stats;
   } finally {
     reader.releaseLock();
+  }
+}
+
+/**
+ * Verificar si un archivo es ZIP leyendo primeros bytes
+ */
+async function checkIfZipFile(file: File): Promise<boolean> {
+  if (file.size < 4) return false;
+  
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  return isZipFile(buffer);
+}
+
+/**
+ * Parsear línea CSV con detección automática de formato
+ */
+function parseCSVLineWithDetection(
+  line: string,
+  asset: Asset,
+  timeframe: Timeframe,
+  format: 'histdata' | 'standard' | 'auto',
+  lineNumber?: number
+): Candle {
+  const parts = line.split(',');
+  
+  if (format === 'auto') {
+    // Detectar automáticamente
+    if (parts.length === 6 && parts[0].includes('.') && parts[0].includes(' ')) {
+      format = 'histdata';
+    } else if (parts.length === 7 && parts[1].match(/^\d{2}:\d{2}:\d{2}/)) {
+      format = 'standard';
+    } else {
+      throw new Error(`No se pudo detectar formato. Columnas: ${parts.length}${lineNumber ? ` (línea ${lineNumber})` : ''}`);
+    }
+  }
+
+  if (format === 'histdata') {
+    if (parts.length !== 6) {
+      throw new Error(`HistData requiere 6 columnas, encontradas: ${parts.length}`);
+    }
+    return parseHistDataLine(line, asset, timeframe);
+  } else {
+    if (parts.length !== 7) {
+      throw new Error(`Formato Standard requiere 7 columnas, encontradas: ${parts.length}`);
+    }
+    return parseStandardCSVLine(line, asset, timeframe);
   }
 }
 
