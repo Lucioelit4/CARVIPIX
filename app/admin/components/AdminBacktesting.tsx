@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { BacktestPanelExpanded } from '../../alertas/components/BacktestPanelExpanded';
 import { CacheAndBatchPanel } from '../../alertas/components/CacheAndBatchPanel';
 import { OptimizerPanel } from '../../alertas/components/OptimizerPanel';
+import BacktestExecutor from './BacktestExecutor';
 import { ChevronDown } from 'lucide-react';
 
 type BacktestTabType = 'backtest' | 'cache_batch' | 'optimizer';
@@ -93,14 +94,8 @@ export default function AdminBacktesting() {
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-white">Backtesting Avanzado</h3>
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="text-slate-400 hover:text-white text-sm"
-              >
-                {isExpanded ? 'Contraer' : 'Expandir'} <ChevronDown className="w-4 h-4 inline" />
-              </button>
             </div>
-            <BacktestPanelExpanded isPrivate={true} />
+            <BacktestExecutor />
           </div>
         )}
 
