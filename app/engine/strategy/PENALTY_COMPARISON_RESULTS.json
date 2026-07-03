@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-07-03T04:32:21.209Z",
+  "dataSource": "XAUUSD M1 June 2026",
+  "totalCandles": 250,
+  "penaltyComparison": {
+    "0.25": {
+      "totalCandles": 250,
+      "buyCount": 51,
+      "sellCount": 179,
+      "neutralCount": 20,
+      "confidenceA_Plus": 56,
+      "confidenceA": 57,
+      "confidenceB": 62,
+      "confidenceC": 75
+    },
+    "0.5": {
+      "totalCandles": 250,
+      "buyCount": 51,
+      "sellCount": 179,
+      "neutralCount": 20,
+      "confidenceA_Plus": 56,
+      "confidenceA": 57,
+      "confidenceB": 62,
+      "confidenceC": 75
+    },
+    "0.75": {
+      "totalCandles": 250,
+      "buyCount": 51,
+      "sellCount": 179,
+      "neutralCount": 20,
+      "confidenceA_Plus": 56,
+      "confidenceA": 57,
+      "confidenceB": 62,
+      "confidenceC": 75
+    }
+  },
+  "recommendation": {
+    "recommendedPenalty": 0.5,
+    "status": "PROVISIONAL",
+    "note": "Final decision pending Pullback validator testing"
+  }
+}
