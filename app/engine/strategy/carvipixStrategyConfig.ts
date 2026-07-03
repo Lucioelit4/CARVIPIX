@@ -2,6 +2,17 @@
  * CARVIPIX Strategy v1.0 - Configuration
  * Configuración oficial registrada de la estrategia
  * Privado / Admin only
+ * 
+ * ARQUITECTURA PROFESIONAL:
+ * 1. Trading Engine: Motor central (recibe datos, ejecuta reglas, valida)
+ * 2. CARVIPIX Alerts: Sistema de alertas (3-8/día, WR 75%-85%, RR 1:1.2-1:1.8)
+ * 3. Estrategia: Multi-timeframe (1H trend, 45M confirm, 5M entry)
+ * 4. Indicadores: EMA20, EMA50, EMA200
+ * 5. Validación: Por niveles (A+/A/B/C) usando 4 condiciones
+ * 6. Score: 0-100 con 7 componentes desglosados
+ * 7. Estados: PENDING, ACTIVE, TP_HIT, SL_HIT, BREAK_EVEN, CANCELLED, EXPIRED
+ * 
+ * NO INVENTES LÓGICA: Si no está definida, deja campo PENDING
  */
 
 import {
