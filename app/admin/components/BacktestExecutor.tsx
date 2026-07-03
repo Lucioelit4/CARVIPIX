@@ -27,6 +27,7 @@ import {
   DemoBacktestExecution,
 } from '../../engine/backtesting/runBacktest';
 import CSVDataLoader from './CSVDataLoader';
+import LargeFileDataLoader from './LargeFileDataLoader';
 
 type TradeType = 'BUY' | 'SELL';
 
@@ -111,6 +112,18 @@ export default function BacktestExecutor() {
 
   // Advertencias
   const warnings: { type: string; message: string; severity: 'warning' | 'error' | 'info' }[] = [];
+  
+  // Agregar advertencias del engine
+  if (result?.warnings && result.warnings.length > 0) {
+    result.warnings.forEach((w) => {
+      warnings.push({
+        type: w.type.replace(/_/g, ' ').charAt(0).toUpperCase() + w.type.replace(/_/g, ' ').slice(1),
+        message: w.message,
+        severity: w.severity,
+      });
+    });
+  }
+  
   if (metrics) {
     if (metrics.totalTrades < 10) {
       warnings.push({
@@ -144,7 +157,7 @@ export default function BacktestExecutor() {
 
   return (
     <div className="space-y-6">
-      {/* Cargador de Datos CSV */}
+      {/* Cargador de Datos CSV - Small Files */}
       <CSVDataLoader
         asset={asset}
         timeframe={timeframe}
@@ -157,6 +170,20 @@ export default function BacktestExecutor() {
           setCSVCandles(undefined);
         }}
         isLoading={isRunning}
+      />
+
+      {/* Cargador de Datos CSV - Large Files */}
+      <LargeFileDataLoader
+        asset={asset}
+        timeframe={timeframe}
+        onDataLoaded={(candles) => {
+          setCSVCandles(candles);
+          setCSVError('');
+        }}
+        onError={(error) => {
+          setCSVError(error);
+          setCSVCandles(undefined);
+        }}
       />
 
       {/* Panel de Controles */}

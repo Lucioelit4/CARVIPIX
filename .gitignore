@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Historical market data - Datasets grandes no se suben a GitHub
+/data/
+/data-history/
+/market-history/
+*.csv
+!public/sample-data/*.csv

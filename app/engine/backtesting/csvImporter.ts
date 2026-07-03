@@ -269,3 +269,72 @@ export function filterCandlesByDateRange(
 export function getLastNCandles(candles: Candle[], n: number): Candle[] {
   return candles.slice(Math.max(0, candles.length - n));
 }
+
+/**
+ * Parsear una línea CSV detectando automáticamente el formato
+ * Usado para importación por chunks
+ */
+export function parseCSVLine(line: string, asset: Asset, timeframe: Timeframe, lineNumber?: number): Candle {
+  const parts = line.split(',');
+  
+  // Detectar formato por número de columnas
+  if (parts.length === 6) {
+    // HistData format: DateTime,Open,High,Low,Close,Volume
+    return parseHistDataLine(line, asset, timeframe);
+  } else if (parts.length === 7) {
+    // Standard format: Date,Time,Open,High,Low,Close,Volume
+    return parseStandardCSVLine(line, asset, timeframe);
+  } else {
+    throw new Error(`Expected 6 or 7 columns, got ${parts.length}${lineNumber ? ` at line ${lineNumber}` : ''}`);
+  }
+}
+
+/**
+ * Validar un candle individual
+ */
+export function validateSingleCandle(candle: Candle): {
+  valid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+
+  // Validar precios
+  if (candle.open <= 0 || candle.high <= 0 || candle.low <= 0 || candle.close <= 0) {
+    errors.push('Precio debe ser > 0');
+  }
+
+  if (candle.high < candle.low) {
+    errors.push(`High (${candle.high}) < Low (${candle.low})`);
+  }
+
+  if (candle.open > candle.high) {
+    errors.push(`Open (${candle.open}) > High (${candle.high})`);
+  }
+
+  if (candle.open < candle.low) {
+    errors.push(`Open (${candle.open}) < Low (${candle.low})`);
+  }
+
+  if (candle.close > candle.high) {
+    errors.push(`Close (${candle.close}) > High (${candle.high})`);
+  }
+
+  if (candle.close < candle.low) {
+    errors.push(`Close (${candle.close}) < Low (${candle.low})`);
+  }
+
+  // Validar volumen
+  if (candle.volume < 0) {
+    errors.push('Volumen no puede ser negativo');
+  }
+
+  // Validar timestamp
+  if (!Number.isFinite(candle.timestamp) || candle.timestamp <= 0) {
+    errors.push('Timestamp inválido');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+  };
+}

@@ -46,6 +46,8 @@ export class BacktestEngine {
   private candles: Candle[] = [];
   private activeTrades: Map<string, BacktestTrade> = new Map();
   private performanceTracker: PerformanceTracker;
+  private isShortSample: boolean = false; // Flag para samples cortos
+  private adjustedConsensusThreshold: number = 0; // Threshold ajustado para samples cortos
 
   constructor(config: BacktestConfig) {
     this.config = config;
@@ -73,6 +75,11 @@ export class BacktestEngine {
     this.status.startTime = Date.now();
     this.candles = historicalCandles;
     this.status.totalCandles = historicalCandles.length;
+
+    // Detectar si es un sample corto (< 100 candles)
+    this.isShortSample = historicalCandles.length < 100;
+    // Ajustar consenso para samples cortos: reducir de 7 a 5 agentes mínimo
+    this.adjustedConsensusThreshold = this.isShortSample ? Math.max(5, this.config.consensusThreshold - 2) : this.config.consensusThreshold;
 
     try {
       // Validar datos
@@ -417,9 +424,11 @@ export class BacktestEngine {
       return { approved: false, averageScore: 0, approvalCount: 0 };
     }
 
-    const approvalCount = agentScores.filter((s) => s.score >= 60).length;
+    // Para samples cortos, ser más permisivo con los scores (50 en lugar de 60)
+    const scoreThreshold = this.isShortSample ? 50 : 60;
+    const approvalCount = agentScores.filter((s) => s.score >= scoreThreshold).length;
     const averageScore = agentScores.reduce((sum, s) => sum + s.score, 0) / agentScores.length;
-    const approved = approvalCount >= this.config.consensusThreshold;
+    const approved = approvalCount >= this.adjustedConsensusThreshold;
 
     return { approved, averageScore, approvalCount };
   }
@@ -438,8 +447,9 @@ export class BacktestEngine {
       const takeProfit = candle.high * 1.01; // 1% arriba del high
       const riskReward = (takeProfit - candle.close) / (candle.close - stopLoss);
 
-      // Validar RR
-      if (riskReward < 1.5) {
+      // Validar RR - ser más permisivo con samples cortos
+      const minRR = this.isShortSample ? 1.0 : 1.5;
+      if (riskReward < minRR) {
         this.warnings.push({
           timestamp: Date.now(),
           message: `RR bajo (${riskReward.toFixed(2)}): ${candle.asset}`,
@@ -574,6 +584,16 @@ export class BacktestEngine {
   private validateHistoricalData(candles: Candle[]): void {
     if (candles.length === 0) {
       throw new Error('No hay datos históricos para backtesting');
+    }
+
+    // Advertencia para samples cortos
+    if (this.isShortSample) {
+      this.warnings.push({
+        timestamp: Date.now(),
+        message: `Sample corto detectado: ${candles.length} candles. Solo válido para prueba visual y demostración. Resultados no validados en datos históricos reales.`,
+        type: 'short_sample_warning',
+        severity: 'info',
+      });
     }
 
     let issues = 0;

@@ -171,7 +171,8 @@ export interface BacktestWarning {
     | 'unusual_pattern'
     | 'consensus_low'
     | 'drawdown_warning'
-    | 'insufficient_signals';
+    | 'insufficient_signals'
+    | 'short_sample_warning';
   severity: 'info' | 'warning';
 }
 
