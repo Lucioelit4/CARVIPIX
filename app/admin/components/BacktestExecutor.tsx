@@ -329,6 +329,18 @@ export default function BacktestExecutor() {
         </div>
       )}
 
+      {/* Aviso Modo Técnico */}
+      <div className="bg-amber-900/30 border border-amber-600/60 rounded-lg p-4 flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-amber-500 mt-1 flex-shrink-0" />
+        <div className="flex-1">
+          <p className="font-bold text-amber-300 text-sm mb-1">⚙️ Modo Técnico</p>
+          <p className="text-xs text-amber-200">
+            Estos resultados validan <strong>infraestructura</strong> del motor. La estrategia real aún no está programada.
+            <br />No son indicativos de rentabilidad final ni rendimiento esperado en trading real.
+          </p>
+        </div>
+      </div>
+
       {/* Panel de Controles */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-bold text-white">🎮 Parámetros Demo</h3>
@@ -485,6 +497,12 @@ export default function BacktestExecutor() {
       {/* Resultados */}
       {execution?.status === 'completed' && metrics && (
         <>
+          {/* Etiqueta Resultado Técnico */}
+          <div className="bg-blue-950/40 border border-blue-700/60 rounded-lg px-4 py-2 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-400" />
+            <p className="text-xs font-medium text-blue-300">Resultado técnico | No es evaluación de estrategia final</p>
+          </div>
+
           {/* Métricas principales */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-lg p-4">

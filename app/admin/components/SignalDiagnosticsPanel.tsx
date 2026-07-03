@@ -194,11 +194,15 @@ export default function SignalDiagnosticsPanel({
         </div>
       </div>
 
-      {/* Nota de privacidad */}
-      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+      {/* Nota de privacidad y recalibración */}
+      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
         <p className="text-xs text-gray-600">
           💡 <strong>Diagnóstico privado:</strong> Estos datos son solo para análisis interno del motor. No se exponen
           al cliente. Utiliza para optimizar filtros sin cambiar configuración oficial.
+        </p>
+        <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+          ⚙️ <strong>Recalibración pendiente:</strong> Se recalibrará completamente cuando se programe la estrategia real.
+          Los umbrales de consenso y rechazos mostrados aquí son temporales para validar infraestructura.
         </p>
       </div>
     </div>
