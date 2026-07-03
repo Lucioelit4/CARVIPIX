@@ -78,3 +78,23 @@ export type {
   BatchWarning,
   BatchQueueStats,
 } from '../batch/types';
+
+// Parameter Optimizer
+export {
+  ParameterOptimizer,
+  getParameterOptimizer,
+  OptimizationScorer,
+} from './optimizer';
+export type {
+  OptimizationMethod,
+  ParameterRange,
+  OptimizationConfig,
+  OptimizationCandidate,
+  OptimizationRunResult,
+  OptimizationScore,
+  OptimizationResult,
+  OptimizationRun,
+  OptimizationProgress,
+  ParameterSensitivity,
+  OptimizationComparison,
+} from './optimizer/types';
