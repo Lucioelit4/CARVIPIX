@@ -86,7 +86,12 @@ export default function MultiDatasetLoader({
           
           if (cached) {
             setMessage(`[Cache] ${file.name} - ${cached.candles.length} velas`);
-            allCandles.push(...cached.candles);
+            // Acumular sin usar spread operator o push.apply con arrays gigantes
+            const CHUNK_SIZE = 1000;
+            for (let idx = 0; idx < cached.candles.length; idx += CHUNK_SIZE) {
+              const chunk = cached.candles.slice(idx, Math.min(idx + CHUNK_SIZE, cached.candles.length));
+              Array.prototype.push.apply(allCandles, chunk);
+            }
             const monthKey = `${file.year}-${file.month}`;
             candlesByMonth[monthKey] = cached.candles.length;
             months.push(monthKey);
@@ -107,7 +112,7 @@ export default function MultiDatasetLoader({
 
           setMessage(`Parseando ${file.name} con Worker... (${lines.length} líneas)`);
 
-          // Parsear en Web Worker (no bloquea UI)
+          // Parsear en Web Worker (no bloquea UI, streaming para archivos grandes)
           const candles = await parseCSVLines(
             lines,
             'XAUUSD',
@@ -120,6 +125,18 @@ export default function MultiDatasetLoader({
                 setMessage(
                   `Parseando ${file.name}... ${percent}% (${progress.parsed}/${progress.total})`
                 );
+              } else if (progress.type === 'batch') {
+                const percent = Math.round(
+                  ((progress.parsed || 0) / (progress.total || 1)) * 100
+                );
+                let msg = `Parseando ${file.name}... ${percent}%`;
+                if (progress.batchSize) {
+                  msg += ` (lote: ${progress.batchSize} velas)`;
+                }
+                if (progress.warning) {
+                  msg += ` ⚠️ ${progress.warning}`;
+                }
+                setMessage(msg);
               }
             }
           );
@@ -136,7 +153,13 @@ export default function MultiDatasetLoader({
             },
           });
 
-          allCandles.push(...candles);
+          // Acumular sin usar spread operator o push.apply (evitar stack overflow)
+          // Procesar candles en sub-lotes pequeños
+          const CHUNK_SIZE = 1000;
+          for (let idx = 0; idx < candles.length; idx += CHUNK_SIZE) {
+            const chunk = candles.slice(idx, Math.min(idx + CHUNK_SIZE, candles.length));
+            Array.prototype.push.apply(allCandles, chunk);
+          }
           candlesByMonth[monthKey] = candles.length;
           months.push(monthKey);
         } catch (fileError) {

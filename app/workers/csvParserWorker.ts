@@ -1,6 +1,6 @@
 /**
  * Web Worker para parsear CSV HistData en background
- * Procesa líneas de forma asincrónica sin bloquear el UI
+ * Streaming real para archivos grandes (350k+) sin stack overflow
  */
 
 interface ParseMessage {
@@ -8,35 +8,30 @@ interface ParseMessage {
   lines?: string[];
   asset?: string;
   timeframe?: string;
-  chunkSize?: number;
 }
 
 interface ParseResult {
-  type: 'progress' | 'complete' | 'error';
+  type: 'progress' | 'batch' | 'complete' | 'error';
   parsed?: number;
   total?: number;
   candles?: any[];
+  batchSize?: number;
   error?: string;
+  warning?: string;
 }
 
-// Importar funciones de parseo
+// Parsing eficiente
 const parseHistDataRealLine = (line: string, asset: string, timeframe: string): any => {
   const parts = line.split(';');
-  if (parts.length < 6) {
-    throw new Error(`Expected 6 columns, got ${parts.length}`);
-  }
+  if (parts.length < 6) throw new Error('Expected 6 columns');
 
   const dateTimeParts = parts[0].trim().split(' ');
-  if (dateTimeParts.length !== 2) {
-    throw new Error(`Invalid DateTime format: ${parts[0]}`);
-  }
+  if (dateTimeParts.length !== 2) throw new Error('Invalid DateTime');
 
   const dateStr = dateTimeParts[0];
   const timeStr = dateTimeParts[1];
 
-  if (dateStr.length !== 8 || timeStr.length !== 6) {
-    throw new Error(`Invalid date/time format`);
-  }
+  if (dateStr.length !== 8 || timeStr.length !== 6) throw new Error('Invalid date/time');
 
   const year = parseInt(dateStr.substring(0, 4), 10);
   const month = parseInt(dateStr.substring(4, 6), 10);
@@ -46,10 +41,9 @@ const parseHistDataRealLine = (line: string, asset: string, timeframe: string): 
   const second = parseInt(timeStr.substring(4, 6), 10);
 
   const date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
-  const timestamp = date.getTime();
 
   return {
-    timestamp,
+    timestamp: date.getTime(),
     open: parseFloat(parts[1].trim()),
     high: parseFloat(parts[2].trim()),
     low: parseFloat(parts[3].trim()),
@@ -61,66 +55,116 @@ const parseHistDataRealLine = (line: string, asset: string, timeframe: string): 
   };
 };
 
-const validateSingleCandle = (candle: any): { valid: boolean } => {
+const validateSingleCandle = (candle: any): boolean => {
   if (!candle.timestamp || !candle.open || !candle.high || !candle.low || !candle.close) {
-    return { valid: false };
+    return false;
   }
   if (candle.high < candle.low || candle.high < candle.open || candle.high < candle.close) {
-    return { valid: false };
+    return false;
   }
   if (candle.low > candle.open || candle.low > candle.close) {
-    return { valid: false };
+    return false;
   }
   if (candle.volume < 0) {
-    return { valid: false };
+    return false;
   }
-  return { valid: true };
+  return true;
 };
 
 self.onmessage = async (event: MessageEvent<ParseMessage>) => {
-  const { type, lines = [], asset = 'XAUUSD', timeframe = '5M', chunkSize = 5000 } = event.data;
+  const { type, lines = [], asset = 'XAUUSD', timeframe = '5M' } = event.data;
 
   if (type === 'parse') {
     try {
-      const candles: any[] = [];
       const total = lines.length;
+      const seenTimestamps = new Map<number, boolean>(); // Deduplicación incremental
+      let processedCount = 0;
+      let validCount = 0;
+      let duplicateCount = 0;
 
-      // Procesar en chunks sin bloquear
-      for (let i = 0; i < total; i++) {
-        if (i % chunkSize === 0) {
-          // Enviar progreso cada chunk
-          const result: ParseResult = {
-            type: 'progress',
-            parsed: i,
-            total: total,
-          };
-          self.postMessage(result);
+      // Constantes de streaming
+      const LINES_PER_BATCH = 1000; // Procesar 1k líneas por iteración
+      const BATCH_SEND_SIZE = 5000; // Enviar candles en lotes de 5k
 
-          // Yield al event loop
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        }
+      let currentBatch: any[] = [];
 
-        const line = lines[i].trim();
-        if (!line) continue;
+      // Procesar en streaming real
+      for (let i = 0; i < total; i += LINES_PER_BATCH) {
+        const batchEnd = Math.min(i + LINES_PER_BATCH, total);
 
-        try {
-          const candle = parseHistDataRealLine(line, asset, timeframe);
-          if (validateSingleCandle(candle).valid) {
-            candles.push(candle);
+        // Procesar líneas del batch
+        for (let j = i; j < batchEnd; j++) {
+          const line = lines[j].trim();
+          if (!line) continue;
+
+          try {
+            const candle = parseHistDataRealLine(line, asset, timeframe);
+            if (validateSingleCandle(candle)) {
+              // Deduplicación incremental
+              if (!seenTimestamps.has(candle.timestamp)) {
+                seenTimestamps.set(candle.timestamp, true);
+                currentBatch.push(candle);
+                validCount++;
+
+                // Enviar batch cuando alcance tamaño
+                if (currentBatch.length >= BATCH_SEND_SIZE) {
+                  const result: ParseResult = {
+                    type: 'batch',
+                    candles: currentBatch,
+                    batchSize: currentBatch.length,
+                    parsed: j,
+                    total: total,
+                  };
+                  self.postMessage(result);
+                  currentBatch = [];
+                }
+              } else {
+                duplicateCount++;
+              }
+            }
+          } catch (e) {
+            // Ignorar líneas malformadas
           }
-        } catch (e) {
-          // Ignorar líneas malformadas
+
+          processedCount++;
         }
+
+        // Enviar progreso después de cada batch de líneas
+        const result: ParseResult = {
+          type: 'progress',
+          parsed: batchEnd,
+          total: total,
+        };
+        self.postMessage(result);
+
+        // Yield al event loop para no bloquear
+        await new Promise((resolve) => setTimeout(resolve, 0));
       }
 
-      // Enviar resultado final
-      const result: ParseResult = {
+      // Enviar candles restantes
+      if (currentBatch.length > 0) {
+        const result: ParseResult = {
+          type: 'batch',
+          candles: currentBatch,
+          batchSize: currentBatch.length,
+          parsed: total,
+          total: total,
+        };
+        self.postMessage(result);
+      }
+
+      // Resultado final con metadatos
+      const finalResult: ParseResult = {
         type: 'complete',
         parsed: total,
         total: total,
-        candles,
+        candles: [],
+        warning:
+          total > 100000
+            ? `Archivo grande procesado: ${total} líneas (${duplicateCount} duplicados limpiados). Puede ser lento en algunos navegadores.`
+            : undefined,
       };
-      self.postMessage(result);
+      self.postMessage(finalResult);
     } catch (error) {
       const result: ParseResult = {
         type: 'error',

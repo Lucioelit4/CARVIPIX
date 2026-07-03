@@ -1,16 +1,18 @@
 /**
- * Hook para parsear CSV usando Web Worker
- * Mantiene el UI responsivo incluso con archivos muy grandes
+ * Hook para parsear CSV usando Web Worker con streaming
+ * Soporta archivos grandes (300k+ líneas) sin bloquear UI
  */
 
 import { useCallback, useRef, useState } from 'react';
 
 interface ParseProgress {
-  type: 'progress' | 'complete' | 'error';
+  type: 'progress' | 'batch' | 'complete' | 'error';
   parsed?: number;
   total?: number;
   candles?: any[];
+  batchSize?: number;
   error?: string;
+  warning?: string;
 }
 
 export function useCSVParserWorker() {
@@ -45,17 +47,36 @@ export function useCSVParserWorker() {
           }
 
           setIsLoading(true);
+          const allCandles: any[] = [];
 
           const messageHandler = (event: MessageEvent<ParseProgress>) => {
-            const { type, parsed, total, candles, error } = event.data;
+            const { type, parsed, total, candles, error, warning, batchSize } = event.data;
 
             if (type === 'progress') {
+              // Reporte de progreso simple
               onProgress?.({ type, parsed, total });
+            } else if (type === 'batch') {
+              // Acumular candles de cada batch sin stack overflow
+              if (candles && candles.length > 0) {
+                // Procesar en sub-chunks para evitar stack overflow
+                const CHUNK_SIZE = 1000;
+                for (let idx = 0; idx < candles.length; idx += CHUNK_SIZE) {
+                  const chunk = candles.slice(idx, Math.min(idx + CHUNK_SIZE, candles.length));
+                  Array.prototype.push.apply(allCandles, chunk);
+                }
+              }
+              onProgress?.({
+                type,
+                parsed,
+                total,
+                batchSize,
+                warning: warning,
+              });
             } else if (type === 'complete') {
               setIsLoading(false);
               worker.removeEventListener('message', messageHandler);
               worker.removeEventListener('error', errorHandler);
-              resolve(candles || []);
+              resolve(allCandles);
             } else if (type === 'error') {
               setIsLoading(false);
               worker.removeEventListener('message', messageHandler);
@@ -80,7 +101,6 @@ export function useCSVParserWorker() {
             lines,
             asset,
             timeframe,
-            chunkSize: 5000,
           });
         } catch (error) {
           setIsLoading(false);
