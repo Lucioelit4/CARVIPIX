@@ -235,3 +235,20 @@ export type {
   ProviderCredentials,
   ProviderHealthCheck,
 } from './realDataProvider';
+
+// ============================================
+// BACKTESTING TYPES (Privado - Admin Only)
+// ============================================
+
+// Re-export backtesting types
+export type {
+  BacktestConfig,
+  BacktestTrade,
+  BacktestResult,
+  BacktestMetrics,
+  BacktestStatus,
+  BacktestError,
+  BacktestWarning,
+  BacktestSession,
+  BacktestReport,
+} from './backtesting';
