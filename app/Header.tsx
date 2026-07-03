@@ -1,5 +1,4 @@
 import Image from "next/image";
-import AdminNavButton from "./components/AdminNavButton";
 
 export default function Header() {
   return (
@@ -24,7 +23,6 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <AdminNavButton />
           <button className="rounded-full bg-[#D4AF37] px-8 py-3.5 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-300 hover:scale-105 hover:bg-[#f0c94a]">
             Comenzar
           </button>

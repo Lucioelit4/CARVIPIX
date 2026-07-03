@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import PlansModal from "./PlansModal";
+import AdminMenuItem from "./AdminMenuItem";
 
 const menuItems = [
   { name: "Dashboard", href: "/" },
@@ -86,6 +87,7 @@ export default function Sidebar() {
                   </Link>
                 );
               })}
+              <AdminMenuItem />
             </nav>
           </div>
 
@@ -146,6 +148,7 @@ export default function Sidebar() {
                   </Link>
                 );
               })}
+              <AdminMenuItem />
             </nav>
           </div>
         </div>
