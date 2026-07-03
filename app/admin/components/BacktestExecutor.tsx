@@ -186,6 +186,19 @@ export default function BacktestExecutor() {
 
   return (
     <div className="space-y-6">
+      {/* Aviso Privado - CARVIPIX v1.0 */}
+      <div className="bg-slate-900/50 border border-slate-700/60 rounded-lg p-4 flex items-start gap-3">
+        <AlertTriangle className="w-5 h-5 text-slate-400 mt-1 flex-shrink-0" />
+        <div className="flex-1">
+          <p className="font-bold text-slate-300 text-sm">🔒 CARVIPIX Strategy v1.0 Registrada</p>
+          <p className="text-xs text-slate-500 mt-1">
+            Especificación oficial guardada en <code className="text-slate-400 bg-slate-800/50 px-2 py-1 rounded text-xs">docs/CARVIPIX_STRATEGY_V1.md</code>
+            <br />
+            Reglas exactas (v1.1) pendientes antes de backtesting real: tendencia, retroceso, entrada, SL/TP, score.
+          </p>
+        </div>
+      </div>
+
       {/* Cargador de Múltiples Datasets */}
       <MultiDatasetLoader
         onDataLoaded={(candles, metadata) => {
