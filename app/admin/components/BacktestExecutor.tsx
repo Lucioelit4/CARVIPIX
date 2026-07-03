@@ -6,7 +6,7 @@
  * Totalmente privada, no expone nada al cliente
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Play,
   AlertTriangle,
@@ -17,6 +17,8 @@ import {
   DollarSign,
   Percent,
   ChevronDown,
+  Database,
+  Calendar,
 } from 'lucide-react';
 import { Asset, Timeframe, Candle } from '../../engine/types/marketData';
 import {
@@ -33,16 +35,31 @@ type TradeType = 'BUY' | 'SELL';
 
 export default function BacktestExecutor() {
   // Parámetros de control
-  const [asset, setAsset] = useState<Asset>('EURUSD');
-  const [timeframe, setTimeframe] = useState<Timeframe>('1H');
-  const [balance, setBalance] = useState(5000);
-  const [riskPerTrade, setRiskPerTrade] = useState(0.5);
+  const [asset, setAsset] = useState<Asset>('XAUUSD');
+  const [timeframe, setTimeframe] = useState<Timeframe>('5M');
+  const [balance, setBalance] = useState(10000);
+  const [riskPerTrade, setRiskPerTrade] = useState(1);
   const [minConsensus, setMinConsensus] = useState(7);
   const [daysBack, setDaysBack] = useState(30);
 
   // Datos CSV
   const [csvCandles, setCSVCandles] = useState<Candle[] | undefined>(undefined);
   const [csvError, setCSVError] = useState<string>('');
+
+  // Metadatos del dataset
+  const datasetInfo = useMemo(() => {
+    if (!csvCandles || csvCandles.length === 0) {
+      return null;
+    }
+    const sortedByTime = [...csvCandles].sort((a, b) => a.timestamp - b.timestamp);
+    return {
+      count: csvCandles.length,
+      startDate: new Date(sortedByTime[0].timestamp),
+      endDate: new Date(sortedByTime[sortedByTime.length - 1].timestamp),
+      asset: csvCandles[0].asset,
+      timeframe: csvCandles[0].timeframe,
+    };
+  }, [csvCandles]);
 
   // Estado de ejecución
   const [execution, setExecution] = useState<DemoBacktestExecution | null>(null);
@@ -186,6 +203,51 @@ export default function BacktestExecutor() {
         }}
       />
 
+      {/* Indicador de Datos Reales vs Demo */}
+      {datasetInfo ? (
+        <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 border border-emerald-600/60 rounded-lg p-4">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <Database className="w-6 h-6 text-emerald-400 mt-1" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-emerald-300 mb-2">📊 Datos Reales Cargados</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <p className="text-slate-400">Velas</p>
+                  <p className="text-emerald-200 font-semibold">{datasetInfo.count.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Activo</p>
+                  <p className="text-emerald-200 font-semibold">{datasetInfo.asset}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Timeframe</p>
+                  <p className="text-emerald-200 font-semibold">{datasetInfo.timeframe}</p>
+                </div>
+                <div>
+                  <p className="text-slate-400">Período</p>
+                  <p className="text-emerald-200 font-semibold text-xs">
+                    {datasetInfo.startDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })} -
+                    {datasetInfo.endDate.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-800/30 border border-slate-700 rounded-lg p-4">
+          <div className="flex items-start gap-4">
+            <Calendar className="w-5 h-5 text-slate-500 mt-1 flex-shrink-0" />
+            <div>
+              <p className="text-slate-300">Se usarán datos demo generados localmente (últimos 30 días)</p>
+              <p className="text-slate-500 text-sm mt-1">Carga un archivo CSV para usar datos reales HistData</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Panel de Controles */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6 space-y-4">
         <h3 className="text-lg font-bold text-white">🎮 Parámetros Demo</h3>
@@ -279,12 +341,13 @@ export default function BacktestExecutor() {
                 type="number"
                 value={daysBack}
                 onChange={(e) => setDaysBack(Number(e.target.value))}
-                disabled={isRunning}
+                disabled={isRunning || !!datasetInfo}
                 min="7"
                 max="365"
                 className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white disabled:opacity-50"
               />
             </div>
+            {datasetInfo && <p className="text-xs text-slate-400 mt-1">Rango definido por dataset importado</p>}
           </div>
         </div>
 
@@ -452,6 +515,26 @@ export default function BacktestExecutor() {
               </div>
             </div>
           </div>
+
+          {/* Información del Dataset Utilizado */}
+          {datasetInfo && (
+            <div className="bg-emerald-900/20 border border-emerald-700/50 rounded-lg p-4">
+              <p className="text-emerald-300 text-sm font-semibold mb-2">
+                ✅ Backtest ejecutado con {datasetInfo.count.toLocaleString()} velas reales de HistData
+              </p>
+              <p className="text-slate-300 text-xs">
+                {datasetInfo.asset} {datasetInfo.timeframe} | {datasetInfo.startDate.toLocaleDateString('es-ES')} a{' '}
+                {datasetInfo.endDate.toLocaleDateString('es-ES')}
+              </p>
+            </div>
+          )}
+          {!datasetInfo && (
+            <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+              <p className="text-slate-300 text-sm">
+                📊 Backtest ejecutado con datos demo generados (últimos 30 días)
+              </p>
+            </div>
+          )}
 
           {/* Advertencias */}
           {warnings.length > 0 && (
