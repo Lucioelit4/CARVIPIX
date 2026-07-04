@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getAuthSessionSnapshot, getCurrentRole, logAccessEvent } from '@/app/lib/auth/session';
 
 /**
  * Hook para verificar si el usuario actual es administrador
@@ -11,27 +12,28 @@ export function useIsAdmin() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar si hay sesión admin válida en localStorage
-    const adminSession = localStorage.getItem('carvipix_admin_session');
-    const adminTimestamp = localStorage.getItem('carvipix_admin_timestamp');
+    const snapshot = getAuthSessionSnapshot();
+    const session = snapshot.session;
 
-    if (adminSession && adminTimestamp) {
-      // Sesión válida por 24 horas
-      const sessionTime = parseInt(adminTimestamp);
-      const currentTime = Date.now();
-      const hoursIn24 = 24 * 60 * 60 * 1000;
-
-      if (currentTime - sessionTime < hoursIn24) {
-        setIsAdmin(true);
-      } else {
-        // Sesión expirada
-        localStorage.removeItem('carvipix_admin_session');
-        localStorage.removeItem('carvipix_admin_timestamp');
-        setIsAdmin(false);
+    if (!session) {
+      if (snapshot.status === 'expired') {
+        logAccessEvent('admin_session_expired', 'La sesión administrativa expiró en la validación del menú.');
       }
-    } else {
       setIsAdmin(false);
+      setIsLoading(false);
+      return;
     }
+
+    if (session.role !== 'admin') {
+      if (getCurrentRole() !== 'invitado') {
+        logAccessEvent('admin_access_denied', 'Rol sin permisos de administración.');
+      }
+      setIsAdmin(false);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsAdmin(true);
 
     setIsLoading(false);
   }, []);

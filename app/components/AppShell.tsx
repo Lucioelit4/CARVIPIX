@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
+import ProtectedDashboardGuard from "./ProtectedDashboardGuard";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ export default function AppShell({ children }: AppShellProps) {
     <>
       <Sidebar />
       <div className="flex min-h-screen flex-1 flex-col pt-20 lg:ml-72 lg:pt-0">
-        {children}
+        <ProtectedDashboardGuard>{children}</ProtectedDashboardGuard>
         <Footer />
       </div>
     </>

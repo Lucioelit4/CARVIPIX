@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Lock, ChevronLeft } from 'lucide-react';
+import { AlertTriangle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
+import { getAuthSessionSnapshot, getCurrentRole, logAccessEvent } from '@/app/lib/auth/session';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -20,25 +21,26 @@ export default function AdminGuard({ children }: AdminGuardProps) {
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    // Verificar sesión admin
-    const adminSession = localStorage.getItem('carvipix_admin_session');
-    const adminTimestamp = localStorage.getItem('carvipix_admin_timestamp');
+    const snapshot = getAuthSessionSnapshot();
+    const session = snapshot.session;
 
-    if (adminSession && adminTimestamp) {
-      const sessionTime = parseInt(adminTimestamp);
-      const currentTime = Date.now();
-      const hoursIn24 = 24 * 60 * 60 * 1000;
-
-      if (currentTime - sessionTime < hoursIn24) {
-        setIsAuthenticated(true);
-      } else {
-        // Sesión expirada
-        localStorage.removeItem('carvipix_admin_session');
-        localStorage.removeItem('carvipix_admin_timestamp');
+    if (!session) {
+      if (snapshot.status === 'expired') {
+        logAccessEvent('admin_session_expired', 'La sesión administrativa expiró antes de cargar el panel.');
         setIsExpired(true);
-        setIsAuthenticated(false);
       }
+      setIsLoading(false);
+      return;
     }
+
+    if (session.role !== 'admin') {
+      logAccessEvent('admin_access_denied', 'Intento de acceso a /admin con rol no autorizado.');
+      setIsAuthenticated(false);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsAuthenticated(true);
 
     setIsLoading(false);
   }, []);
@@ -83,7 +85,9 @@ export default function AdminGuard({ children }: AdminGuardProps) {
           <p className="text-white/60">
             {isExpired
               ? 'Tu sesión de administrador ha expirado.'
-              : 'No tienes permisos para acceder a esta área.'}
+              : getCurrentRole() === 'cliente'
+                ? 'Tu cuenta actual no tiene permisos de administración.'
+                : 'No tienes permisos para acceder a esta área.'}
           </p>
         </div>
 

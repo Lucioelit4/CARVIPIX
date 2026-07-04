@@ -4,30 +4,14 @@ import { useEffect, useState } from 'react';
 import AdminLogin from './AdminLogin';
 import AdminDashboard from './AdminDashboard';
 import AdminGuard from '@/app/components/AdminGuard';
+import { clearAuthSession, getCurrentRole } from '@/app/lib/auth/session';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar si hay sesión admin guardada en localStorage
-    const adminSession = localStorage.getItem('carvipix_admin_session');
-    const adminTimestamp = localStorage.getItem('carvipix_admin_timestamp');
-
-    if (adminSession && adminTimestamp) {
-      // Sesión válida por 24 horas
-      const sessionTime = parseInt(adminTimestamp);
-      const currentTime = Date.now();
-      const hoursIn24 = 24 * 60 * 60 * 1000;
-
-      if (currentTime - sessionTime < hoursIn24) {
-        setIsAuthenticated(true);
-      } else {
-        // Sesión expirada
-        localStorage.removeItem('carvipix_admin_session');
-        localStorage.removeItem('carvipix_admin_timestamp');
-      }
-    }
+    setIsAuthenticated(getCurrentRole() === 'admin');
 
     setIsLoading(false);
   }, []);
@@ -37,8 +21,7 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('carvipix_admin_session');
-    localStorage.removeItem('carvipix_admin_timestamp');
+    clearAuthSession();
     setIsAuthenticated(false);
   };
 
@@ -54,12 +37,12 @@ export default function AdminPage() {
   }
 
   return (
-    <AdminGuard>
-      {isAuthenticated ? (
+    isAuthenticated ? (
+      <AdminGuard>
         <AdminDashboard onLogout={handleLogout} />
-      ) : (
-        <AdminLogin onLogin={handleLogin} />
-      )}
-    </AdminGuard>
+      </AdminGuard>
+    ) : (
+      <AdminLogin onLogin={handleLogin} />
+    )
   );
 }

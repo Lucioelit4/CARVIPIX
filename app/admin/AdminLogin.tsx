@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, Lock, Check } from 'lucide-react';
+import { logAccessEvent, writeAuthSession } from '@/app/lib/auth/session';
 
 interface AdminLoginProps {
   onLogin: () => void;
@@ -22,8 +23,8 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
 
     setTimeout(() => {
       if (code.toUpperCase() === ADMIN_CODE) {
-        localStorage.setItem('carvipix_admin_session', 'true');
-        localStorage.setItem('carvipix_admin_timestamp', Date.now().toString());
+        writeAuthSession('admin');
+        logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
         onLogin();
       } else {
         setError('Código de acceso incorrecto. Intenta de nuevo.');

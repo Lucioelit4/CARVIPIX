@@ -9,7 +9,7 @@ import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
 
 const menuItems = [
-  { name: "Dashboard", href: "/" },
+  { name: "Dashboard", href: "/dashboard" },
   { name: "Alertas en Vivo", href: "/alertas" },
   { name: "Resultados", href: "/resultados" },
   { name: "Análisis Diario", href: "/analisis" },
