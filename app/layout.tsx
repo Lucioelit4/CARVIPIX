@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
-import Sidebar from "./components/Sidebar";
-import Footer from "./components/Footer";
+import AppShell from "./components/AppShell";
 
-const geistSans = Geist({
+const manrope = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
@@ -12,6 +11,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -25,13 +30,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen flex flex-col">
-        <Sidebar />
-        <div className="lg:ml-72 pt-20 lg:pt-0 flex flex-col flex-1">
-          {children}
-          <Footer />
-        </div>
+    <html lang="es" className={`${manrope.variable} ${geistMono.variable} ${cormorant.variable}`}>
+      <body className="min-h-screen flex flex-col bg-[#05070b] text-[#f5f1e8]">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

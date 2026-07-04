@@ -39,6 +39,7 @@
   /* Typography */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
   --font-mono: 'JetBrains Mono', 'Menlo', monospace;
+  --font-display: var(--font-display);
   
   /* Animations */
   --duration-fast: 200ms;
@@ -60,7 +61,7 @@ html, body {
 body {
   background: linear-gradient(to bottom, var(--color-black-dark), var(--color-black-darker));
   color: var(--color-white-pure);
-  font-family: var(--font-sans);
+  font-family: var(--font-geist-sans), var(--font-sans);
   line-height: 1.5;
   min-height: 100vh;
   overflow-x: hidden;
@@ -149,4 +150,159 @@ a:hover {
 
 .animate-pulse-gold {
   animation: pulse-gold 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.cv-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.cv-home {
+  position: relative;
+  isolation: isolate;
+}
+
+.cv-home__backdrop {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 14% 12%, rgba(212, 175, 55, 0.14), transparent 30%),
+    radial-gradient(circle at 82% 18%, rgba(88, 128, 184, 0.16), transparent 28%),
+    radial-gradient(circle at 50% 100%, rgba(212, 175, 55, 0.08), transparent 34%),
+    linear-gradient(180deg, #05070b 0%, #081019 46%, #05070b 100%);
+}
+
+.cv-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: #d4af37;
+}
+
+.cv-kicker::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.7));
+}
+
+.cv-surface {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(17, 25, 35, 0.88), rgba(11, 15, 23, 0.88));
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(18px);
+}
+
+.cv-hero-panel {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 36px;
+  background:
+    linear-gradient(180deg, rgba(17, 24, 33, 0.92), rgba(10, 14, 22, 0.96));
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.cv-panel-shell {
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at top, rgba(212, 175, 55, 0.09), transparent 40%),
+    linear-gradient(180deg, rgba(15, 20, 30, 0.95), rgba(9, 13, 20, 0.95));
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  padding: 20px;
+}
+
+.cv-cta-shell {
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 40px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.1), transparent 30%),
+    linear-gradient(180deg, rgba(13, 19, 28, 0.98), rgba(8, 12, 18, 0.98));
+  box-shadow:
+    0 32px 110px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.cv-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border-radius: 999px;
+  padding: 0 22px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition:
+    transform 160ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.cv-button:hover {
+  transform: translateY(-1px);
+}
+
+.cv-button--primary {
+  border: 1px solid rgba(212, 175, 55, 0.48);
+  background: linear-gradient(135deg, #d4af37 0%, #f0d374 100%);
+  color: #08080a;
+  box-shadow: 0 14px 40px rgba(212, 175, 55, 0.18);
+}
+
+.cv-button--primary:hover {
+  box-shadow: 0 20px 44px rgba(212, 175, 55, 0.24);
+}
+
+.cv-button--secondary,
+.cv-button--ghost {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  color: #f5f1e8;
+}
+
+.cv-button--secondary:hover,
+.cv-button--ghost:hover {
+  border-color: rgba(212, 175, 55, 0.24);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cv-hover-lift {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.cv-hover-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.16);
+  box-shadow:
+    0 34px 92px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+@media (max-width: 767px) {
+  .cv-hero-panel,
+  .cv-panel-shell,
+  .cv-cta-shell,
+  .cv-surface {
+    border-radius: 24px;
+  }
 }
