@@ -49,6 +49,7 @@ export interface WalkForwardAnalysis {
   
   // Degradación de performance
   performanceDegradation: number; // % (test vs train)
+  walkForwardEfficiency: number; // Test net profit / Train net profit * 100
   overflowedWindowsCount: number;
   healthyWindowsCount: number;
   
@@ -172,6 +173,9 @@ export async function runWalkForwardAnalysis(
   const degradation = avgTestMetrics.netProfit && avgTrainMetrics.netProfit
     ? ((avgTestMetrics.netProfit - avgTrainMetrics.netProfit) / avgTrainMetrics.netProfit) * 100
     : 0;
+  const walkForwardEfficiency = avgTrainMetrics.netProfit
+    ? ((avgTestMetrics.netProfit || 0) / avgTrainMetrics.netProfit) * 100
+    : 0;
 
   return {
     config: wfConfig,
@@ -179,6 +183,7 @@ export async function runWalkForwardAnalysis(
     averageTrainMetrics: avgTrainMetrics,
     averageTestMetrics: avgTestMetrics,
     performanceDegradation: degradation,
+    walkForwardEfficiency,
     overflowedWindowsCount: overflowedWindows,
     healthyWindowsCount: windows.length - overflowedWindows,
     totalWindows: windowIndex,
@@ -238,6 +243,7 @@ function getEmptyWalkForwardAnalysis(
     averageTrainMetrics: {},
     averageTestMetrics: {},
     performanceDegradation: 0,
+    walkForwardEfficiency: 0,
     overflowedWindowsCount: 0,
     healthyWindowsCount: 0,
     totalWindows: 0,

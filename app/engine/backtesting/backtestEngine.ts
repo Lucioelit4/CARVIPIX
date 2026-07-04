@@ -6,6 +6,7 @@
  */
 
 import { Asset, Timeframe, Candle, MarketData } from '../types/marketData';
+import { AgentScore } from '../types/index';
 import {
   BacktestConfig,
   BacktestResult,
@@ -107,11 +108,12 @@ export class BacktestEngine {
         this.status.progress = Math.round((i / historicalCandles.length) * 100);
         this.status.lastUpdate = Date.now();
 
-        // Procesar cierre de vela
-        await this.processCandle(candle, i);
-
         // Verificar trades abiertos contra cierre actual
         this.checkActiveTrades(candle);
+
+        // Procesar cierre de vela después de actualizar posiciones abiertas
+        // para evitar lookahead bias con el high/low de la misma vela.
+        await this.processCandle(candle, i);
       }
 
       // Cerrar trades abiertos al final
@@ -180,6 +182,8 @@ export class BacktestEngine {
           sharpeRatio: 0,
           sortinoRatio: 0,
           profitability: 0,
+          expectancy: 0,
+          expectancyPercent: 0,
           finalBalance: this.currentBalance,
           balanceGrowth: 0,
           returnOnInitialCapital: 0,
@@ -191,6 +195,7 @@ export class BacktestEngine {
           avgLossSize: 0,
           payoffIndex: 0,
           recoveryFactor: 0,
+          riskPerTradeCapital: 0,
           tradesWithValidSL: 0,
           tradesWithValidTP: 0,
           tradesWithProperRiskRatio: 0,
@@ -302,10 +307,14 @@ export class BacktestEngine {
   private runAgents(
     candle: Candle,
     indicators: any
-  ): Array<{ agent: string; score: number; confidence: number }> {
-    const scores: Array<{ agent: string; score: number; confidence: number }> = [];
+  ): AgentScore[] {
+    const scores: AgentScore[] = [];
 
     try {
+      const support = indicators.support || candle.low;
+      const resistance = indicators.resistance || candle.high;
+      const currentDrawdown = this.getCurrentDrawdown();
+
       // 1. Market Regime Analyst
       const regimeResult = analyzeMarketRegime({
         symbol: candle.asset,
@@ -313,11 +322,7 @@ export class BacktestEngine {
         volatility: indicators.volatility || 30,
         trend: indicators.trend || 'neutral',
       });
-      scores.push({
-        agent: regimeResult.agent,
-        score: regimeResult.score,
-        confidence: regimeResult.confidence,
-      });
+      scores.push(regimeResult);
 
       // 2. Trend Analyst
       const trendResult = analyzeTrend({
@@ -326,53 +331,40 @@ export class BacktestEngine {
         ema50: indicators.ema50 || candle.close,
         ema200: indicators.ema200 || candle.close,
         price: candle.close,
-        direction: candle.close > (indicators.ema200 || candle.close) ? 'up' : 'down',
+        direction: indicators.direction === 'down' ? 'down' : 'up',
       });
-      scores.push({
-        agent: trendResult.agent,
-        score: trendResult.score,
-        confidence: trendResult.confidence,
-      });
+      scores.push(trendResult);
 
       // 3. Structure Analyst
       const structureResult = analyzeStructure({
         symbol: candle.asset,
         price: candle.close,
-        resistance: candle.high,
-        support: candle.low,
-        breakout: candle.close > candle.open,
+        resistance,
+        support,
+        breakout: Boolean(indicators.breakout),
       });
-      scores.push({
-        agent: structureResult.agent,
-        score: structureResult.score,
-        confidence: structureResult.confidence,
-      });
+      scores.push(structureResult);
 
       // 4. Momentum Analyst
       const momentumResult = analyzeMomentum({
         symbol: candle.asset,
         rsi: indicators.rsi || 50,
         macdHistogram: indicators.macd || 0,
-        momentum: candle.close > candle.open ? 'bullish' : 'bearish',
+        momentum: indicators.momentum || 'neutral',
       });
-      scores.push({
-        agent: momentumResult.agent,
-        score: momentumResult.score,
-        confidence: momentumResult.confidence,
-      });
+      scores.push(momentumResult);
 
       // 5. Pullback Analyst
       const pullbackResult = analyzePullback({
-        symbol: candle.asset,
-        isPullback: Math.random() > 0.7,
-        pullbackDepth: Math.random() * 20,
-        trend: candle.close > candle.open ? 'up' : 'down',
+        symbol: candle.asset.toString(),
+        isPullback: Boolean(indicators.isPullback),
+        pullbackDepth: indicators.pullbackDepth || 0,
+        pullbackNormalized: indicators.pullbackNormalized || 0,
+        trend: indicators.direction || 'none',
+        trendStrength: indicators.trendStrength || 0,
+        recoveryFromPullback: indicators.recoveryFromPullback || 0,
       });
-      scores.push({
-        agent: pullbackResult.agent,
-        score: pullbackResult.score,
-        confidence: pullbackResult.confidence,
-      });
+      scores.push(pullbackResult);
 
       // 6. Session Analyst
       const hour = new Date(candle.timestamp).getUTCHours();
@@ -387,55 +379,34 @@ export class BacktestEngine {
         sessionStart: candle.timestamp,
         sessionEnd: candle.timestamp + 3600000,
       });
-      scores.push({
-        agent: sessionResult.agent,
-        score: sessionResult.score,
-        confidence: sessionResult.confidence,
-      });
+      scores.push(sessionResult);
 
       // 7. News Analyst
       const newsResult = analyzeNews({
         symbol: candle.asset,
-        hasMajorNews: Math.random() > 0.9,
-        newsImpact: Math.random() > 0.5 ? 'positive' : 'negative',
-        volatilityExpected: Math.random() > 0.7,
+        hasMajorNews: Boolean(indicators.hasMajorNews),
+        newsImpact: indicators.newsImpact || 'neutral',
+        volatilityExpected: Boolean(indicators.volatilityExpected),
       });
-      scores.push({
-        agent: newsResult.agent,
-        score: newsResult.score,
-        confidence: newsResult.confidence,
-      });
+      scores.push(newsResult);
 
       // 8. Risk Manager
-      const stopLoss = candle.low * 0.99;
-      const takeProfit = candle.high * 1.01;
+      const stopLoss = indicators.stopLoss || candle.low * 0.99;
+      const takeProfit = indicators.takeProfit || candle.high * 1.01;
       const riskResult = analyzeRisk({
-        symbol: candle.asset,
+        symbol: candle.asset.toString(),
         entryPrice: candle.close,
         stopLossPrice: stopLoss,
         takeProfitPrice: takeProfit,
         accountRisk: this.config.riskPerTrade,
+        spreadEstimated: this.config.includeSlippage ? this.config.slippagePoints : 0,
+        volatility: indicators.atr || 0,
+        currentDrawdown,
+        maxAllowedDrawdown: this.config.maxDrawdown,
       });
-      scores.push({
-        agent: riskResult.agent,
-        score: riskResult.score,
-        confidence: riskResult.confidence,
-      });
+      scores.push(riskResult);
 
-      // 9. Confidence Scoring
-      const confidenceResult = scoreConfidence({
-        agentAgreement: 70 + Math.random() * 20,
-        dataQuality: 'high',
-        marketConditions: 'normal',
-        timeframe: this.config.timeframe,
-      });
-      scores.push({
-        agent: confidenceResult.agent,
-        score: confidenceResult.score,
-        confidence: confidenceResult.confidence,
-      });
-
-      // 10. Trade Validator
+      // 10. Trade Validator (antes de Confidence para tener todos los scores)
       const validatorResult = validateTrade({
         symbol: candle.asset,
         hasAllRequiredData: true,
@@ -443,24 +414,27 @@ export class BacktestEngine {
         priceActionClean: true,
         entrySureAdjustment: 0,
       });
-      scores.push({
-        agent: validatorResult.agent,
-        score: validatorResult.score,
-        confidence: validatorResult.confidence,
-      });
+      scores.push(validatorResult);
 
       // 11. Learning Engine
       const learningResult = learnFromHistory({
-        winRate: 55 + Math.random() * 10,
-        totalTrades: 100,
-        profitFactor: 1.5,
-        recentPerformance: 'stable',
+        winRate: this.trades.length > 0
+          ? (this.trades.filter((trade) => trade.isWinning).length / this.trades.length) * 100
+          : 50,
+        totalTrades: this.trades.length,
+        profitFactor: this.getCurrentProfitFactor(),
+        recentPerformance: this.getRecentPerformanceTrend(),
       });
-      scores.push({
-        agent: learningResult.agent,
-        score: learningResult.score,
-        confidence: learningResult.confidence,
+      scores.push(learningResult);
+
+      // 9. Confidence Scoring (DESPUÉS de todos los agentes para calcular agreement real)
+      const confidenceResult = scoreConfidence({
+        allAgentScores: scores, // Todos los scores incluidos
+        dataQuality: 'high',
+        marketConditions: 'normal',
+        timeframe: this.config.timeframe,
       });
+      scores.push(confidenceResult);
     } catch (error) {
       this.warnings.push({
         timestamp: Date.now(),
@@ -476,7 +450,7 @@ export class BacktestEngine {
   /**
    * Evaluar consenso (9/11)
    */
-  private evaluateConsensus(agentScores: Array<{ agent: string; score: number; confidence: number }>): {
+  private evaluateConsensus(agentScores: AgentScore[]): {
     approved: boolean;
     averageScore: number;
     approvalCount: number;
@@ -504,9 +478,12 @@ export class BacktestEngine {
   ): void {
     try {
       const riskAmount = (this.currentBalance * this.config.riskPerTrade) / 100;
-      const stopLoss = candle.low * 0.99; // 1% abajo del low
-      const takeProfit = candle.high * 1.01; // 1% arriba del high
-      const riskReward = (takeProfit - candle.close) / (candle.close - stopLoss);
+      const direction: 'long' | 'short' = candle.close >= candle.open ? 'long' : 'short';
+      const stopLoss = direction === 'long' ? candle.low * 0.99 : candle.high * 1.01;
+      const takeProfit = direction === 'long' ? candle.high * 1.01 : candle.low * 0.99;
+      const riskDistance = Math.abs(candle.close - stopLoss);
+      const rewardDistance = Math.abs(takeProfit - candle.close);
+      const riskReward = riskDistance > 0 ? rewardDistance / riskDistance : 0;
 
       // Validar RR - ser más permisivo con samples cortos
       const minRR = this.isShortSample ? 1.0 : 1.5;
@@ -525,8 +502,8 @@ export class BacktestEngine {
         entryTime: candle.timestamp,
         entryPrice: candle.close,
         entryReason: `Consenso ${consensusScore.toFixed(0)}/100 - 11 agentes aprobados`,
-        direction: candle.close > candle.open ? 'long' : 'short',
-        quantity: riskAmount / (candle.close - stopLoss),
+        direction,
+        quantity: riskDistance > 0 ? riskAmount / riskDistance : 0,
         stopLoss,
         takeProfit,
         riskReward,
@@ -557,28 +534,25 @@ export class BacktestEngine {
   private checkActiveTrades(candle: Candle): void {
     this.activeTrades.forEach((trade, tradeId) => {
       try {
-        // Aplicar slippage al entry
-        const effectiveEntry = trade.entryPrice + (trade.slippage * 0.0001);
-
         if (trade.direction === 'long') {
           // Check TP
           if (candle.high >= trade.takeProfit) {
-            this.closeTrade(tradeId, trade.takeProfit, 'tp_hit');
+            this.closeTrade(tradeId, trade.takeProfit, 'tp_hit', candle.timestamp);
             return;
           }
           // Check SL
           if (candle.low <= trade.stopLoss) {
-            this.closeTrade(tradeId, trade.stopLoss, 'stopped');
+            this.closeTrade(tradeId, trade.stopLoss, 'stopped', candle.timestamp);
             return;
           }
         } else {
           // Short
           if (candle.low <= trade.takeProfit) {
-            this.closeTrade(tradeId, trade.takeProfit, 'tp_hit');
+            this.closeTrade(tradeId, trade.takeProfit, 'tp_hit', candle.timestamp);
             return;
           }
           if (candle.high >= trade.stopLoss) {
-            this.closeTrade(tradeId, trade.stopLoss, 'stopped');
+            this.closeTrade(tradeId, trade.stopLoss, 'stopped', candle.timestamp);
             return;
           }
         }
@@ -596,11 +570,11 @@ export class BacktestEngine {
   /**
    * Cerrar trade
    */
-  private closeTrade(tradeId: string, exitPrice: number, reason: string): void {
+  private closeTrade(tradeId: string, exitPrice: number, reason: string, exitTime: number): void {
     const trade = this.activeTrades.get(tradeId);
     if (!trade) return;
 
-    trade.exitTime = Date.now();
+    trade.exitTime = exitTime;
     trade.exitPrice = exitPrice;
     trade.exitReason = reason;
     trade.status = reason === 'tp_hit' ? 'tp_hit' : reason === 'stopped' ? 'stopped' : 'closed';
@@ -635,7 +609,7 @@ export class BacktestEngine {
     if (!lastCandle) return;
 
     this.activeTrades.forEach((trade, tradeId) => {
-      this.closeTrade(tradeId, lastCandle.close, 'closed_at_end');
+      this.closeTrade(tradeId, lastCandle.close, 'closed_at_end', lastCandle.timestamp);
     });
   }
 
@@ -742,19 +716,177 @@ export class BacktestEngine {
    * Simular indicadores técnicos
    */
   private simulateIndicators(index: number): any {
-    // En producción, calcular reales desde candles históricos
-    const volatilityRange = Math.random() * 40 + 10;
+    const ema20 = this.calculateEMA(index, 20);
+    const ema50 = this.calculateEMA(index, 50);
+    const ema200 = this.calculateEMA(index, 200);
+    const atr = this.calculateATR(index, 14);
+    const rsi = this.calculateRSI(index, 14);
+    const macd = this.calculateMACD(index);
+    const volatility = this.calculateVolatility(index, 20);
+    const currentCandle = this.candles[index];
+    const recentWindow = this.candles.slice(Math.max(0, index - 20), index + 1);
+    const support = recentWindow.length > 0 ? Math.min(...recentWindow.map((candle) => candle.low)) : currentCandle?.low || 0;
+    const resistance = recentWindow.length > 0 ? Math.max(...recentWindow.map((candle) => candle.high)) : currentCandle?.high || 0;
+    const trend = ema20 > ema50 && ema50 > ema200
+      ? 'strong_up'
+      : ema20 < ema50 && ema50 < ema200
+        ? 'strong_down'
+        : Math.abs(ema20 - ema50) / Math.max(currentCandle?.close || 1, 1) < 0.001
+          ? 'choppy'
+          : 'neutral';
+    const direction = trend === 'strong_down' ? 'down' : trend === 'strong_up' ? 'up' : currentCandle?.close >= ema50 ? 'up' : 'down';
+    const pullbackDepth = direction === 'up'
+      ? Math.max(0, resistance - (currentCandle?.close || 0))
+      : Math.max(0, (currentCandle?.close || 0) - support);
+    const pullbackNormalized = atr > 0 ? pullbackDepth / atr : 0;
+    const trendStrength = Math.min(100, (Math.abs(ema20 - ema200) / Math.max(currentCandle?.close || 1, 1)) * 10000);
+    const momentum = macd > 0.2 && rsi > 55
+      ? 'strong_bullish'
+      : macd > 0 && rsi >= 50
+        ? 'bullish'
+        : macd < -0.2 && rsi < 45
+          ? 'strong_bearish'
+          : macd < 0 && rsi < 50
+            ? 'bearish'
+            : 'neutral';
+    const stopLoss = direction === 'up'
+      ? (currentCandle?.close || 0) - atr * 1.2
+      : (currentCandle?.close || 0) + atr * 1.2;
+    const takeProfit = direction === 'up'
+      ? (currentCandle?.close || 0) + atr * 2
+      : (currentCandle?.close || 0) - atr * 2;
+    const hour = new Date(currentCandle?.timestamp || 0).getUTCHours();
 
     return {
-      ema20: this.candles[index]?.close || 0,
-      ema50: this.candles[Math.max(0, index - 10)]?.close || 0,
-      ema200: this.candles[Math.max(0, index - 50)]?.close || 0,
-      rsi: Math.random() * 100,
-      atr: volatilityRange,
-      volatility: volatilityRange,
-      macd: (Math.random() - 0.5) * 100,
-      trend: Math.random() > 0.5 ? 'strong_up' : 'strong_down',
+      ema20,
+      ema50,
+      ema200,
+      rsi,
+      atr,
+      volatility,
+      macd,
+      trend,
+      direction,
+      support,
+      resistance,
+      breakout: direction === 'up' ? (currentCandle?.close || 0) >= resistance * 0.998 : (currentCandle?.close || 0) <= support * 1.002,
+      trendStrength,
+      pullbackDepth,
+      pullbackNormalized,
+      recoveryFromPullback: pullbackNormalized > 0 ? Math.max(0, 100 - pullbackNormalized * 50) : 100,
+      isPullback: pullbackNormalized > 0.2 && pullbackNormalized < 1.25,
+      momentum,
+      stopLoss,
+      takeProfit,
+      hasMajorNews: hour === 13 || hour === 14,
+      newsImpact: volatility > 2 ? 'negative' : 'neutral',
+      volatilityExpected: volatility > 2,
     };
+  }
+
+  private calculateEMA(index: number, period: number): number {
+    const start = Math.max(0, index - period * 3);
+    const slice = this.candles.slice(start, index + 1);
+    if (slice.length === 0) return 0;
+
+    const multiplier = 2 / (period + 1);
+    let ema = slice[0].close;
+
+    for (let i = 1; i < slice.length; i++) {
+      ema = slice[i].close * multiplier + ema * (1 - multiplier);
+    }
+
+    return ema;
+  }
+
+  private calculateATR(index: number, period: number): number {
+    const start = Math.max(1, index - period + 1);
+    const slice = this.candles.slice(start, index + 1);
+    if (slice.length === 0) return 0;
+
+    const trueRanges = slice.map((candle, offset) => {
+      const previousClose = this.candles[start + offset - 1]?.close ?? candle.close;
+      return Math.max(
+        candle.high - candle.low,
+        Math.abs(candle.high - previousClose),
+        Math.abs(candle.low - previousClose)
+      );
+    });
+
+    return trueRanges.reduce((sum, value) => sum + value, 0) / trueRanges.length;
+  }
+
+  private calculateRSI(index: number, period: number): number {
+    if (index <= 0) return 50;
+
+    const start = Math.max(1, index - period + 1);
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = start; i <= index; i++) {
+      const delta = this.candles[i].close - this.candles[i - 1].close;
+      if (delta >= 0) {
+        gains += delta;
+      } else {
+        losses += Math.abs(delta);
+      }
+    }
+
+    if (losses === 0) return 100;
+    const rs = gains / losses;
+    return 100 - 100 / (1 + rs);
+  }
+
+  private calculateMACD(index: number): number {
+    return this.calculateEMA(index, 12) - this.calculateEMA(index, 26);
+  }
+
+  private calculateVolatility(index: number, period: number): number {
+    const start = Math.max(1, index - period + 1);
+    const returns: number[] = [];
+
+    for (let i = start; i <= index; i++) {
+      const previousClose = this.candles[i - 1]?.close;
+      if (!previousClose) continue;
+      returns.push((this.candles[i].close - previousClose) / previousClose);
+    }
+
+    if (returns.length === 0) return 0;
+    const mean = returns.reduce((sum, value) => sum + value, 0) / returns.length;
+    const variance = returns.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / returns.length;
+    return Math.sqrt(variance) * 100;
+  }
+
+  private getCurrentProfitFactor(): number {
+    const winningProfit = this.trades
+      .filter((trade) => trade.isWinning)
+      .reduce((sum, trade) => sum + trade.profit, 0);
+    const losingProfit = this.trades
+      .filter((trade) => !trade.isWinning)
+      .reduce((sum, trade) => sum + Math.abs(trade.profit), 0);
+
+    if (losingProfit === 0) {
+      return winningProfit > 0 ? 999 : 0;
+    }
+
+    return winningProfit / losingProfit;
+  }
+
+  private getRecentPerformanceTrend(): 'improving' | 'stable' | 'declining' {
+    if (this.trades.length < 6) return 'stable';
+
+    const recentTrades = this.trades.slice(-6);
+    const firstHalf = recentTrades.slice(0, 3).reduce((sum, trade) => sum + trade.profit, 0);
+    const secondHalf = recentTrades.slice(3).reduce((sum, trade) => sum + trade.profit, 0);
+
+    if (secondHalf > firstHalf * 1.1) return 'improving';
+    if (secondHalf < firstHalf * 0.9) return 'declining';
+    return 'stable';
+  }
+
+  private getCurrentDrawdown(): number {
+    const metrics = calculateBacktestMetrics(this.trades, this.config.initialBalance, this.balanceHistory);
+    return metrics.currentDrawdown;
   }
 
   /**

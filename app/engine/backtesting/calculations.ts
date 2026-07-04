@@ -77,13 +77,22 @@ export function calculateBacktestMetrics(
   const payoffIndex = avgLossSize > 0 ? avgWinSize / avgLossSize : avgWinSize > 0 ? 999 : 0;
 
   const recoveryFactor = drawdownData.maxDrawdown > 0 ? Math.abs(netProfit) / drawdownData.maxDrawdown : 0;
+  const winRate = (winningTrades.length / trades.length) * 100;
+  const expectancy = trades.length > 0 ? netProfit / trades.length : 0;
+  const expectancyPercent = initialBalance > 0 ? (expectancy / initialBalance) * 100 : 0;
+  const averageRiskCapital = trades.length > 0
+    ? trades.reduce((sum, trade) => {
+        const riskDistance = Math.abs(trade.entryPrice - trade.stopLoss);
+        return sum + riskDistance * trade.quantity;
+      }, 0) / trades.length
+    : 0;
 
   return {
     // Trading básico
     totalTrades: trades.length,
     winningTrades: winningTrades.length,
     losingTrades: losingTrades.length,
-    winRate: (winningTrades.length / trades.length) * 100,
+    winRate,
     lossRate: (losingTrades.length / trades.length) * 100,
 
     // Ganancias
@@ -109,6 +118,8 @@ export function calculateBacktestMetrics(
     sharpeRatio,
     sortinoRatio,
     profitability: ((trades.filter((t) => t.riskReward >= 1) || []).length / trades.length) * 100,
+    expectancy,
+    expectancyPercent,
 
     // Balance
     finalBalance,
@@ -126,6 +137,7 @@ export function calculateBacktestMetrics(
     avgLossSize,
     payoffIndex,
     recoveryFactor,
+    riskPerTradeCapital: averageRiskCapital,
 
     // Validaciones
     tradesWithValidSL,
@@ -238,6 +250,8 @@ function getEmptyMetrics(initialBalance: number): BacktestMetrics {
     sharpeRatio: 0,
     sortinoRatio: 0,
     profitability: 0,
+    expectancy: 0,
+    expectancyPercent: 0,
     finalBalance: initialBalance,
     balanceGrowth: 0,
     returnOnInitialCapital: 0,
@@ -249,6 +263,7 @@ function getEmptyMetrics(initialBalance: number): BacktestMetrics {
     avgLossSize: 0,
     payoffIndex: 0,
     recoveryFactor: 0,
+    riskPerTradeCapital: 0,
     tradesWithValidSL: 0,
     tradesWithValidTP: 0,
     tradesWithProperRiskRatio: 0,

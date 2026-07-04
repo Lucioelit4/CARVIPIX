@@ -2,8 +2,7 @@
 
 /**
  * Panel Privado de Backtesting - Admin
- * Integra BacktestPanelExpanded, CacheAndBatchPanel y OptimizerPanel
- * Visible solo en admin panel privado
+ * Laboratorio de validación cuantitativa para históricos reales
  */
 
 import React, { useState } from 'react';
@@ -30,17 +29,17 @@ export default function AdminBacktesting() {
       {/* Header */}
       <div className="space-y-4">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-1">🔒 Backtesting & Optimización Privada</h2>
+          <h2 className="text-3xl font-bold text-white mb-1">🔒 Laboratorio de Backtesting Privado</h2>
           <p className="text-white/60">
-            Sistema de backtesting local masivo, caché de datos e optimización de parámetros para CARVIPIX Bot
+            Backtesting profesional sobre históricos importados, análisis cuantitativo y herramientas de investigación interna.
           </p>
         </div>
 
         {/* Info Box */}
         <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-4">
           <p className="text-sm text-blue-300">
-            ℹ️ <strong>Panel Privado Admin:</strong> Todos los datos son de demostración local. No se realiza operación real.
-            Cache local soporta XAUUSD, EURUSD, GBPUSD, BTCUSD en 1H, 45M, 5M.
+            ℹ️ <strong>Panel Privado Admin:</strong> El laboratorio opera sobre datasets históricos cargados por admin.
+            No se ejecutan órdenes reales ni se toca el bot operativo.
           </p>
         </div>
       </div>
@@ -49,23 +48,23 @@ export default function AdminBacktesting() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
           <p className="text-xs text-slate-400 mb-2">Cache Status</p>
-          <p className="text-2xl font-bold text-green-400">✓ Active</p>
-          <p className="text-xs text-slate-400 mt-1">45K velas cacheadas</p>
+          <p className="text-2xl font-bold text-green-400">✓ Ready</p>
+          <p className="text-xs text-slate-400 mt-1">Importación histórica habilitada</p>
         </div>
         <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
           <p className="text-xs text-slate-400 mb-2">Batch Processing</p>
           <p className="text-2xl font-bold text-blue-400">⚙️ Ready</p>
-          <p className="text-xs text-slate-400 mt-1">4 workers available</p>
+          <p className="text-xs text-slate-400 mt-1">Procesamiento por lotes disponible</p>
         </div>
         <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
           <p className="text-xs text-slate-400 mb-2">Optimization</p>
-          <p className="text-2xl font-bold text-yellow-400">⚡ Grid Ready</p>
-          <p className="text-xs text-slate-400 mt-1">288 combinations</p>
+          <p className="text-2xl font-bold text-yellow-400">⚡ Ready</p>
+          <p className="text-xs text-slate-400 mt-1">Monte Carlo + Walk Forward</p>
         </div>
         <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
           <p className="text-xs text-slate-400 mb-2">Last Build</p>
-          <p className="text-2xl font-bold text-purple-400">✓ Success</p>
-          <p className="text-xs text-slate-400 mt-1">0 errors</p>
+          <p className="text-2xl font-bold text-purple-400">✓ Build</p>
+          <p className="text-xs text-slate-400 mt-1">Validación en curso</p>
         </div>
       </div>
 
@@ -124,12 +123,12 @@ export default function AdminBacktesting() {
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
           <h4 className="font-bold text-slate-200 mb-3">📐 Arquitectura</h4>
           <ul className="text-xs text-slate-400 space-y-2">
-            <li>✓ Cache Manager - In-memory + demo fallback</li>
+            <li>✓ Cache Manager - soporte de datasets locales</li>
             <li>✓ Batch Processor - 4 workers, job queue</li>
             <li>✓ Parameter Optimizer - Grid search engine</li>
             <li>✓ Scoring System - Multi-metric evaluation</li>
             <li>✓ Local-first - No API dependency</li>
-            <li>✓ Demo mode - All data procedurally generated</li>
+            <li>✓ Monte Carlo y Walk Forward integrados</li>
           </ul>
         </div>
 
@@ -137,8 +136,8 @@ export default function AdminBacktesting() {
         <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
           <h4 className="font-bold text-slate-200 mb-3">🚀 Capacidades</h4>
           <ul className="text-xs text-slate-400 space-y-2">
-            <li>✓ Backtesting local masivo</li>
-            <li>✓ 12 combinaciones de parámetros (6×4×4×4)</li>
+            <li>✓ Backtesting sobre históricos cargados</li>
+            <li>✓ Limpieza y validación de datos</li>
             <li>✓ Monte Carlo + Walk-forward analysis</li>
             <li>✓ Performance tracking real-time</li>
             <li>✓ Private admin visualization</li>
@@ -150,8 +149,8 @@ export default function AdminBacktesting() {
       {/* Status Footer */}
       <div className="bg-green-900/20 border border-green-600/50 rounded-lg p-4">
         <p className="text-xs text-green-300">
-          ✅ <strong>Sistema Operativo:</strong> Todos los módulos de backtesting, cache y optimización funcionando correctamente.
-          Commit f58a986 desplegado. Build exitoso (0 errores TypeScript). Panel privado visible solo en admin.
+          ✅ <strong>Estado del módulo:</strong> laboratorio privado de backtesting enfocado en históricos reales,
+          sin impacto en Home, backend público ni bot operativo.
         </p>
       </div>
     </div>

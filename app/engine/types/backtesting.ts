@@ -129,6 +129,8 @@ export interface BacktestMetrics {
   sharpeRatio: number; // Risk-adjusted return
   sortinoRatio: number; // Downside risk-adjusted
   profitability: number; // % de trades con RR > 1
+  expectancy: number; // Expectativa monetaria por trade
+  expectancyPercent: number; // % sobre capital inicial por trade
 
   // Balance
   finalBalance: number;
@@ -146,6 +148,7 @@ export interface BacktestMetrics {
   avgLossSize: number; // Pips perdidos promedio
   payoffIndex: number; // (Avg Win / Avg Loss)
   recoveryFactor: number; // Net Profit / Max Drawdown
+  riskPerTradeCapital: number; // Riesgo nominal por trade respecto al capital inicial
 
   // Validaciones
   tradesWithValidSL: number;

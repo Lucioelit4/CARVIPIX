@@ -1,6 +1,6 @@
 /**
- * Data Loader Component - Carga datos CSV para backtesting
- * Soporta archivos locales y datos de ejemplo
+ * Data Loader Component - Carga datos CSV históricos para backtesting
+ * Uso orientado a históricos reales cargados por admin
  */
 
 'use client';
@@ -108,57 +108,6 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
   };
 
   /**
-   * Load sample data
-   */
-  const handleLoadSample = async () => {
-    setFileName('XAUUSD_M1_sample.csv');
-    setStatus('loading');
-    setMessage('Cargando datos de ejemplo...');
-    setStats(null);
-    setMultiTimeframeResult(null);
-    setShowAnalyzer(false);
-
-    try {
-      const response = await fetch('/sample-data/XAUUSD_M1_sample.csv');
-      if (!response.ok) throw new Error('No se pudo cargar el archivo de ejemplo');
-
-      const content = await response.text();
-      const candles = parseCSVContent(content, 'XAUUSD', '5M'); // Sample es M1, pero lo marcamos como base
-
-      const validation = validateCandleData(candles);
-      if (!validation.isValid) {
-        throw new Error('Datos de ejemplo inválidos: ' + validation.errors[0]);
-      }
-
-      const startDate = new Date(candles[0].timestamp).toLocaleString();
-      const endDate = new Date(candles[candles.length - 1].timestamp).toLocaleString();
-
-      setStats({
-        candleCount: candles.length,
-        startDate,
-        endDate,
-      });
-
-      // Convertir a múltiples timeframes
-      try {
-        const multiResult = convertToMultipleTimeframes(candles, '5M');
-        setMultiTimeframeResult(multiResult);
-      } catch (convertError) {
-        console.warn('Multi-timeframe conversion failed:', convertError);
-      }
-
-      setStatus('success');
-      setMessage(`✓ Ejemplo cargado: ${candles.length} candles`);
-      onDataLoaded(candles);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
-      setStatus('error');
-      setMessage(`Error: ${errorMsg}`);
-      onError(errorMsg);
-    }
-  };
-
-  /**
    * Clear loaded data
    */
   const handleClear = () => {
@@ -201,17 +150,6 @@ export default function CSVDataLoader({ asset, timeframe, onDataLoaded, onError,
             </span>
           </button>
         </div>
-
-        {/* Sample Data Button */}
-        {!stats && (
-          <button
-            onClick={handleLoadSample}
-            disabled={isLoading || status === 'loading'}
-            className="w-full py-2 px-4 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-          >
-            📋 Usar Datos de Ejemplo XAUUSD
-          </button>
-        )}
 
         {/* Status Messages */}
         {message && (

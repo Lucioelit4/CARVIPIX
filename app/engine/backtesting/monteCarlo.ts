@@ -121,8 +121,22 @@ export function runMonteCarloAnalysis(
  */
 function resampleTrades(trades: BacktestTrade[], preserveSequence: boolean): BacktestTrade[] {
   if (preserveSequence) {
-    // Mantener secuencia: reensampler bloques de trades
-    return trades.map((t) => ({ ...t })); // Simple copia por ahora
+    // Block bootstrap para preservar dependencia temporal parcial.
+    const blockSize = Math.max(2, Math.round(Math.sqrt(trades.length)));
+    const resampled: BacktestTrade[] = [];
+
+    while (resampled.length < trades.length) {
+      const maxStart = Math.max(0, trades.length - blockSize);
+      const start = Math.floor(Math.random() * (maxStart + 1));
+      const block = trades.slice(start, Math.min(start + blockSize, trades.length));
+
+      for (const trade of block) {
+        if (resampled.length >= trades.length) break;
+        resampled.push({ ...trade });
+      }
+    }
+
+    return resampled;
   }
 
   // Random sampling con reemplazo
