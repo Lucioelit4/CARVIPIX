@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * CARVIPIX Trend Validation System v1.1
  * Lógica REAL bullish/bearish por separado
@@ -427,3 +428,4 @@ export class TrendValidator {
  * Export para testing
  */
 export default TrendValidator;
+

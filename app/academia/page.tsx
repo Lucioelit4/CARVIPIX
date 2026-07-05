@@ -2,7 +2,7 @@ import BackToDashboard from "../components/BackToDashboard";
 
 export default function AcademiaPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto flex min-h-screen max-w-6xl flex-col items-center justify-center px-6 py-16 text-center">
         <BackToDashboard />        <div className="rounded-[2rem] border border-white/10 bg-[#0B1220]/95 px-8 py-12 shadow-2xl shadow-black/30">
           <p className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
@@ -16,15 +16,15 @@ export default function AcademiaPage() {
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-5">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-5">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">En desarrollo</p>
               <p className="mt-4 text-3xl font-bold text-white">Cursos</p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-5">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-5">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Orientado a</p>
               <p className="mt-4 text-3xl font-bold text-[#D4AF37]">Traders</p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-5">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-5">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Enfoque</p>
               <p className="mt-4 text-3xl font-bold text-white">Riesgo y disciplina</p>
             </div>

@@ -11,6 +11,7 @@ import { CacheAndBatchPanel } from '../../alertas/components/CacheAndBatchPanel'
 import { OptimizerPanel } from '../../alertas/components/OptimizerPanel';
 import BacktestExecutor from './BacktestExecutor';
 import { ChevronDown } from 'lucide-react';
+import { CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 type BacktestTabType = 'backtest' | 'cache_batch' | 'optimizer';
 
@@ -36,53 +37,50 @@ export default function AdminBacktesting() {
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-900/20 border border-blue-600/50 rounded-lg p-4">
+        <CARVIPIXCard variant="info" padding="16" hover={false}>
           <p className="text-sm text-blue-300">
             ℹ️ <strong>Panel Privado Admin:</strong> El laboratorio opera sobre datasets históricos cargados por admin.
             No se ejecutan órdenes reales ni se toca el bot operativo.
           </p>
-        </div>
+        </CARVIPIXCard>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-slate-400 mb-2">Cache Status</p>
           <p className="text-2xl font-bold text-green-400">✓ Ready</p>
           <p className="text-xs text-slate-400 mt-1">Importación histórica habilitada</p>
-        </div>
-        <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-slate-400 mb-2">Batch Processing</p>
           <p className="text-2xl font-bold text-blue-400">⚙️ Ready</p>
           <p className="text-xs text-slate-400 mt-1">Procesamiento por lotes disponible</p>
-        </div>
-        <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-slate-400 mb-2">Optimization</p>
           <p className="text-2xl font-bold text-yellow-400">⚡ Ready</p>
           <p className="text-xs text-slate-400 mt-1">Monte Carlo + Walk Forward</p>
-        </div>
-        <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg p-4 border border-slate-600">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-slate-400 mb-2">Last Build</p>
           <p className="text-2xl font-bold text-purple-400">✓ Build</p>
           <p className="text-xs text-slate-400 mt-1">Validación en curso</p>
-        </div>
+        </CARVIPIXCard>
       </div>
 
       {/* Tab Navigation */}
       <div className="border-b border-slate-700">
         <div className="flex gap-4 overflow-x-auto">
           {tabs.map((tab) => (
-            <button
+            <CARVIPIXButton
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 font-medium text-sm whitespace-nowrap border-b-2 transition ${
-                activeTab === tab.id
-                  ? 'border-[#D4AF37] text-[#D4AF37]'
-                  : 'border-transparent text-white/60 hover:text-white/80'
-              }`}
+              variant={activeTab === tab.id ? 'premium' : 'ghost'}
+              size="sm"
             >
               {tab.label}
-            </button>
+            </CARVIPIXButton>
           ))}
         </div>
       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tipos para módulo privado de backtesting
  * Solo para uso interno en admin - NO exponer al cliente
@@ -245,3 +246,4 @@ export interface BacktestReport {
   recommendations: string[];
   generatedAt: number;
 }
+

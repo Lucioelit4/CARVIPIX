@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -16,46 +16,25 @@ interface AdminGuardProps {
  * Si está expirado, permite reintentar login
  */
 export default function AdminGuard({ children }: AdminGuardProps) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isExpired, setIsExpired] = useState(false);
-
-  useEffect(() => {
+  const { isAuthenticated, isExpired } = useMemo(() => {
     const snapshot = getAuthSessionSnapshot();
     const session = snapshot.session;
 
     if (!session) {
       if (snapshot.status === 'expired') {
         logAccessEvent('admin_session_expired', 'La sesión administrativa expiró antes de cargar el panel.');
-        setIsExpired(true);
+        return { isAuthenticated: false, isExpired: true };
       }
-      setIsLoading(false);
-      return;
+      return { isAuthenticated: false, isExpired: false };
     }
 
     if (session.role !== 'admin') {
       logAccessEvent('admin_access_denied', 'Intento de acceso a /admin con rol no autorizado.');
-      setIsAuthenticated(false);
-      setIsLoading(false);
-      return;
+      return { isAuthenticated: false, isExpired: false };
     }
 
-    setIsAuthenticated(true);
-
-    setIsLoading(false);
+    return { isAuthenticated: true, isExpired: false };
   }, []);
-
-  // Cargando
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-[#05070B] text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">Verificando autenticación...</p>
-        </div>
-      </main>
-    );
-  }
 
   // Autenticado: mostrar contenido
   if (isAuthenticated) {
@@ -64,7 +43,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
   // No autenticado: mostrar acceso denegado
   return (
-    <main className="min-h-screen bg-[#05070B] text-white flex items-center justify-center p-4">
+    <main className="min-h-screen bg-[#030303] text-white flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -96,7 +75,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B111A] to-[#05070B] p-8 shadow-2xl shadow-[#D4AF37]/10"
+          className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B0B0B] to-[#030303] p-8 shadow-2xl shadow-[#D4AF37]/10"
         >
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30">
             <p className="text-sm text-red-400">

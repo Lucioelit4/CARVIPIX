@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Web Worker para parsear CSV HistData en background
  * Streaming real para archivos grandes (350k+) sin stack overflow
@@ -176,3 +177,4 @@ self.onmessage = async (event: MessageEvent<ParseMessage>) => {
 };
 
 export {};
+

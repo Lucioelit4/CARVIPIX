@@ -1,0 +1,70 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Deployment target
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+
+jobs:
+  resolve-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      env_name: ${{ steps.setenv.outputs.env_name }}
+      compose_file: ${{ steps.setenv.outputs.compose_file }}
+      image_tag: ${{ steps.setenv.outputs.image_tag }}
+    steps:
+      - id: setenv
+        run: |
+          TARGET="${{ github.event.inputs.environment }}"
+
+          if [ "$TARGET" = "prod" ]; then
+            echo "env_name=production" >> $GITHUB_OUTPUT
+            echo "compose_file=docker-compose.prod.yml" >> $GITHUB_OUTPUT
+            echo "image_tag=latest" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "compose_file=docker-compose.staging.yml" >> $GITHUB_OUTPUT
+            echo "image_tag=staging" >> $GITHUB_OUTPUT
+          fi
+
+  deploy:
+    needs: resolve-environment
+    runs-on: ubuntu-latest
+    environment: ${{ needs.resolve-environment.outputs.env_name }}
+    if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_PORT != '' && secrets.DEPLOY_APP_DIR != '' }}
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          TARGET_ENV: ${{ needs.resolve-environment.outputs.env_name }}
+          COMPOSE_FILE: ${{ needs.resolve-environment.outputs.compose_file }}
+          IMAGE_TAG: ${{ needs.resolve-environment.outputs.image_tag }}
+          REPOSITORY: ${{ github.repository }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          envs: TARGET_ENV,COMPOSE_FILE,IMAGE_TAG,REPOSITORY
+          script: |
+            set -e
+            APP_DIR="${{ secrets.DEPLOY_APP_DIR }}"
+            cd "$APP_DIR"
+
+            REPO_LOWER=$(echo "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
+            export APP_IMAGE="ghcr.io/${REPO_LOWER}:${IMAGE_TAG}"
+
+            echo "Deploying $APP_IMAGE with $COMPOSE_FILE to $TARGET_ENV"
+            docker compose -f "$COMPOSE_FILE" pull
+            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
+            docker image prune -f
+
+            curl -fsS http://localhost/api/health > /dev/null
+            echo "Deployment finished successfully"

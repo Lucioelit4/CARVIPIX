@@ -1,0 +1,57 @@
+================================================================================
+CHAT 8 - DEPLOYMENT & DEVOPS
+================================================================================
+
+RESPONSABILIDAD: Deploy, CI/CD, monitoring, producción
+
+ESTADO ACTUAL:
+- Vercel: Auto-deploy en push a GitHub ✓
+- Build: Next.js 3.8s Turbopack ✓
+- Routes: 39/39 static prerendered ✓
+
+TASKS AHORA:
+
+1. GIT MANAGEMENT
+   [ ] git add .
+   [ ] git commit -m "Motor V2 + Gates + Backtesting"
+   [ ] git push → auto-deploy Vercel
+
+2. TESTING ANTES DE DEPLOY
+   [x] npm run build → success (2026-07-03, 41/41 static pages)
+   [ ] npm run dev → test localhost:3000
+   [ ] Verify no console errors
+   [ ] Backtest V2 vs V1
+
+3. MONITORING
+   [ ] Vercel dashboard check
+   [ ] Error logs monitoring
+   [ ] Performance metrics
+
+4. DATABASE
+   [ ] Setup: Historical data storage
+   [ ] Schema: spreads, volumes, ATR
+   [ ] Migrations script
+
+5. ENVIRONMENT VARS
+   [ ] BROKER_API_KEY
+   [ ] CALENDAR_API_KEY
+   [ ] DATABASE_URL
+   [ ] Add to .env.local
+
+CRITICAL PATH:
+Build (✓) → Git push → Vercel deploy → Test live → Connect broker API
+
+ACTUALIZACION 2026-07-03:
+- Build local verificado: PASS (Next.js 16.2.9, Turbopack).
+- TypeScript verificado: PASS.
+- Warning no bloqueante en build: trazado NFT desde next.config.ts -> app/api/datasets/route.ts.
+- Pendiente para activar auto-deploy real en Vercel: git add + git commit + git push.
+
+INSTRUCCION DIRECCION 2026-07-03:
+- Deployment aprobado tecnicamente, pero en HOLD operativo.
+- NO ejecutar commit.
+- NO ejecutar push.
+- NO publicar en Vercel.
+- Esperar orden explicita de Direccion para liberar deploy.
+
+================================================================================

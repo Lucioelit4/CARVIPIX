@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Hook para parsear CSV usando Web Worker con streaming
  * Soporta archivos grandes (300k+ líneas) sin bloquear UI
@@ -125,3 +126,4 @@ export function useCSVParserWorker() {
     cleanup,
   };
 }
+

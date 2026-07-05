@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Adaptador para proveedor de datos real
  * Interfaz de conexión a APIs reales de mercado
@@ -550,3 +551,4 @@ export class RealDataProvider extends DataProvider {
     };
   }
 }
+

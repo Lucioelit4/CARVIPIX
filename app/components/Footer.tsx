@@ -3,7 +3,7 @@ import { Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-[#05070B] text-white mt-12">
+    <footer className="mt-12 border-t border-[#2A2A2A] bg-[#030303] text-white">
       <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Info */}
@@ -25,7 +25,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/legal"
-                  className="text-zinc-400 hover:text-[#D4AF37] transition"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
                   Aviso Legal
                 </Link>
@@ -33,7 +33,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/terms"
-                  className="text-zinc-400 hover:text-[#D4AF37] transition"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
                   Términos y Condiciones
                 </Link>
@@ -41,7 +41,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/privacy"
-                  className="text-zinc-400 hover:text-[#D4AF37] transition"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
                   Política de Privacidad
                 </Link>
@@ -49,7 +49,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/risk-disclosure"
-                  className="text-zinc-400 hover:text-[#D4AF37] transition"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
                   Divulgación de Riesgos
                 </Link>
@@ -57,7 +57,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/cookies"
-                  className="text-zinc-400 hover:text-[#D4AF37] transition"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
                   Política de Cookies
                 </Link>
@@ -72,7 +72,7 @@ export default function Footer() {
             </h3>
             <Link
               href="/soporte"
-              className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-[#D4AF37] transition"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-lg px-2 text-sm text-[#B5B5B5] transition duration-200 hover:text-[#F4C542]"
             >
               <Mail size={16} />
               Soporte
@@ -81,15 +81,15 @@ export default function Footer() {
         </div>
 
         {/* Disclaimer */}
-        <div className="border-t border-white/10 pt-6">
-          <p className="text-xs text-zinc-500 leading-relaxed">
+        <div className="border-t border-[#2A2A2A] pt-6">
+          <p className="text-xs leading-relaxed text-[#B5B5B5]">
             <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo, incluida pérdida total de capital. CARVIPIX no garantiza rendimientos ni resultados específicos. Consulta asesores financieros autorizados antes de decisiones de inversión. Parte del contenido puede utilizar datos simulados.
           </p>
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-white/10 mt-6 pt-6">
-          <p className="text-xs text-zinc-600 text-center">
+        <div className="mt-6 border-t border-[#2A2A2A] pt-6">
+          <p className="text-center text-xs text-[#7E7E7E]">
             © 2026 CARVIPIX. Todos los derechos reservados.
           </p>
         </div>

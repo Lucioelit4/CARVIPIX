@@ -2,6 +2,7 @@
 
 import { Alert, AlertRule, AlertHistory } from "./types";
 import { getDemoAlerts, getDemoAlertRules } from "./demo-data";
+import { ecosystemServices } from "@/app/backend";
 
 export class AlertsService {
   private isDemoMode = true;
@@ -9,7 +10,25 @@ export class AlertsService {
 
   // Obtener alertas del usuario
   async getAlerts(userId: string, limit?: number): Promise<Alert[]> {
-    let alerts = this.isDemoMode ? getDemoAlerts() : [];
+    const serviceAlerts = await ecosystemServices.alerts.getAlerts({ userId, limit });
+    const engineAlerts: Alert[] = serviceAlerts.map((item) => ({
+      id: item.id,
+      type: item.type,
+      symbol: item.symbol,
+      title: item.title,
+      description: item.description,
+      priority: item.priority,
+      status: item.status,
+      timestamp: item.timestamp,
+      actionUrl: item.actionUrl,
+      data: item.data,
+    }));
+
+    if (engineAlerts.length > 0) {
+      return engineAlerts;
+    }
+
+    const alerts = this.isDemoMode ? getDemoAlerts() : [];
 
     // FUTURE: Conectar a bot real para obtener alertas en vivo
     // const response = await fetch(`/api/alerts?user=${userId}`);
@@ -63,6 +82,11 @@ export class AlertsService {
     triggered: number;
     resolved: number;
   }> {
+    const engineStats = await ecosystemServices.alerts.getAlertStats(userId);
+    if (engineStats.total > 0) {
+      return engineStats;
+    }
+
     const alerts = await this.getAlerts(userId);
     return {
       total: alerts.length,

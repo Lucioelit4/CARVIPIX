@@ -366,9 +366,9 @@ export function ProgressDashboard() {
           </button>
         </Link>
 
-        <button className="w-full md:w-auto px-6 py-3 border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 font-bold rounded-lg transition-all">
-          Descargar Reporte
-        </button>
+        <Link href="/resultados" className="w-full md:w-auto px-6 py-3 border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/10 font-bold rounded-lg transition-all text-center">
+          Ver resultados
+        </Link>
       </motion.div>
 
       {/* Footer Info */}

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import ProtectedDashboardGuard from "./ProtectedDashboardGuard";
+import WorkspaceHero from "./WorkspaceHero";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -11,17 +12,21 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isStandaloneRoute = pathname === "/" || pathname === "/login";
+  const isAdminLogin = pathname === "/admin";
 
-  if (isHome) {
+  if (isStandaloneRoute) {
     return <>{children}</>;
   }
 
   return (
     <>
       <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col pt-20 lg:ml-72 lg:pt-0">
-        <ProtectedDashboardGuard>{children}</ProtectedDashboardGuard>
+      <div className="cv-app-shell flex min-h-screen flex-1 flex-col pt-[76px] lg:ml-72 lg:pt-0">
+        {!isAdminLogin ? <WorkspaceHero /> : null}
+        <div className="cv-workspace cv-page-content">
+          <ProtectedDashboardGuard>{children}</ProtectedDashboardGuard>
+        </div>
         <Footer />
       </div>
     </>

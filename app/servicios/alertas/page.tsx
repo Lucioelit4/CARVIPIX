@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function ServiciosAlertasPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         <BackToDashboard />
         <div className="rounded-[2rem] border border-white/10 bg-[#0B1220]/95 p-8 shadow-2xl shadow-black/40">
@@ -17,14 +17,14 @@ export default function ServiciosAlertasPage() {
                 Miembro activo: ya tienes acceso a señales y seguimiento operativo. Este servicio te permite recibir alertas estratégicas con foco en gestión de riesgo.
               </p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 text-right">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6 text-right">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Acceso</p>
               <p className="mt-2 text-3xl font-bold text-[#D4AF37]">Miembro activo</p>
             </div>
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Beneficios clave</h2>
               <ul className="mt-4 space-y-3 text-zinc-300">
                 <li>Señales oportunas para pares principales.</li>
@@ -32,13 +32,13 @@ export default function ServiciosAlertasPage() {
                 <li>Alertas con objetivos y stops claros.</li>
               </ul>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Enfoque</h2>
               <p className="mt-4 text-zinc-300">
                 Diseño para miembros que buscan información accionable y una supervisión constante sin prometer rendimientos garantizados.
               </p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Vista demo</h2>
               <p className="mt-4 text-zinc-400">Datos simulados y enfoque comercial. La información real llegará con la integración de la membresía completa.</p>
             </div>

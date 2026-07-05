@@ -52,9 +52,9 @@ export default function CapitalPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       {/* Hero Comercial */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] px-6 py-20 sm:px-8">
+      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-12 lg:grid-cols-2 items-center">
             {/* Contenido izquierdo */}
@@ -103,7 +103,7 @@ export default function CapitalPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B111A] to-[#05070B] p-8 shadow-2xl shadow-[#D4AF37]/20"
+              className="rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B0B0B] to-[#030303] p-8 shadow-2xl shadow-[#D4AF37]/20"
             >
               <h3 className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Rango de asignación</h3>
               <p className="mt-4 text-4xl font-bold text-white">10,000 - 1,000,000 USD</p>
@@ -201,7 +201,7 @@ export default function CapitalPage() {
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-6"
+            className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-6"
           >
             <h3 className="text-lg font-bold mb-6">Ejemplo demo</h3>
             <div className="space-y-3">
@@ -241,7 +241,7 @@ export default function CapitalPage() {
       <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <h2 className="text-3xl font-bold mb-8 text-center">Cuenta de ejemplo</h2>
 
-        <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-6">
+        <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-6">
           <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {[
               { label: "Capital asignado", value: "$12,500", color: "text-white" },
@@ -256,7 +256,7 @@ export default function CapitalPage() {
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05, duration: 0.4 }}
-                className="rounded-lg bg-[#0B111A]/80 border border-[#D4AF37]/20 p-4 text-center hover:border-[#D4AF37]/40 transition"
+                className="rounded-lg bg-[#0B0B0B]/80 border border-[#D4AF37]/20 p-4 text-center hover:border-[#D4AF37]/40 transition"
               >
                 <p className="text-xs uppercase text-zinc-400 mb-2 font-semibold">{item.label}</p>
                 <p className={`text-2xl font-bold ${item.color}`}>{item.value}</p>
@@ -278,7 +278,7 @@ export default function CapitalPage() {
               <YAxis stroke="rgba(255,255,255,0.5)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#0B111A",
+                  backgroundColor: "#0B0B0B",
                   border: "1px solid rgba(212, 175, 55, 0.3)",
                 }}
                 labelStyle={{ color: "#fff" }}
@@ -379,7 +379,7 @@ export default function CapitalPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-lg border border-[#D4AF37]/30 bg-gradient-to-r from-[#11161E] to-[#0B111A] p-8 text-center"
+          className="rounded-lg border border-[#D4AF37]/30 bg-gradient-to-r from-[#11161E] to-[#0B0B0B] p-8 text-center"
         >
           <h3 className="text-3xl font-bold mb-3">¿Listo para solicitar revisión?</h3>
           <p className="text-white/70 mb-6 max-w-2xl mx-auto">
@@ -459,7 +459,7 @@ export default function CapitalPage() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1, duration: 0.4 }}
-                  className="rounded-lg border border-white/10 bg-[#0B111A] p-5"
+                  className="rounded-lg border border-white/10 bg-[#0B0B0B] p-5"
                 >
                   <div className="flex gap-4">
                     <div className="w-10 h-10 rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]/10 flex items-center justify-center flex-shrink-0">
@@ -478,19 +478,19 @@ export default function CapitalPage() {
             <div className="border-t border-white/10 pt-6 mb-6">
               <h3 className="text-lg font-bold mb-4 text-white">Información clave</h3>
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                <div className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                   <p className="text-xs text-white/60 mb-2">Montos permitidos</p>
                   <p className="text-xl font-bold text-[#D4AF37]">10,000 - 1,000,000 USD</p>
                 </div>
-                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                <div className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                   <p className="text-xs text-white/60 mb-2">Tu participación</p>
                   <p className="text-xl font-bold text-green-400">60% de utilidades</p>
                 </div>
-                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                <div className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                   <p className="text-xs text-white/60 mb-2">CARVIPIX participa</p>
                   <p className="text-xl font-bold text-[#D4AF37]">40% solo sobre utilidades</p>
                 </div>
-                <div className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+                <div className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                   <p className="text-xs text-white/60 mb-2">Tu capital inicial</p>
                   <p className="text-xl font-bold text-white">Sin cobros, siempre tuyo</p>
                 </div>
@@ -572,7 +572,7 @@ export default function CapitalPage() {
                         setFormData({ ...formData, name: e.target.value });
                         if (errors.name) setErrors({ ...errors, name: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
                         errors.name
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"
@@ -595,7 +595,7 @@ export default function CapitalPage() {
                         setFormData({ ...formData, email: e.target.value });
                         if (errors.email) setErrors({ ...errors, email: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
                         errors.email
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"
@@ -618,7 +618,7 @@ export default function CapitalPage() {
                         setFormData({ ...formData, amount: e.target.value });
                         if (errors.amount) setErrors({ ...errors, amount: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
                         errors.amount
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"
@@ -636,7 +636,7 @@ export default function CapitalPage() {
                     <select
                       value={formData.method}
                       onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
                         errors.method
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"

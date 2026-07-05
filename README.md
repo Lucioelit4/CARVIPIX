@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CARVIPIX
 
-## Getting Started
+Plataforma Next.js de CARVIPIX con stack DevOps profesional para local, staging y produccion.
 
-First, run the development server:
+## Inicio rapido
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Copiar variables de entorno:
+
+```powershell
+copy .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Instalar dependencias:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Levantar stack local de produccion con observabilidad:
 
-## Learn More
+```powershell
+npm run infra:up:local
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Abrir servicios:
+- App: http://localhost:3010
+- Grafana: http://localhost:3001
+- Prometheus: http://localhost:9090
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Entornos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- local: `docker-compose.local.yml`
+- staging: `docker-compose.staging.yml`
+- produccion: `docker-compose.prod.yml`
 
-## Deploy on Vercel
+Comandos de despliegue:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```powershell
+npm run deploy:staging
+npm run deploy:prod
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Backups y recuperacion
+
+```powershell
+npm run backup:local
+npm run restore:local -- -BackupFile backups/manual/local_postgres_YYYYMMDD_HHMMSS.sql
+npm run dr:drill:local
+```
+
+## Tareas pesadas en la estacion local
+
+```powershell
+npm run heavy:local -- npm run build
+```
+
+Esto ajusta memoria y pool de hilos para aprovechar CPU/RAM local sin cambiar la arquitectura de despliegue.
+
+## Documentacion DevOps
+
+Ver detalles operativos en `docs/DEPLOYMENT_DEVOPS.md`.

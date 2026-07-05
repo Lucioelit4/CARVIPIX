@@ -3,7 +3,10 @@
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Download, TrendingUp, Zap, Target, AlertCircle, Scale } from "lucide-react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getResultsHistory, getPlatformResults } from "@/app/lib/data-helpers";
+import type { PlatformResults, ResultsHistory } from "@/app/lib/modules/results/types";
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors } from "@/app/design-system";
 
 // Default demo data (fallback)
 const defaultMonthlyData = [
@@ -44,20 +47,30 @@ const recentTrades = [
 
 export default function ResultadosPage() {
   const [monthlyData, setMonthlyData] = useState(defaultMonthlyData);
+  const [platformResults, setPlatformResults] = useState<PlatformResults | null>(null);
 
   // Load results data from modules on mount
   useEffect(() => {
     const loadResultsData = async () => {
       try {
-        const history = await getResultsHistory(12);
+        const [history, currentResults] = await Promise.all([getResultsHistory(12), getPlatformResults("monthly")]);
+
+        setPlatformResults(currentResults);
+
         if (history && history.length > 0) {
-          const transformedData = history.map((h: any) => ({
-            month: h.mes.substring(0, 3),
-            value: Math.round(100 + Math.random() * 100),
-          }));
+          const transformedData = history.map((h: ResultsHistory, index: number) => {
+            const monthName = (h.month ?? "").toString();
+            const metricValue = Number(h.metrics?.alertas?.totalTrades ?? 0) + Number(h.metrics?.bot?.totalTrades ?? 0);
+
+            return {
+              month: monthName.substring(0, 3) || `${index + 1}`,
+              value: metricValue,
+            };
+          });
+
           setMonthlyData(transformedData);
         }
-      } catch (error) {
+      } catch {
         console.log("Usando datos demo de resultados");
       }
     };
@@ -66,15 +79,13 @@ export default function ResultadosPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       {/* Header */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] px-6 py-12 sm:px-8">
-        <div className="mx-auto max-w-7xl">
+      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] py-10 sm:py-12">
+        <div className="cv-workspace max-w-7xl">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <span className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-                Vista demo
-              </span>
+              <CARVIPIXBadge variant="premium">Vista demo</CARVIPIXBadge>
               <h1 className="mt-6 text-4xl font-bold text-[#D4AF37]">Resultados CARVIPIX</h1>
               <p className="mt-4 max-w-2xl text-lg text-white/80">
                 Resumen de rendimiento, operaciones cerradas y desempeño general de la comunidad.
@@ -83,45 +94,58 @@ export default function ResultadosPage() {
                 Los datos reales se conectarán en la fase de cuenta/API.
               </p>
             </div>
-            <button className="flex items-center gap-2 rounded-full bg-[#D4AF37] px-6 py-3 font-semibold text-black transition hover:bg-[#f5d76e]">
-              <Download size={18} />
-              Descargar reporte demo
-            </button>
+            <Link href="/soporte" style={{ display: 'inline-flex' }}>
+              <CARVIPIXButton variant="premium" leftIcon={<Download size={18} />}>
+                Solicitar reporte demo
+              </CARVIPIXButton>
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Métricas Horizontales */}
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
+      <div className="cv-workspace max-w-7xl py-14 sm:py-16">
         <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { label: "Ganancia mensual", value: "+18.4%", color: "text-[#00D084]", icon: TrendingUp },
-            { label: "Win Rate", value: "72.4%", color: "text-[#D4AF37]", icon: Zap },
-            { label: "Operaciones cerradas", value: "186", color: "text-white", icon: Target },
+            {
+              label: "Ganancia mensual",
+              value: `${platformResults ? (platformResults.bySource.alertas.profitLoss >= 0 ? "+" : "") : "+"}${platformResults ? platformResults.bySource.alertas.profitLoss.toFixed(2) : "18.4"}`,
+              color: "text-[#00D084]",
+              icon: TrendingUp,
+            },
+            {
+              label: "Win Rate",
+              value: `${platformResults ? platformResults.bySource.alertas.winRate.toFixed(1) : "72.4"}%`,
+              color: "text-[#D4AF37]",
+              icon: Zap,
+            },
+            {
+              label: "Operaciones cerradas",
+              value: `${platformResults ? platformResults.bySource.alertas.totalTrades : "186"}`,
+              color: "text-white",
+              icon: Target,
+            },
             { label: "Drawdown máximo", value: "6.8%", color: "text-[#D4AF37]", icon: AlertCircle },
             { label: "Riesgo/Beneficio", value: "1.92", color: "text-[#D4AF37]", icon: Scale },
             { label: "Mejor activo del mes", value: "XAUUSD", color: "text-white", icon: TrendingUp },
           ].map((metric, i) => {
             const IconComponent = metric.icon;
             return (
-              <div 
-                key={i} 
-                className="relative rounded-xl border border-white/10 bg-[#11161E] p-6 hover:border-[#D4AF37]/40 hover:shadow-lg hover:shadow-[#D4AF37]/10 transition duration-300"
-              >
+              <CARVIPIXCard key={i} variant="statistics" padding="16" hover={false}>
                 <div className="absolute top-4 right-4 text-[#D4AF37]/40">
                   <IconComponent size={18} />
                 </div>
                 <p className="text-xs uppercase text-zinc-400 tracking-wider">{metric.label}</p>
                 <p className={`mt-4 text-2xl font-bold ${metric.color}`}>{metric.value}</p>
-              </div>
+              </CARVIPIXCard>
             );
           })}
         </div>
       </div>
 
       {/* Gráfica Grande - Ancho Completo */}
-      <div className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
-        <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+      <div className="cv-workspace max-w-7xl py-8">
+        <CARVIPIXCard variant="info" padding="24" hover={false}>
           <div className="mb-6 flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold">Evolución de resultados</h2>
@@ -137,7 +161,7 @@ export default function ResultadosPage() {
                 <YAxis stroke="#9CA3AF" style={{ fontSize: "12px" }} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: "#0B111A", 
+                    backgroundColor: colors.black.dark,
                     border: "1px solid #D4AF37/30",
                     borderRadius: "8px"
                   }}
@@ -153,17 +177,17 @@ export default function ResultadosPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </CARVIPIXCard>
       </div>
 
       {/* Secciones Inferiores - Dos Columnas */}
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
+      <div className="cv-workspace max-w-7xl py-14 sm:py-16">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Top 10 Miembros */}
-          <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+          <CARVIPIXCard variant="info" padding="24" hover={false}>
             <h2 className="mb-8 text-2xl font-bold">Top 10 miembros</h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="cv-readable-table w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
                     <th className="pb-4 font-semibold">#</th>
@@ -177,24 +201,24 @@ export default function ResultadosPage() {
                 <tbody className="divide-y divide-white/5">
                   {topMembers.map((member) => (
                     <tr key={member.pos} className="hover:bg-white/5 transition">
-                      <td className="py-4 font-bold text-[#D4AF37]">{member.pos}</td>
-                      <td className="py-4 font-medium">{member.name}</td>
-                      <td className="py-4 text-xs font-medium text-white/60">{member.plan}</td>
-                      <td className="py-4 font-semibold text-green-400">{member.perf}</td>
-                      <td className="py-4 text-white/70">{member.ops}</td>
-                      <td className="py-4 text-white/70">{member.streak}d</td>
+                      <td className="py-3.5 font-bold text-[#D4AF37]">{member.pos}</td>
+                      <td className="py-3.5 font-medium">{member.name}</td>
+                      <td className="py-3.5 text-xs font-medium text-white/60">{member.plan}</td>
+                      <td className="py-3.5 font-semibold text-green-400">{member.perf}</td>
+                      <td className="py-3.5 text-white/70">{member.ops}</td>
+                      <td className="py-3.5 text-white/70">{member.streak}d</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </CARVIPIXCard>
 
           {/* Últimas Operaciones */}
-          <div className="rounded-lg border border-white/10 bg-[#0B111A]/60 p-8 backdrop-blur-sm">
+          <CARVIPIXCard variant="info" padding="24" hover={false}>
             <h2 className="mb-8 text-2xl font-bold">Últimas operaciones cerradas</h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="cv-readable-table w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
                     <th className="pb-4 font-semibold">Fecha</th>
@@ -207,24 +231,20 @@ export default function ResultadosPage() {
                 <tbody className="divide-y divide-white/5">
                   {recentTrades.map((trade, i) => (
                     <tr key={i} className="hover:bg-white/5 transition">
-                      <td className="py-4 text-white/70">{trade.date}</td>
-                      <td className="py-4 font-medium">{trade.asset}</td>
-                      <td className="py-4 text-white/70">{trade.type}</td>
-                      <td className="py-4">
-                        <span
-                          className={`inline-flex rounded px-3 py-1 text-xs font-semibold ${
-                            trade.status === "success"
-                              ? "bg-green-400/15 text-green-400"
-                              : trade.status === "loss"
-                                ? "bg-red-400/15 text-red-400"
-                                : "bg-gray-400/15 text-gray-300"
-                          }`}
-                        >
+                      <td className="py-3.5 text-white/70">{trade.date}</td>
+                      <td className="py-3.5 font-medium">{trade.asset}</td>
+                      <td className="py-3.5 text-white/70">{trade.type}</td>
+                      <td className="py-3.5">
+                        <span style={{ display: 'inline-flex' }}>
+                          <CARVIPIXBadge
+                            variant={trade.status === "success" ? "success" : trade.status === "loss" ? "danger" : "default"}
+                          >
                           {trade.result}
+                          </CARVIPIXBadge>
                         </span>
                       </td>
                       <td
-                        className={`py-4 font-semibold ${
+                        className={`py-3.5 font-semibold ${
                           trade.status === "success"
                             ? "text-green-400"
                             : trade.status === "loss"
@@ -239,12 +259,12 @@ export default function ResultadosPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </CARVIPIXCard>
         </div>
       </div>
 
       {/* Footer pequeño */}
-      <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 text-center border-t border-white/5 mt-8">
+      <div className="cv-workspace mt-8 border-t border-white/5 py-16 text-center">
         <p className="text-xs text-white/40">
           Vista demo. Los datos reales se conectarán desde tu cuenta CARVIPIX cuando se integre la API.
         </p>

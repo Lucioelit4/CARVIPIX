@@ -32,7 +32,7 @@ export const CARVIPIXStatCard: React.FC<CARVIPIXStatCardProps> = ({
   const colorMap = {
     gold: colors.gold.primary,
     white: colors.white.pure,
-    success: '#22C55E',
+    success: '#2ECC71',
   };
 
   const textColor = colorMap[color];
@@ -130,7 +130,7 @@ export const CARVIPIXStatCard: React.FC<CARVIPIXStatCardProps> = ({
           {trend && (
             <span
               style={{
-                color: trend.startsWith('-') ? '#EF4444' : '#22C55E',
+                color: trend.startsWith('-') ? '#E74C3C' : '#2ECC71',
                 fontWeight: typography.weights.semibold,
               }}
             >

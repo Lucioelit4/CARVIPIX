@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Plus, TrendingUp, TrendingDown, Clock, Eye } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getAdminData, updateAlerta, createAlerta } from '@/app/admin/lib/admin-helpers';
 import { useToast } from './Toast';
 import DetailModal from './DetailModal';
@@ -20,16 +20,11 @@ interface Alerta {
 
 export default function AdminAlertas() {
   const [showCreate, setShowCreate] = useState(false);
-  const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [alertas, setAlertas] = useState<Alerta[]>(() => getAdminData().alertas);
   const [selectedAlerta, setSelectedAlerta] = useState<Alerta | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ symbol: '', tipo: 'Compra', entrada: '', tp: '', sl: '' });
   const { showToast } = useToast();
-
-  useEffect(() => {
-    const data = getAdminData();
-    setAlertas(data.alertas);
-  }, []);
 
   const handleUpdateAlerta = (id: string, nuevoEstado: Alerta['estado']) => {
     if (updateAlerta(id, nuevoEstado)) {
@@ -45,7 +40,7 @@ export default function AdminAlertas() {
       return;
     }
 
-    const newAlerta = createAlerta({
+    createAlerta({
       symbol: formData.symbol,
       tipo: formData.tipo,
       estado: 'activa',

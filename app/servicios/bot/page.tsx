@@ -11,9 +11,9 @@ export default function BotPage() {
   const [accepted, setAccepted] = useState(false);
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       {/* Hero Comercial */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] px-6 py-20 sm:px-8">
+      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-12 lg:grid-cols-2 items-center">
             {/* Contenido izquierdo */}
@@ -60,9 +60,9 @@ export default function BotPage() {
                   >
                     Comprar Bot CARVIPIX
                   </Link>
-                  <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
+                  <Link href="#resultados-demo" className="block w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 text-center">
                     Ver funcionamiento demo
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
             </motion.div>
@@ -72,7 +72,7 @@ export default function BotPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="relative h-96 rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B111A] to-[#05070B] p-8 overflow-hidden shadow-2xl shadow-[#D4AF37]/20"
+              className="relative h-96 rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B0B0B] to-[#030303] p-8 overflow-hidden shadow-2xl shadow-[#D4AF37]/20"
             >
               {/* Glow effects */}
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -131,15 +131,15 @@ export default function BotPage() {
 
                 {/* Bottom metrics */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                  <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
                     <p className="text-white/50">Operaciones</p>
                     <p className="font-bold text-[#D4AF37]">64</p>
                   </div>
-                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                  <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
                     <p className="text-white/50">Win Rate</p>
                     <p className="font-bold text-green-400">71%</p>
                   </div>
-                  <div className="border border-white/10 rounded bg-[#0B111A]/60 px-2 py-1">
+                  <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
                     <p className="text-white/50">Rendimiento</p>
                     <p className="font-bold text-green-400">+12.8%</p>
                   </div>
@@ -188,7 +188,7 @@ export default function BotPage() {
       </div>
 
       {/* Resultados Demo */}
-      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      <div id="resultados-demo" className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -232,10 +232,10 @@ export default function BotPage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#11161E] to-[#0B111A] p-6"
+          className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-b from-[#11161E] to-[#0B0B0B] p-6"
         >
           {/* Mini gráfico */}
-          <div className="mb-6 h-20 rounded-lg border border-white/10 bg-[#0B111A] p-4 relative overflow-hidden">
+          <div className="mb-6 h-20 rounded-lg border border-white/10 bg-[#0B0B0B] p-4 relative overflow-hidden">
             <svg className="w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
               <polyline
                 points="0,45 20,40 40,35 60,30 80,25 100,20 120,18 140,22 160,20 180,15 200,10"
@@ -262,7 +262,7 @@ export default function BotPage() {
               { title: "Mercado", value: "En seguimiento", status: "success" },
               { title: "Próxima revisión", value: "12:45 UTC", status: "neutral" },
             ].map((item, i) => (
-              <div key={i} className="rounded-lg bg-[#0B111A] border border-white/10 p-4">
+              <div key={i} className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                 <p className="text-xs uppercase text-zinc-400 mb-2">{item.title}</p>
                 <div className="flex items-center gap-2">
                   <p className={`text-sm font-bold ${
@@ -343,7 +343,7 @@ export default function BotPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-r from-[#11161E] to-[#0B111A] p-8 text-center"
+          className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-r from-[#11161E] to-[#0B0B0B] p-8 text-center"
         >
           <h3 className="text-2xl font-bold text-white mb-3">
             Diseñado para operar sin estar pegado a la pantalla
@@ -440,12 +440,21 @@ export default function BotPage() {
               </label>
             </div>
 
-            <button
-              disabled={!accepted}
-              className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] disabled:opacity-50 disabled:cursor-not-allowed text-lg mb-3"
-            >
-              Continuar compra demo
-            </button>
+            {accepted ? (
+              <Link
+                href="/checkout?product=bot"
+                className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] text-lg mb-3 text-center"
+              >
+                Continuar compra demo
+              </Link>
+            ) : (
+              <button
+                disabled
+                className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] disabled:opacity-50 disabled:cursor-not-allowed text-lg mb-3"
+              >
+                Continuar compra demo
+              </button>
+            )}
 
             <button
               onClick={() => setShowModal(false)}

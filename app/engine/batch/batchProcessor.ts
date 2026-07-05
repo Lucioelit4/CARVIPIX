@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Batch Processor - Ejecutor de backtests en lotes
  * Maneja job queue, workers, progreso y error recovery
@@ -503,3 +504,4 @@ export async function getBatchProcessor(
 export async function resetBatchProcessor(): Promise<void> {
   batchProcessorInstance = null;
 }
+

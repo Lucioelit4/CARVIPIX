@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function RiskDisclosurePage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
         <Link
           href="/"
@@ -20,7 +20,7 @@ export default function RiskDisclosurePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-white/10 bg-[#0B111A]/80 p-8 backdrop-blur-sm"
+          className="rounded-2xl border border-white/10 bg-[#0B0B0B]/80 p-8 backdrop-blur-sm"
         >
           <div className="flex items-center gap-3 mb-6">
             <AlertTriangle size={32} className="text-orange-500" />
@@ -63,7 +63,7 @@ export default function RiskDisclosurePage() {
                 <li>Que nuestras estrategias funcionarán en todas condiciones de mercado</li>
                 <li>Protección contra cualquier tipo de pérdida</li>
                 <li>Que no perderás dinero usando nuestros servicios</li>
-                <li>Ingresos pasivos o "dinero fácil"</li>
+                <li>Ingresos pasivos o &quot;dinero fácil&quot;</li>
               </ul>
             </section>
 

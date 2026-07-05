@@ -229,6 +229,12 @@ The Learning Engine tracks:
 - Integrate news APIs
 - Real tick data analysis
 
+### Integration Architecture (Worker 7)
+- Single gateway: `app/engine/integrations/dataIntegrationGateway.ts`
+- Broker, calendar, news, and historical data go through this gateway
+- Runtime entrypoint: `app/engine/core/engineDataRuntime.ts`
+- Internal modules must not depend directly on external providers
+
 ### Phase 3: Execution
 - MT4/MT5 bridge
 - Automated entry

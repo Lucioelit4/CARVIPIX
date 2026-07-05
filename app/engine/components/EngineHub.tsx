@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -268,7 +269,7 @@ function OverviewTab({
           Demo Scenarios
         </h2>
         <p className="text-white/60 text-sm mb-4">
-          Three realistic trading scenarios showing the engine's decision-making process.
+          Three realistic trading scenarios showing the engine&apos;s decision-making process.
         </p>
         <button
           onClick={onShowDemo}
@@ -575,3 +576,4 @@ function DemoScenarioModal({
     </motion.div>
   );
 }
+

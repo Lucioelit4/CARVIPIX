@@ -1,0 +1,54 @@
+{
+  "id": null,
+  "uid": "carvipix-overview",
+  "title": "CARVIPIX Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Host CPU Usage %",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Container Memory Working Set",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by(name) (container_memory_working_set_bytes{name!~\"\"})",
+          "legendFormat": "{{name}}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Health Probe Success",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "probe_success{job=\"blackbox-http\"}",
+          "legendFormat": "health"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Application Logs (Loki)",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "{service=~\"app|carvipix-app-local|carvipix-app-staging|carvipix-app-prod\"}"
+        }
+      ]
+    }
+  ]
+}

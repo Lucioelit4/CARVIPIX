@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Análisis de rendimiento del motor de backtesting
  * Monitorea velocidad, eficiencia y escalabilidad
@@ -378,3 +379,4 @@ export function comparePerformanceReports(
 
   return { improvements, regressions };
 }
+

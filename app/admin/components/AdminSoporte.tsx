@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { useState } from 'react';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 interface Ticket {
   id: string;
@@ -37,18 +38,6 @@ export default function AdminSoporte() {
     return <AlertCircle className="w-5 h-5 text-red-400" />;
   };
 
-  const getEstadoColor = (estado: string) => {
-    if (estado === 'cerrado') return 'bg-green-500/20 text-green-300';
-    if (estado === 'en-progreso') return 'bg-yellow-500/20 text-yellow-300';
-    return 'bg-red-500/20 text-red-300';
-  };
-
-  const getPrioridadColor = (prioridad: string) => {
-    if (prioridad === 'crítico') return 'bg-red-500/20 text-red-300';
-    if (prioridad === 'alto') return 'bg-orange-500/20 text-orange-300';
-    if (prioridad === 'normal') return 'bg-blue-500/20 text-blue-300';
-    return 'bg-green-500/20 text-green-300';
-  };
 
   const stats = [
     { label: 'Abiertos', value: demoTickets.filter((t) => t.estado === 'abierto').length, color: 'text-red-400' },
@@ -75,17 +64,14 @@ export default function AdminSoporte() {
         className="flex gap-3 flex-wrap"
       >
         {['todos', 'abierto', 'en-progreso', 'cerrado'].map((f) => (
-          <button
+          <CARVIPIXButton
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === f
-                ? 'bg-[#D4AF37] text-black'
-                : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+            variant={filter === f ? 'premium' : 'ghost'}
+            size="sm"
           >
             {f === 'en-progreso' ? 'En progreso' : f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
+          </CARVIPIXButton>
         ))}
       </motion.div>
 
@@ -97,10 +83,10 @@ export default function AdminSoporte() {
         className="grid grid-cols-3 gap-4"
       >
         {stats.map((stat, i) => (
-          <div key={i} className="rounded-lg border border-white/10 bg-white/5 p-4">
+          <CARVIPIXCard key={i} variant="statistics" padding="16" hover={false}>
             <p className="text-xs text-white/60 mb-2">{stat.label}</p>
             <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-          </div>
+          </CARVIPIXCard>
         ))}
       </motion.div>
 
@@ -109,8 +95,9 @@ export default function AdminSoporte() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-white/10 bg-white/5">
@@ -131,14 +118,12 @@ export default function AdminSoporte() {
                   <td className="px-6 py-4 text-sm text-white">{ticket.usuario}</td>
                   <td className="px-6 py-4 text-sm text-white/70">{ticket.categoria}</td>
                   <td className="px-6 py-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded capitalize ${getPrioridadColor(ticket.prioridad)}`}>
-                      {ticket.prioridad}
-                    </span>
+                    <CARVIPIXBadge variant={ticket.prioridad === 'crítico' ? 'danger' : ticket.prioridad === 'alto' ? 'warning' : ticket.prioridad === 'normal' ? 'info' : 'success'}>{ticket.prioridad}</CARVIPIXBadge>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded capitalize flex items-center gap-1 w-fit ${getEstadoColor(ticket.estado)}`}>
+                    <span className="capitalize flex items-center gap-1 w-fit">
                       {getEstadoIcon(ticket.estado)}
-                      {ticket.estado}
+                      <CARVIPIXBadge variant={ticket.estado === 'cerrado' ? 'success' : ticket.estado === 'en-progreso' ? 'warning' : 'danger'}>{ticket.estado}</CARVIPIXBadge>
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-white">{ticket.respuestas}</td>
@@ -153,6 +138,7 @@ export default function AdminSoporte() {
             <p className="text-white/50">No hay tickets en este estado</p>
           </div>
         )}
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Tips */}
@@ -160,11 +146,13 @@ export default function AdminSoporte() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-4"
+        className=""
       >
-        <p className="text-sm text-white/70">
-          Gestiona tickets desde aquí. Asigna prioridades, cambia estados y coordina respuestas con el equipo de soporte.
-        </p>
+        <CARVIPIXCard variant="info" padding="16" hover={false}>
+          <p className="text-sm text-white/70">
+            Gestiona tickets desde aquí. Asigna prioridades, cambia estados y coordina respuestas con el equipo de soporte.
+          </p>
+        </CARVIPIXCard>
       </motion.div>
     </div>
   );

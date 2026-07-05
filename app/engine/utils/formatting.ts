@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * ENGINE UTILITIES
  * Helper functions for engine operations
@@ -182,3 +183,4 @@ export function getEngineStatusSummary(
     lastUpdate: new Date(metrics.lastDecisionTime).toLocaleString(),
   };
 }
+

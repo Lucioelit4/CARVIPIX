@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * IMPLEMENTACIÓN DE AGENTES
  * 11 agentes especializados de análisis para decisiones de trading
@@ -236,47 +237,90 @@ export function analyzeMomentum(params: {
 }
 
 /**
- * Analista de Pullback
- * Analiza oportunidades de pullback
+ * Analista de Pullback MEJORADO
+ * 
+ * CAMBIOS EN V2:
+ * - Pullback depth normalizado por ATR (no % fijo)
+ * - Valida que tendencia sea fuerte ANTES de buscar pullback
+ * - Detecta false pullbacks (no vuelve a tendencia)
+ * - Integra con trend para evitar redundancia
  */
 export function analyzePullback(params: {
   symbol: string;
   isPullback: boolean;
-  pullbackDepth: number; // porcentaje
-  trend: 'up' | 'down';
+  pullbackDepth: number; // porcentaje vs ATR
+  pullbackNormalized: number; // pullbackDepth / ATR (mejor métrica)
+  trend: 'up' | 'down' | 'none';
+  trendStrength: number; // 0-100 (proporcionado por TrendAnalyst)
+  recoveryFromPullback: number; // % recovery hacia tendencia anterior
 }): AgentScore {
   let score = 50;
   const keyMetrics: Record<string, any> = {
     isPullback: params.isPullback,
-    pullbackDepth: params.pullbackDepth,
+    pullbackNormalized: params.pullbackNormalized.toFixed(2),
+    trendStrength: params.trendStrength,
+    recovery: params.recoveryFromPullback.toFixed(1) + '%',
   };
 
-  if (params.isPullback) {
-    score = 70;
-    if (params.pullbackDepth < 10) {
-      score += 15;
-      keyMetrics.verdict = 'Pullback poco profundo - muy favorable';
-    } else if (params.pullbackDepth < 25) {
-      score += 10;
-      keyMetrics.verdict = 'Pullback normal - favorable';
-    } else {
-      score -= 5;
-      keyMetrics.verdict = 'Pullback profundo - usar precaución';
-    }
-  } else {
+  // Solo evalúa pullback si hay tendencia fuerte
+  if (params.trend === 'none' || params.trendStrength < 50) {
+    score = 35;
+    keyMetrics.verdict = 'Sin tendencia fuerte - pullback no tiene contexto';
+    return {
+      agent: 'PullbackAnalyst',
+      score,
+      reasoning: `Pullback requiere tendencia fuerte (actual: ${params.trendStrength}/100)`,
+      confidence: 40,
+      keyMetrics,
+      timestamp: Date.now(),
+    };
+  }
+
+  if (!params.isPullback) {
     score = 45;
-    keyMetrics.verdict = 'Sin pullback claro detectado';
+    keyMetrics.verdict = 'Sin pullback detectado en tendencia';
+    return {
+      agent: 'PullbackAnalyst',
+      score,
+      reasoning: `Tendencia ${params.trend} pero sin oportunidad de pullback`,
+      confidence: 50,
+      keyMetrics,
+      timestamp: Date.now(),
+    };
+  }
+
+  // Pullback existe: evalúa profundidad normalizada
+  // 50% de ATR = shallow + good
+  // 100-120% de ATR = normal
+  // 120%+ de ATR = too deep
+  if (params.pullbackNormalized < 0.5) {
+    score = 85; // Muy favorable
+    keyMetrics.verdict = 'Pullback poco profundo - excelente setup';
+  } else if (params.pullbackNormalized < 1.0) {
+    score = 75; // Favorable
+    keyMetrics.verdict = 'Pullback normal - favorable';
+  } else if (params.pullbackNormalized < 1.25) {
+    score = 60; // Marginal
+    keyMetrics.verdict = 'Pullback profundo - usar precaución';
+  } else {
+    score = 30; // No es pullback, es reversión
+    keyMetrics.verdict = 'Demasiado profundo - puede no ser pullback';
+  }
+
+  // Bonus si recovery está en progreso (confirma que es pullback, no reversa)
+  if (params.recoveryFromPullback > 30) {
+    score += 15;
+    keyMetrics.recoveryNote = 'Recovery en progreso - pullback confirmado';
+  } else if (params.recoveryFromPullback < 10) {
+    score -= 20; // Stuck at pullback level = riesgo
+    keyMetrics.recoveryNote = 'Sin recovery - posible false breakout anterior';
   }
 
   return {
     agent: 'PullbackAnalyst',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `${
-      params.isPullback
-        ? `Pullback de ${params.pullbackDepth.toFixed(1)}% en tendencia ${params.trend}. ${keyMetrics.verdict}`
-        : 'Sin oportunidad de pullback detectada'
-    }`,
-    confidence: params.isPullback ? 75 : 50,
+    reasoning: `Pullback en tendencia ${params.trend} (strength ${params.trendStrength}/100). Depth: ${params.pullbackNormalized.toFixed(2)}x ATR. ${keyMetrics.verdict}`,
+    confidence: params.recoveryFromPullback > 20 ? 75 : 55,
     keyMetrics,
     timestamp: Date.now(),
   };
@@ -374,8 +418,13 @@ export function analyzeNews(params: {
 }
 
 /**
- * Gestor de Riesgo
- * Evalúa relaciones riesgo/recompensa, dimensionamiento de posiciones
+ * Gestor de Riesgo MEJORADO
+ * 
+ * CAMBIOS EN V2:
+ * - Ajusta RR por slippage y spread
+ * - Penaliza si account risk es muy alto
+ * - Incorpora volatilidad en el cálculo
+ * - Valida contra máximo drawdown de cuenta
  */
 export function analyzeRisk(params: {
   symbol: string;
@@ -383,76 +432,142 @@ export function analyzeRisk(params: {
   stopLossPrice: number;
   takeProfitPrice: number;
   accountRisk: number; // porcentaje por operación
+  spreadEstimated: number; // pips (slippage)
+  volatility: number; // ATR o similar
+  currentDrawdown: number; // % actual
+  maxAllowedDrawdown: number; // % máximo
 }): AgentScore {
   let score = 50;
   const riskPoints = Math.abs(params.entryPrice - params.stopLossPrice);
   const rewardPoints = Math.abs(params.takeProfitPrice - params.entryPrice);
-  const riskRewardRatio = rewardPoints / riskPoints;
-
+  
+  // RR AJUSTADO POR SPREAD/SLIPPAGE
+  // Restar spread del reward (worst case: entra 1 spread afuera)
+  const spreadCost = params.spreadEstimated * 0.0001; // Convertir pips a precio
+  const rewardPointsAdjusted = Math.max(0, rewardPoints - spreadCost);
+  const riskRewardRatioAdjusted = rewardPointsAdjusted / riskPoints;
+  
   const keyMetrics: Record<string, any> = {
-    riskPoints,
-    rewardPoints,
-    riskRewardRatio: riskRewardRatio.toFixed(2),
-    accountRisk: params.accountRisk,
+    riskPoints: riskPoints.toFixed(5),
+    rewardPoints: rewardPoints.toFixed(5),
+    riskRewardRatioTheoretical: (rewardPoints / riskPoints).toFixed(2),
+    riskRewardRatioAdjusted: riskRewardRatioAdjusted.toFixed(2),
+    spreadCost: params.spreadEstimated.toFixed(1) + ' pips',
+    accountRisk: params.accountRisk.toFixed(2) + '%',
   };
 
-  // Buen R:R es 2:1 o mejor
-  if (riskRewardRatio >= 2.0) {
+  // Scoring basado en RR AJUSTADO
+  if (riskRewardRatioAdjusted >= 2.0) {
     score = 85;
-    keyMetrics.verdict = 'Excelente relación riesgo/recompensa';
-  } else if (riskRewardRatio >= 1.5) {
+    keyMetrics.verdict = 'Excelente R:R (ajustado)';
+  } else if (riskRewardRatioAdjusted >= 1.5) {
     score = 75;
-    keyMetrics.verdict = 'Buena relación riesgo/recompensa';
-  } else if (riskRewardRatio >= 1.0) {
+    keyMetrics.verdict = 'Bueno R:R (ajustado)';
+  } else if (riskRewardRatioAdjusted >= 1.0) {
     score = 55;
-    keyMetrics.verdict = 'Relación riesgo/recompensa aceptable';
+    keyMetrics.verdict = 'Aceptable R:R (ajustado)';
   } else {
     score = 20;
-    keyMetrics.verdict = 'Relación riesgo/recompensa pobre - evitar';
+    keyMetrics.verdict = 'Pobre R:R - RECHAZAR';
   }
 
-  // Verificación de riesgo de cuenta
+  // PENALIZACIÓN POR RIESGO DE CUENTA ALTO
   if (params.accountRisk > 3) {
-    score -= 20;
-    keyMetrics.accountRiskWarning = 'Tamaño de posición demasiado grande';
-  } else if (params.accountRisk <= 1) {
+    score -= 30; // Penalización severa
+    keyMetrics.riskWarning = 'Posición DEMASIADO grande (>3% de cuenta)';
+  } else if (params.accountRisk > 2) {
+    score -= 15;
+    keyMetrics.riskWarning = 'Posición grande (2-3%)';
+  } else if (params.accountRisk <= 0.5) {
     score += 5;
-    keyMetrics.accountRiskNote = 'Dimensionamiento conservador';
+    keyMetrics.riskNote = 'Dimensionamiento conservador - excelente';
+  }
+
+  // PENALIZACIÓN POR VOLATILIDAD ALTA
+  // Si spread es grande relativo a volatilidad = risk aumenta
+  const spreadToVolatilityRatio = params.spreadEstimated / (params.volatility * 100);
+  if (spreadToVolatilityRatio > 0.5) {
+    score -= 20; // Spread es 50%+ de volatilidad
+    keyMetrics.volatilityWarning = 'Spread muy grande relativo a volatilidad';
+  }
+
+  // PENALIZACIÓN POR DRAWDOWN PROFUNDO
+  const drawdownUsagePercent = (params.currentDrawdown / params.maxAllowedDrawdown) * 100;
+  if (drawdownUsagePercent > 90) {
+    score -= 40; // Casi en límite
+    keyMetrics.ddWarning = `Drawdown muy profundo: ${params.currentDrawdown.toFixed(1)}% / ${params.maxAllowedDrawdown}%`;
+  } else if (drawdownUsagePercent > 70) {
+    score -= 20; // Acercándose al límite
+    keyMetrics.ddWarning = `Drawdown elevado: ${params.currentDrawdown.toFixed(1)}% / ${params.maxAllowedDrawdown}%`;
+  }
+
+  // Si todo falla en risk: score 20 es REJECT
+  if (score < 25) {
+    keyMetrics.verdict = 'TRADE RECHAZADO - Riesgo inaceptable';
   }
 
   return {
     agent: 'RiskManager',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `R:R: 1:${riskRewardRatio.toFixed(2)}. Riesgo de cuenta: ${params.accountRisk.toFixed(
-      2
-    )}%. ${keyMetrics.verdict}`,
-    confidence: 90,
+    reasoning: `R:R ajustado: 1:${riskRewardRatioAdjusted.toFixed(2)} (spread -${params.spreadEstimated.toFixed(1)}pips). Account risk: ${params.accountRisk.toFixed(2)}%. ${keyMetrics.verdict}`,
+    confidence: 95, // Risk manager tiene alta confianza en su cálculo
     keyMetrics,
     timestamp: Date.now(),
   };
 }
 
 /**
- * Puntuación de Confianza
- * Meta-análisis: ¿Qué tan confiados estamos en los otros agentes?
+ * Puntuación de Confianza MEJORADO
+ * 
+ * CAMBIOS EN V2:
+ * - Calcula agreement real desde agentScores (no es input)
+ * - Detecta divergencia entre agentes críticos
+ * - Penaliza si solo agentes secundarios aprueban
+ * - Ajusta por uniformidad de scores
  */
 export function scoreConfidence(params: {
-  agentAgreement: number; // 0-100, cuánto acuerdan los agentes
+  allAgentScores: AgentScore[]; // TODOS los agentes para calcular agreement
   dataQuality: 'high' | 'medium' | 'low';
   marketConditions: 'normal' | 'unusual' | 'chaotic';
   timeframe: string;
 }): AgentScore {
   let score = 50;
   const keyMetrics: Record<string, any> = {
-    agentAgreement: params.agentAgreement,
     dataQuality: params.dataQuality,
     marketConditions: params.marketConditions,
   };
 
-  // Peso de acuerdo entre agentes
-  score = Math.min(100, Math.max(20, params.agentAgreement));
+  // Calcular agreement real desde scores
+  const approvals = params.allAgentScores.filter(s => s.score >= 60).length;
+  const rejections = params.allAgentScores.filter(s => s.score < 40).length;
+  const totalAgents = params.allAgentScores.length;
 
-  // Ajuste de calidad de datos
+  // Percentaje de acuerdo
+  const agentAgreement = (approvals / totalAgents) * 100;
+  keyMetrics.agentAgreement = agentAgreement.toFixed(0) + '%';
+  keyMetrics.approvals = approvals;
+  keyMetrics.rejections = rejections;
+
+  // Base score: mapear agreement a 0-100
+  score = Math.min(100, Math.max(20, agentAgreement));
+
+  // Analizar uniformidad de scores (std deviation)
+  const avgScore = params.allAgentScores.reduce((s, a) => s + a.score, 0) / totalAgents;
+  const variance = params.allAgentScores.reduce((s, a) => s + Math.pow(a.score - avgScore, 2), 0) / totalAgents;
+  const stdDev = Math.sqrt(variance);
+
+  // Si high divergence (std dev > 25) = agentes muy divididos
+  if (stdDev > 25) {
+    score *= 0.80; // Penalizar 20%
+    keyMetrics.divergence = 'ALTA - agentes muy divididos';
+  } else if (stdDev < 10) {
+    score *= 1.10; // Bonus 10% si todos en acuerdo
+    keyMetrics.divergence = 'BAJA - agentes unánimes';
+  } else {
+    keyMetrics.divergence = 'NORMAL';
+  }
+
+  // Calidad de datos
   if (params.dataQuality === 'high') {
     score += 15;
   } else if (params.dataQuality === 'low') {
@@ -470,19 +585,17 @@ export function scoreConfidence(params: {
     keyMetrics.verdict = 'Condiciones normales - buena confianza';
   }
 
-  // Consideración de timeframe
+  // Timeframe bonus (datos diarios son más confiables)
   if (params.timeframe === 'D') {
     score += 5;
-    keyMetrics.timeframeNote = 'Timeframe diario más confiable';
+    keyMetrics.timeframeNote = 'Timeframe diario - más confiable';
   }
 
   return {
     agent: 'ConfidenceScoring',
     score: Math.max(0, Math.min(100, score)),
-    reasoning: `Evaluación general de confianza: Acuerdo de agentes ${params.agentAgreement.toFixed(
-      0
-    )}%. Datos ${params.dataQuality}. Mercado ${params.marketConditions}. ${keyMetrics.verdict}`,
-    confidence: Math.min(100, Math.max(30, score - 10)),
+    reasoning: `Agreement: ${agentAgreement.toFixed(0)}% (${approvals}/${totalAgents} agentes). Divergencia: ${keyMetrics.divergence}. Datos: ${params.dataQuality}. Mercado: ${params.marketConditions}. ${keyMetrics.verdict}`,
+    confidence: Math.min(100, Math.max(30, score - 15)),
     keyMetrics,
     timestamp: Date.now(),
   };
@@ -605,3 +718,4 @@ export function learnFromHistory(params: {
     timestamp: Date.now(),
   };
 }
+

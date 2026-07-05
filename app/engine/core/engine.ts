@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * CARVIPIX Trading Engine - Core Decision Engine
  * Handles consensus, decision logging, and alert lifecycle
@@ -51,9 +52,13 @@ export class CARVIPIXEngine {
   }
 
   /**
-   * CONSENSUS ENGINE
-   * Evaluates if there's enough agreement among agents
-   * Returns: approved (9+), rejected (2 or fewer), pending (3-8)
+   * CONSENSUS ENGINE MEJORADO
+   * 
+   * CAMBIOS EN V2:
+   * - Ponderaciones por agent criticality
+   * - Thresholds dinámicos basados en calidad de setup
+   * - Detección de contrarian votes
+   * - Mejor reasoning en rechazos
    */
   evaluateConsensus(agentScores: AgentScore[]): ConsensusResult {
     if (agentScores.length === 0) {
@@ -70,50 +75,98 @@ export class CARVIPIXEngine {
       };
     }
 
-    // Verificar agentes críticos obligatorios
-    const criticalAgents = ['MarketRegimeAnalyst', 'PullbackAnalyst', 'RiskManager', 'TradeValidator'];
-    const criticalScores = agentScores.filter(s => criticalAgents.includes(s.agent));
-    const criticalApprovalCount = criticalScores.filter(s => s.score >= 60).length;
-    const hasCriticalApprovals = criticalApprovalCount >= 3; // Al menos 3 de 4 críticos
+    // AGENT WEIGHTING - Algunos agentes son más importantes
+    const agentWeights: Record<string, number> = {
+      'RiskManager': 1.5,           // CRÍTICO: Si RR es malo, rechazar
+      'MarketRegimeAnalyst': 1.3,   // IMPORTANTE: Mercado correcto fundamental
+      'TrendAnalyst': 1.3,          // IMPORTANTE: Tendencia es core
+      'TradeValidator': 1.2,        // IMPORTANTE: Validación final
+      'StructureAnalyst': 1.1,      // Importante pero menos que los 4 arriba
+      'MomentumAnalyst': 1.0,       // Normal
+      'ConfidenceScoring': 1.0,     // Normal
+      'PullbackAnalyst': 1.0,       // Normal
+      'SessionAnalyst': 0.9,        // Secundario
+      'NewsAnalyst': 1.1,           // Importante pero contextual
+      'LearningEngine': 0.85,       // Secundario
+    };
 
-    // Contar aprobaciones (score >= 60) y rechazos (score < 40)
+    // CALCULAR WEIGHTED CONSENSUS
+    let weightedSum = 0;
+    let weightSum = 0;
+    
+    for (const agent of agentScores) {
+      const weight = agentWeights[agent.agent] || 1.0;
+      weightedSum += agent.score * weight;
+      weightSum += weight;
+    }
+    
+    const weightedAverageScore = weightSum > 0 ? weightedSum / weightSum : 0;
+
+    // CONTAR APROBACIONES/RECHAZOS PONDERADOS
     const approvals = agentScores.filter((s) => s.score >= 60).length;
     const rejections = agentScores.filter((s) => s.score < 40).length;
-    const neutral = agentScores.filter((s) => s.score >= 40 && s.score < 60).length;
+    const criticalRejections = agentScores
+      .filter(s => ['RiskManager', 'MarketRegimeAnalyst', 'TradeValidator'].includes(s.agent))
+      .filter(s => s.score < 40).length;
 
-    // Calcular promedio y confianza
-    const averageScore =
-      agentScores.reduce((sum, s) => sum + s.score, 0) / agentScores.length;
+    // CALCULAR CONFIANZA PONDERADA
     const overallConfidence =
-      agentScores.reduce((sum, s) => sum + s.confidence, 0) /
-      agentScores.length;
+      agentScores.reduce((sum, s) => sum + (s.confidence * (agentWeights[s.agent] || 1.0)), 0) /
+      agentScores.reduce((sum, s) => sum + (agentWeights[s.agent] || 1.0), 0);
+
+    // DYNAMIC THRESHOLD - Se adapta según calidad del setup
+    const averageScore = agentScores.reduce((sum, s) => sum + s.score, 0) / agentScores.length;
+    const scoreVariance = agentScores.reduce((sum, s) => sum + Math.pow(s.score - averageScore, 2), 0) / agentScores.length;
+    const scoreStdDev = Math.sqrt(scoreVariance);
+
+    let dynamicThreshold = this.config.consensusThreshold;
+    
+    // Si setup es excellent (high average, low variance) → threshold BAJA
+    if (averageScore > 80 && scoreStdDev < 12) {
+      dynamicThreshold = 8; // Excelente setup → 8/11 OK
+    } 
+    // Si setup es mediocre → threshold SUBE
+    else if (averageScore < 65 && scoreStdDev > 15) {
+      dynamicThreshold = 10; // Mediocre setup → 10/11 requerido
+    }
+    // Si setup es pobre → casi unánime requerido
+    else if (averageScore < 55) {
+      dynamicThreshold = 11; // Pobre → casi unánime o reject
+    }
 
     // LÓGICA DE DECISIÓN
     let outcome: DecisionOutcome = 'pending';
     let reasonForDecision = '';
 
-    if (
-      approvals >= this.config.consensusThreshold &&
-      overallConfidence >= this.config.confidenceThreshold &&
-      hasCriticalApprovals
+    // CRITICAL REJECTION: Si RiskManager o MarketRegime rechazan severamente
+    if (criticalRejections > 0) {
+      const criticalAgents = agentScores.filter(s => 
+        ['RiskManager', 'MarketRegimeAnalyst', 'TradeValidator'].includes(s.agent) && s.score < 40
+      );
+      
+      outcome = 'rejected';
+      reasonForDecision = `RECHAZO CRÍTICO: ${criticalAgents.map(a => a.agent).join(', ')} rechaza. ${criticalAgents[0]?.reasoning}`;
+    }
+    // SUCCESS: Threshold dinámico cumplido + confianza suficiente
+    else if (
+      approvals >= dynamicThreshold &&
+      overallConfidence >= this.config.confidenceThreshold
     ) {
       outcome = 'approved';
-      reasonForDecision = `Consenso fuerte: ${approvals}/${agentScores.length} agentes aprueban (requiere ${this.config.consensusThreshold}). Críticos: ${criticalApprovalCount}/4. Confianza: ${overallConfidence.toFixed(
-        1
-      )}%`;
-    } else if (!hasCriticalApprovals) {
+      reasonForDecision = `✓ APROBADO: ${approvals}/${agentScores.length} agentes (threshold dinámico: ${dynamicThreshold}). Confianza: ${overallConfidence.toFixed(1)}%. Score ponderado: ${weightedAverageScore.toFixed(1)}/100`;
+    }
+    // INSUFICIENTE CONSENSO
+    else if (approvals < dynamicThreshold) {
       outcome = 'rejected';
-      reasonForDecision = `Rechazo: Solo ${criticalApprovalCount}/4 agentes críticos aprueban. Requeridos: Market Regime, Pullback, Risk Manager, Trade Validator.`;
-    } else if (rejections >= agentScores.length - this.config.consensusThreshold) {
+      reasonForDecision = `✗ Consenso insuficiente: ${approvals} aprobaciones vs ${dynamicThreshold} requeridas (threshold dinámico)`;
+    }
+    // BAJA CONFIANZA
+    else if (overallConfidence < this.config.confidenceThreshold) {
       outcome = 'rejected';
-      reasonForDecision = `Consenso insuficiente: Solo ${approvals}/${agentScores.length} agentes aprueban (necesarios ${this.config.consensusThreshold}). Rechazos: ${rejections}.`;
-    } else if (overallConfidence < this.config.confidenceThreshold) {
-      outcome = 'rejected';
-      reasonForDecision = `Confianza baja: ${overallConfidence.toFixed(
-        1
-      )}% < ${this.config.confidenceThreshold}% requerido.`;
-    } else {
-      reasonForDecision = `Señales mixtas: ${approvals} aprobaciones, ${rejections} rechazos, ${neutral} neutrales.`;
+      reasonForDecision = `✗ Confianza baja: ${overallConfidence.toFixed(1)}% < ${this.config.confidenceThreshold}% requerido`;
+    }
+    else {
+      reasonForDecision = `? PENDIENTE: Señales mixtas. ${approvals} aprobaciones, ${rejections} rechazos`;
     }
 
     // Update metrics
@@ -121,11 +174,11 @@ export class CARVIPIXEngine {
 
     return {
       outcome,
-      agentScores: agentScores.sort((a, b) => b.score - a.score),
+      agentScores: agentScores.sort((a, b) => (agentWeights[b.agent] || 1.0) * b.score - (agentWeights[a.agent] || 1.0) * a.score),
       approvalCount: approvals,
       rejectionCount: rejections,
-      consensusThreshold: this.config.consensusThreshold,
-      averageScore,
+      consensusThreshold: dynamicThreshold,
+      averageScore: weightedAverageScore,
       overallConfidence,
       reasonForDecision,
       timestamp: Date.now(),
@@ -134,11 +187,43 @@ export class CARVIPIXEngine {
 
   /**
    * CREAR ALERTA DE SEÑAL
-   * Solo si el consenso aprueba
+   * 
+   * CAMBIOS EN V2:
+   * - Pre-validación con safety gates (liquidity, volatility, news, account, correlation)
+   * - MODO PROVISIONAL: Gates solo aconsejan, no rechazan, si faltan datos reales
+   * - Solo rechaza si: (1) consenso no aprueba O (2) gate falla crítico Y NO es por datos faltantes
+   * - Logging completo de razones de rechazo
    */
-  createAlert(signal: TradeSignal, consensusResult: ConsensusResult): TradeAlert | null {
+  createAlert(
+    signal: TradeSignal,
+    consensusResult: ConsensusResult,
+    safetyGateResults?: { 
+      allPassed: boolean; 
+      modeProvisional: boolean;
+      criticalFailures: Array<{ gate: string; reason: string; reason_isDataMissing?: boolean }> 
+    }
+  ): TradeAlert | null {
+    // GATE VALIDATION: Rechazar SOLO si hay fallo crítico y NO es por datos faltantes
+    if (safetyGateResults && safetyGateResults.criticalFailures && safetyGateResults.criticalFailures.length > 0) {
+      // Filtrar fallos que son REALES (no solo por falta de datos)
+      const realFailures = safetyGateResults.criticalFailures.filter(f => !f.reason.includes('NO DISPONIBLES'));
+      
+      if (realFailures.length > 0) {
+        const failedGates = realFailures.map(f => `${f.gate}: ${f.reason}`).join(' | ');
+        console.log(`Señal ${signal.id} RECHAZADA por safety gates críticos: ${failedGates}`);
+        return null;
+      }
+      
+      // Si solo hay fallos por datos faltantes, log pero continúa
+      if (safetyGateResults.modeProvisional) {
+        const missingDataGates = safetyGateResults.criticalFailures.filter(f => f.reason.includes('NO DISPONIBLES'));
+        console.log(`⚠️ Modo provisional: ${missingDataGates.length} gates sin datos reales. Continuando con consenso...`);
+      }
+    }
+
+    // CONSENSUS VALIDATION
     if (consensusResult.outcome !== 'approved') {
-      console.log(`Señal ${signal.id} no aprobada. No se puede crear alerta.`);
+      console.log(`Señal ${signal.id} no aprobada por consenso. Razón: ${consensusResult.reasonForDecision}`);
       return null;
     }
 
@@ -328,3 +413,4 @@ export class CARVIPIXEngine {
 
 // Export singleton instance
 export const engine = new CARVIPIXEngine();
+

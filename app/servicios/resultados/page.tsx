@@ -80,9 +80,9 @@ const topMembers = [
 
 export default function ResultadosComercialPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16">
+      <div className="bg-gradient-to-b from-[#0B0B0B] to-[#030303] border-b border-white/5 px-4 py-12 sm:py-16">
         <div className="max-w-6xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -169,7 +169,7 @@ export default function ResultadosComercialPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.05 }}
-                className="bg-[#0B111A] border border-white/10 rounded-lg p-6"
+                className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <Icon className="w-5 h-5 text-[#D4AF37]" />
@@ -198,7 +198,7 @@ export default function ResultadosComercialPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + i * 0.05 }}
-                  className="bg-[#0B111A] border border-white/10 rounded-lg p-6"
+                  className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export default function ResultadosComercialPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-[#0B111A] border border-white/10 rounded-lg p-6 mb-12"
+          className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6 mb-12"
         >
           <h2 className="text-2xl font-bold mb-6">Evolución global de la plataforma</h2>
           <div className="h-72">
@@ -255,7 +255,7 @@ export default function ResultadosComercialPage() {
           className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12"
         >
           {/* Activity */}
-          <div className="bg-[#0B111A] border border-white/10 rounded-lg p-6">
+          <div className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-6">
               <Activity className="w-5 h-5 text-[#D4AF37]" />
               <h2 className="text-2xl font-bold">Actividad reciente</h2>
@@ -277,7 +277,7 @@ export default function ResultadosComercialPage() {
           </div>
 
           {/* Transparency */}
-          <div className="bg-[#0B111A] border border-white/10 rounded-lg p-6">
+          <div className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-6">
               <AlertCircle className="w-5 h-5 text-[#D4AF37]" />
               <h2 className="text-2xl font-bold">Transparencia CARVIPIX</h2>
@@ -310,7 +310,7 @@ export default function ResultadosComercialPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-[#0B111A] border border-white/10 rounded-lg p-6 mb-12"
+          className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6 mb-12"
         >
           <h3 className="text-lg font-bold mb-4">Top de actividad demo</h3>
           <div className="overflow-x-auto">

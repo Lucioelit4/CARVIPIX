@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Types para Parameter Optimizer
  * Optimización de parámetros de backtesting mediante grid search y análisis
@@ -139,3 +140,4 @@ export interface OptimizationComparison {
   recommendation: OptimizationCandidate;
   reason: string;
 }
+

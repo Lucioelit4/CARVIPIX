@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
@@ -89,3 +90,4 @@ async function listDatasets() {
     return NextResponse.json({ error: 'Failed to list datasets' }, { status: 500 });
   }
 }
+

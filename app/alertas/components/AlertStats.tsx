@@ -2,17 +2,30 @@
 
 import CountUp from "react-countup";
 import { Activity, BadgeCheck, Flame, Target } from "lucide-react";
-import { CARVIPIXStatCard, colors, spacing, borders } from "../../design-system";
+import { CARVIPIXCard, colors, spacing } from "../../design-system";
 
-const stats = [
-  { title: "Alertas activas", value: 3, note: "Operaciones abiertas", icon: Activity, color: "success" },
-  { title: "Win Rate", value: 72.4, suffix: "%", note: "Últimos 30 días", icon: Target, color: "gold" },
-  { title: "Profit Factor", value: 2.18, note: "Promedio mensual", icon: BadgeCheck, color: "white" },
-  { title: "Racha actual", value: 5, note: "Alertas ganadas", icon: Flame, color: "gold" },
-];
+type AlertStatsData = {
+  activeAlerts: number;
+  winRate: number;
+  profitFactor: number;
+  currentStreak: number;
+};
 
-export default function AlertStats() {
-  const safeStats = stats ?? [];
+const defaultStats: AlertStatsData = {
+  activeAlerts: 3,
+  winRate: 72.4,
+  profitFactor: 2.18,
+  currentStreak: 5,
+};
+
+export default function AlertStats({ stats }: { stats?: AlertStatsData }) {
+  const values = stats ?? defaultStats;
+  const safeStats = [
+    { title: "Alertas activas", value: values.activeAlerts, note: "Operaciones abiertas", icon: Activity, color: "success" },
+    { title: "Win Rate", value: values.winRate, suffix: "%", note: "Últimos 30 días", icon: Target, color: "gold" },
+    { title: "Profit Factor", value: values.profitFactor, note: "Promedio mensual", icon: BadgeCheck, color: "white" },
+    { title: "Racha actual", value: values.currentStreak, note: "Alertas ganadas", icon: Flame, color: "gold" },
+  ];
 
   return (
     <div style={{ display: 'grid', gap: spacing[16], gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
@@ -20,15 +33,13 @@ export default function AlertStats() {
         const Icon = stat.icon;
 
         return (
-          <div
+          <CARVIPIXCard
             key={stat.title}
+            variant="statistics"
+            padding="16"
             style={{
               position: 'relative',
               overflow: 'hidden',
-              borderRadius: borders.radius.xl,
-              border: `1px solid rgba(255, 255, 255, 0.1)`,
-              backgroundColor: `rgba(16, 20, 29, 0.9)`,
-              padding: spacing[16],
               transition: 'all 300ms ease',
               cursor: 'pointer',
             }}
@@ -52,12 +63,12 @@ export default function AlertStats() {
               <Icon size={20} style={{ color: colors.gold.primary }} />
             </div>
 
-            <p style={{ position: 'relative', marginTop: spacing[16], fontSize: '1.875rem', fontWeight: 700, color: stat.color === 'gold' ? colors.gold.primary : stat.color === 'success' ? '#22C55E' : colors.white.pure }}>
+            <p style={{ position: 'relative', marginTop: spacing[16], fontSize: '1.875rem', fontWeight: 700, color: stat.color === 'gold' ? colors.gold.primary : stat.color === 'success' ? '#2ECC71' : colors.white.pure }}>
               <CountUp end={stat.value} decimals={stat.value % 1 !== 0 ? 2 : 0} duration={1.3} suffix={stat.suffix || ""} />
             </p>
 
             <p style={{ position: 'relative', marginTop: spacing[8], fontSize: '0.875rem', color: colors.white.secondary }}>{stat.note}</p>
-          </div>
+          </CARVIPIXCard>
         );
       })}
     </div>

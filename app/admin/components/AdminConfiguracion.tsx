@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Settings, DollarSign, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 export default function AdminConfiguracion() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -41,8 +42,9 @@ export default function AdminConfiguracion() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-6 space-y-4"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="24" hover={false}>
         <h3 className="text-lg font-bold flex items-center gap-2">
           <Settings className="w-5 h-5 text-[#D4AF37]" />
           Configuración Global
@@ -55,16 +57,13 @@ export default function AdminConfiguracion() {
               <p className="font-semibold text-white mb-1">Modo Demostración</p>
               <p className="text-sm text-white/60">Todos los datos son demo, sin pagos reales</p>
             </div>
-            <button
+            <CARVIPIXButton
               onClick={() => setDemoMode(!demoMode)}
-              className={`px-4 py-2 rounded font-bold transition ${
-                demoMode
-                  ? 'bg-green-500/20 text-green-300'
-                  : 'bg-red-500/20 text-red-300'
-              }`}
+              variant={demoMode ? 'success' : 'danger'}
+              size="sm"
             >
               {demoMode ? 'Activado' : 'Desactivado'}
-            </button>
+            </CARVIPIXButton>
           </div>
 
           {/* Maintenance Mode */}
@@ -73,16 +72,13 @@ export default function AdminConfiguracion() {
               <p className="font-semibold text-white mb-1">Modo Mantenimiento</p>
               <p className="text-sm text-white/60">Suspende acceso para usuarios regulares</p>
             </div>
-            <button
+            <CARVIPIXButton
               onClick={() => setMaintenanceMode(!maintenanceMode)}
-              className={`px-4 py-2 rounded font-bold transition ${
-                maintenanceMode
-                  ? 'bg-red-500/20 text-red-300'
-                  : 'bg-green-500/20 text-green-300'
-              }`}
+              variant={maintenanceMode ? 'danger' : 'success'}
+              size="sm"
             >
               {maintenanceMode ? 'Activado' : 'Desactivado'}
-            </button>
+            </CARVIPIXButton>
           </div>
         </div>
 
@@ -99,6 +95,7 @@ export default function AdminConfiguracion() {
             </div>
           </motion.div>
         )}
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Precios */}
@@ -106,8 +103,9 @@ export default function AdminConfiguracion() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="px-6 py-4 border-b border-white/10 flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-[#D4AF37]" />
           <h3 className="text-lg font-bold">Precios de Productos</h3>
@@ -130,18 +128,19 @@ export default function AdminConfiguracion() {
                   <td className="px-6 py-4 text-sm text-white font-semibold">{item.precio}</td>
                   <td className="px-6 py-4 text-sm text-white/70">{item.currency}</td>
                   <td className="px-6 py-4">
-                    <span className="text-xs px-2 py-1 rounded bg-white/10 text-white/70">{item.tipo}</span>
+                    <CARVIPIXBadge variant="default">{item.tipo}</CARVIPIXBadge>
                   </td>
                   <td className="px-6 py-4">
-                    <button className="px-3 py-1 text-xs rounded bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 transition">
+                    <CARVIPIXButton variant="secondary" size="sm">
                       Editar
-                    </button>
+                    </CARVIPIXButton>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Servicios */}
@@ -149,8 +148,9 @@ export default function AdminConfiguracion() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-6"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="24" hover={false}>
         <h3 className="text-lg font-bold mb-4">Estado de Servicios</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {servicios.map((servicio, i) => (
@@ -168,12 +168,13 @@ export default function AdminConfiguracion() {
                   <span className="text-white/60">{servicio.usuarios} usuarios</span>
                 </div>
               </div>
-              <button className="px-3 py-1 text-xs rounded bg-white/10 hover:bg-white/20 text-white transition">
+              <CARVIPIXButton variant="ghost" size="sm">
                 Ver
-              </button>
+              </CARVIPIXButton>
             </div>
           ))}
         </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Info */}
@@ -181,11 +182,13 @@ export default function AdminConfiguracion() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-4"
+        className=""
       >
-        <p className="text-sm text-white/70">
-          Todas las configuraciones mostradas son datos demo. Los cambios se guardan en localStorage por sesión.
-        </p>
+        <CARVIPIXCard variant="info" padding="16" hover={false}>
+          <p className="text-sm text-white/70">
+            Todas las configuraciones mostradas son datos demo. Los cambios se guardan en localStorage por sesión.
+          </p>
+        </CARVIPIXCard>
       </motion.div>
     </div>
   );

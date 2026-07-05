@@ -12,6 +12,7 @@ import {
   Gauge,
   TrendingUp,
 } from 'lucide-react';
+import { CARVIPIXBadge, CARVIPIXCard } from '@/app/design-system';
 
 interface Modulo {
   id: string;
@@ -365,29 +366,29 @@ export default function AdminProyecto() {
         transition={{ delay: 0.15 }}
         className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
-        <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-4 text-center">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-green-400 mb-2">{completedModulos}</p>
           <p className="text-white/80 text-sm">Módulos Completados</p>
           <p className="text-white/60 text-xs mt-1">Listos para producción</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-lg p-4 text-center">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-yellow-400 mb-2">{revisionModulos}</p>
           <p className="text-white/80 text-sm">En Revisión</p>
           <p className="text-white/60 text-xs mt-1">Optimización técnica</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-lg p-4 text-center">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-[#D4AF37] mb-2">{progresoModulos}</p>
           <p className="text-white/80 text-sm">En Progreso</p>
           <p className="text-white/60 text-xs mt-1">Desarrollo activo</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-slate-500/20 to-slate-500/5 border border-slate-500/30 rounded-lg p-4 text-center">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-slate-400 mb-2">{pendienteModulos}</p>
           <p className="text-white/80 text-sm">Pendientes</p>
           <p className="text-white/60 text-xs mt-1">Próximas fases</p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Modules Grid */}
@@ -416,9 +417,7 @@ export default function AdminProyecto() {
                     <p className="text-white/60 text-sm">{modulo.descripcion}</p>
                   </div>
                 </div>
-                <div className={`px-3 py-1 rounded border text-xs font-mono ${getPriorityColor(modulo.prioridad)}`}>
-                  {modulo.prioridad.toUpperCase()}
-                </div>
+                <CARVIPIXBadge variant={modulo.prioridad === 'alta' ? 'danger' : modulo.prioridad === 'media' ? 'warning' : 'info'}>{modulo.prioridad.toUpperCase()}</CARVIPIXBadge>
               </div>
 
               {/* Progress Bar */}
@@ -493,22 +492,14 @@ export default function AdminProyecto() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-bold text-white">{riesgo.titulo}</h4>
-                      <span className={`text-xs font-mono px-2 py-0.5 rounded border ${
-                        riesgo.severidad === 'alta'
-                          ? 'border-red-500/50 text-red-400'
-                          : 'border-yellow-500/50 text-yellow-400'
-                      }`}>
+                      <CARVIPIXBadge variant={riesgo.severidad === 'alta' ? 'danger' : 'warning'}>
                         {riesgo.severidad.toUpperCase()}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded border ml-auto ${
-                        riesgo.estado === 'en-proceso'
-                          ? 'border-[#D4AF37]/50 text-[#D4AF37]'
-                          : riesgo.estado === 'pendiente'
-                          ? 'border-red-500/50 text-red-400'
-                          : 'border-slate-500/50 text-slate-400'
-                      }`}>
+                      </CARVIPIXBadge>
+                      <span className="ml-auto">
+                      <CARVIPIXBadge variant={riesgo.estado === 'en-proceso' ? 'premium' : riesgo.estado === 'pendiente' ? 'danger' : 'default'}>
                         {riesgo.estado === 'en-proceso' ? 'EN PROCESO' : 
                          riesgo.estado === 'pendiente' ? 'PENDIENTE' : 'NO INICIADO'}
+                      </CARVIPIXBadge>
                       </span>
                     </div>
                     <p className="text-white/70 text-sm">{riesgo.descripcion}</p>

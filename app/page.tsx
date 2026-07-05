@@ -244,7 +244,7 @@ export default function Home() {
 
             <div className="grid gap-4 p-5 sm:p-6">
               <div className="grid gap-4 sm:grid-cols-[1.15fr_0.85fr]">
-                <article className="rounded-[28px] border border-white/8 bg-[#0b1320]/95 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
+                <article className="rounded-[28px] border border-white/8 bg-[#121212]/95 p-5 shadow-[0_20px_70px_rgba(0,0,0,0.35)]">
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-[#c8c0b2]">Contexto de mercado</p>
                     <Activity size={16} className="text-[#d4af37]" />

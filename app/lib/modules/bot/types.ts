@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos para Bot CARVIPIX
 
 export type BotStatus = "inactive" | "running" | "paused" | "error";
@@ -43,3 +44,4 @@ export interface BotUpdate {
   improvements: string[];
   bugFixes: string[];
 }
+

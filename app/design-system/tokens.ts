@@ -11,29 +11,31 @@
 export const colors = {
   // Primary: Black (Control)
   black: {
-    pure: '#000000',
-    dark: '#05070B',
-    darker: '#0B111A',
+    pure: '#030303',
+    dark: '#0B0B0B',
+    darker: '#121212',
+    elevated: '#181818',
+    border: '#2A2A2A',
   },
 
   // Secondary: Gold (Precision)
   gold: {
     primary: '#D4AF37',
-    bright: '#E6C547',
+    bright: '#F4C542',
     muted: '#B8960F',
   },
 
   // Tertiary: White (Clarity)
   white: {
     pure: '#FFFFFF',
-    text: '#C0C0C0', // 70% opacity equivalent
-    secondary: '#808080', // 50% opacity equivalent
+    text: '#B5B5B5',
+    secondary: '#7E7E7E',
   },
 
   // Functional (semantic usage only)
-  success: '#22C55E', // Green for positive
-  warning: '#F59E0B', // Amber for warning
-  error: '#EF4444', // Red for error
+  success: '#2ECC71', // Green for positive
+  warning: '#F4C542',
+  error: '#E74C3C',
 } as const;
 
 // ============================================
@@ -56,13 +58,46 @@ export const spacing = {
   '128': '128px', // 16 units
 } as const;
 
+export const layoutSpacing = {
+  page: {
+    desktop: spacing['40'],
+    laptop: spacing['32'],
+    tablet: spacing['24'],
+    mobile: spacing['16'],
+  },
+  section: {
+    desktop: spacing['32'],
+    laptop: spacing['24'],
+    tablet: spacing['24'],
+    mobile: spacing['16'],
+  },
+  panelGap: {
+    desktop: spacing['24'],
+    laptop: spacing['24'],
+    tablet: spacing['16'],
+    mobile: spacing['12'],
+  },
+  tableGap: {
+    desktop: spacing['16'],
+    laptop: spacing['16'],
+    tablet: spacing['12'],
+    mobile: spacing['8'],
+  },
+  cardGap: {
+    desktop: spacing['16'],
+    laptop: spacing['16'],
+    tablet: spacing['12'],
+    mobile: spacing['8'],
+  },
+} as const;
+
 // ============================================
 // TYPOGRAPHY
 // ============================================
 
 export const typography = {
   fonts: {
-    sans: 'Inter, system-ui, -apple-system, sans-serif',
+    sans: 'Manrope, system-ui, -apple-system, sans-serif',
     mono: 'JetBrains Mono, Menlo, monospace',
   },
 
@@ -91,6 +126,52 @@ export const typography = {
     normal: 1.5,
     relaxed: 1.6,
     loose: 1.8,
+  },
+} as const;
+
+export const typographyScale = {
+  title: {
+    page: {
+      fontSize: typography.sizes['4xl'],
+      fontWeight: typography.weights.bold,
+      lineHeight: typography.lineHeights.tight,
+      letterSpacing: '-0.02em',
+    },
+    section: {
+      fontSize: typography.sizes['2xl'],
+      fontWeight: typography.weights.bold,
+      lineHeight: typography.lineHeights.tight,
+      letterSpacing: '-0.01em',
+    },
+  },
+  subtitle: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
+    lineHeight: typography.lineHeights.normal,
+  },
+  body: {
+    fontSize: typography.sizes.base,
+    fontWeight: typography.weights.regular,
+    lineHeight: typography.lineHeights.relaxed,
+  },
+  help: {
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.regular,
+    lineHeight: typography.lineHeights.normal,
+  },
+  table: {
+    header: {
+      fontSize: typography.sizes.xs,
+      fontWeight: typography.weights.semibold,
+      lineHeight: typography.lineHeights.normal,
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase' as const,
+    },
+    cell: {
+      fontSize: typography.sizes.sm,
+      fontWeight: typography.weights.medium,
+      lineHeight: typography.lineHeights.relaxed,
+    },
   },
 } as const;
 
@@ -142,7 +223,7 @@ export const borders = {
     goldSubtle: `1px solid rgba(212, 175, 55, 0.2)`,
     goldActive: `1px solid rgba(212, 175, 55, 0.4)`,
     white: `1px solid ${colors.white.pure}`,
-    whiteSoft: `1px solid rgba(255, 255, 255, 0.1)`,
+    whiteSoft: `1px solid ${colors.black.border}`,
   },
 } as const;
 
@@ -198,9 +279,33 @@ export const breakpoints = {
   mobile: '0px',
   sm: '640px',
   md: '768px',
+  laptop: '1024px',
   lg: '1024px',
   xl: '1280px',
   '2xl': '1536px',
+} as const;
+
+export const responsiveLayout = {
+  desktop: {
+    minWidth: breakpoints.xl,
+    containerMaxWidth: '80rem',
+    pagePaddingX: layoutSpacing.page.desktop,
+  },
+  laptop: {
+    minWidth: breakpoints.laptop,
+    containerMaxWidth: '72rem',
+    pagePaddingX: layoutSpacing.page.laptop,
+  },
+  tablet: {
+    minWidth: breakpoints.md,
+    containerMaxWidth: '64rem',
+    pagePaddingX: layoutSpacing.page.tablet,
+  },
+  mobile: {
+    minWidth: breakpoints.mobile,
+    containerMaxWidth: '100%',
+    pagePaddingX: layoutSpacing.page.mobile,
+  },
 } as const;
 
 // ============================================
@@ -279,7 +384,7 @@ export const sizes = {
 
 export const gradients = {
   // Background
-  background: 'linear-gradient(to bottom, #050709, #0B111A)',
+  background: 'linear-gradient(to bottom, #050709, #0B0B0B)',
   
   // Subtle accent
   accentSubtle: 'linear-gradient(135deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%)',

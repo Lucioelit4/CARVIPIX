@@ -61,7 +61,10 @@ export function generateDemoScenario1(): {
       symbol: 'EURUSD',
       isPullback: true,
       pullbackDepth: 15,
+      pullbackNormalized: 0.75, // normalized by ATR
       trend: 'up',
+      trendStrength: 85, // strong uptrend
+      recoveryFromPullback: 35, // 35% recovery
     }),
     analyzeSession({
       symbol: 'EURUSD',
@@ -81,9 +84,13 @@ export function generateDemoScenario1(): {
       stopLossPrice: 1.0880,
       takeProfitPrice: 1.1060,
       accountRisk: 1.5,
+      spreadEstimated: 1.8, // typical spread
+      volatility: 85, // ATR
+      currentDrawdown: 2.5, // current DD
+      maxAllowedDrawdown: 20, // max allowed
     }),
     scoreConfidence({
-      agentAgreement: 85,
+      allAgentScores: [], // Will be populated after all agents score
       dataQuality: 'high',
       marketConditions: 'normal',
       timeframe: '1H',
@@ -179,7 +186,10 @@ export function generateDemoScenario2(): {
       symbol: 'GBPUSD',
       isPullback: false,
       pullbackDepth: 0,
+      pullbackNormalized: 0.25, // shallow
       trend: 'up',
+      trendStrength: 72, // moderate trend
+      recoveryFromPullback: 8, // weak recovery
     }),
     analyzeSession({
       symbol: 'GBPUSD',
@@ -199,9 +209,13 @@ export function generateDemoScenario2(): {
       stopLossPrice: 1.2750,
       takeProfitPrice: 1.2850,
       accountRisk: 2.8,
+      spreadEstimated: 2.2, // higher spread
+      volatility: 95, // higher volatility
+      currentDrawdown: 5.0, // deeper DD
+      maxAllowedDrawdown: 20,
     }),
     scoreConfidence({
-      agentAgreement: 45,
+      allAgentScores: [],
       dataQuality: 'medium',
       marketConditions: 'unusual',
       timeframe: '45M',
@@ -301,7 +315,10 @@ export function generateDemoScenario3(): {
       symbol: 'XAUUSD',
       isPullback: false,
       pullbackDepth: 0,
+      pullbackNormalized: 0.0,
       trend: 'down',
+      trendStrength: 68, // moderate downtrend
+      recoveryFromPullback: 0,
     }),
     analyzeSession({
       symbol: 'XAUUSD',
@@ -321,9 +338,13 @@ export function generateDemoScenario3(): {
       stopLossPrice: 1985,
       takeProfitPrice: 1920,
       accountRisk: 1.2,
+      spreadEstimated: 3.5, // wider spread on GOLD
+      volatility: 120, // high ATR
+      currentDrawdown: 8.0, // significant DD
+      maxAllowedDrawdown: 20,
     }),
     scoreConfidence({
-      agentAgreement: 80,
+      allAgentScores: [],
       dataQuality: 'high',
       marketConditions: 'normal',
       timeframe: '5M',

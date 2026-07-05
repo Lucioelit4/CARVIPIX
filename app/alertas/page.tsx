@@ -1,337 +1,497 @@
-﻿"use client";
+"use client";
 
-import { motion } from "framer-motion";
-import { useMemo, useState, useEffect } from "react";
-import AlertFilters from "./components/AlertFilters";
-import AlertStats from "./components/AlertStats";
+import { useEffect, useMemo, useState } from "react";
+import { Clock3, Gauge, ShieldCheck, Signal } from "lucide-react";
+import AlertFilters, { type StatusFilterValue } from "./components/AlertFilters";
 import AlertsTable from "./components/AlertsTable";
 import AlertDetails from "./components/AlertDetails";
-import AlertHistory from "./components/AlertHistory";
 import { getAlerts } from "@/app/lib/data-helpers";
-import { CARVIPIXCard, colors, spacing, typography, shadows, borders } from "../design-system";
+import { CARVIPIXCard } from "../design-system";
 
-// Data from modules - will be populated on mount
-const defaultDemoAlerts = [
+type SignalStateKey = "can-enter" | "wait" | "no-enter" | "closed";
+
+type AlertSignal = {
+  id: string;
+  symbol: string;
+  market: string;
+  direction: "Compra" | "Venta";
+  entry?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  riskReward: number;
+  stateKey: SignalStateKey;
+  stateLabel: string;
+  stateNote: string;
+  statusRaw: string;
+  time: string;
+  minutesAgo: number;
+  canEnter: boolean;
+  confidence: number;
+  timeframe: string;
+  strategy: string;
+  analysis: string;
+};
+
+const DEFAULT_ALERTS: AlertSignal[] = [
   {
-    id: "xauusd-1432",
+    id: "xauusd-01",
     symbol: "XAUUSD",
     market: "Oro",
-    tipo: "Compra",
-    entrada: "2338.45",
-    sl: "2332.00",
-    tp: "2345.00",
-    rr: "2.31",
-    estado: "Activa",
-    hora: "14:32",
-    session: "Londres",
-    risk: "Medio",
-    probability: "88%",
-    analysis:
-      "Compra confirmada después de un rompimiento de estructura en H1. El precio mitigó una zona institucional y tomó liquidez antes de continuar el movimiento.",
-    plan: "PRO",
     direction: "Compra",
+    entry: 2338.45,
+    stopLoss: 2332.0,
+    takeProfit: 2345.0,
+    riskReward: 2.31,
+    stateKey: "can-enter",
+    stateLabel: "🟢 PUEDES ENTRAR",
+    stateNote: "Ventana de entrada aún válida.",
+    statusRaw: "active",
+    time: "14:32",
+    minutesAgo: 6,
+    canEnter: true,
+    confidence: 88,
+    timeframe: "M15",
+    strategy: "Ruptura + retesteo",
+    analysis: "Rompimiento limpio de estructura y retesteo válido de zona institucional.",
   },
   {
-    id: "btcusd-1428",
-    symbol: "BTCUSD",
-    market: "Crypto",
-    tipo: "Compra",
-    entrada: "61520.00",
-    sl: "60780.00",
-    tp: "62880.00",
-    rr: "3.12",
-    estado: "Activa",
-    hora: "14:28",
-    session: "NY",
-    risk: "Alto",
-    probability: "92%",
-    analysis:
-      "Señal de compra con momentum claro tras soporte en 1H. Las velas muestran fuerza alcista y el riesgo está definido con disciplina.",
-    plan: "ELITE",
-    direction: "Compra",
-  },
-  {
-    id: "eurusd-1355",
+    id: "eurusd-02",
     symbol: "EURUSD",
     market: "Forex",
-    tipo: "Venta",
-    entrada: "1.07153",
-    sl: "1.07320",
-    tp: "1.06900",
-    rr: "1.80",
-    estado: "TP cerca",
-    hora: "13:55",
-    session: "Asia",
-    risk: "Medio",
-    probability: "79%",
-    analysis:
-      "La presión vendedora domina tras el rechazo en la resistencia. Se recomienda reducir tamaño si el precio llega a la zona clave.",
-    plan: "PRO",
     direction: "Venta",
+    entry: undefined,
+    stopLoss: undefined,
+    takeProfit: undefined,
+    riskReward: 0,
+    stateKey: "wait",
+    stateLabel: "🟡 ESPERA CONFIRMACIÓN",
+    stateNote: "Todavía no hay niveles completos de ejecución.",
+    statusRaw: "active",
+    time: "14:21",
+    minutesAgo: 17,
+    canEnter: false,
+    confidence: 74,
+    timeframe: "M5",
+    strategy: "Confirmación de momentum",
+    analysis: "Dirección probable bajista, pero falta confirmación de entrada y niveles finales.",
   },
   {
-    id: "gbpusd-1215",
+    id: "btcusd-03",
+    symbol: "BTCUSD",
+    market: "Crypto",
+    direction: "Compra",
+    entry: 61520,
+    stopLoss: 60780,
+    takeProfit: 62880,
+    riskReward: 1.84,
+    stateKey: "no-enter",
+    stateLabel: "🔴 YA NO ENTRAR",
+    stateNote: "Precio fuera de ventana óptima de entrada.",
+    statusRaw: "active",
+    time: "13:58",
+    minutesAgo: 43,
+    canEnter: false,
+    confidence: 81,
+    timeframe: "M15",
+    strategy: "Continuación de tendencia",
+    analysis: "La señal fue válida, pero el desplazamiento ya reduce relación riesgo/beneficio para nueva entrada.",
+  },
+  {
+    id: "gbpusd-04",
     symbol: "GBPUSD",
     market: "Forex",
-    tipo: "Venta",
-    entrada: "1.26840",
-    sl: "1.27200",
-    tp: "1.26200",
-    rr: "1.77",
-    estado: "Cerrada TP",
-    hora: "12:15",
-    session: "NY",
-    risk: "Alto",
-    probability: "95%",
-    analysis:
-      "Operación cerrada en ganancia tras objetivo alcanzado. La gestión siguió el plan y el precio respetó la estructura técnica.",
-    plan: "ELITE",
     direction: "Venta",
+    entry: 1.2684,
+    stopLoss: 1.272,
+    takeProfit: 1.262,
+    riskReward: 1.77,
+    stateKey: "closed",
+    stateLabel: "⚫ FINALIZADA",
+    stateNote: "Señal cerrada por objetivo o gestión.",
+    statusRaw: "triggered",
+    time: "12:15",
+    minutesAgo: 106,
+    canEnter: false,
+    confidence: 95,
+    timeframe: "M30",
+    strategy: "Rechazo en resistencia",
+    analysis: "Operación cerrada según plan. No corresponde una nueva entrada en esta señal.",
   },
 ];
 
-const categoryOptions = ["Todas", "Oro", "Forex", "Crypto"];
-const statusOptions = ["Todas", "Activas", "TP cerca", "Cerradas"];
-const sessionOptions = ["Todas", "Londres", "NY", "Asia"];
-const riskOptions = ["Todas", "Bajo", "Medio", "Alto"];
-const directionOptions = ["Todas", "Compra", "Venta"];
+const DEMO_LEVELS_BY_SYMBOL: Record<string, { entry: number; stopLoss: number; takeProfit: number; riskReward: number; direction: "Compra" | "Venta"; strategy: string; timeframe: string }> = {
+  XAUUSD: { entry: 2338.45, stopLoss: 2332.0, takeProfit: 2345.0, riskReward: 2.31, direction: "Compra", strategy: "Ruptura + retesteo", timeframe: "M15" },
+  EURUSD: { entry: 1.07153, stopLoss: 1.0732, takeProfit: 1.069, riskReward: 1.8, direction: "Venta", strategy: "Pullback de continuación", timeframe: "M5" },
+  GBPUSD: { entry: 1.2684, stopLoss: 1.272, takeProfit: 1.262, riskReward: 1.77, direction: "Venta", strategy: "Rechazo de resistencia", timeframe: "M15" },
+  USDJPY: { entry: 159.145, stopLoss: 159.46, takeProfit: 158.62, riskReward: 1.66, direction: "Venta", strategy: "Quiebre intradía", timeframe: "M15" },
+  AUDUSD: { entry: 0.68021, stopLoss: 0.6787, takeProfit: 0.68295, riskReward: 1.81, direction: "Compra", strategy: "Reanudación alcista", timeframe: "M15" },
+  NZDUSD: { entry: 0.61135, stopLoss: 0.60988, takeProfit: 0.61372, riskReward: 1.61, direction: "Compra", strategy: "Impulso sobre soporte", timeframe: "M15" },
+  BTCUSD: { entry: 61520, stopLoss: 60780, takeProfit: 62880, riskReward: 1.84, direction: "Compra", strategy: "Continuación de tendencia", timeframe: "M15" },
+};
+
+const STATE_PRIORITY: Record<SignalStateKey, number> = {
+  "can-enter": 0,
+  wait: 1,
+  "no-enter": 2,
+  closed: 3,
+};
+
+function parseNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.replace(/,/g, "").trim();
+    if (!normalized || normalized.toUpperCase() === "N/A") {
+      return undefined;
+    }
+
+    const parsed = Number(normalized);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
+function resolveSignalState(input: {
+  statusRaw: string;
+  entry?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  minutesAgo: number;
+}): { key: SignalStateKey; label: string; note: string; canEnter: boolean } {
+  const status = input.statusRaw.toLowerCase();
+  const hasFullLevels =
+    typeof input.entry === "number" &&
+    typeof input.stopLoss === "number" &&
+    typeof input.takeProfit === "number";
+
+  if (status.includes("closed") || status.includes("triggered") || status.includes("resolved")) {
+    return {
+      key: "closed",
+      label: "⚫ FINALIZADA",
+      note: "Señal cerrada por objetivo o gestión.",
+      canEnter: false,
+    };
+  }
+
+  if (!hasFullLevels) {
+    return {
+      key: "wait",
+      label: "🟡 ESPERA CONFIRMACIÓN",
+      note: "Faltan niveles completos para ejecutar.",
+      canEnter: false,
+    };
+  }
+
+  if (input.minutesAgo > 35) {
+    return {
+      key: "no-enter",
+      label: "🔴 YA NO ENTRAR",
+      note: "La ventana óptima de entrada ya pasó.",
+      canEnter: false,
+    };
+  }
+
+  return {
+    key: "can-enter",
+    label: "🟢 PUEDES ENTRAR",
+    note: "Entrada aún válida según plan.",
+    canEnter: true,
+  };
+}
+
+function mapExternalAlerts(rawAlerts: unknown[]): AlertSignal[] {
+  const now = Date.now();
+
+  return rawAlerts
+    .map((item, index) => {
+      const source = item as {
+        id?: string;
+        symbol?: string;
+        status?: string;
+        description?: string;
+        priority?: string;
+        timestamp?: Date | string | number;
+        data?: {
+          direction?: string;
+          entryPrice?: number;
+          stopLossPrice?: number;
+          takeProfitPrice?: number;
+          riskRewardRatio?: number;
+          timeframe?: string;
+          confidence?: number;
+          strategy?: string;
+        };
+      };
+
+      const timestamp = source.timestamp ? new Date(source.timestamp) : new Date(now - (index + 1) * 9 * 60000);
+      const minutesAgo = Math.max(1, Math.round((now - timestamp.getTime()) / 60000));
+      const symbol = source.symbol ?? `ALERTA-${index + 1}`;
+      const fallbackLevels = DEMO_LEVELS_BY_SYMBOL[symbol];
+
+      const entry = parseNumber(source.data?.entryPrice) ?? fallbackLevels?.entry;
+      const stopLoss = parseNumber(source.data?.stopLossPrice) ?? fallbackLevels?.stopLoss;
+      const takeProfit = parseNumber(source.data?.takeProfitPrice) ?? fallbackLevels?.takeProfit;
+      const riskReward = parseNumber(source.data?.riskRewardRatio) ?? fallbackLevels?.riskReward ?? 0;
+
+      const direction =
+        source.data?.direction?.toLowerCase() === "venta"
+          ? "Venta"
+          : source.data?.direction?.toLowerCase() === "compra"
+            ? "Compra"
+            : fallbackLevels?.direction ?? "Compra";
+      const state = resolveSignalState({
+        statusRaw: source.status ?? "active",
+        entry,
+        stopLoss,
+        takeProfit,
+        minutesAgo,
+      });
+
+      const market =
+        symbol === "XAUUSD"
+          ? "Oro"
+          : symbol.includes("BTC") || symbol.includes("ETH")
+            ? "Crypto"
+            : "Forex";
+
+      return {
+        id: source.id ?? `${symbol.toLowerCase()}-${index}`,
+        symbol,
+        market,
+        direction,
+        entry,
+        stopLoss,
+        takeProfit,
+        riskReward,
+        stateKey: state.key,
+        stateLabel: state.label,
+        stateNote: state.note,
+        statusRaw: source.status ?? "active",
+        time: timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+        minutesAgo,
+        canEnter: state.canEnter,
+        confidence: Number(source.data?.confidence ?? (source.priority === "critical" ? 90 : 78)),
+        timeframe: source.data?.timeframe ?? fallbackLevels?.timeframe ?? "M15",
+        strategy: source.data?.strategy ?? fallbackLevels?.strategy ?? "Gestión institucional",
+        analysis:
+          source.description ??
+          "Señal demo preparada para evaluación rápida del contexto y ejecución disciplinada.",
+      } satisfies AlertSignal;
+    })
+    .sort((a, b) => a.minutesAgo - b.minutesAgo);
+}
+
+function formatLevel(value?: number): string {
+  if (typeof value !== "number") {
+    return "Pendiente";
+  }
+
+  if (value >= 100) {
+    return value.toFixed(2);
+  }
+
+  return value.toFixed(5);
+}
 
 export default function AlertasPage() {
-  const [demoAlerts, setDemoAlerts] = useState(defaultDemoAlerts);
-  const [activeCategory, setActiveCategory] = useState("Todas");
-  const [status, setStatus] = useState("Todas");
-  const [search, setSearch] = useState("");
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [session, setSession] = useState("Todas");
-  const [risk, setRisk] = useState("Todas");
-  const [direction, setDirection] = useState("Todas");
-  const [rrMin, setRrMin] = useState("0");
-  const [selectedId, setSelectedId] = useState("");
+  const [alerts, setAlerts] = useState<AlertSignal[]>(DEFAULT_ALERTS);
+  const [selectedId, setSelectedId] = useState<string>(DEFAULT_ALERTS[0].id);
+  const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
+  const [symbolFilter, setSymbolFilter] = useState<string>("all");
+  const [search, setSearch] = useState<string>("");
 
-  // Load alerts from modules on mount
   useEffect(() => {
+    let mounted = true;
+
     const loadAlerts = async () => {
       try {
-        const alerts = await getAlerts(10);
-        if (alerts && alerts.length > 0) {
-          // Transform module alerts to component format
-          const transformedAlerts = alerts.map((alert: any, index: number) => ({
-            id: alert.id,
-            symbol: alert.symbol || "EURUSD",
-            market: alert.type === "signal" ? "Forex" : "General",
-            tipo: "Compra",
-            entrada: "N/A",
-            sl: "N/A",
-            tp: "N/A",
-            rr: "2.0",
-            estado: alert.status === "active" ? "Activa" : alert.status,
-            hora: new Date(alert.timestamp).toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            session: "General",
-            risk: alert.priority === "critical" || alert.priority === "high" ? "Alto" : alert.priority === "medium" ? "Medio" : "Bajo",
-            probability: "85%",
-            analysis: alert.description,
-            plan: "PRO",
-            direction: "Compra",
-          }));
-          setDemoAlerts(transformedAlerts);
-          if (transformedAlerts.length > 0) {
-            setSelectedId(transformedAlerts[0].id);
-          }
-        } else {
-          setDemoAlerts(defaultDemoAlerts);
-          setSelectedId(defaultDemoAlerts[0]?.id ?? "");
+        const result = await getAlerts(16);
+        if (!mounted || !Array.isArray(result) || result.length === 0) {
+          return;
         }
-      } catch (error) {
-        console.log("Usando datos demo (módulos no disponibles)");
-        setDemoAlerts(defaultDemoAlerts);
-        setSelectedId(defaultDemoAlerts[0]?.id ?? "");
+
+        const mapped = mapExternalAlerts(result);
+        if (mapped.length === 0) {
+          return;
+        }
+
+        setAlerts(mapped);
+        setSelectedId(mapped[0].id);
+      } catch {
+        // Keep default demo data when module data is not available.
       }
     };
 
     loadAlerts();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  const symbolOptions = useMemo(() => {
+    const symbols = Array.from(new Set(alerts.map((item) => item.symbol)));
+    return ["all", ...symbols];
+  }, [alerts]);
+
   const filteredAlerts = useMemo(() => {
-    const rrValue = parseFloat(rrMin) || 0;
-    const statusKey = status === "Activas" ? "Activa" : status;
+    return alerts.filter((item) => {
+      const matchesState = statusFilter === "all" ? true : item.stateKey === statusFilter;
+      const matchesSymbol = symbolFilter === "all" ? true : item.symbol === symbolFilter;
+      const matchesSearch =
+        search.trim().length === 0
+          ? true
+          : `${item.symbol} ${item.market}`.toLowerCase().includes(search.toLowerCase());
 
-    return demoAlerts.filter((alert) => {
-      const matchesCategory = activeCategory === "Todas" || alert.market === activeCategory;
-      const matchesStatus = status === "Todas" || alert.estado.includes(statusKey);
-      const matchesSearch = alert.symbol.toLowerCase().includes(search.toLowerCase());
-      const matchesSession = session === "Todas" || alert.session === session;
-      const matchesRisk = risk === "Todas" || alert.risk === risk;
-      const matchesDirection = direction === "Todas" || alert.direction === direction;
-      const matchesRr = parseFloat(alert.rr) >= rrValue;
-
-      return (
-        matchesCategory &&
-        matchesStatus &&
-        matchesSearch &&
-        matchesSession &&
-        matchesRisk &&
-        matchesDirection &&
-        matchesRr
-      );
+      return matchesState && matchesSymbol && matchesSearch;
     });
-  }, [activeCategory, status, search, session, risk, direction, rrMin]);
+  }, [alerts, search, statusFilter, symbolFilter]);
 
-  const selectedAlert = filteredAlerts.find((alert) => alert.id === selectedId) ?? filteredAlerts[0] ?? demoAlerts[0];
+  const protagonist = useMemo(() => {
+    if (filteredAlerts.length === 0) {
+      return undefined;
+    }
 
-  const handleClear = () => {
-    setActiveCategory("Todas");
-    setStatus("Todas");
-    setSearch("");
-    setSession("Todas");
-    setRisk("Todas");
-    setDirection("Todas");
-    setRrMin("0");
-    setAdvancedOpen(false);
-  };
+    return [...filteredAlerts].sort((a, b) => {
+      if (STATE_PRIORITY[a.stateKey] !== STATE_PRIORITY[b.stateKey]) {
+        return STATE_PRIORITY[a.stateKey] - STATE_PRIORITY[b.stateKey];
+      }
+      return a.minutesAgo - b.minutesAgo;
+    })[0];
+  }, [filteredAlerts]);
+
+  const selectedAlert = useMemo(() => {
+    const picked = filteredAlerts.find((item) => item.id === selectedId);
+    return picked ?? protagonist;
+  }, [filteredAlerts, protagonist, selectedId]);
+
+  const summary = useMemo(() => {
+    const canEnter = filteredAlerts.filter((item) => item.stateKey === "can-enter").length;
+    const waiting = filteredAlerts.filter((item) => item.stateKey === "wait").length;
+    const noEnter = filteredAlerts.filter((item) => item.stateKey === "no-enter").length;
+    const avgConfidence =
+      filteredAlerts.length === 0
+        ? 0
+        : Math.round(filteredAlerts.reduce((acc, item) => acc + item.confidence, 0) / filteredAlerts.length);
+
+    return { canEnter, waiting, noEnter, avgConfidence };
+  }, [filteredAlerts]);
 
   return (
-    <main style={{ minHeight: '100vh', backgroundColor: colors.black.pure, color: colors.white.pure }}>
-      <div style={{ marginLeft: 'auto', marginRight: 'auto', maxWidth: '80rem', paddingLeft: spacing[24], paddingRight: spacing[24], paddingTop: spacing[40], paddingBottom: spacing[40] }}>
-        <motion.section
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            marginBottom: spacing[40],
-            overflow: 'hidden',
-            borderRadius: borders.radius.xl,
-            border: `1px solid rgba(255, 255, 255, 0.1)`,
-            background: `linear-gradient(135deg, rgba(7, 10, 15, 1) 0%, rgba(7, 9, 15, 1) 50%, rgba(14, 17, 24, 1) 100%)`,
-            padding: spacing[32],
-            boxShadow: shadows.glow.lg,
-          }}
-        >
-          <div style={{ display: 'grid', gap: spacing[32], gridTemplateColumns: 'minmax(0, 1.5fr) minmax(0, 0.95fr)', gridAutoRows: 'auto' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[24] }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: spacing[12] }}>
-                <span style={{ borderRadius: '9999px', backgroundColor: `rgba(212, 175, 55, 0.1)`, paddingLeft: spacing[16], paddingRight: spacing[16], paddingTop: spacing[8], paddingBottom: spacing[8], fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold, textTransform: 'uppercase', letterSpacing: '0.22em', color: colors.gold.primary }}>PRO ACTIVO</span>
-                <span style={{ borderRadius: '9999px', backgroundColor: `rgba(255, 255, 255, 0.05)`, paddingLeft: spacing[16], paddingRight: spacing[16], paddingTop: spacing[8], paddingBottom: spacing[8], fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold, textTransform: 'uppercase', letterSpacing: '0.22em', color: colors.white.secondary }}>SALA EN VIVO</span>
-                <span style={{ borderRadius: '9999px', backgroundColor: 'rgba(11, 15, 22, 1)', border: `1px solid rgba(255, 255, 255, 0.1)`, paddingLeft: spacing[16], paddingRight: spacing[16], paddingTop: spacing[8], paddingBottom: spacing[8], fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold, textTransform: 'uppercase', letterSpacing: '0.22em', color: colors.white.secondary }}>RIESGO CONTROLADO</span>
-                <span style={{ borderRadius: '9999px', backgroundColor: 'rgba(17, 21, 31, 1)', border: `1px solid rgba(212, 175, 55, 0.2)`, paddingLeft: spacing[16], paddingRight: spacing[16], paddingTop: spacing[8], paddingBottom: spacing[8], fontSize: typography.sizes.xs, fontWeight: typography.weights.semibold, textTransform: 'uppercase', letterSpacing: '0.22em', color: colors.gold.primary }}>DEMO DATA</span>
+    <main className="min-h-screen bg-[#030303] px-4 py-8 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <section className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#0B0B0B] to-[#0E1622] p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
+            <span className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1">Sala en vivo</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">Modo premium</span>
+          </div>
+          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Alertas en Vivo</h1>
+          <p className="mt-2 max-w-3xl text-sm text-white/70 sm:text-base">
+            En menos de 2 segundos identifica la señal activa, si aún puedes entrar y los niveles exactos de ejecución.
+          </p>
+
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/65">Puedes entrar</p>
+                <Signal className="h-4 w-4 text-emerald-300" />
               </div>
-              <div style={{ maxWidth: '48rem', display: 'flex', flexDirection: 'column', gap: spacing[16] }}>
-                <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', letterSpacing: '0.32em', color: `rgba(212, 175, 55, 0.7)` }}>Sala de alertas premium</p>
-                <h1 style={{ fontSize: '3.75rem', fontWeight: typography.weights.bold, letterSpacing: '-0.02em', color: colors.white.pure, lineHeight: 1.15 }}>Sala de Alertas en Vivo</h1>
-                <p style={{ maxWidth: '42rem', fontSize: typography.sizes.lg, lineHeight: 1.8, color: colors.white.secondary }}>
-                  Miembro PRO activo: acceso habilitado a señales premium. Recibe entradas, zonas de protección, objetivos y seguimiento operativo en una sala privada.
+              <p className="mt-3 text-3xl font-bold text-emerald-300">{summary.canEnter}</p>
+            </CARVIPIXCard>
+            <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/65">Espera confirmación</p>
+                <Clock3 className="h-4 w-4 text-amber-300" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-amber-300">{summary.waiting}</p>
+            </CARVIPIXCard>
+            <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/65">Ya no entrar</p>
+                <ShieldCheck className="h-4 w-4 text-rose-300" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-rose-300">{summary.noEnter}</p>
+            </CARVIPIXCard>
+            <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/65">Confianza media</p>
+                <Gauge className="h-4 w-4 text-[#D4AF37]" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-[#D4AF37]">{summary.avgConfidence}%</p>
+            </CARVIPIXCard>
+          </div>
+        </section>
+
+        {protagonist ? (
+          <section className="rounded-2xl border border-[#D4AF37]/35 bg-[#0A131F] p-5 sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">Alerta protagonista</p>
+            <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold sm:text-3xl">
+                  {protagonist.symbol} · {protagonist.direction}
+                </h2>
+                <p className="mt-1 text-sm text-white/65">
+                  {protagonist.time} · hace {protagonist.minutesAgo} min · {protagonist.stateLabel}
                 </p>
-                <p style={{ marginTop: spacing[8], fontSize: typography.sizes.xs, color: colors.white.secondary }}>Entrada = precio sugerido | Protección (SL) = límite de riesgo | Objetivo (TP) = zona de ganancia</p>
               </div>
             </div>
 
-            <CARVIPIXCard variant="elevated" padding="24">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[12] }}>
-                <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', letterSpacing: '0.24em', color: colors.gold.primary }}>Control de sala</p>
-                <h2 style={{ marginTop: spacing[12], fontSize: '1.5rem', fontWeight: typography.weights.semibold, color: colors.white.pure }}>Equipo CARVIPIX monitoreando</h2>
-                <p style={{ marginTop: spacing[12], fontSize: typography.sizes.sm, lineHeight: 1.6, color: colors.white.secondary }}>
-                  Analistas, traders y gestión de riesgo vigilan cada señal, actualizando los parámetros en vivo con disciplina.
-                </p>
-
-                <div style={{ marginTop: spacing[24], display: 'grid', gap: spacing[16], gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
-                  <div style={{ borderRadius: borders.radius.lg, backgroundColor: `rgba(11, 17, 26, 0.9)`, padding: spacing[16] }}>
-                    <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>Sesión</p>
-                    <p style={{ marginTop: spacing[8], fontSize: typography.sizes.lg, fontWeight: typography.weights.semibold, color: colors.white.pure }}>Londres • NY</p>
-                  </div>
-                  <div style={{ borderRadius: borders.radius.lg, backgroundColor: `rgba(11, 17, 26, 0.9)`, padding: spacing[16] }}>
-                    <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', letterSpacing: '0.2em', color: colors.white.secondary }}>Riesgo</p>
-                    <p style={{ marginTop: spacing[8], fontSize: typography.sizes.lg, fontWeight: typography.weights.semibold, color: colors.gold.primary }}>Controlado</p>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: spacing[24], borderRadius: borders.radius.lg, border: `1px solid rgba(212, 175, 55, 0.2)`, backgroundColor: `rgba(10, 15, 22, 0.9)`, padding: spacing[16] }}>
-                  <p style={{ fontSize: typography.sizes.sm, color: colors.white.secondary }}>Visión rápida</p>
-                  <ul style={{ marginTop: spacing[16], display: 'flex', flexDirection: 'column', gap: spacing[12], fontSize: typography.sizes.sm, color: colors.white.secondary }}>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[12] }}>
-                      <span style={{ marginTop: spacing[4], minWidth: '10px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: colors.gold.primary, flexShrink: 0 }} />
-                      Señales con objetivos y gestión en una sola vista.
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[12] }}>
-                      <span style={{ marginTop: spacing[4], minWidth: '10px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: colors.gold.primary, flexShrink: 0 }} />
-                      Panel de detalle operativo para la alerta seleccionada.
-                    </li>
-                    <li style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[12] }}>
-                      <span style={{ marginTop: spacing[4], minWidth: '10px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: colors.gold.primary, flexShrink: 0 }} />
-                      Soporte premium para decisiones basadas en data demo.
-                    </li>
-                  </ul>
-                </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Entrada</p>
+                <p className="mt-1 text-lg font-semibold text-white">{formatLevel(protagonist.entry)}</p>
               </div>
-            </CARVIPIXCard>
-          </div>
-        </motion.section>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">TP</p>
+                <p className="mt-1 text-lg font-semibold text-emerald-300">{formatLevel(protagonist.takeProfit)}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">SL</p>
+                <p className="mt-1 text-lg font-semibold text-rose-300">{formatLevel(protagonist.stopLoss)}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Riesgo/Beneficio</p>
+                <p className="mt-1 text-lg font-semibold text-[#D4AF37]">
+                  {protagonist.riskReward > 0 ? protagonist.riskReward.toFixed(2) : "Pendiente"}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-xl border border-[#D4AF37]/45 bg-[#D4AF37] px-4 py-3 text-sm font-semibold text-black transition hover:brightness-105"
+                onClick={() => setSelectedId(protagonist.id)}
+              >
+                Ver señal
+              </button>
+            </div>
+          </section>
+        ) : null}
 
-        <div style={{ display: 'grid', gap: spacing[24], gridTemplateColumns: 'minmax(0, 1.55fr) minmax(0, 0.95fr)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[24] }}>
+        <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+          <section className="space-y-4">
             <AlertFilters
-              categories={categoryOptions}
-              activeCategory={activeCategory}
-              status={status}
               search={search}
-              advancedOpen={advancedOpen}
-              session={session}
-              risk={risk}
-              direction={direction}
-              rrMin={rrMin}
-              onCategoryChange={setActiveCategory}
+              selectedSymbol={symbolFilter}
+              selectedStatus={statusFilter}
+              symbolOptions={symbolOptions}
               onSearchChange={setSearch}
-              onStatusChange={setStatus}
-              onToggleAdvanced={() => setAdvancedOpen((value) => !value)}
-              onSessionChange={setSession}
-              onRiskChange={setRisk}
-              onDirectionChange={setDirection}
-              onRrMinChange={setRrMin}
-              onClear={handleClear}
+              onSymbolChange={setSymbolFilter}
+              onStatusChange={setStatusFilter}
+              onClear={() => {
+                setSearch("");
+                setSymbolFilter("all");
+                setStatusFilter("all");
+              }}
             />
 
-            <AlertStats />
-
             <AlertsTable alerts={filteredAlerts} selectedId={selectedId} onSelect={setSelectedId} />
-          </div>
+          </section>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[24] }}>
-            <AlertDetails alert={selectedAlert} />
-
-            <CARVIPIXCard variant="elevated" padding="24">
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing[16] }}>
-                <div>
-                  <p style={{ fontSize: typography.sizes.sm, textTransform: 'uppercase', letterSpacing: '0.24em', color: colors.gold.primary }}>Gestión de sala</p>
-                  <h3 style={{ marginTop: spacing[12], fontSize: '1.5rem', fontWeight: typography.weights.semibold, color: colors.white.pure }}>Seguimiento premium</h3>
-                </div>
-                <span style={{ borderRadius: '9999px', backgroundColor: `rgba(212, 175, 55, 0.1)`, paddingLeft: spacing[12], paddingRight: spacing[12], paddingTop: spacing[4], paddingBottom: spacing[4], fontSize: typography.sizes.xs, textTransform: 'uppercase', letterSpacing: '0.24em', color: colors.gold.primary, whiteSpace: 'nowrap' }}>Activo</span>
-              </div>
-
-              <p style={{ marginTop: spacing[16], fontSize: typography.sizes.sm, lineHeight: 1.7, color: colors.white.secondary }}>
-                El equipo revisa cada señal, ajusta niveles y mantiene el control de riesgo en todo momento. Este panel complementa el detalle operativo.
-              </p>
-
-              <div style={{ marginTop: spacing[24], display: 'grid', gap: spacing[12], gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))' }}>
-                <div style={{ borderRadius: borders.radius.lg, backgroundColor: `rgba(0, 0, 0, 0.2)`, padding: spacing[16] }}>
-                  <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', color: colors.white.secondary }}>Actualizaciones</p>
-                  <p style={{ marginTop: spacing[8], fontSize: typography.sizes.lg, fontWeight: typography.weights.semibold, color: colors.white.pure }}>24/7</p>
-                </div>
-                <div style={{ borderRadius: borders.radius.lg, backgroundColor: `rgba(0, 0, 0, 0.2)`, padding: spacing[16] }}>
-                  <p style={{ fontSize: typography.sizes.xs, textTransform: 'uppercase', color: colors.white.secondary }}>Modo</p>
-                  <p style={{ marginTop: spacing[8], fontSize: typography.sizes.lg, fontWeight: typography.weights.semibold, color: colors.gold.primary }}>Demo premium</p>
-                </div>
-              </div>
-            </CARVIPIXCard>
-
-            <AlertHistory />
-          </div>
-        </div>
-
-        <div style={{ marginTop: spacing[24], borderRadius: borders.radius.lg, border: `1px solid rgba(255, 255, 255, 0.1)`, backgroundColor: `rgba(10, 16, 23, 0.9)`, padding: spacing[24], fontSize: typography.sizes.sm, color: colors.white.secondary }}>
-          <p style={{ maxWidth: '48rem', lineHeight: 1.7 }}>
-            Operar mercados financieros implica riesgo. Las señales tienen fines educativos e informativos y no constituyen asesoramiento financiero. Consulta siempre tu propio criterio antes de tomar decisiones.
-          </p>
+          <AlertDetails alert={selectedAlert} />
         </div>
       </div>
     </main>

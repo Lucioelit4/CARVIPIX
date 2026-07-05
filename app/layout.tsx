@@ -31,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${manrope.variable} ${geistMono.variable} ${cormorant.variable}`}>
-      <body className="min-h-screen flex flex-col bg-[#05070b] text-[#f5f1e8]">
+      <body className="min-h-screen flex flex-col bg-[#030303] text-[#FFFFFF]">
         <AppShell>{children}</AppShell>
       </body>
     </html>

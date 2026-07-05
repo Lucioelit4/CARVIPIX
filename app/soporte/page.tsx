@@ -142,9 +142,9 @@ export default function SoportePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-white">
+    <div className="min-h-screen bg-[#030303] text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16">
+      <div className="bg-gradient-to-b from-[#0B0B0B] to-[#030303] border-b border-white/5 px-4 py-12 sm:py-16">
         <div className="max-w-6xl mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -194,7 +194,7 @@ export default function SoportePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-[#D4AF37]/10 to-[#0B111A] border border-[#D4AF37]/30 rounded-2xl p-6 mb-12 flex items-center gap-6"
+          className="bg-gradient-to-br from-[#D4AF37]/10 to-[#0B0B0B] border border-[#D4AF37]/30 rounded-2xl p-6 mb-12 flex items-center gap-6"
         >
           <div className="flex-shrink-0">
             <div className="w-16 h-16 rounded-full bg-[#D4AF37]/20 flex items-center justify-center">
@@ -217,7 +217,7 @@ export default function SoportePage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-3 bg-[#0B111A] border border-white/10 rounded-2xl p-6 flex flex-col h-[600px]"
+            className="lg:col-span-3 bg-[#0B0B0B] border border-white/10 rounded-2xl p-6 flex flex-col h-[600px]"
           >
             <div className="mb-6 pb-6 border-b border-white/10">
               <h2 className="text-2xl font-bold mb-1">Asistente CARVIPIX</h2>
@@ -241,7 +241,7 @@ export default function SoportePage() {
                   <div
                     className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
                       msg.role === 'user'
-                        ? 'bg-[#D4AF37] text-[#05070B] rounded-br-none'
+                        ? 'bg-[#D4AF37] text-[#030303] rounded-br-none'
                         : 'bg-[#1a2535] text-white border border-white/10 rounded-bl-none'
                     }`}
                   >
@@ -264,7 +264,7 @@ export default function SoportePage() {
               />
               <button
                 onClick={handleSendMessage}
-                className="bg-[#D4AF37] text-[#05070B] p-3 rounded-lg hover:bg-[#E5C158] transition-all font-bold"
+                className="bg-[#D4AF37] text-[#030303] p-3 rounded-lg hover:bg-[#E5C158] transition-all font-bold"
               >
                 <Send size={20} />
               </button>
@@ -278,7 +278,7 @@ export default function SoportePage() {
             transition={{ delay: 0.2 }}
             className="lg:col-span-1"
           >
-            <div className="bg-[#0B111A] border border-white/10 rounded-2xl p-6">
+            <div className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-[#D4AF37]" />
                 Temas rápidos
@@ -311,7 +311,7 @@ export default function SoportePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12"
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 mb-12"
         >
           <div className="flex items-center gap-2 mb-6">
             <Ticket className="w-5 h-5 text-[#D4AF37]" />
@@ -448,7 +448,7 @@ export default function SoportePage() {
 
           <button
             onClick={handleCreateTicket}
-            className="bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
+            className="bg-[#D4AF37] text-[#030303] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
             disabled={Object.keys(ticketErrors).length > 0}
           >
             Crear ticket demo
@@ -491,7 +491,7 @@ export default function SoportePage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.05 }}
-                className="bg-[#0B111A] border border-white/10 rounded-lg p-6"
+                className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <IconComponent className="w-5 h-5 text-[#D4AF37]" />
@@ -508,7 +508,7 @@ export default function SoportePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-r from-[#D4AF37]/10 to-[#0B111A] border border-[#D4AF37]/30 rounded-2xl p-8 mb-8 text-center"
+          className="bg-gradient-to-r from-[#D4AF37]/10 to-[#0B0B0B] border border-[#D4AF37]/30 rounded-2xl p-8 mb-8 text-center"
         >
           <h3 className="text-2xl font-bold mb-2">¿Prefieres contacto directo?</h3>
           <p className="text-white/70 mb-4">

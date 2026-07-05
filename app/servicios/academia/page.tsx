@@ -64,7 +64,7 @@ export default function ServiciosAcademiaPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
         <BackToDashboard />
 
@@ -75,7 +75,7 @@ export default function ServiciosAcademiaPage() {
           transition={{ duration: 0.6 }}
           className="mb-12"
         >
-          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#0B1220] to-[#05070B] p-8 sm:p-12 shadow-2xl shadow-black/40">
+          <div className="rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#0B1220] to-[#030303] p-8 sm:p-12 shadow-2xl shadow-black/40">
             <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
               {/* Contenido Izquierdo */}
               <div>
@@ -94,9 +94,6 @@ export default function ServiciosAcademiaPage() {
                     className="rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#F5DEB3] shadow-lg shadow-[#D4AF37]/30"
                   >
                     Únete a la Lista de Espera
-                  </button>
-                  <button className="rounded-lg border-2 border-[#D4AF37]/40 bg-white/5 px-8 py-4 font-semibold text-white transition hover:border-[#D4AF37] hover:bg-[#D4AF37]/5">
-                    Ver Roadmap
                   </button>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { getAuthSessionSnapshot, getCurrentRole, logAccessEvent } from '@/app/lib/auth/session';
 
 /**
@@ -8,10 +8,7 @@ import { getAuthSessionSnapshot, getCurrentRole, logAccessEvent } from '@/app/li
  * Revisa la sesión admin guardada en localStorage
  */
 export function useIsAdmin() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
+  const isAdmin = useMemo(() => {
     const snapshot = getAuthSessionSnapshot();
     const session = snapshot.session;
 
@@ -19,24 +16,18 @@ export function useIsAdmin() {
       if (snapshot.status === 'expired') {
         logAccessEvent('admin_session_expired', 'La sesión administrativa expiró en la validación del menú.');
       }
-      setIsAdmin(false);
-      setIsLoading(false);
-      return;
+      return false;
     }
 
     if (session.role !== 'admin') {
       if (getCurrentRole() !== 'invitado') {
         logAccessEvent('admin_access_denied', 'Rol sin permisos de administración.');
       }
-      setIsAdmin(false);
-      setIsLoading(false);
-      return;
+      return false;
     }
 
-    setIsAdmin(true);
-
-    setIsLoading(false);
+    return true;
   }, []);
 
-  return { isAdmin, isLoading };
+  return { isAdmin, isLoading: false };
 }

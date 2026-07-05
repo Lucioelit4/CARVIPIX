@@ -19,6 +19,7 @@ import AdminBot from './components/AdminBot';
 import AdminBacktesting from './components/AdminBacktesting';
 import AdminDataHealth from './components/AdminDataHealth';
 import { ToastProvider } from './components/Toast';
+import { CARVIPIXButton } from '../design-system';
 
 type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
@@ -41,7 +42,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
     if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
-      setActiveTab(tabParam);
+      queueMicrotask(() => {
+        setActiveTab(tabParam);
+      });
     }
   }, [searchParams]);
 
@@ -71,21 +74,17 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   return (
     <ToastProvider>
-      <main className="min-h-screen bg-[#05070B] text-white">
+      <main className="min-h-screen bg-[#030303] text-white">
       {/* Header */}
-      <header className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] sticky top-0 z-40">
+      <header className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-6 py-4 sm:px-8 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-[#D4AF37]">CARVIPIX Admin</h1>
             <p className="text-xs text-white/50 mt-1">Panel administrativo privado</p>
           </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 transition"
-          >
-            <LogOut className="w-4 h-4" />
+          <CARVIPIXButton onClick={onLogout} variant="ghost" size="sm" leftIcon={<LogOut className="w-4 h-4" />}>
             Cerrar sesión
-          </button>
+          </CARVIPIXButton>
         </div>
       </header>
 

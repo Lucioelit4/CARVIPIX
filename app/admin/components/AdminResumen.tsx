@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Users, CheckCircle, Clock, DollarSign, AlertCircle, HelpCircle } from 'lucide-react';
+import { CARVIPIXBadge, CARVIPIXCard } from '@/app/design-system';
 
 export default function AdminResumen() {
   const stats = [
@@ -76,19 +77,18 @@ export default function AdminResumen() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="rounded-lg border border-white/10 bg-white/5 p-5 hover:border-white/20 transition"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`rounded-lg ${stat.bg} p-3`}>
-                  <Icon className={`w-5 h-5 ${stat.color}`} />
+              <CARVIPIXCard variant="admin" padding="16" hover={false}>
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`rounded-lg ${stat.bg} p-3`}>
+                    <Icon className={`w-5 h-5 ${stat.color}`} />
+                  </div>
+                  <CARVIPIXBadge variant="admin">Demo</CARVIPIXBadge>
                 </div>
-                <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded">
-                  Demo
-                </span>
-              </div>
-              <p className="text-white/70 text-sm mb-1">{stat.label}</p>
-              <p className="text-2xl font-bold text-white mb-2">{stat.value}</p>
-              <p className="text-xs text-white/50">{stat.change}</p>
+                <p className="text-white/70 text-sm mb-1">{stat.label}</p>
+                <p className="text-2xl font-bold text-white mb-2">{stat.value}</p>
+                <p className="text-xs text-white/50">{stat.change}</p>
+              </CARVIPIXCard>
             </motion.div>
           );
         })}
@@ -99,10 +99,11 @@ export default function AdminResumen() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-6"
+        className=""
       >
-        <h3 className="text-lg font-bold mb-4">Actividad reciente</h3>
-        <div className="space-y-3">
+        <CARVIPIXCard variant="info" padding="24" hover={false}>
+          <h3 className="text-lg font-bold mb-4">Actividad reciente</h3>
+          <div className="space-y-3">
           {[
             { time: '14:32', action: 'Nueva solicitud de capital de usuario #1247', status: 'pending' },
             { time: '13:28', action: 'Pago demo procesado: Bot CARVIPIX Pro', status: 'completed' },
@@ -115,16 +116,13 @@ export default function AdminResumen() {
               <div className="flex-1">
                 <p className="text-sm text-white">{item.action}</p>
               </div>
-              <div className={`text-xs px-2 py-1 rounded ${
-                item.status === 'pending' ? 'bg-yellow-500/10 text-yellow-400' :
-                item.status === 'completed' ? 'bg-green-500/10 text-green-400' :
-                'bg-blue-500/10 text-blue-400'
-              }`}>
+              <CARVIPIXBadge variant={item.status === 'pending' ? 'warning' : item.status === 'completed' ? 'success' : 'info'}>
                 {item.status === 'pending' ? 'Pendiente' : item.status === 'completed' ? 'Completado' : 'Abierto'}
-              </div>
+              </CARVIPIXBadge>
             </div>
           ))}
-        </div>
+          </div>
+        </CARVIPIXCard>
       </motion.div>
     </div>
   );

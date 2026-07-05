@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function LegalPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
         <Link
           href="/"
@@ -20,7 +20,7 @@ export default function LegalPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-white/10 bg-[#0B111A]/80 p-8 backdrop-blur-sm"
+          className="rounded-2xl border border-white/10 bg-[#0B0B0B]/80 p-8 backdrop-blur-sm"
         >
           <h1 className="text-4xl font-bold text-[#D4AF37] mb-2">Aviso Legal</h1>
           <p className="text-zinc-400 mb-8">Última actualización: 2 de julio de 2026</p>
@@ -65,7 +65,7 @@ export default function LegalPage() {
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">4. Datos Demo</h2>
               <p>
-                Parte del contenido de CARVIPIX utiliza datos simulados o "demo" claramente identificados. Estos datos:
+                Parte del contenido de CARVIPIX utiliza datos simulados o &quot;demo&quot; claramente identificados. Estos datos:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>NO representan datos reales de mercado</li>

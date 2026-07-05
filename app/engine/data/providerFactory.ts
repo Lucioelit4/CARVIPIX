@@ -1,0 +1,84 @@
+import { DataProvider } from './dataProvider';
+import { getDemoDataSource } from './demoDataSource';
+import { TwelveDataProvider } from './twelveDataProvider';
+import {
+  BrokerProviderId,
+  ProviderSelectionConfig,
+  ProviderResolution,
+} from '../types/brokerProvider';
+
+type ProviderFactoryFn = (config: ProviderSelectionConfig) => DataProvider;
+
+const providerFactories: Partial<Record<BrokerProviderId, ProviderFactoryFn>> = {
+  demo: () => getDemoDataSource(),
+  twelve_data: (config) => {
+    const provider = new TwelveDataProvider(config.assets, config.timeframes, {
+      provider: 'twelve_data',
+      ...config.realConfig,
+    });
+    return provider;
+  },
+};
+
+/**
+ * Permite registrar nuevos proveedores sin modificar el engine.
+ */
+export function registerProviderFactory(
+  providerId: BrokerProviderId,
+  factory: ProviderFactoryFn
+): void {
+  providerFactories[providerId] = factory;
+}
+
+function resolveFactory(providerId: BrokerProviderId): ProviderFactoryFn {
+  const factory = providerFactories[providerId];
+  if (!factory) {
+    throw new Error(
+      `No provider factory registered for '${providerId}'. Register it with registerProviderFactory().`
+    );
+  }
+  return factory;
+}
+
+/**
+ * Crea y conecta proveedor siguiendo politica de fallback.
+ */
+export async function createDataProvider(
+  config: ProviderSelectionConfig
+): Promise<{ provider: DataProvider; resolution: ProviderResolution }> {
+  const fallbackPolicy = config.fallbackPolicy ?? 'fallback-demo';
+  const requested = config.preferred;
+
+  const preferredFactory = resolveFactory(requested);
+  const preferredProvider = preferredFactory(config);
+
+  try {
+    await preferredProvider.connect();
+    return {
+      provider: preferredProvider,
+      resolution: {
+        selected: requested,
+        requested,
+        usedFallback: false,
+      },
+    };
+  } catch (error) {
+    if (fallbackPolicy !== 'fallback-demo' || requested === 'demo') {
+      throw error;
+    }
+
+    const fallbackFactory = resolveFactory('demo');
+    const fallbackProvider = fallbackFactory({ ...config, preferred: 'demo' });
+    await fallbackProvider.connect();
+
+    return {
+      provider: fallbackProvider,
+      resolution: {
+        selected: 'demo',
+        requested,
+        usedFallback: true,
+        fallbackReason: error instanceof Error ? error.message : 'Unknown provider connection error',
+      },
+    };
+  }
+}

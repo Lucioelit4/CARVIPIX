@@ -34,7 +34,7 @@ export default function TradingViewNews() {
   }, []);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-5 shadow-xl shadow-[#D4AF37]/10">
+    <div className="rounded-2xl border border-white/10 bg-[#121212]/90 p-5 shadow-xl shadow-[#D4AF37]/10">
       <h2 className="mb-4 text-xl font-bold text-[#D4AF37]">Noticias del mercado</h2>
       <div ref={containerRef} className="min-h-[560px] w-full" />
     </div>

@@ -1,0 +1,40 @@
+================================================================================
+CHAT 4 - FRONTEND SPECIALIST
+================================================================================
+
+RESPONSABILIDAD: UI/UX, Componentes React, Visualización, Admin Panel
+
+CONTEXTO ACTUAL:
+- Next.js 16.2.9 (Turbopack)
+- React 19.2.4 (strict mode)
+- 39 rutas static + 1 dynamic (/api/datasets)
+- Admin panel en /app/admin/
+- Alertas visualización en /app/alertas/
+
+FICHEROS A EDITAR:
+- /app/components/** (componentes compartidos)
+- /app/alertas/components/** (visualización alertas)
+- /app/admin/components/** (panel admin)
+- /app/globals.css (estilos globales)
+- /app/layout.tsx (layout root)
+
+TAREAS TÍPICAS:
+[ ] Mejorar UI del dashboard de alertas
+[ ] Agregar gráficos de performance
+[ ] Optimizar responsive design
+[ ] Implementar dark mode
+[ ] Agregar animaciones trades en vivo
+[ ] Refactor componentes admin
+
+NOTAS IMPORTANTES:
+- NO tocar /app/engine/** (backend motor)
+- Vercel auto-deploy en push a GitHub
+- TypeScript strict mode obligatorio
+- CSS modules preferred para componentes
+
+ESTADO BUILD: ✓ PASS
+
+PRÓXIMO PASO:
+npm run dev → Revisar UI en localhost:3000
+
+================================================================================

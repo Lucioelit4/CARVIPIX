@@ -44,7 +44,7 @@ export default function PlansModal({ open, onClose }: Props) {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-[#10141D]/90 p-5">
+          <div className="rounded-xl border border-white/10 bg-[#121212]/90 p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#D4AF37]">Plan Starter</p>
@@ -77,7 +77,7 @@ export default function PlansModal({ open, onClose }: Props) {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#10141D]/90 p-5">
+          <div className="rounded-xl border border-white/10 bg-[#121212]/90 p-5">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#D4AF37]">Plan Elite</p>

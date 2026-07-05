@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo } from "react";
@@ -265,7 +266,7 @@ export default function AnalisisPage() {
   }, [searchTerm, categoryFilter, resultFilter]);
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white p-6">
+    <main className="min-h-screen bg-[#030303] text-white p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Análisis Diario</h1>
@@ -282,7 +283,7 @@ export default function AnalisisPage() {
           placeholder="Busca por activo, título, sesión o tipo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-[#0B111A] border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none transition"
+          className="w-full bg-[#0B0B0B] border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] focus:outline-none transition"
         />
       </div>
 
@@ -299,7 +300,7 @@ export default function AnalisisPage() {
                 className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${
                   categoryFilter === cat
                     ? "bg-[#D4AF37] text-black"
-                    : "bg-[#0B111A] border border-white/10 text-white hover:border-[#D4AF37]/50"
+                    : "bg-[#0B0B0B] border border-white/10 text-white hover:border-[#D4AF37]/50"
                 }`}
               >
                 {cat}
@@ -319,7 +320,7 @@ export default function AnalisisPage() {
                 className={`px-4 py-2 rounded-lg transition text-sm font-semibold ${
                   resultFilter === res
                     ? "bg-[#D4AF37] text-black"
-                    : "bg-[#0B111A] border border-white/10 text-white hover:border-[#D4AF37]/50"
+                    : "bg-[#0B0B0B] border border-white/10 text-white hover:border-[#D4AF37]/50"
                 }`}
               >
                 {res}
@@ -345,7 +346,7 @@ export default function AnalisisPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() => setSelectedAnalysis(analysis)}
-            className="rounded-lg border border-white/10 bg-[#0B111A] p-5 cursor-pointer hover:border-[#D4AF37]/40 transition hover:shadow-lg hover:shadow-[#D4AF37]/10"
+            className="rounded-lg border border-white/10 bg-[#0B0B0B] p-5 cursor-pointer hover:border-[#D4AF37]/40 transition hover:shadow-lg hover:shadow-[#D4AF37]/10"
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
@@ -411,7 +412,7 @@ export default function AnalisisPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-[#0B111A] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[#0B0B0B] border border-[#D4AF37]/30 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
             {/* Header con cierre */}
             <div className="flex items-start justify-between mb-6">
@@ -429,19 +430,19 @@ export default function AnalisisPage() {
 
             {/* Información general */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-3">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-3">
                 <p className="text-xs text-white/50 mb-1">Fecha</p>
                 <p className="font-bold text-white">{selectedAnalysis.date}</p>
               </div>
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-3">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-3">
                 <p className="text-xs text-white/50 mb-1">Sesión</p>
                 <p className="font-bold text-white">{selectedAnalysis.session}</p>
               </div>
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-3">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-3">
                 <p className="text-xs text-white/50 mb-1">Tipo</p>
                 <p className="font-bold text-white">{selectedAnalysis.type}</p>
               </div>
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-3">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-3">
                 <p className="text-xs text-white/50 mb-1">Riesgo</p>
                 <p className="font-bold text-white">{selectedAnalysis.risk}</p>
               </div>
@@ -484,7 +485,7 @@ export default function AnalisisPage() {
 
             {/* Estructura de operación */}
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-4">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-4">
                 <p className="text-xs text-white/50 mb-2 uppercase font-bold">Entrada (Entry)</p>
                 <p className="font-bold text-white">{selectedAnalysis.entry}</p>
               </div>
@@ -501,7 +502,7 @@ export default function AnalisisPage() {
             {/* Aprendizaje */}
             <div className="mb-6">
               <h3 className="text-lg font-bold text-white mb-3">Aprendizaje clave</h3>
-              <div className="rounded-lg bg-[#05070B] border border-[#D4AF37]/20 p-4">
+              <div className="rounded-lg bg-[#030303] border border-[#D4AF37]/20 p-4">
                 <p className="text-white/80">{selectedAnalysis.learning}</p>
               </div>
             </div>
@@ -509,7 +510,7 @@ export default function AnalisisPage() {
             {/* Estado final */}
             <div className="mb-6">
               <h3 className="text-lg font-bold text-white mb-3">Resultado final</h3>
-              <div className="rounded-lg bg-[#05070B] border border-white/10 p-4">
+              <div className="rounded-lg bg-[#030303] border border-white/10 p-4">
                 <p className="text-white/70">{selectedAnalysis.finalStatus}</p>
               </div>
             </div>

@@ -23,6 +23,7 @@ import {
 import { useState, useEffect } from 'react';
 import { generateMockDataHealth } from '../utils/mockDataHealth';
 import type { DataHealthResponse } from '../../engine/types/marketData';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 interface Modulo {
   id: string;
@@ -297,41 +298,41 @@ export default function AdminBot() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-4 gap-4"
       >
-        <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-3">
             <Battery className="w-5 h-5 text-green-400" />
             <span className="font-mono text-xs text-white/80">Estado</span>
           </div>
           <p className="text-white font-bold text-lg">Operativo</p>
           <p className="text-white/60 text-xs mt-1">Sistema activo</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-3">
             <Send className="w-5 h-5 text-[#D4AF37]" />
             <span className="font-mono text-xs text-white/80">Alertas Hoy</span>
           </div>
           <p className="text-[#D4AF37] font-bold text-lg">{estadoBot.alertasHoy}</p>
           <p className="text-white/60 text-xs mt-1">Señales procesadas</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-3">
             <GitBranch className="w-5 h-5 text-blue-400" />
             <span className="font-mono text-xs text-white/80">Último Commit</span>
           </div>
           <p className="text-white font-bold text-lg">7d2aea4</p>
           <p className="text-white/60 text-xs mt-1">Protección de datos</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-3">
             <Gauge className="w-5 h-5 text-purple-400" />
             <span className="font-mono text-xs text-white/80">Build</span>
           </div>
           <p className="text-white font-bold text-lg">✓ Exitoso</p>
           <p className="text-white/60 text-xs mt-1">0 errores TypeScript</p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Progreso del Bot */}
@@ -416,12 +417,15 @@ export default function AdminBot() {
             <Activity className="w-5 h-5 text-blue-400" />
             Salud de Datos en Tiempo Real
           </h3>
-          <a
-            href="?tab=datos"
-            className="text-xs bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded text-blue-300 hover:bg-blue-500/30 transition"
+          <CARVIPIXButton
+            onClick={() => {
+              window.location.href = '?tab=datos';
+            }}
+            variant="secondary"
+            size="sm"
           >
             Ver panel completo
-          </a>
+          </CARVIPIXButton>
         </div>
 
         {dataHealth ? (
@@ -598,9 +602,7 @@ export default function AdminBot() {
                     {item.titulo}
                   </p>
                   {item.critico && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-red-500/20 border border-red-500/50 rounded text-[10px] text-red-300 font-mono">
-                      CRÍTICO
-                    </span>
+                    <span className="inline-block mt-1"><CARVIPIXBadge variant="danger">CRÍTICO</CARVIPIXBadge></span>
                   )}
                 </div>
               </motion.div>
@@ -637,13 +639,9 @@ export default function AdminBot() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs font-mono px-2 py-0.5 rounded border ${
-                      error.tipo === 'Advertencia'
-                        ? 'border-yellow-500/50 text-yellow-300'
-                        : 'border-green-500/50 text-green-300'
-                    }`}>
+                    <CARVIPIXBadge variant={error.tipo === 'Advertencia' ? 'warning' : 'success'}>
                       {error.tipo}
-                    </span>
+                    </CARVIPIXBadge>
                   </div>
                   <h4 className="font-bold text-white">{error.titulo}</h4>
                   <p className="text-white/70 text-sm mt-1">{error.descripcion}</p>

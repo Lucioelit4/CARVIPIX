@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Motor privado de backtesting para CARVIPIX Bot
  * Simula ejecución de estrategia con datos históricos
@@ -962,3 +963,4 @@ export class BacktestEngine {
     return this.performanceTracker.generateReport();
   }
 }
+

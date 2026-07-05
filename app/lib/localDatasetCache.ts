@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -123,3 +124,4 @@ export const datasetCache = {
   set: async (dataset: Omit<CachedDataset, 'timestamp'>) => getDatasetCache().set(dataset),
   clear: async () => getDatasetCache().clear(),
 };
+

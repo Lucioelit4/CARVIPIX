@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Parameter Optimizer Engine
  * Ejecuta optimización de parámetros usando grid search o métodos avanzados
@@ -370,3 +371,4 @@ export async function getParameterOptimizer(): Promise<ParameterOptimizer> {
   }
   return optimizerInstance;
 }
+

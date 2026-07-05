@@ -35,6 +35,61 @@ export {
   type WalkForwardAnalysis,
 } from './walkForward';
 
+// Massive Backtesting Lab
+export {
+  discoverHistoricalDatasetInventory,
+  runMassiveBacktestingLab,
+  type HistoricalDatasetFile,
+  type MassiveLabConfig,
+  type MassiveLabJob,
+  type MassiveLabJobResult,
+  type MassiveLabDatasetInventory,
+  type MassiveLabRunResult,
+} from './massiveLab';
+
+// Research Center
+export {
+  saveResearchExecutionRecord,
+  loadResearchExecutionRecord,
+  listResearchExecutionRecords,
+  saveProfessionalComparisonReport,
+  saveEngineHistoricalComparisonReport,
+  listEngineHistoricalComparisonReports,
+  saveCandidateValidationReport,
+  listCandidateValidationReports,
+  listResearchDatasets,
+  listResearchExports,
+  exportResearchRun,
+  buildTrainingRecords,
+  exportTrainingDatasetNdjson,
+  compareResearchExecutions,
+  compareEngineVersionAgainstHistory,
+  buildEngineBenchmark,
+  detectEngineVersionInfo,
+  evaluateCandidateEngineVersion,
+  getDefaultCandidateValidationRules,
+  buildResearchDashboardSnapshot,
+} from './research';
+export type {
+  ResearchExecutionRecord,
+  ResearchExecutionMetadata,
+  ResearchExecutionExports,
+  ResearchCpuSnapshot,
+  ResearchDatasetUsage,
+  ResearchRunParameters,
+  ProfessionalComparisonReport,
+  TrainingRecord,
+  BenchmarkMetricOutcome,
+  BenchmarkComparison,
+  EngineVersionInfo,
+  VersionDeltaMetric,
+  EngineHistoricalComparisonReport,
+  CandidateValidationRule,
+  CandidateValidationFinding,
+  CandidateValidationReport,
+  ResearchDashboardSnapshot,
+} from './research';
+
 // Performance
 export {
   PerformanceTracker,

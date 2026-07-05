@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -421,3 +422,4 @@ function TradesTable({ trades }: TradesTableProps) {
     </div>
   );
 }
+

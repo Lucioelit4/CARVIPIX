@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
 
@@ -15,7 +15,7 @@ const menuItems = [
   { name: "Análisis Diario", href: "/analisis" },
   { name: "Comunidad", href: "/comunidad" },
   { name: "Bot CARVIPIX", href: "/bot" },
-  { name: "Gestión de Capital", href: "/capital" },
+  { name: "Gestión de Capital", href: "/gestion-capital" },
   { name: "Programa de Fondeo", href: "/fondeo" },
   { name: "Herramientas", href: "/herramientas" },
   { name: "Perfil", href: "/perfil" },
@@ -27,9 +27,21 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
 
+  useEffect(() => {
+    if (!mobileOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
   return (
     <>
-      <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#070A0F]/95 px-4 py-3 text-white lg:hidden">
+      <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between border-b border-[#2A2A2A] bg-[#030303]/95 px-4 py-3 text-white lg:hidden">
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo/logo carvipix.png"
@@ -43,16 +55,17 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#0F1117]/95 text-white transition hover:bg-white/10"
+          aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#2A2A2A] bg-[#121212] text-white transition hover:border-[#D4AF37]/40 hover:bg-[#181818]"
         >
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-white/10 bg-[#070A0F]/95 lg:flex lg:flex-col">
-        <div className="flex h-full flex-col justify-between p-6">
-          <div>
-            <div className="mb-10 rounded-[2rem] border border-white/5 bg-[#10141D]/90 p-5 text-center shadow-[0_25px_80px_rgba(0,0,0,0.15)]">
+      <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-[#2A2A2A] bg-[#030303] lg:flex lg:flex-col">
+        <div className="flex h-full flex-col p-6">
+          <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+            <div className="mb-10 rounded-[2rem] border border-[#2A2A2A] bg-[#121212] p-5 text-center shadow-[0_25px_80px_rgba(0,0,0,0.25)]">
               <Image
                 src="/logo/logo carvipix.png"
                 alt="CARVIPIX"
@@ -61,11 +74,12 @@ export default function Sidebar() {
                 priority
                 style={{ width: "200px", height: "auto" }}
               />
-              <p className="mt-4 text-xs uppercase tracking-[0.24em] text-zinc-500">
+              <p className="mt-4 text-xs uppercase tracking-[0.24em] text-[#B5B5B5]">
                 Plataforma premium
               </p>
             </div>
 
+            <div className="mb-3 px-4 text-[11px] uppercase tracking-[0.24em] text-[#B5B5B5]">Navegación</div>
             <nav className="flex flex-col gap-2">
               {menuItems.map((item) => {
                 const isActive =
@@ -76,10 +90,10 @@ export default function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`group relative flex items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-sm transition duration-300 ${
+                    className={`group relative flex min-h-[44px] items-center gap-3 overflow-hidden rounded-2xl px-4 py-3 text-[15px] leading-5 transition duration-200 ${
                       isActive
-                        ? "border-l-4 border-[#D4AF37] bg-white/5 text-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.1)]"
-                        : "text-zinc-300 hover:border-l-4 hover:border-[#D4AF37]/50 hover:bg-white/5 hover:text-[#D4AF37]"
+                        ? "border-l-4 border-[#D4AF37] bg-[#181818] text-[#F4C542] shadow-[0_0_30px_rgba(212,175,55,0.14)]"
+                        : "text-[#B5B5B5] hover:border-l-4 hover:border-[#D4AF37]/50 hover:bg-[#121212] hover:text-[#F4C542]"
                     }`}
                   >
                     <span className="flex-1">{item.name}</span>
@@ -91,12 +105,12 @@ export default function Sidebar() {
             </nav>
           </div>
 
-          <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#10141D]/90 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
-            <p className="text-sm text-zinc-400">Plan actual</p>
+          <div className="mt-6 rounded-[1.75rem] border border-[#2A2A2A] bg-[#121212] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+            <p className="text-sm text-[#B5B5B5]">Plan actual</p>
             <p className="mt-2 text-xl font-semibold text-[#D4AF37]">CARVIPIX PRO</p>
             <button
               onClick={() => setShowPlans(true)}
-              className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F5D76E] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition hover:brightness-110"
+              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4C542] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-200 hover:brightness-110"
             >
               Ver planes
             </button>
@@ -105,8 +119,11 @@ export default function Sidebar() {
       </aside>
 
       {mobileOpen ? (
-        <div className="fixed inset-0 z-40 bg-black/70 lg:hidden">
-          <div className="fixed left-0 top-0 h-full w-[280px] border-r border-white/10 bg-[#070A0F]/95 p-6 shadow-xl">
+        <div className="fixed inset-0 z-40 bg-black/70 lg:hidden" onClick={() => setMobileOpen(false)}>
+          <div
+            className="fixed left-0 top-0 h-full w-[300px] max-w-[86vw] overflow-y-auto border-r border-[#2A2A2A] bg-[#030303] p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="mb-10 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2">
                 <Image
@@ -121,12 +138,14 @@ export default function Sidebar() {
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-[#0F1117]/95 text-white transition hover:bg-white/10"
+                aria-label="Cerrar menú"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#2A2A2A] bg-[#121212] text-white transition hover:border-[#D4AF37]/40 hover:bg-[#181818]"
               >
                 <X size={20} />
               </button>
             </div>
 
+            <div className="mb-3 px-1 text-[11px] uppercase tracking-[0.24em] text-[#B5B5B5]">Navegación</div>
             <nav className="flex flex-col gap-2">
               {menuItems.map((item) => {
                 const isActive =
@@ -138,17 +157,17 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block rounded-2xl border border-white/10 px-4 py-3 text-sm transition ${
+                    className={`flex min-h-[44px] items-center rounded-2xl border border-white/10 px-4 py-3 text-sm transition duration-200 ${
                       isActive
-                        ? "bg-[#D4AF37]/15 text-[#D4AF37]"
-                        : "text-zinc-300 hover:bg-white/5 hover:text-[#D4AF37]"
+                        ? "bg-[#181818] text-[#F4C542]"
+                        : "text-[#B5B5B5] hover:bg-[#121212] hover:text-[#F4C542]"
                     }`}
                   >
                     {item.name}
                   </Link>
                 );
               })}
-              <AdminMenuItem />
+              <AdminMenuItem onNavigate={() => setMobileOpen(false)} compact />
             </nav>
           </div>
         </div>

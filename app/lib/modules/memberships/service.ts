@@ -1,47 +1,32 @@
-// Servicio de membresías (preparado para APIs reales)
+// Servicio de membresias delegado al Backend Enterprise
 
-import { UserProfile, Membership, PlanType, PLAN_PERMISSIONS } from "./types";
-import { getDemoUser, DEMO_MEMBERSHIP } from "./demo-data";
+import { UserProfile, Membership, PlanType } from "./types";
+import { ecosystemServices } from "@/app/backend";
 
 export class MembershipsService {
-  private isDemoMode = true;
-
   // Obtener perfil del usuario actual
   async getCurrentUserProfile(): Promise<UserProfile> {
-    if (this.isDemoMode) {
-      return getDemoUser();
-    }
-    // FUTURE: Conectar a API real
-    // const response = await fetch('/api/user/profile');
-    // return response.json();
-    throw new Error("API no conectada todavía");
+    return ecosystemServices.memberships.getCurrentUserProfile();
   }
 
   // Obtener membresía actual
   async getCurrentMembership(): Promise<Membership> {
-    if (this.isDemoMode) {
-      return { ...DEMO_MEMBERSHIP };
-    }
-    // FUTURE: Conectar a API real
-    throw new Error("API no conectada todavía");
+    return ecosystemServices.memberships.getCurrentMembership();
   }
 
   // Verificar si usuario tiene permiso para módulo
   async hasPermission(permission: "alertas" | "bot" | "capital" | "fondeo" | "reportes" | "soporte" | "aiBriefing"): Promise<boolean> {
-    const user = await this.getCurrentUserProfile();
-    const permValue = user.permisos[permission];
-    return typeof permValue === "boolean" ? permValue : false;
+    return ecosystemServices.memberships.hasPermission(permission);
   }
 
   // Obtener plan activo
   async getActivePlan(): Promise<PlanType> {
-    const user = await this.getCurrentUserProfile();
-    return user.plan;
+    return ecosystemServices.memberships.getActivePlan();
   }
 
-  // Cambiar modo demo/producción (para testing)
-  setDemoMode(isDemoMode: boolean) {
-    this.isDemoMode = isDemoMode;
+  // Compatibilidad con el API previo sin cambiar el frontend.
+  setDemoMode(_isDemoMode: boolean) {
+    // No-op: la fuente de datos oficial es Backend Enterprise.
   }
 }
 

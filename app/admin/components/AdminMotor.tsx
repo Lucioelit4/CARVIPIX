@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useState } from 'react';
+import { CARVIPIXBadge, CARVIPIXCard } from '@/app/design-system';
 
 interface Agent {
   nombre: string;
@@ -210,29 +211,29 @@ export default function AdminMotor() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-3 gap-4"
       >
-        <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-2">
             <CheckCircle className="w-5 h-5 text-green-400" />
             <span className="font-mono text-xs text-white/80">Alertas Aprobadas</span>
           </div>
           <p className="text-3xl font-bold text-green-400">{alertas.aprobadas}</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-2">
             <AlertCircle className="w-5 h-5 text-red-400" />
             <span className="font-mono text-xs text-white/80">Alertas Rechazadas</span>
           </div>
           <p className="text-3xl font-bold text-red-400">{alertas.rechazadas}</p>
-        </div>
+        </CARVIPIXCard>
 
-        <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 border border-yellow-500/30 rounded-lg p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-yellow-400" />
             <span className="font-mono text-xs text-white/80">Alertas Pendientes</span>
           </div>
           <p className="text-3xl font-bold text-yellow-400">{alertas.pendientes}</p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Últimas Decisiones */}
@@ -355,8 +356,10 @@ export default function AdminMotor() {
                 <div className="flex-1">
                   <h4 className="font-bold text-white text-sm">{agente.nombre}</h4>
                   {agente.critico && (
-                    <span className="inline-block mt-1 px-2 py-0.5 bg-[#D4AF37]/20 border border-[#D4AF37]/50 rounded text-[10px] text-[#D4AF37] font-mono">
+                    <span className="inline-block mt-1">
+                    <CARVIPIXBadge variant="premium">
                       CRÍTICO
+                    </CARVIPIXBadge>
                     </span>
                   )}
                 </div>
@@ -445,12 +448,14 @@ export default function AdminMotor() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-4"
+        className=""
       >
-        <p className="text-sm text-red-200 font-semibold">⚠️ Información Privada</p>
-        <p className="mt-2 text-sm text-red-300/80">
-          Esta información solo es visible para administradores. Contiene detalles internos del Motor de Trading de CARVIPIX que son propiedad intelectual protegida.
-        </p>
+        <CARVIPIXCard variant="alert" padding="16" hover={false}>
+          <p className="text-sm text-red-200 font-semibold">⚠️ Información Privada</p>
+          <p className="mt-2 text-sm text-red-300/80">
+            Esta información solo es visible para administradores. Contiene detalles internos del Motor de Trading de CARVIPIX que son propiedad intelectual protegida.
+          </p>
+        </CARVIPIXCard>
       </motion.div>
     </div>
   );

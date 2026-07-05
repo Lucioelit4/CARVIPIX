@@ -120,7 +120,7 @@ export default function CheckoutContent() {
 
   if (!selectedProduct) {
     return (
-      <div className="min-h-screen bg-[#05070B] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -195,9 +195,9 @@ export default function CheckoutContent() {
   };
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white pt-20 lg:pt-0">
+    <main className="min-h-screen bg-[#030303] text-white pt-20 lg:pt-0">
       {/* Header */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] px-4 py-12 sm:px-8">
+      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-4 py-12 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-3 mb-6">
             <ShoppingCart className="w-6 h-6 text-[#D4AF37]" />
@@ -233,7 +233,7 @@ export default function CheckoutContent() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border border-white/10 bg-[#0B111A] p-8"
+                className="rounded-lg border border-white/10 bg-[#0B0B0B] p-8"
               >
                 <h2 className="text-2xl font-bold mb-6">Información personal</h2>
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -385,7 +385,7 @@ export default function CheckoutContent() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border border-white/10 bg-[#0B111A] p-8"
+                className="rounded-lg border border-white/10 bg-[#0B0B0B] p-8"
               >
                 <h2 className="text-2xl font-bold mb-6">Método de pago</h2>
 
@@ -551,7 +551,7 @@ export default function CheckoutContent() {
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-1"
           >
-            <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-6 sticky top-24">
+            <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-6 sticky top-24">
               <h3 className="text-lg font-bold mb-4">Resumen del pedido</h3>
 
               {/* Product Info */}

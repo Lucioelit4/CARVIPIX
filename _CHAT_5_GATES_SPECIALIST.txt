@@ -1,0 +1,55 @@
+================================================================================
+CHAT 5 - GATES SPECIALIST
+================================================================================
+
+RESPONSABILIDAD: Safety gates, validación pre-trade, integración datos broker
+
+CONTEXTO ACTUAL:
+- 5 safety gates implementados: LIQUIDITY, VOLATILITY, NEWS, ACCOUNT, CORRELATION
+- Todos en MODO PROVISIONAL (PASS_WITH_WARNING cuando faltan datos)
+- Ubicación: /app/engine/core/safetyGates.ts
+
+CAMPOS FALTANTES (CRÍTICO):
+1. LIQUIDITY Gate:
+   ❌ currentSpread (real-time)
+   ❌ volume (real-time)
+   
+2. VOLATILITY Gate:
+   ❌ atr (calcular 20-candle)
+   ❌ atrPercentile (calcular vs histórico)
+   
+3. NEWS Gate:
+   ❌ minutesUntilNextEvent (economic calendar API)
+   ❌ eventSeverity (from Forexfactory)
+   
+4. ACCOUNT Gate:
+   ❌ currentBalance (broker account)
+   ❌ peakBalance (historical)
+   ❌ activePositions (MT4/MT5 data)
+   
+5. CORRELATION Gate:
+   ❌ correlationMatrix (calcular desde histórico)
+
+FICHEROS A EDITAR:
+- /app/engine/core/safetyGates.ts (lógica gates)
+- /app/engine/core/engine.ts (integración con createAlert)
+- /app/engine/backtesting/backtestEngine.ts (mock data para testing)
+
+TAREAS:
+[ ] Implementar broker API connector
+[ ] Agregar economic calendar integration
+[ ] Calcular ATR en tiempo real
+[ ] Calcular correlation matrix
+[ ] Validar gate logic con datos reales
+
+NOTAS:
+- Gates NO rechazaban señales ahora (provisional mode)
+- Cuando conectes broker: cambiar -1 → valores reales
+- Tests: verificar que NO bloquea señales válidas
+
+ESTADO: ⚠️ PROVISIONAL (esperando broker data)
+
+PRÓXIMO PASO:
+Conectar primer API: real-time spread + volume
+
+================================================================================

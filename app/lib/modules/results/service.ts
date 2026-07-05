@@ -1,13 +1,19 @@
 // Servicio para Resultados (agregador de métricas)
 
-import { PlatformResults, ResultsHistory } from "./types";
+import { PlatformResults, ResultsHistory, ResultsBySource } from "./types";
 import { getDemoPlatformResults, getDemoResultsHistory } from "./demo-data";
+import { ecosystemServices } from "@/app/backend";
 
 export class ResultsService {
   private isDemoMode = true;
 
   // Obtener resultados actuales de la plataforma
   async getPlatformResults(period: "monthly" | "yearly" | "all-time" = "monthly"): Promise<PlatformResults> {
+    const engineResults = await ecosystemServices.results.getPlatformResults(period);
+    if (engineResults.combinedStats.totalTrades > 0) {
+      return engineResults;
+    }
+
     if (this.isDemoMode) {
       return getDemoPlatformResults();
     }
@@ -29,6 +35,11 @@ export class ResultsService {
 
   // Obtener histórico de resultados
   async getResultsHistory(months: number = 12): Promise<ResultsHistory[]> {
+    const engineHistory = await ecosystemServices.results.getHistory(months);
+    if (engineHistory.length > 0) {
+      return engineHistory;
+    }
+
     if (this.isDemoMode) {
       return getDemoResultsHistory().slice(0, months);
     }
@@ -38,7 +49,7 @@ export class ResultsService {
   }
 
   // Obtener métricas por fuente específica
-  async getMetricsBySource(source: "alertas" | "bot" | "capital" | "fondeo"): Promise<any> {
+  async getMetricsBySource(source: "alertas" | "bot" | "capital" | "fondeo"): Promise<ResultsBySource[keyof ResultsBySource]> {
     const results = await this.getPlatformResults("monthly");
 
     return results.bySource[source];

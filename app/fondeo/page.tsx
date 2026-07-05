@@ -3,15 +3,16 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, CheckCircle2, DollarSign, Calendar, Building2, Zap } from 'lucide-react';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 export default function FondeoPage() {
   const [showModal, setShowModal] = useState(false);
   const termsRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-white">
+    <div className="min-h-screen bg-[#030303] text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16 md:py-20">
+      <div className="bg-gradient-to-b from-[#0B0B0B] to-[#030303] border-b border-white/5 px-4 py-12 sm:py-16 md:py-20">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -28,19 +29,18 @@ export default function FondeoPage() {
             {/* Badges */}
             <div className="flex flex-wrap gap-3">
               {[
-                { label: 'Pago único', color: 'bg-[#D4AF37]/10 text-[#D4AF37]' },
-                { label: 'FTMO / TopTier', color: 'bg-white/5 text-white/70' },
-                { label: 'Capital objetivo 200K', color: 'bg-white/5 text-white/70' },
-                { label: 'Gestión del proceso', color: 'bg-green-500/10 text-green-400' },
+                { label: 'Pago único', variant: 'premium' as const },
+                { label: 'FTMO / TopTier', variant: 'default' as const },
+                { label: 'Capital objetivo 200K', variant: 'default' as const },
+                { label: 'Gestión del proceso', variant: 'success' as const },
               ].map((badge, i) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.1 }}
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${badge.color}`}
                 >
-                  {badge.label}
+                  <CARVIPIXBadge variant={badge.variant}>{badge.label}</CARVIPIXBadge>
                 </motion.div>
               ))}
             </div>
@@ -57,17 +57,16 @@ export default function FondeoPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-1 bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-2xl p-8 backdrop-blur-sm"
+            className="lg:col-span-1"
           >
-            <h2 className="text-2xl font-bold mb-2">Servicio completo</h2>
-            <p className="text-3xl font-bold text-[#D4AF37] mb-2">5,000 USD</p>
-            <p className="text-sm text-white/70 mb-6">Pago único por gestión del proceso</p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-xl hover:bg-[#E5C158] transition-all shadow-lg"
-            >
-              Solicitar revisión
-            </button>
+            <CARVIPIXCard variant="premium" padding="24" hover={false}>
+              <h2 className="text-2xl font-bold mb-2">Servicio completo</h2>
+              <p className="text-3xl font-bold text-[#D4AF37] mb-2">5,000 USD</p>
+              <p className="text-sm text-white/70 mb-6">Pago único por gestión del proceso</p>
+              <CARVIPIXButton onClick={() => setShowModal(true)} variant="premium" fullWidth>
+                Solicitar revisión
+              </CARVIPIXButton>
+            </CARVIPIXCard>
           </motion.div>
 
           {/* Metrics */}
@@ -81,11 +80,12 @@ export default function FondeoPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.1 }}
-              className="bg-[#0B111A] border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
             >
-              <p className="text-white/60 text-sm font-medium mb-3">{metric.label}</p>
-              <p className="text-2xl font-bold text-white mb-2">{metric.value}</p>
-              <p className="text-2xl">{metric.icon}</p>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+                <p className="text-white/60 text-sm font-medium mb-3">{metric.label}</p>
+                <p className="text-2xl font-bold text-white mb-2">{metric.value}</p>
+                <p className="text-2xl">{metric.icon}</p>
+              </CARVIPIXCard>
             </motion.div>
           ))}
         </div>
@@ -95,7 +95,7 @@ export default function FondeoPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
         >
           <h2 className="text-2xl font-bold mb-8">Qué incluye</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -126,7 +126,7 @@ export default function FondeoPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
         >
           <h2 className="text-2xl font-bold mb-8">Proceso</h2>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -144,7 +144,7 @@ export default function FondeoPage() {
                 transition={{ delay: 0.6 + i * 0.1 }}
                 className="text-center"
               >
-                <div className="bg-[#D4AF37] text-[#05070B] rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg mx-auto mb-3">
+                <div className="bg-[#D4AF37] text-[#030303] rounded-full w-12 h-12 flex items-center justify-center font-bold text-lg mx-auto mb-3">
                   {item.step}
                 </div>
                 <h3 className="font-semibold mb-1 text-sm">{item.title}</h3>
@@ -159,7 +159,7 @@ export default function FondeoPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 mb-12 backdrop-blur-sm"
         >
           <h2 className="text-2xl font-bold mb-8">Empresas disponibles</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -201,17 +201,18 @@ export default function FondeoPage() {
 
         {/* Botones */}
         <div className="flex flex-col sm:flex-row gap-4 mb-12">
-          <button
+          <CARVIPIXButton
             onClick={() => setShowModal(true)}
-            className="flex-1 bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-xl hover:bg-[#E5C158] transition-all shadow-lg"
+            variant="premium"
+            fullWidth
           >
             Solicitar revisión
-          </button>
-          <button className="flex-1 border border-[#D4AF37] text-[#D4AF37] font-bold py-3 px-6 rounded-xl hover:bg-[#D4AF37]/10 transition-all" onClick={() => {
+          </CARVIPIXButton>
+          <CARVIPIXButton variant="secondary" fullWidth onClick={() => {
             termsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}>
             Ver términos
-          </button>
+          </CARVIPIXButton>
         </div>
 
         {/* Legal Footer */}
@@ -239,7 +240,7 @@ export default function FondeoPage() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#0B111A] border border-white/20 rounded-2xl p-8 max-w-md w-full"
+            className="bg-[#0B0B0B] border border-white/20 rounded-2xl p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -294,21 +295,23 @@ export default function FondeoPage() {
             </div>
 
             <div className="flex gap-3">
-              <button
+              <CARVIPIXButton
                 onClick={() => setShowModal(false)}
-                className="flex-1 border border-white/20 text-white font-bold py-2 rounded-lg hover:bg-white/5 transition"
+                variant="ghost"
+                fullWidth
               >
                 Cancelar
-              </button>
-              <button
+              </CARVIPIXButton>
+              <CARVIPIXButton
                 onClick={() => {
                   setShowModal(false);
                   alert('✓ Solicitud de revisión enviada (demo). En producción, requiere validación completa.');
                 }}
-                className="flex-1 bg-[#D4AF37] text-[#05070B] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition"
+                variant="premium"
+                fullWidth
               >
                 Enviar solicitud
-              </button>
+              </CARVIPIXButton>
             </div>
           </motion.div>
         </motion.div>

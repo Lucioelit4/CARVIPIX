@@ -2,40 +2,54 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, Lock, Check } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Lock, XCircle } from 'lucide-react';
 import { logAccessEvent, writeAuthSession } from '@/app/lib/auth/session';
+import { CARVIPIXButton, CARVIPIXCard, CARVIPIXFormField } from '../design-system';
 
 interface AdminLoginProps {
   onLogin: () => void;
 }
 
+type LoginStatus = 'idle' | 'loading' | 'success' | 'denied' | 'error';
+
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [code, setCode] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<LoginStatus>('idle');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const ADMIN_CODE = 'CARVIPIX-ADMIN';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setStatus('loading');
+    setStatusMessage('Validando credenciales...');
 
     setTimeout(() => {
-      if (code.toUpperCase() === ADMIN_CODE) {
-        writeAuthSession('admin');
-        logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
-        onLogin();
-      } else {
-        setError('Código de acceso incorrecto. Intenta de nuevo.');
+      try {
+        if (code.toUpperCase() === ADMIN_CODE) {
+          writeAuthSession('admin');
+          logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
+          setStatus('success');
+          setStatusMessage('Acceso correcto. Ingresando al panel administrativo...');
+
+          setTimeout(() => {
+            onLogin();
+          }, 350);
+          return;
+        }
+
+        setStatus('denied');
+        setStatusMessage('Acceso denegado. Verifica tus credenciales e intenta nuevamente.');
         setCode('');
+      } catch {
+        setStatus('error');
+        setStatusMessage('Ocurrió un error al validar el acceso. Intenta de nuevo.');
       }
-      setLoading(false);
     }, 600);
   };
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white flex items-center justify-center p-4">
+    <main className="min-h-screen bg-[#030303] text-white flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -61,80 +75,96 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B111A] to-[#05070B] p-8 shadow-2xl shadow-[#D4AF37]/10"
+          className=""
         >
+          <CARVIPIXCard variant="admin" padding="24" hover={false}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Input */}
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">
-                Código de acceso
-              </label>
+            <CARVIPIXFormField label="Código de acceso">
               <input
                 type="password"
                 value={code}
                 onChange={(e) => {
                   setCode(e.target.value);
-                  if (error) setError('');
+                  if (status !== 'idle') {
+                    setStatus('idle');
+                    setStatusMessage('');
+                  }
                 }}
                 placeholder="Ingresa el código"
                 className={`w-full px-4 py-3 rounded-lg border-2 transition ${
-                  error
+                  status === 'denied' || status === 'error'
                     ? 'border-red-500/50 bg-red-500/10 text-white focus:border-red-400'
                     : 'border-white/10 bg-white/5 text-white focus:border-[#D4AF37]'
                 } outline-none font-mono text-center text-lg tracking-widest`}
-                disabled={loading}
+                disabled={status === 'loading' || status === 'success'}
               />
-            </div>
+            </CARVIPIXFormField>
 
-            {/* Error */}
-            {error && (
+            {(status === 'loading' || status === 'success' || status === 'denied' || status === 'error') && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30"
+                className={`flex items-center gap-2 p-3 rounded-lg border ${
+                  status === 'loading'
+                    ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30'
+                    : status === 'success'
+                    ? 'bg-emerald-500/10 border-emerald-500/30'
+                    : 'bg-red-500/10 border-red-500/30'
+                }`}
               >
-                <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                <p className="text-sm text-red-400">{error}</p>
+                {status === 'loading' && (
+                  <div className="w-4 h-4 border-2 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin" />
+                )}
+                {status === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
+                {status === 'denied' && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                {status === 'error' && <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                <p
+                  className={`text-sm ${
+                    status === 'loading'
+                      ? 'text-[#E5C158]'
+                      : status === 'success'
+                      ? 'text-emerald-400'
+                      : 'text-red-400'
+                  }`}
+                >
+                  {statusMessage}
+                </p>
               </motion.div>
             )}
 
             {/* Submit Button */}
-            <button
+            <CARVIPIXButton
               type="submit"
-              disabled={loading || !code.trim()}
-              className={`w-full py-3 rounded-lg font-bold transition-all ${
-                loading || !code.trim()
-                  ? 'bg-white/10 text-white/50 cursor-not-allowed'
-                  : 'bg-[#D4AF37] text-black hover:bg-[#f5d76e] shadow-lg shadow-[#D4AF37]/30'
-              }`}
+              disabled={status === 'loading' || status === 'success' || !code.trim()}
+              variant={status === 'loading' || status === 'success' || !code.trim() ? 'disabled' : 'premium'}
+              fullWidth
             >
-              {loading ? (
+              {status === 'loading' ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                  Verificando...
+                  Cargando...
                 </div>
+              ) : status === 'success' ? (
+                'Acceso correcto'
               ) : (
                 'Acceder al Panel'
               )}
-            </button>
+            </CARVIPIXButton>
           </form>
 
-          {/* Demo Info */}
+          {/* Security Info */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="mt-8 pt-8 border-t border-white/10"
           >
-            <p className="text-xs text-white/50 text-center mb-3">Código de acceso demo:</p>
-            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20">
-              <Check className="w-4 h-4 text-[#D4AF37]" />
-              <p className="font-mono text-sm text-[#D4AF37]">CARVIPIX-ADMIN</p>
-            </div>
-            <p className="text-xs text-white/40 text-center mt-3">
-              Panel administrativo privado. Datos de demostración.
+            <p className="text-xs text-white/45 text-center">
+              Acceso administrativo privado. Por seguridad, las credenciales nunca se muestran en pantalla.
             </p>
           </motion.div>
+          </CARVIPIXCard>
         </motion.div>
 
         {/* Footer */}

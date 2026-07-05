@@ -2,10 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getAdminData, updateSolicitud } from '@/app/admin/lib/admin-helpers';
 import { useToast } from './Toast';
 import DetailModal from './DetailModal';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 interface Solicitud {
   id: string;
@@ -18,15 +19,10 @@ interface Solicitud {
 
 export default function AdminSolicitudes() {
   const [filter, setFilter] = useState('todas');
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
+  const [solicitudes, setSolicitudes] = useState<Solicitud[]>(() => getAdminData().solicitudes);
   const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    const data = getAdminData();
-    setSolicitudes(data.solicitudes);
-  }, []);
 
   const handleUpdateSolicitud = (id: string, nuevoEstado: Solicitud['estado']) => {
     if (updateSolicitud(id, nuevoEstado)) {
@@ -54,12 +50,6 @@ export default function AdminSolicitudes() {
     return <Clock className="w-5 h-5 text-yellow-400" />;
   };
 
-  const getEstadoColor = (estado: string) => {
-    if (estado === 'aprobado') return 'bg-green-500/20 text-green-300';
-    if (estado === 'rechazado') return 'bg-red-500/20 text-red-300';
-    if (estado === 'contactado') return 'bg-blue-500/20 text-blue-300';
-    return 'bg-yellow-500/20 text-yellow-300';
-  };
 
   return (
     <div className="space-y-6">
@@ -80,17 +70,14 @@ export default function AdminSolicitudes() {
         className="flex gap-3 flex-wrap"
       >
         {['todas', 'pendiente', 'aprobado', 'rechazado', 'contactado'].map((f) => (
-          <button
+          <CARVIPIXButton
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === f
-                ? 'bg-[#D4AF37] text-black'
-                : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+            variant={filter === f ? 'premium' : 'ghost'}
+            size="sm"
           >
             {f.charAt(0).toUpperCase() + f.slice(1)}
-          </button>
+          </CARVIPIXButton>
         ))}
       </motion.div>
 
@@ -102,15 +89,14 @@ export default function AdminSolicitudes() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="rounded-lg border border-white/10 bg-white/5 p-5 hover:border-white/20 transition"
+            className=""
           >
+            <CARVIPIXCard variant="admin" padding="16" hover={false}>
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="font-mono text-sm text-white/60">{solicitud.id}</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded capitalize ${getEstadoColor(solicitud.estado)}`}>
-                    {solicitud.estado}
-                  </span>
+                  <CARVIPIXBadge variant={solicitud.estado === 'aprobado' ? 'success' : solicitud.estado === 'rechazado' ? 'danger' : solicitud.estado === 'contactado' ? 'info' : 'warning'}>{solicitud.estado}</CARVIPIXBadge>
                 </div>
                 <p className="font-semibold text-white mb-1">{solicitud.usuario}</p>
                 <p className="text-sm text-white/70 mb-2">{solicitud.producto}</p>
@@ -121,40 +107,45 @@ export default function AdminSolicitudes() {
               </div>
               <div className="flex items-center gap-2 flex-wrap justify-end">
                 {getEstadoIcon(solicitud.estado)}
-                <button
+                <CARVIPIXButton
                   onClick={() => {
                     setSelectedSolicitud(solicitud);
                     setIsModalOpen(true);
                   }}
-                  className="px-2 py-1 text-xs rounded bg-white/10 text-white hover:bg-white/20 transition flex items-center gap-1"
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<Eye className="w-4 h-4" />}
                 >
-                  <Eye className="w-4 h-4" />
                   Ver
-                </button>
+                </CARVIPIXButton>
                 {solicitud.estado === 'pendiente' && (
                   <>
-                    <button
+                    <CARVIPIXButton
                       onClick={() => handleUpdateSolicitud(solicitud.id, 'aprobado')}
-                      className="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 transition"
+                      variant="success"
+                      size="sm"
                     >
                       Aprobar
-                    </button>
-                    <button
+                    </CARVIPIXButton>
+                    <CARVIPIXButton
                       onClick={() => handleUpdateSolicitud(solicitud.id, 'rechazado')}
-                      className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition"
+                      variant="danger"
+                      size="sm"
                     >
                       Rechazar
-                    </button>
-                    <button
+                    </CARVIPIXButton>
+                    <CARVIPIXButton
                       onClick={() => handleUpdateSolicitud(solicitud.id, 'contactado')}
-                      className="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition"
+                      variant="secondary"
+                      size="sm"
                     >
                       Contactado
-                    </button>
+                    </CARVIPIXButton>
                   </>
                 )}
               </div>
             </div>
+            </CARVIPIXCard>
           </motion.div>
         ))}
       </div>
@@ -166,30 +157,30 @@ export default function AdminSolicitudes() {
         transition={{ delay: 0.3 }}
         className="grid grid-cols-4 gap-4"
       >
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Pendientes</p>
           <p className="text-2xl font-bold text-yellow-400">
             {solicitudes.filter((s) => s.estado === 'pendiente').length}
           </p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Aprobadas</p>
           <p className="text-2xl font-bold text-green-400">
             {solicitudes.filter((s) => s.estado === 'aprobado').length}
           </p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Rechazadas</p>
           <p className="text-2xl font-bold text-red-400">
             {solicitudes.filter((s) => s.estado === 'rechazado').length}
           </p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Contactadas</p>
           <p className="text-2xl font-bold text-blue-400">
             {solicitudes.filter((s) => s.estado === 'contactado').length}
           </p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Detail Modal */}
@@ -208,9 +199,7 @@ export default function AdminSolicitudes() {
               </div>
               <div>
                 <p className="text-xs text-white/60 mb-1">Estado</p>
-                <span className={`text-xs font-bold px-2 py-1 rounded capitalize w-fit block ${getEstadoColor(selectedSolicitud.estado)}`}>
-                  {selectedSolicitud.estado}
-                </span>
+                <CARVIPIXBadge variant={selectedSolicitud.estado === 'aprobado' ? 'success' : selectedSolicitud.estado === 'rechazado' ? 'danger' : selectedSolicitud.estado === 'contactado' ? 'info' : 'warning'}>{selectedSolicitud.estado}</CARVIPIXBadge>
               </div>
             </div>
 

@@ -9,7 +9,7 @@ const messages = [
 
 export default function ServiciosComunidadPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-6xl px-6 py-10 sm:px-8">
         <BackToDashboard />
         <div className="rounded-[2rem] border border-white/10 bg-[#0B1220]/95 p-8 shadow-2xl shadow-black/40">
@@ -23,14 +23,14 @@ export default function ServiciosComunidadPage() {
                 Un espacio privado estilo Telegram/Discord para preguntas, seguimiento de ideas y convivencia moderada.
               </p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6 text-right">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6 text-right">
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Moderación</p>
               <p className="mt-2 text-3xl font-bold text-[#D4AF37]">Moderada</p>
             </div>
           </div>
 
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Beneficios</h2>
               <ul className="mt-4 space-y-3 text-zinc-300">
                 <li>Intercambio de ideas en tiempo real.</li>
@@ -38,11 +38,11 @@ export default function ServiciosComunidadPage() {
                 <li>Ambiente privado y responsable.</li>
               </ul>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Audiencia</h2>
               <p className="mt-4 text-zinc-300">Miembros activos que buscan apoyo y seguimiento profesional.</p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-[#10141D]/90 p-6">
+            <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Reglas</h2>
               <p className="mt-4 text-zinc-300">Tu mensaje debe cumplir las reglas de convivencia. No se permiten spam ni ofensas.</p>
             </div>
@@ -52,7 +52,7 @@ export default function ServiciosComunidadPage() {
             <div className="mb-4 text-sm uppercase tracking-[0.2em] text-[#D4AF37]">Chat simulado</div>
             <div className="space-y-4">
               {messages.map((message, index) => (
-                <div key={index} className="rounded-3xl border border-white/5 bg-[#10141D]/90 p-4">
+                <div key={index} className="rounded-3xl border border-white/5 bg-[#121212]/90 p-4">
                   <p className="text-sm text-zinc-400">{message.user}</p>
                   <p className="mt-2 text-white">{message.text}</p>
                 </div>

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3, AlertCircle, RotateCcw } from 'lucide-react';
+import Link from 'next/link';
 import { getCurrentUser } from '@/app/lib/data-helpers';
 import { validateProfileForm } from '@/app/lib/form-validators';
 
@@ -123,7 +124,7 @@ export default function PerfilPage() {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-[#05070B] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/60">Cargando perfil...</p>
@@ -133,10 +134,10 @@ export default function PerfilPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-white">
+    <div className="min-h-screen bg-[#030303] text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16">
-        <div className="max-w-6xl mx-auto">
+      <div className="border-b border-white/5 bg-gradient-to-b from-[#0B0B0B] to-[#030303] py-12 sm:py-16">
+        <div className="cv-workspace max-w-6xl">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -149,13 +150,13 @@ export default function PerfilPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="cv-workspace max-w-6xl py-12">
         {/* Premium Profile Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-[#D4AF37]/10 to-[#0B111A] border border-[#D4AF37]/30 rounded-2xl p-8 mb-12 backdrop-blur-sm"
+          className="cv-card-muted rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/10 to-[#0B0B0B] p-8 mb-12 backdrop-blur-sm"
         >
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Photo Section */}
@@ -164,12 +165,12 @@ export default function PerfilPage() {
                 {profilePhoto ? (
                   <img src={profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-5xl font-bold text-[#05070B]">AB</span>
+                  <span className="text-5xl font-bold text-[#030303]">AB</span>
                 )}
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-[#D4AF37] text-[#05070B] p-3 rounded-full hover:bg-[#E5C158] transition-all shadow-lg"
+                className="absolute bottom-0 right-0 bg-[#D4AF37] text-[#030303] p-3 rounded-full hover:bg-[#E5C158] transition-all shadow-lg"
               >
                 <Camera size={18} />
               </button>
@@ -236,7 +237,7 @@ export default function PerfilPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.05 }}
-              className="bg-[#0B111A] border border-white/10 rounded-lg p-6"
+              className="cv-card-muted rounded-lg border border-white/10 p-6"
             >
               <CardIcon className="w-6 h-6 mb-2 text-[#D4AF37]" />
               <p className="text-white/60 text-sm mb-1">{card.label}</p>
@@ -251,7 +252,7 @@ export default function PerfilPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 mb-8"
+          className="cv-card-muted rounded-2xl border border-white/10 p-8 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold">Datos personales</h3>
@@ -334,7 +335,7 @@ export default function PerfilPage() {
           {editMode && (
             <button
               onClick={handleSaveChanges}
-              className="flex items-center gap-2 bg-[#D4AF37] text-[#05070B] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
+              className="flex items-center gap-2 bg-[#D4AF37] text-[#030303] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
               disabled={Object.keys(profileErrors).length > 0}
             >
               <Save size={18} />
@@ -349,7 +350,7 @@ export default function PerfilPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[#0B111A] border border-white/10 rounded-2xl p-6"
+            className="cv-card-muted rounded-2xl border border-white/10 p-6"
           >
             <h3 className="text-xl font-bold mb-6">Preferencias de trading</h3>
             <div className="space-y-4">
@@ -410,7 +411,7 @@ export default function PerfilPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="bg-[#0B111A] border border-white/10 rounded-2xl p-6"
+            className="cv-card-muted rounded-2xl border border-white/10 p-6"
           >
             <div className="flex items-center gap-2 mb-6">
               <Shield className="w-5 h-5 text-[#D4AF37]" />
@@ -433,9 +434,9 @@ export default function PerfilPage() {
                 <p className="text-white/70 text-sm mb-1">Dispositivo</p>
                 <p className="text-white">Chrome Windows</p>
               </div>
-              <button className="w-full bg-[#D4AF37]/20 text-[#D4AF37] font-bold py-2 rounded-lg hover:bg-[#D4AF37]/30 transition-all">
+              <Link href="/soporte" className="block w-full bg-[#D4AF37]/20 text-[#D4AF37] font-bold py-2 rounded-lg hover:bg-[#D4AF37]/30 transition-all text-center">
                 Configurar seguridad
-              </button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -446,7 +447,7 @@ export default function PerfilPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-gradient-to-br from-[#D4AF37]/10 to-[#0B111A] border border-[#D4AF37]/30 rounded-2xl p-6"
+            className="cv-card-muted rounded-2xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#D4AF37]/10 to-[#0B0B0B] p-6"
           >
             <div className="flex items-center gap-2 mb-6">
               <CreditCard className="w-5 h-5 text-[#D4AF37]" />
@@ -467,12 +468,12 @@ export default function PerfilPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all">
+              <Link href="/checkout?product=membership" className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all text-center">
                 Ver planes
-              </button>
-              <button className="flex-1 bg-[#D4AF37] text-[#05070B] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all">
+              </Link>
+              <Link href="/checkout?product=membership" className="flex-1 bg-[#D4AF37] text-[#030303] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all text-center">
                 Actualizar membresía
-              </button>
+              </Link>
             </div>
           </motion.div>
 
@@ -481,7 +482,7 @@ export default function PerfilPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="bg-[#0B111A] border border-white/10 rounded-2xl p-6"
+            className="cv-card-muted rounded-2xl border border-white/10 p-6"
           >
             <div className="flex items-center gap-2 mb-6">
               <Award className="w-5 h-5 text-[#D4AF37]" />

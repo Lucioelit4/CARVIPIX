@@ -1,198 +1,550 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Send, Users, ShieldCheck, MessageSquare, Zap, Check } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Bell,
+  Bot,
+  ChartColumnBig,
+  CircleHelp,
+  FolderClock,
+  Gauge,
+  Gem,
+  Hash,
+  Heart,
+  LayoutGrid,
+  Paperclip,
+  Rocket,
+  Search,
+  Send,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { getCurrentUser } from "@/app/lib/data-helpers";
+import { CARVIPIXBadge, CARVIPIXCard } from "@/app/design-system";
 
-type Message = {
+type CommunityRole = "Equipo CARVIPIX" | "Moderador" | "Miembro PRO" | "Miembro";
+type ReactionKey = "like" | "love" | "fire" | "check" | "eyes";
+
+type ChatMessage = {
   id: string;
-  author: string;
-  role?: string;
-  text: string;
+  user: string;
+  role: CommunityRole;
+  avatar: string;
   time: string;
-  admin?: boolean;
+  content: string;
+  reactions: Record<ReactionKey, number>;
+  reactedByMe: ReactionKey[];
 };
 
-const initialMessages: Message[] = [
-  { id: "m1", author: "Equipo CARVIPIX", role: "Equipo", text: "Buenos días equipo, hoy estaremos atentos a XAUUSD y EURUSD durante sesión NY.", time: "09:02", admin: true },
-  { id: "m2", author: "María", role: "Miembro PRO", text: "¿La entrada de oro sigue válida?", time: "09:04" },
-  { id: "m3", author: "Equipo CARVIPIX", role: "Equipo", text: "Sí, mientras respete la zona de protección marcada.", time: "09:05", admin: true },
-  { id: "m4", author: "Diego", role: "Miembro", text: "Gracias, ya marqué gestión parcial.", time: "09:08" },
-  { id: "m5", author: "Lucio", role: "Miembro PRO", text: "Reduciré el tamaño de lote para XAUUSD, mejor gestión de riesgo.", time: "09:12" },
-  { id: "m6", author: "Sofía", role: "Miembro", text: "He compartido una captura en #gestion para revisar niveles.", time: "09:14" },
+type ChannelItem = {
+  id: string;
+  label: string;
+  description: string;
+  messageCount: number;
+};
+
+const MAIN_NAV = [
+  { id: "panel-principal", label: "Panel Principal", icon: LayoutGrid },
+  { id: "mis-alertas", label: "Mis Alertas", icon: Sparkles },
+  { id: "resultados", label: "Resultados", icon: TrendingUp },
+  { id: "bot", label: "Bot", icon: Bot },
+  { id: "gestion-capital", label: "Gestion de Capital", icon: Gauge },
+  { id: "programa-fondeo", label: "Programa de Fondeo", icon: Rocket },
+  { id: "comunidad", label: "Comunidad", icon: Users },
+  { id: "historial", label: "Historial", icon: FolderClock },
+  { id: "estadisticas", label: "Estadisticas", icon: ChartColumnBig },
+] as const;
+
+const CHANNELS: ChannelItem[] = [
+  { id: "chat-principal", label: "chat-principal", description: "Canal principal para comunicacion general del equipo.", messageCount: 87 },
+  { id: "alertas-en-vivo", label: "alertas-en-vivo", description: "Senales y alertas en tiempo real", messageCount: 56 },
+  { id: "gestion-de-senales", label: "gestion-de-senales", description: "Analisis y gestion de operaciones", messageCount: 42 },
+  { id: "dudas-de-miembros", label: "dudas-de-miembros", description: "Resolucion de dudas tacticas", messageCount: 23 },
+  { id: "noticias-importantes", label: "noticias-importantes", description: "Comunicados clave", messageCount: 19 },
+  { id: "resultados-operativos", label: "resultados-operativos", description: "Resumen de rendimiento", messageCount: 34 },
 ];
 
-const profanity = ["puta", "mierda", "idiota", "fuck", "shit"];
+const CHANNEL_MESSAGES: Record<string, ChatMessage[]> = {
+  "chat-principal": [
+    {
+      id: "cp-1",
+      user: "Equipo CARVIPIX",
+      role: "Equipo CARVIPIX",
+      avatar: "EC",
+      time: "09:02",
+      content: "Buenos dias equipo, hoy estaremos atentos a XAUUSD y EURUSD durante sesion NY.",
+      reactions: { like: 12, love: 4, fire: 5, check: 9, eyes: 6 },
+      reactedByMe: [],
+    },
+    {
+      id: "cp-2",
+      user: "Maria",
+      role: "Miembro PRO",
+      avatar: "MA",
+      time: "09:04",
+      content: "La entrada de oro sigue valida?",
+      reactions: { like: 8, love: 2, fire: 1, check: 0, eyes: 3 },
+      reactedByMe: [],
+    },
+    {
+      id: "cp-3",
+      user: "Equipo CARVIPIX",
+      role: "Equipo CARVIPIX",
+      avatar: "EC",
+      time: "09:05",
+      content: "Si, mientras respete la zona de proteccion marcada.",
+      reactions: { like: 8, love: 0, fire: 0, check: 4, eyes: 0 },
+      reactedByMe: [],
+    },
+    {
+      id: "cp-4",
+      user: "Diego",
+      role: "Miembro",
+      avatar: "DI",
+      time: "09:08",
+      content: "Gracias, ya marque gestion parcial.",
+      reactions: { like: 3, love: 0, fire: 0, check: 0, eyes: 0 },
+      reactedByMe: [],
+    },
+    {
+      id: "cp-5",
+      user: "Lucio",
+      role: "Miembro PRO",
+      avatar: "LU",
+      time: "09:12",
+      content: "Reducire el tamano de lote para XAUUSD, mejor gestion de riesgo.",
+      reactions: { like: 5, love: 0, fire: 2, check: 0, eyes: 1 },
+      reactedByMe: [],
+    },
+    {
+      id: "cp-6",
+      user: "Sofia",
+      role: "Miembro",
+      avatar: "SO",
+      time: "09:14",
+      content: "He compartido una captura en #gestion-de-senales para revisar niveles.",
+      reactions: { like: 4, love: 0, fire: 0, check: 2, eyes: 2 },
+      reactedByMe: [],
+    },
+  ],
+  "alertas-en-vivo": [
+    {
+      id: "al-1",
+      user: "Moderador Alex",
+      role: "Moderador",
+      avatar: "AL",
+      time: "10:03",
+      content: "Alerta activa: EURUSD venta con confirmacion en M15.",
+      reactions: { like: 7, love: 1, fire: 4, check: 5, eyes: 8 },
+      reactedByMe: [],
+    },
+  ],
+  "gestion-de-senales": [
+    {
+      id: "gs-1",
+      user: "Equipo CARVIPIX",
+      role: "Equipo CARVIPIX",
+      avatar: "EC",
+      time: "11:18",
+      content: "Recordatorio: proteger parcial en +1R y mover SL a BE segun plan.",
+      reactions: { like: 9, love: 0, fire: 3, check: 7, eyes: 4 },
+      reactedByMe: [],
+    },
+  ],
+  "dudas-de-miembros": [
+    {
+      id: "dm-1",
+      user: "Carla",
+      role: "Miembro",
+      avatar: "CA",
+      time: "12:01",
+      content: "Que riesgo maximo diario recomiendan para cuenta de 10k?",
+      reactions: { like: 2, love: 0, fire: 0, check: 0, eyes: 5 },
+      reactedByMe: [],
+    },
+  ],
+  "noticias-importantes": [
+    {
+      id: "ni-1",
+      user: "Moderador Alex",
+      role: "Moderador",
+      avatar: "AL",
+      time: "08:20",
+      content: "Actualizacion de politicas internas de la comunidad disponible en anclados.",
+      reactions: { like: 11, love: 0, fire: 1, check: 13, eyes: 7 },
+      reactedByMe: [],
+    },
+  ],
+  "resultados-operativos": [
+    {
+      id: "ro-1",
+      user: "Equipo CARVIPIX",
+      role: "Equipo CARVIPIX",
+      avatar: "EC",
+      time: "17:45",
+      content: "Cierre del dia: win rate 68%, drawdown controlado y sesion cerrada en verde.",
+      reactions: { like: 14, love: 6, fire: 9, check: 12, eyes: 4 },
+      reactedByMe: [],
+    },
+  ],
+};
 
-function formatTime() {
-  const d = new Date();
-  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+const REACTION_META: Array<{ key: ReactionKey; emoji: string }> = [
+  { key: "like", emoji: "👍" },
+  { key: "love", emoji: "❤️" },
+  { key: "fire", emoji: "🔥" },
+  { key: "check", emoji: "✅" },
+  { key: "eyes", emoji: "👀" },
+];
+
+function roleStyles(role: CommunityRole): string {
+  if (role === "Equipo CARVIPIX") return "bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#f0cb66]";
+  if (role === "Moderador") return "bg-cyan-400/15 border-cyan-300/40 text-cyan-200";
+  if (role === "Miembro PRO") return "bg-emerald-400/15 border-emerald-300/40 text-emerald-200";
+  return "bg-white/10 border-white/20 text-white/80";
+}
+
+function nowTime(): string {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function ComunidadPage() {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [input, setInput] = useState("");
-  const [notice, setNotice] = useState("");
-  const [onlineCount] = useState(128);
-  const [userName, setUserName] = useState("Abraham");
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [activeChannel, setActiveChannel] = useState<string>("chat-principal");
+  const [messagesByChannel, setMessagesByChannel] = useState<Record<string, ChatMessage[]>>(CHANNEL_MESSAGES);
+  const [userName, setUserName] = useState("Usuario Demo");
+  const [inputValue, setInputValue] = useState("");
+  const [typingName, setTypingName] = useState("Andrea");
+  const [helperNotice, setHelperNotice] = useState("");
 
-  // Load user data from modules on mount
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadUser = async () => {
       try {
         const user = await getCurrentUser();
-        if (user) {
+        if (user?.nombre) {
           setUserName(user.nombre);
         }
-      } catch (error) {
+      } catch {
         console.log("Usando datos demo de comunidad");
       }
     };
 
-    loadUserData();
+    loadUser();
   }, []);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+  const activeChannelInfo = useMemo(
+    () => CHANNELS.find((channel) => channel.id === activeChannel) ?? CHANNELS[0],
+    [activeChannel]
+  );
 
-  const containsProfanity = (text: string) => {
-    const lower = text.toLowerCase();
-    return profanity.some((w) => lower.includes(w));
+  const activeMessages = messagesByChannel[activeChannel] ?? [];
+
+  const onlineMembers = [
+    { name: "Equipo CARVIPIX", role: "Equipo" },
+    { name: "Maria", role: "Miembro PRO" },
+    { name: "Diego", role: "Miembro" },
+    { name: "Lucio", role: "Miembro PRO" },
+    { name: "Sofia", role: "Miembro" },
+  ];
+
+  const toggleReaction = (messageId: string, reaction: ReactionKey) => {
+    setMessagesByChannel((prev) => {
+      const channelMessages = prev[activeChannel] ?? [];
+      const updated = channelMessages.map((message) => {
+        if (message.id !== messageId) return message;
+
+        const alreadyReacted = message.reactedByMe.includes(reaction);
+        return {
+          ...message,
+          reactions: {
+            ...message.reactions,
+            [reaction]: alreadyReacted
+              ? Math.max(0, message.reactions[reaction] - 1)
+              : message.reactions[reaction] + 1,
+          },
+          reactedByMe: alreadyReacted
+            ? message.reactedByMe.filter((entry) => entry !== reaction)
+            : [...message.reactedByMe, reaction],
+        };
+      });
+
+      return {
+        ...prev,
+        [activeChannel]: updated,
+      };
+    });
   };
 
   const sendMessage = () => {
-    if (!input.trim()) return;
-    if (containsProfanity(input)) {
-      setNotice("Tu mensaje debe cumplir las reglas de convivencia.");
-      setTimeout(() => setNotice(""), 3000);
-      return;
-    }
+    const text = inputValue.trim();
+    if (!text) return;
 
-    const newMsg: Message = {
-      id: `m-${Date.now()}`,
-      author: "Tú",
+    const newMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      user: userName,
       role: "Miembro PRO",
-      text: input.trim(),
-      time: formatTime(),
+      avatar: userName.slice(0, 2).toUpperCase(),
+      time: nowTime(),
+      content: text,
+      reactions: { like: 0, love: 0, fire: 0, check: 0, eyes: 0 },
+      reactedByMe: [],
     };
-    setMessages((s) => [...s, newMsg]);
-    setInput("");
+
+    setMessagesByChannel((prev) => ({
+      ...prev,
+      [activeChannel]: [...(prev[activeChannel] ?? []), newMessage],
+    }));
+    setInputValue("");
+    setTypingName("Marco");
+  };
+
+  const addEmoji = () => {
+    setInputValue((prev) => `${prev}${prev ? " " : ""}🔥`);
+  };
+
+  const attachDemo = () => {
+    setHelperNotice("Adjunto demo agregado al mensaje.");
+    setTimeout(() => setHelperNotice(""), 2000);
   };
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white px-4 py-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-[#D4AF37]/80">Comunidad privada</p>
-            <h1 className="mt-2 text-3xl font-semibold">Comunidad CARVIPIX</h1>
-            <p className="mt-1 text-sm text-zinc-300">Sala privada para seguimiento, dudas y acompañamiento operativo.</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#D4AF37]/10 px-3 py-1 text-xs text-[#D4AF37]">Miembro PRO activo</span>
-              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-300">Comunidad moderada</span>
-              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-300">Vista demo</span>
-              <span className="rounded-full bg-white/5 px-3 py-1 text-xs text-zinc-300">Online ahora: {onlineCount}</span>
+    <main className="min-h-screen bg-[#030303] text-white px-2 py-3 md:px-3 md:py-4">
+      <div className="mx-auto w-full max-w-[1480px] space-y-3">
+        <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B0B0B] to-[#030303] p-3 md:p-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl md:text-[1.75rem] font-semibold">Comunidad CARVIPIX</h1>
+            <p className="mt-1 text-xs md:text-sm text-white/65">Sala privada para seguimiento, dudas y acompanamiento operativo.</p>
+            <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
+              <CARVIPIXBadge variant="premium">Miembro PRO activo</CARVIPIXBadge>
+              <CARVIPIXBadge variant="default">Comunidad moderada</CARVIPIXBadge>
+              <CARVIPIXBadge variant="default">Vista demo</CARVIPIXBadge>
+              <CARVIPIXBadge variant="success">Online ahora: 128</CARVIPIXBadge>
             </div>
           </div>
-          <div className="mt-3 md:mt-0 text-sm text-zinc-400 flex items-center gap-3">
-            <Users size={18} /> <span>Equipo conectado</span>
+
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+            <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+              <Search size={15} />
+            </button>
+            <button type="button" className="relative h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+              <Bell size={15} />
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-[#D4AF37] text-black text-[10px] leading-none font-bold inline-flex items-center justify-center px-1">3</span>
+            </button>
+            <div className="rounded-xl border border-white/10 bg-[#0B0B0B] p-1.5 pr-2 flex items-center gap-2 min-w-0">
+              <span className="h-7 w-7 rounded-full bg-gradient-to-br from-[#E7C866] to-[#D4AF37] text-black text-[11px] font-bold inline-flex items-center justify-center shrink-0">{userName.slice(0, 2).toUpperCase()}</span>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold truncate">{userName}</p>
+                <p className="text-[11px] text-white/60 truncate">Miembro PRO</p>
+              </div>
+            </div>
           </div>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-[1fr_320px]">
-          {/* Chat column */}
-          <div className="rounded-2xl border border-white/10 bg-[#0B111A]/90 p-4 flex flex-col h-[70vh] max-h-[80vh]">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="text-zinc-300" />
-                <h2 className="text-lg font-semibold">Chat principal</h2>
+        <section className="grid gap-2 md:gap-3 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
+          <aside className="space-y-2 md:space-y-3 lg:space-y-2 md:grid md:grid-cols-2 md:gap-3 lg:block">
+            <CARVIPIXCard variant="info" padding="16">
+              <h2 className="text-sm font-semibold">Panel de navegacion</h2>
+              <nav className="mt-2 space-y-1.5">
+                {MAIN_NAV.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = item.id === "comunidad";
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={`w-full rounded-lg border px-2.5 py-2 text-left text-xs md:text-[13px] flex items-center gap-2 ${
+                        isActive
+                          ? "border-[#D4AF37]/55 bg-[#D4AF37]/15 text-white"
+                          : "border-white/10 bg-white/[0.03] text-white/80"
+                      }`}
+                    >
+                      <span className="h-5 w-5 rounded-md bg-white/10 inline-flex items-center justify-center"><Icon size={14} /></span>
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </CARVIPIXCard>
+
+            <CARVIPIXCard variant="premium" padding="16">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Canales</h3>
+                <span className="text-[10px] tracking-[0.08em] uppercase text-white/55">Privados</span>
               </div>
-              <div className="text-xs text-zinc-400">Moderado • Ver reglas</div>
-            </div>
+              <div className="mt-2 space-y-1.5">
+                {CHANNELS.map((channel) => {
+                  const isActive = channel.id === activeChannel;
+                  return (
+                    <button
+                      key={channel.id}
+                      type="button"
+                      onClick={() => setActiveChannel(channel.id)}
+                      className={`w-full rounded-lg border p-2 text-left ${
+                        isActive
+                          ? "border-[#D4AF37]/55 bg-[#D4AF37]/15"
+                          : "border-white/10 bg-white/[0.03]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs md:text-[13px] font-semibold inline-flex items-center gap-1">
+                          <Hash size={12} />
+                          {channel.label}
+                        </span>
+                        <small className="text-[10px] text-white/60">{channel.messageCount}</small>
+                      </div>
+                      <p className="mt-1 text-[11px] text-white/60">{channel.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </CARVIPIXCard>
+          </aside>
 
-            <div ref={scrollRef} className="flex-1 overflow-auto pr-2 space-y-2">
-              <div className="text-xs text-zinc-400 text-center">Hoy</div>
+          <section className="min-w-0">
+            <CARVIPIXCard variant="premium" padding="16">
+              <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-2.5">
+                <div className="min-w-0">
+                  <h2 className="text-sm md:text-base font-semibold truncate">#{activeChannelInfo.label}</h2>
+                  <p className="mt-1 text-[11px] md:text-xs text-white/60">{activeChannelInfo.description}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Bell size={14} /></button>
+                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Search size={14} /></button>
+                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Users size={14} /></button>
+                </div>
+              </div>
 
-              {messages.map((m) => (
-                <motion.div
-                  key={m.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`max-w-[85%] ${m.admin ? "ml-0 bg-gradient-to-r from-[#2b220d]/10 via-transparent to-transparent border border-[#D4AF37]/20 text-white" : "ml-auto bg-[#0B1320] text-zinc-200"} rounded-xl p-3`}
-                >
-                  <div className="flex items-baseline gap-2">
-                    <span className={`text-sm font-semibold ${m.admin ? "text-[#D4AF37]" : "text-zinc-200"}`}>{m.author}</span>
-                    <span className="text-xs text-zinc-400">{m.role}</span>
-                    <span className="text-xs text-zinc-500 ml-2">{m.time}</span>
-                  </div>
-                  <div className="mt-1 text-sm leading-6">{m.text}</div>
-                </motion.div>
-              ))}
-            </div>
+              <div className="mt-2.5 h-[44vh] min-h-[260px] md:h-[52vh] overflow-auto pr-1 space-y-2">
+                {activeMessages.map((message) => (
+                  <article key={message.id} className="rounded-xl border border-white/10 bg-[#0A111B] p-2.5 md:p-3 grid grid-cols-[34px_minmax(0,1fr)] gap-2">
+                    <div className="h-[34px] w-[34px] rounded-full border border-white/20 bg-gradient-to-br from-[#D4AF37]/70 to-[#2C4A7A] text-[11px] font-bold inline-flex items-center justify-center">
+                      {message.avatar}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <strong className="text-xs md:text-sm font-semibold">{message.user}</strong>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] ${roleStyles(message.role)}`}>{message.role}</span>
+                        <small className="text-[10px] text-white/55">{message.time}</small>
+                      </div>
+                      <p className="mt-1.5 text-xs md:text-sm leading-relaxed text-white/90">{message.content}</p>
 
-            <div className="mt-2 border-t border-white/5 py-2">
-              {notice ? <div className="mb-2 text-sm text-red-400">{notice}</div> : null}
-              <div className="mb-1 text-xs text-zinc-400">Filtro activo: lenguaje respetuoso</div>
-              <div className="flex gap-2">
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {REACTION_META.map((reaction) => {
+                          const isActive = message.reactedByMe.includes(reaction.key);
+                          return (
+                            <button
+                              key={reaction.key}
+                              type="button"
+                              onClick={() => toggleReaction(message.id, reaction.key)}
+                              className={`rounded-full border px-2 py-1 text-xs inline-flex items-center gap-1 ${
+                                isActive
+                                  ? "border-[#D4AF37]/55 bg-[#D4AF37]/15"
+                                  : "border-white/15 bg-white/[0.03]"
+                              }`}
+                            >
+                              <span>{reaction.emoji}</span>
+                              <small className="text-[10px] text-white/75">{message.reactions[reaction.key]}</small>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <p className="mt-2 text-[11px] md:text-xs text-white/55">{typingName} esta escribiendo...</p>
+
+              <div className="mt-2 rounded-xl border border-white/12 bg-[#070E17] p-1.5 grid grid-cols-[34px_34px_minmax(0,1fr)] md:grid-cols-[34px_34px_minmax(0,1fr)_auto] gap-1.5 items-center">
+                <button type="button" onClick={attachDemo} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+                  <Paperclip size={15} />
+                </button>
+                <button type="button" onClick={addEmoji} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+                  <Heart size={15} />
+                </button>
                 <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
+                  value={inputValue}
+                  onChange={(event) => setInputValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") sendMessage();
+                  }}
                   placeholder="Escribe tu mensaje..."
-                  className="flex-1 rounded-xl bg-[#061018] px-4 py-2 text-sm text-white outline-none placeholder:text-zinc-500"
+                  className="h-[34px] min-w-0 w-full rounded-lg border border-white/15 bg-[#0A111B] px-3 text-xs md:text-sm text-white placeholder:text-white/45 outline-none"
                 />
                 <button
+                  type="button"
                   onClick={sendMessage}
-                  className="rounded-xl bg-[#D4AF37] px-3 py-2 text-black flex items-center gap-2"
+                  className="h-[34px] rounded-lg bg-gradient-to-r from-[#F0CF68] to-[#D4AF37] text-black font-bold px-3 text-xs inline-flex items-center justify-center gap-1 md:col-auto col-span-full"
                 >
-                  <Send size={16} /> Enviar
+                  <Send size={14} />
+                  Enviar
                 </button>
               </div>
-            </div>
-          </div>
+              {helperNotice ? <p className="mt-1.5 text-[11px] text-white/60">{helperNotice}</p> : null}
+            </CARVIPIXCard>
+          </section>
 
-          {/* Right panel */}
-          <aside className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-[#0B111A]/90 p-4">
-              <h3 className="text-sm font-semibold text-[#D4AF37]">Reglas de la comunidad</h3>
-              <ul className="mt-3 text-sm text-zinc-300 space-y-2">
-                <li className="flex items-start gap-2"><ShieldCheck className="text-[#D4AF37]" /> Respeto obligatorio</li>
-                <li className="flex items-start gap-2"><Zap className="text-zinc-300" /> No spam</li>
-                <li className="flex items-start gap-2"><Check className="text-zinc-300" /> No prometer ganancias</li>
-                <li className="flex items-start gap-2"><Users className="text-zinc-300" /> Seguir indicaciones del equipo</li>
+          <aside className="space-y-2 md:space-y-3">
+            <CARVIPIXCard variant="info" padding="16">
+              <h3 className="text-sm font-semibold">Reglas de la comunidad</h3>
+              <ul className="mt-2 space-y-1.5 text-xs md:text-[13px] text-white/85">
+                <li className="flex items-center gap-1.5"><Shield size={13} /> Respeto.</li>
+                <li className="flex items-center gap-1.5"><CircleHelp size={13} /> No spam.</li>
+                <li className="flex items-center gap-1.5"><Gem size={13} /> No prometer ganancias.</li>
+                <li className="flex items-center gap-1.5"><Users size={13} /> Seguir instrucciones.</li>
               </ul>
-            </div>
+            </CARVIPIXCard>
 
-            <div className="rounded-2xl border border-white/10 bg-[#0B111A]/90 p-4">
-              <h3 className="text-sm font-semibold text-[#D4AF37]">Canales activos</h3>
-              <ul className="mt-3 text-sm text-zinc-300 space-y-2">
-                <li className="flex items-center justify-between"><span>Alertas en Vivo</span><span className="text-xs text-zinc-400">#alerts</span></li>
-                <li className="flex items-center justify-between"><span>Gestión de señales</span><span className="text-xs text-zinc-400">#gestion</span></li>
-                <li className="flex items-center justify-between"><span>Dudas de miembros</span><span className="text-xs text-zinc-400">#preguntas</span></li>
-                <li className="flex items-center justify-between"><span>Noticias importantes</span><span className="text-xs text-zinc-400">#news</span></li>
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[#0B111A]/90 p-4">
-              <h3 className="text-sm font-semibold text-[#D4AF37]">Estado de sala</h3>
-              <div className="mt-3 text-sm text-zinc-300 space-y-2">
-                <div className="flex items-center justify-between"><span>Moderadores</span><span>3</span></div>
-                <div className="flex items-center justify-between"><span>Miembros online</span><span>{onlineCount}</span></div>
-                <div className="flex items-center justify-between"><span>Última actualización</span><span className="text-xs text-zinc-400">hace 2 min</span></div>
+            <CARVIPIXCard variant="info" padding="16">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Canales activos</h3>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-white/55">Ver todos</span>
               </div>
-            </div>
+              <div className="mt-2 space-y-1.5">
+                {CHANNELS.map((channel) => (
+                  <div key={`active-${channel.id}`} className="rounded-lg border border-white/10 bg-white/[0.03] p-2 flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <strong className="text-xs md:text-[13px] block truncate">#{channel.label}</strong>
+                      <p className="mt-1 text-[11px] text-white/60 line-clamp-2">{channel.description}</p>
+                    </div>
+                    <span className="text-[11px] text-white/60 shrink-0">{channel.messageCount}</span>
+                  </div>
+                ))}
+              </div>
+            </CARVIPIXCard>
 
-            <div className="rounded-2xl border border-white/10 bg-[#0B111A]/90 p-4">
-              <h3 className="text-sm font-semibold text-[#D4AF37]">Confianza</h3>
-              <p className="mt-2 text-sm text-zinc-300">Esta comunidad está diseñada para acompañar al miembro durante la operativa, resolver dudas y mantener comunicación clara sobre las señales.</p>
-            </div>
+            <CARVIPIXCard variant="info" padding="16">
+              <h3 className="text-sm font-semibold">Estado de sala</h3>
+              <div className="mt-2 space-y-1.5 text-xs md:text-[13px]">
+                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Moderadores</span><strong>3</strong></p>
+                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Miembros online</span><strong>128</strong></p>
+                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Total de miembros</span><strong>1,248</strong></p>
+                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Ultima actualizacion</span><strong>hace 2 min</strong></p>
+              </div>
+            </CARVIPIXCard>
+
+            <CARVIPIXCard variant="premium" padding="16">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold">Miembros activos</h3>
+                <span className="text-[10px] uppercase tracking-[0.08em] text-white/55">Ver todos</span>
+              </div>
+              <div className="mt-2 space-y-1.5">
+                {onlineMembers.map((member) => (
+                  <div key={member.name} className="rounded-lg border border-white/10 bg-white/[0.03] p-2 grid grid-cols-[28px_minmax(0,1fr)_8px] gap-2 items-center">
+                    <span className="h-7 w-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#7C9BE0] text-black text-[11px] font-bold inline-flex items-center justify-center">{member.name.slice(0, 2).toUpperCase()}</span>
+                    <div className="min-w-0">
+                      <strong className="text-xs md:text-[13px] block truncate">{member.name}</strong>
+                      <p className="text-[11px] text-white/60 truncate">{member.role}</p>
+                    </div>
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_2px_rgba(52,211,153,0.25)]" />
+                  </div>
+                ))}
+              </div>
+            </CARVIPIXCard>
           </aside>
-        </div>
+        </section>
       </div>
     </main>
   );
 }
-// duplicate block removed

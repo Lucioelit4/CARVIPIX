@@ -2,10 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { Search, Eye } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { getAdminData, updatePago } from '@/app/admin/lib/admin-helpers';
 import { useToast } from './Toast';
 import DetailModal from './DetailModal';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 interface Pago {
   id: string;
@@ -19,15 +20,10 @@ interface Pago {
 
 export default function AdminPagos() {
   const [search, setSearch] = useState('');
-  const [pagos, setPagos] = useState<Pago[]>([]);
+  const [pagos, setPagos] = useState<Pago[]>(() => getAdminData().pagos);
   const [selectedPago, setSelectedPago] = useState<Pago | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { showToast } = useToast();
-
-  useEffect(() => {
-    const data = getAdminData();
-    setPagos(data.pagos);
-  }, []);
 
   const handleUpdatePago = (id: string, nuevoEstado: Pago['estado']) => {
     if (updatePago(id, nuevoEstado)) {
@@ -50,11 +46,6 @@ export default function AdminPagos() {
       pago.producto.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getEstadoColor = (estado: string) => {
-    if (estado === 'completado') return 'bg-green-500/20 text-green-300';
-    if (estado === 'fallido') return 'bg-red-500/20 text-red-300';
-    return 'bg-yellow-500/20 text-yellow-300';
-  };
 
   const totalMonto = pagos
     .filter((p) => p.estado === 'completado')
@@ -93,8 +84,9 @@ export default function AdminPagos() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-white/10 bg-white/5">
@@ -118,45 +110,47 @@ export default function AdminPagos() {
                   <td className="px-6 py-4 text-sm font-semibold text-white">{pago.monto}</td>
                   <td className="px-6 py-4 text-sm text-white/70">{pago.metodo}</td>
                   <td className="px-6 py-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded capitalize ${getEstadoColor(pago.estado)}`}>
-                      {pago.estado}
-                    </span>
+                    <CARVIPIXBadge variant={pago.estado === 'completado' ? 'success' : pago.estado === 'fallido' ? 'danger' : 'warning'}>{pago.estado}</CARVIPIXBadge>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-1 flex-wrap">
-                      <button
+                      <CARVIPIXButton
                         onClick={() => {
                           setSelectedPago(pago);
                           setIsModalOpen(true);
                         }}
-                        className="px-2 py-1 text-xs rounded bg-white/10 text-white hover:bg-white/20 transition flex items-center gap-1"
+                        variant="ghost"
+                        size="sm"
+                        leftIcon={<Eye className="w-4 h-4" />}
                       >
-                        <Eye className="w-4 h-4" />
                         Ver
-                      </button>
+                      </CARVIPIXButton>
                       {pago.estado !== 'completado' && (
-                        <button
+                        <CARVIPIXButton
                           onClick={() => handleUpdatePago(pago.id, 'completado')}
-                          className="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 transition"
+                          variant="success"
+                          size="sm"
                         >
                           Confirmar
-                        </button>
+                        </CARVIPIXButton>
                       )}
                       {pago.estado !== 'fallido' && (
-                        <button
+                        <CARVIPIXButton
                           onClick={() => handleUpdatePago(pago.id, 'fallido')}
-                          className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition"
+                          variant="danger"
+                          size="sm"
                         >
                           Rechazar
-                        </button>
+                        </CARVIPIXButton>
                       )}
                       {pago.estado !== 'pendiente' && (
-                        <button
+                        <CARVIPIXButton
                           onClick={() => handleUpdatePago(pago.id, 'pendiente')}
-                          className="px-2 py-1 text-xs rounded bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 transition"
+                          variant="secondary"
+                          size="sm"
                         >
                           Pendiente
-                        </button>
+                        </CARVIPIXButton>
                       )}
                     </div>
                   </td>
@@ -171,6 +165,7 @@ export default function AdminPagos() {
             <p className="text-white/50">No se encontraron pagos</p>
           </div>
         )}
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Stats */}
@@ -180,20 +175,20 @@ export default function AdminPagos() {
         transition={{ delay: 0.3 }}
         className="grid grid-cols-3 gap-4"
       >
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Total procesado</p>
           <p className="text-2xl font-bold text-[#D4AF37]">${totalMonto.toLocaleString()}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Transacciones</p>
           <p className="text-2xl font-bold text-white">{pagos.length}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Tasa de éxito</p>
           <p className="text-2xl font-bold text-green-400">
             {pagos.length > 0 ? ((pagos.filter(p => p.estado === 'completado').length / pagos.length) * 100).toFixed(1) : '0'}%
           </p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Detail Modal */}
@@ -212,9 +207,7 @@ export default function AdminPagos() {
               </div>
               <div>
                 <p className="text-xs text-white/60 mb-1">Estado</p>
-                <span className={`text-xs font-bold px-2 py-1 rounded capitalize w-fit block ${getEstadoColor(selectedPago.estado)}`}>
-                  {selectedPago.estado}
-                </span>
+                <CARVIPIXBadge variant={selectedPago.estado === 'completado' ? 'success' : selectedPago.estado === 'fallido' ? 'danger' : 'warning'}>{selectedPago.estado}</CARVIPIXBadge>
               </div>
             </div>
 

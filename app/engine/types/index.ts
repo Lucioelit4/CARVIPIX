@@ -237,6 +237,17 @@ export type {
 } from './realDataProvider';
 
 // ============================================
+// BROKER PROVIDER RESOLUTION TYPES
+// ============================================
+
+export type {
+  BrokerProviderId,
+  ProviderFallbackPolicy,
+  ProviderSelectionConfig,
+  ProviderResolution,
+} from './brokerProvider';
+
+// ============================================
 // BACKTESTING TYPES (Privado - Admin Only)
 // ============================================
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Walk-forward testing para backtesting
  * Divide datos en períodos de entrenamiento y validación
@@ -312,3 +313,4 @@ function calculateVariance(values: number[]): number {
   const variance = values.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / values.length;
   return variance;
 }
+

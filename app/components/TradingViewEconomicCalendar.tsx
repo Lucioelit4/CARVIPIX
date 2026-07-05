@@ -81,7 +81,7 @@ export default function TradingViewEconomicCalendar() {
 
   return (
     <>
-      <div className="rounded-2xl border border-white/10 bg-[#10141D]/90 p-5 shadow-xl shadow-[#D4AF37]/10 overflow-visible">
+      <div className="rounded-2xl border border-white/10 bg-[#121212]/90 p-5 shadow-xl shadow-[#D4AF37]/10 overflow-visible">
         <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="mb-2 text-sm uppercase tracking-[0.18em] text-[#D4AF37]/80">
@@ -104,7 +104,7 @@ export default function TradingViewEconomicCalendar() {
 
         <div className="rounded-3xl border border-white/10 bg-[#0B1220]/80 p-3">
           {hasErrorCompact ? (
-            <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-[#070A0F]/80 p-6 text-center text-sm text-slate-300">
+            <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-[#0B0B0B]/80 p-6 text-center text-sm text-slate-300">
               No se pudo cargar los eventos relevantes.
               <br />
               Intenta recargar la página o abrir el calendario completo.
@@ -137,9 +137,9 @@ export default function TradingViewEconomicCalendar() {
               </button>
             </div>
             <div className="p-6">
-              <div className="rounded-[28px] border border-white/10 bg-[#10141D]/90 p-4">
+              <div className="rounded-[28px] border border-white/10 bg-[#121212]/90 p-4">
                 {hasErrorExpanded ? (
-                  <div className="flex min-h-[760px] items-center justify-center rounded-[28px] border border-dashed border-white/10 bg-[#070A0F]/80 p-6 text-center text-sm text-slate-300">
+                  <div className="flex min-h-[760px] items-center justify-center rounded-[28px] border border-dashed border-white/10 bg-[#0B0B0B]/80 p-6 text-center text-sm text-slate-300">
                     No se pudo cargar el calendario completo.
                     <br />
                     Prueba de nuevo en unos instantes.

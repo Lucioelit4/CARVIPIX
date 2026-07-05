@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -232,15 +233,15 @@ function ProgressTab({ progress, isRunning }: { progress: any; isRunning: boolea
 
       {/* Acciones */}
       <div className="flex gap-2">
-        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">
+        <div className="flex-1 bg-blue-600/80 text-white font-bold py-2 rounded text-center">
           {isRunning ? '⏸️ Pausar' : '▶️ Iniciar'}
-        </button>
-        <button className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 rounded">
+        </div>
+        <div className="flex-1 bg-orange-600/80 text-white font-bold py-2 rounded text-center">
           🔄 Resetear
-        </button>
-        <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
+        </div>
+        <div className="flex-1 bg-green-600/80 text-white font-bold py-2 rounded text-center">
           💾 Guardar
-        </button>
+        </div>
       </div>
     </div>
   );
@@ -409,13 +410,14 @@ function RecommendationsTab({ recommendations }: { recommendations: any }) {
 
       {/* Action */}
       <div className="flex gap-2">
-        <button className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
+        <div className="flex-1 bg-green-600/80 text-white font-bold py-2 rounded text-center">
           ✓ Aplicar Recomendación
-        </button>
-        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded">
+        </div>
+        <div className="flex-1 bg-blue-600/80 text-white font-bold py-2 rounded text-center">
           📊 Guardar Reporte
-        </button>
+        </div>
       </div>
     </div>
   );
 }
+

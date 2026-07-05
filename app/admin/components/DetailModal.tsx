@@ -32,7 +32,7 @@ export default function DetailModal({ isOpen, onClose, title, children, footerBu
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl max-h-[90vh] z-50 overflow-hidden"
           >
-            <div className="rounded-lg border border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] shadow-2xl flex flex-col">
+            <div className="rounded-lg border border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] shadow-2xl flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-white/5">
                 <h2 className="text-xl font-bold text-[#D4AF37]">{title}</h2>

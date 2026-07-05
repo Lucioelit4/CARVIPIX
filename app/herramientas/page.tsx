@@ -9,9 +9,9 @@ export default function HerramientasPage() {
   const [activeTab, setActiveTab] = useState('riesgo');
 
   return (
-    <div className="min-h-screen bg-[#05070B] text-white">
+    <div className="min-h-screen bg-[#030303] text-white">
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[#0B111A] to-[#05070B] border-b border-white/5 px-4 py-12 sm:py-16 md:py-20">
+      <div className="bg-gradient-to-b from-[#0B0B0B] to-[#030303] border-b border-white/5 px-4 py-12 sm:py-16 md:py-20">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -66,7 +66,7 @@ export default function HerramientasPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           key={activeTab}
-          className="bg-[#0B111A] border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
         >
           {activeTab === 'riesgo' && <CalculadoraRiesgo />}
           {activeTab === 'rr' && <CalculadoraRR />}

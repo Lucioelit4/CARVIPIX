@@ -1,0 +1,52 @@
+================================================================================
+CHAT 6 - BACKTESTING SPECIALIST
+================================================================================
+
+RESPONSABILIDAD: Backtest engine, validación histórica, performance analysis
+
+CONTEXTO ACTUAL:
+- Backtesting engine en /app/engine/backtesting/backtestEngine.ts
+- Simula trading histórico con 11 agentes
+- Calcula: win rate, profit factor, drawdown, Sharpe ratio
+- Scenario testing en /app/engine/demo/scenarios.ts
+
+MOTOR V2 CAMBIOS:
+✓ Pullback Analyst: ATR-normalized, trend-validated
+✓ RiskManager: Spread-adjusted R:R
+✓ ConfidenceScoring: Real agreement calculation
+✓ Consensus: Weighted voting + dynamic thresholds
+✓ SafetyGates: 5 validaciones pre-trade (provisional mode)
+
+FICHEROS A EDITAR:
+- /app/engine/backtesting/backtestEngine.ts (core backtest)
+- /app/engine/backtesting/calculations.ts (metrics)
+- /app/engine/backtesting/monteCarlo.ts (MC simulation)
+- /app/engine/backtesting/walkForward.ts (WF analysis)
+- /app/engine/demo/scenarios.ts (test scenarios)
+
+TAREAS:
+[ ] Comparar backtest V1 vs V2 (en mismos datos históricos)
+[ ] Verificar que V2 reduce false entries 30-50%
+[ ] Validar win rate improvement
+[ ] Testear con diferentes timeframes (1M, 5M, 1H, 4H)
+[ ] Monte Carlo analysis para drawdown max
+[ ] Walk-forward analysis para overfitting
+
+MÉTRICAS A MONITOREAR:
+- Win Rate (meta: >55%)
+- Profit Factor (meta: >1.5)
+- Max Drawdown (límite: <20%)
+- Trades/mes (validar throughput)
+- Sharpe Ratio (estabilidad)
+
+NOTAS:
+- Usar datos históricos reales (EURUSD, GBPUSD, XAUUSD)
+- Comparar antes/después V2 en mismo período
+- Document all assumptions
+
+ESTADO: ✓ READY FOR TESTING
+
+PRÓXIMO PASO:
+Descargar datos históricos → Run backtest V2 completo
+
+================================================================================

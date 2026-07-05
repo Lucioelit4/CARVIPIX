@@ -24,6 +24,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 // Importar tipos de datos
 import type { Asset, Timeframe, DataHealthResponse } from '../../engine/types/marketData';
@@ -43,7 +44,7 @@ interface AdminDataHealthProps {
 export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProps) {
   const [dataHealth, setDataHealth] = useState<DataHealthResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastRefresh, setLastRefresh] = useState<number>(Date.now());
+  const [lastRefresh, setLastRefresh] = useState<number>(0);
 
   // Cargar datos de salud
   useEffect(() => {
@@ -74,7 +75,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
 
   if (!isAdmin || !dataHealth) {
     return (
-      <div className="min-h-screen bg-[#05070B] p-6">
+      <div className="min-h-screen bg-[#030303] p-6">
         <div className="text-center">
           {!isAdmin && <p className="text-red-400">Acceso restringido</p>}
           {isLoading && <p className="text-gray-400">Cargando datos...</p>}
@@ -84,6 +85,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
   }
 
   const { status, assets, timeframes } = dataHealth;
+  const renderNow = lastRefresh || status.lastUpdate;
   const healthPercent = Math.round(status.overallHealth);
   const getHealthColor = (health: number) => {
     if (health >= 90) return 'text-green-400';
@@ -105,23 +107,23 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
           <Database className="w-8 h-8 text-[#D4AF37]" />
           <h2 className="text-2xl font-bold text-white">Salud de Datos en Tiempo Real</h2>
         </div>
-        <motion.button
+        <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setLastRefresh(Date.now())}
-          className="flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-lg text-[#D4AF37] hover:bg-[#D4AF37]/30 transition-colors"
         >
-          <RefreshCw className="w-4 h-4" />
-          Refrescar
-        </motion.button>
+          <CARVIPIXButton onClick={() => setLastRefresh(Date.now())} variant="secondary" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />}>
+            Refrescar
+          </CARVIPIXButton>
+        </motion.div>
       </div>
 
       {/* ESTADO GENERAL */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-lg border p-6 ${getHealthBg(healthPercent)}`}
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="24" hover={false} className={getHealthBg(healthPercent)}>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Salud General */}
           <div className="space-y-2">
@@ -186,6 +188,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
             )}
           </p>
         </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* ACTIVOS */}
@@ -251,7 +254,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
 
               {/* Última actualización */}
               <p className="mt-3 text-xs text-gray-600">
-                Actualizado hace {Math.round((Date.now() - asset.lastUpdate) / 1000)}s
+                Actualizado hace {Math.round((renderNow - asset.lastUpdate) / 1000)}s
               </p>
             </motion.div>
           ))}
@@ -272,18 +275,13 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-[#0B111A] rounded-lg border border-white/10 p-4"
+              className="bg-[#0B0B0B] rounded-lg border border-white/10 p-4"
             >
               <div className="flex items-center justify-between">
                 <p className="font-semibold text-[#D4AF37]">{tf.timeframe}</p>
                 <div className="flex flex-wrap gap-2">
                   {tf.assets.map((asset) => (
-                    <span
-                      key={asset}
-                      className="px-2 py-1 text-xs bg-green-500/20 border border-green-500/30 text-green-400 rounded"
-                    >
-                      {asset}
-                    </span>
+                    <CARVIPIXBadge key={asset} variant="success">{asset}</CARVIPIXBadge>
                   ))}
                 </div>
               </div>
@@ -394,12 +392,12 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
         </h3>
 
         <div className="bg-black/40 rounded border border-white/10 p-4 max-h-64 overflow-y-auto space-y-2 font-mono text-xs">
-          <p className="text-green-400">[{new Date().toLocaleTimeString()}] ✓ Monitor de salud iniciado</p>
-          <p className="text-green-400">[{new Date(Date.now() - 5000).toLocaleTimeString()}] ✓ Datos de XAUUSD/1H recibidos exitosamente</p>
-          <p className="text-green-400">[{new Date(Date.now() - 10000).toLocaleTimeString()}] ✓ Validación completada para 4 activos</p>
-          <p className="text-yellow-400">[{new Date(Date.now() - 15000).toLocaleTimeString()}] ⚠ Latencia elevada en BTCUSD/5M: 68ms</p>
-          <p className="text-green-400">[{new Date(Date.now() - 20000).toLocaleTimeString()}] ✓ Integridad de datos verificada</p>
-          <p className="text-blue-400">[{new Date(Date.now() - 25000).toLocaleTimeString()}] ℹ Actualización de métricas completada</p>
+          <p className="text-green-400">[{new Date(renderNow).toLocaleTimeString()}] ✓ Monitor de salud iniciado</p>
+          <p className="text-green-400">[{new Date(renderNow - 5000).toLocaleTimeString()}] ✓ Datos de XAUUSD/1H recibidos exitosamente</p>
+          <p className="text-green-400">[{new Date(renderNow - 10000).toLocaleTimeString()}] ✓ Validación completada para 4 activos</p>
+          <p className="text-yellow-400">[{new Date(renderNow - 15000).toLocaleTimeString()}] ⚠ Latencia elevada en BTCUSD/5M: 68ms</p>
+          <p className="text-green-400">[{new Date(renderNow - 20000).toLocaleTimeString()}] ✓ Integridad de datos verificada</p>
+          <p className="text-blue-400">[{new Date(renderNow - 25000).toLocaleTimeString()}] ℹ Actualización de métricas completada</p>
           <p className="text-gray-500">... (logs históricos en base de datos de monitoreo)</p>
         </div>
 

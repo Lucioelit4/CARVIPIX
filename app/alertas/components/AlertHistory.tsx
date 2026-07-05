@@ -1,27 +1,32 @@
 ﻿"use client";
 
-import { CARVIPIXCard, colors, spacing, typography, borders } from "../../design-system";
+import { CARVIPIXBadge, CARVIPIXCard, colors, spacing, typography, borders } from "../../design-system";
 
-const history = [
+const defaultHistory = [
   { activo: "XAUUSD", resultado: "Ganada", pips: "+68 pips", fecha: "Hoy 11:20" },
   { activo: "BTCUSD", resultado: "Ganada", pips: "+420 pts", fecha: "Hoy 09:45" },
   { activo: "GBPUSD", resultado: "Perdida", pips: "-36 pips", fecha: "Ayer 18:10" },
   { activo: "EURUSD", resultado: "Ganada", pips: "+22 pips", fecha: "Ayer 14:05" },
 ];
 
-export default function AlertHistory() {
-  const safeHistory = history ?? [];
+type AlertHistoryItem = {
+  activo: string;
+  resultado: string;
+  pips: string;
+  fecha: string;
+};
+
+export default function AlertHistory({ history }: { history?: AlertHistoryItem[] }) {
+  const safeHistory = history && history.length > 0 ? history : defaultHistory;
 
   return (
-    <CARVIPIXCard variant="elevated" padding="16">
+    <CARVIPIXCard variant="info" padding="16">
       <div style={{ marginBottom: spacing[12], display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing[12] }}>
         <div>
           <h2 style={{ fontSize: typography.sizes.lg, fontWeight: typography.weights.bold, color: colors.white.pure }}>Historial reciente</h2>
           <p style={{ marginTop: spacing[8], fontSize: typography.sizes.xs, color: colors.white.secondary }}>Últimas operaciones cerradas.</p>
         </div>
-        <span style={{ borderRadius: '9999px', border: `1px solid rgba(212, 175, 55, 0.3)`, backgroundColor: `rgba(212, 175, 55, 0.1)`, paddingLeft: spacing[8], paddingRight: spacing[8], paddingTop: spacing[4], paddingBottom: spacing[4], fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: colors.gold.primary }}>
-          Último 7 días
-        </span>
+        <CARVIPIXBadge variant="premium">Último 7 días</CARVIPIXBadge>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[8] }}>

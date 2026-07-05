@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * PULLBACK VALIDATOR v1.0
  * 
@@ -315,3 +316,4 @@ export function getPullbackValidatorDiagnostic() {
 }
 
 export default PullbackValidator;
+

@@ -1,0 +1,89 @@
+================================================================================
+CHAT 7 - DATA INTEGRATION SPECIALIST
+================================================================================
+
+RESPONSABILIDAD: Conectar APIs broker, datos reales, pipelines data
+
+CONTEXTO ACTUAL:
+- Sistema actualmente con datos mock/placeholder
+- 5 Safety Gates esperan datos reales
+- Motor necesita: spread, volume, ATR, eventos, account, correlación
+
+INTEGRACIONES FALTANTES (PRIORIDAD):
+
+🔴 CRÍTICO:
+1. Broker API Connection (MT4/MT5/IB/etc)
+   - Real-time bid/ask spread
+   - Real-time volume
+   - Account balance + drawdown
+   - Open positions list
+   → Archivo: /app/engine/integrations/brokerAPI.ts (CREAR)
+
+2. ATR Calculator (Real-time)
+   - 20-candle ATR (volatilidad actual)
+   - 200-candle ATR percentile (contexto histórico)
+   → Archivo: /app/engine/calculations/atrCalculator.ts (CREAR)
+
+3. Economic Calendar API
+   - ForexFactory / TradingEconomics integration
+   - Event severity + timing
+   → Archivo: /app/engine/integrations/economicCalendar.ts (CREAR)
+
+🟡 IMPORTANTE:
+4. Correlation Matrix Calculator
+   - Historical prices (100+ candles per symbol)
+   - Pearson correlation
+   - Update frequency: daily/weekly
+   → Archivo: /app/engine/calculations/correlationMatrix.ts (CREAR)
+
+5. Historical Data Storage
+   - Database schema para: spreads, volumes, ATR
+   - Update pipelines
+   → Archivo: /app/engine/storage/historicalData.ts (CREAR)
+
+FICHEROS A EDITAR/CREAR:
+- /app/api/datasets/route.ts (existente, extend)
+- /app/engine/integrations/** (CREAR)
+- /app/engine/calculations/** (CREAR)
+- /app/engine/storage/** (CREAR)
+
+TAREAS:
+[ ] Diseñar broker API connector interface
+[ ] Implementar primer broker (MT4 o IB)
+[ ] Agregar error handling para connection loss
+[ ] Setup database para historical data
+[ ] Create data validation pipelines
+[ ] Add monitoring/logging para data quality
+[ ] Setup alerts si data stream falla
+
+CONFIG NECESARIO (TODO):
+- BROKER_API_KEY=xxx
+- BROKER_ACCOUNT=xxx
+- CALENDAR_API_KEY=xxx
+- DB_CONNECTION_STRING=xxx
+
+NOTAS:
+- Datos mock NO deben bloquear signals (✓ ya implementado)
+- Validar data freshness antes de usar en gates
+- Implement fallback si broker API cae
+- Log todas las conversiones de unidades (pips ↔ price)
+
+ESTADO: ⏳ PENDING (esperando broker credentials)
+
+PRÓXIMO PASO:
+1. Definir broker a conectar
+2. Solicitar API credentials
+3. Implementar primeros endpoints
+
+ACTUALIZACION IMPLEMENTADA (2026-07-03):
+- Capa central creada: /app/engine/integrations/dataIntegrationGateway.ts
+- Punto unico de acceso conectado al runtime: /app/engine/core/engineDataRuntime.ts
+- Fuentes cubiertas por el gateway:
+   - broker (adapter a providerFactory)
+   - economic calendar
+   - news
+   - historical
+   - custom/futuras APIs via registerSource()
+- Queda pendiente conectar APIs reales con credenciales de produccion.
+
+================================================================================

@@ -35,9 +35,9 @@ export default function FondeoPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       {/* Hero Comercial */}
-      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B111A] to-[#05070B] px-6 py-20 sm:px-8">
+      <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-6 py-20 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-12 lg:grid-cols-2 items-center">
             {/* Contenido izquierdo */}
@@ -75,9 +75,12 @@ export default function FondeoPage() {
                 >
                   Solicitar revisión
                 </Link>
-                <button className="w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5">
+                <a
+                  href="#proceso-fondeo"
+                  className="block w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 text-center"
+                >
                   Ver proceso
-                </button>
+                </a>
               </div>
             </motion.div>
 
@@ -86,7 +89,7 @@ export default function FondeoPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B111A] to-[#05070B] p-8 shadow-2xl shadow-[#D4AF37]/20"
+              className="rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B0B0B] to-[#030303] p-8 shadow-2xl shadow-[#D4AF37]/20"
             >
               <h3 className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Capital objetivo</h3>
               <p className="mt-4 text-5xl font-black text-white">200,000 USD</p>
@@ -149,7 +152,7 @@ export default function FondeoPage() {
       </div>
 
       {/* Proceso CARVIPIX */}
-      <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      <div id="proceso-fondeo" className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <h2 className="text-3xl font-bold mb-8 text-center">Proceso CARVIPIX</h2>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -218,7 +221,7 @@ export default function FondeoPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B111A] p-8"
+          className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-8"
         >
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {[
@@ -228,7 +231,7 @@ export default function FondeoPage() {
               { label: "Entrega", value: "Credenciales", color: "text-[#D4AF37]" },
               { label: "Compatible", value: "Alertas CARVIPIX", color: "text-green-400" },
             ].map((item, i) => (
-              <div key={i} className="rounded-lg bg-[#0B111A]/80 border border-[#D4AF37]/20 p-4 text-center">
+              <div key={i} className="rounded-lg bg-[#0B0B0B]/80 border border-[#D4AF37]/20 p-4 text-center">
                 <p className="text-xs uppercase text-zinc-400 mb-2 font-semibold">{item.label}</p>
                 <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
               </div>
@@ -278,7 +281,7 @@ export default function FondeoPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-lg border border-[#D4AF37]/30 bg-gradient-to-r from-[#11161E] to-[#0B111A] p-8 text-center"
+          className="rounded-lg border border-[#D4AF37]/30 bg-gradient-to-r from-[#11161E] to-[#0B0B0B] p-8 text-center"
         >
           <h3 className="text-3xl font-bold mb-3">¿Quieres buscar una cuenta fondeada?</h3>
           <p className="text-white/70 mb-6 max-w-2xl mx-auto">
@@ -359,7 +362,7 @@ export default function FondeoPage() {
                         setFormData({ ...formData, name: e.target.value });
                         if (errors.name) setErrors({ ...errors, name: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
                         errors.name
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"
@@ -382,7 +385,7 @@ export default function FondeoPage() {
                         setFormData({ ...formData, email: e.target.value });
                         if (errors.email) setErrors({ ...errors, email: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none transition ${
                         errors.email
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"
@@ -403,7 +406,7 @@ export default function FondeoPage() {
                         setFormData({ ...formData, company: e.target.value });
                         if (errors.company) setErrors({ ...errors, company: "" });
                       }}
-                      className={`w-full bg-[#0B111A] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
+                      className={`w-full bg-[#0B0B0B] border rounded-lg px-4 py-3 text-white focus:outline-none transition ${
                         errors.company
                           ? "border-red-500/50 focus:border-red-400"
                           : "border-white/10 focus:border-[#D4AF37]"

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { DollarSign, Users, TrendingUp, Activity } from 'lucide-react';
 import { useState } from 'react';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 export default function AdminUtilidades() {
   const [period, setPeriod] = useState('mes');
@@ -124,17 +125,14 @@ export default function AdminUtilidades() {
         className="flex gap-2 flex-wrap"
       >
         {['dia', 'semana', 'mes', 'año', 'historico'].map((p) => (
-          <button
+          <CARVIPIXButton
             key={p}
             onClick={() => setPeriod(p)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              period === p
-                ? 'bg-[#D4AF37] text-black'
-                : 'bg-white/10 text-white hover:bg-white/20'
-            }`}
+            variant={period === p ? 'premium' : 'ghost'}
+            size="sm"
           >
             {p === 'dia' ? 'Hoy' : p === 'semana' ? 'Semana' : p === 'mes' ? 'Mes' : p === 'año' ? 'Año' : 'Histórico'}
-          </button>
+          </CARVIPIXButton>
         ))}
       </motion.div>
 
@@ -148,14 +146,16 @@ export default function AdminUtilidades() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className={`rounded-lg border border-white/10 ${tarjeta.bg} p-4`}
+              className=""
             >
-              <div className="flex items-center justify-between mb-3">
-                <Icon className={`w-5 h-5 ${tarjeta.color}`} />
-                <span className="text-xs text-green-400 bg-green-500/10 px-2 py-1 rounded">Demo</span>
-              </div>
-              <p className="text-white/70 text-xs mb-1">{tarjeta.label}</p>
-              <p className={`text-2xl font-bold ${tarjeta.color}`}>{tarjeta.value}</p>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}>
+                <div className="flex items-center justify-between mb-3">
+                  <Icon className={`w-5 h-5 ${tarjeta.color}`} />
+                  <CARVIPIXBadge variant="admin">Demo</CARVIPIXBadge>
+                </div>
+                <p className="text-white/70 text-xs mb-1">{tarjeta.label}</p>
+                <p className={`text-2xl font-bold ${tarjeta.color}`}>{tarjeta.value}</p>
+              </CARVIPIXCard>
             </motion.div>
           );
         })}
@@ -168,26 +168,26 @@ export default function AdminUtilidades() {
         transition={{ delay: 0.15 }}
         className="grid grid-cols-2 md:grid-cols-5 gap-4"
       >
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Ingresos Membresías</p>
           <p className="text-xl font-bold text-[#D4AF37]">{metrics.membresias}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Ingresos Bot</p>
           <p className="text-xl font-bold text-green-400">{metrics.bot}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Ingresos Capital</p>
           <p className="text-xl font-bold text-blue-400">{metrics.capital}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Ingresos Fondeo</p>
           <p className="text-xl font-bold text-purple-400">{metrics.fondeo}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+        </CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-xs text-white/60 mb-2">Ticket Promedio</p>
           <p className="text-xl font-bold text-yellow-400">{suscriptores.ticketPromedio}</p>
-        </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Gráficas */}
@@ -207,7 +207,7 @@ export default function AdminUtilidades() {
               <YAxis stroke="rgba(255,255,255,0.6)" style={{ fontSize: '12px' }} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#05070B',
+                  backgroundColor: '#030303',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
                 }}
@@ -240,7 +240,7 @@ export default function AdminUtilidades() {
               <YAxis stroke="rgba(255,255,255,0.6)" style={{ fontSize: '12px' }} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#05070B',
+                  backgroundColor: '#030303',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
                 }}
@@ -248,7 +248,7 @@ export default function AdminUtilidades() {
               />
               <Legend />
               <Bar dataKey="altas" fill="#10B981" />
-              <Bar dataKey="bajas" fill="#EF4444" />
+              <Bar dataKey="bajas" fill="#E74C3C" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -279,7 +279,7 @@ export default function AdminUtilidades() {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#05070B',
+                  backgroundColor: '#030303',
                   border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
                 }}
@@ -327,8 +327,9 @@ export default function AdminUtilidades() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="rounded-lg border border-white/10 bg-white/5 overflow-hidden"
+        className=""
       >
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="px-6 py-4 border-b border-white/10">
           <h3 className="text-lg font-bold">Últimos Pagos Demo</h3>
         </div>
@@ -353,15 +354,14 @@ export default function AdminUtilidades() {
                   <td className="px-6 py-4 text-sm font-semibold text-[#D4AF37]">{pago.monto}</td>
                   <td className="px-6 py-4 text-sm text-white/70">{pago.metodo}</td>
                   <td className="px-6 py-4">
-                    <span className="text-xs font-bold px-2 py-1 rounded bg-green-500/20 text-green-300">
-                      {pago.estado}
-                    </span>
+                    <CARVIPIXBadge variant="success">{pago.estado}</CARVIPIXBadge>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </CARVIPIXCard>
       </motion.div>
 
       {/* Info */}
@@ -369,12 +369,14 @@ export default function AdminUtilidades() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-4"
+        className=""
       >
-        <p className="text-sm text-white/70">
-          Todas las métricas mostradas son datos de demostración. 
-          Panel privado solo para dueño/administrador de CARVIPIX.
-        </p>
+        <CARVIPIXCard variant="info" padding="16" hover={false}>
+          <p className="text-sm text-white/70">
+            Todas las métricas mostradas son datos de demostración.
+            Panel privado solo para dueño/administrador de CARVIPIX.
+          </p>
+        </CARVIPIXCard>
       </motion.div>
     </div>
   );

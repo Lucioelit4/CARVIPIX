@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tipos para alertas
 
 export type AlertType = "signal" | "risk" | "news" | "technical";
@@ -35,3 +36,4 @@ export interface AlertHistory {
   action: "viewed" | "dismissed" | "triggered";
   timestamp: Date;
 }
+

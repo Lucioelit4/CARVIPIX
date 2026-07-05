@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function CookiesPage() {
   return (
-    <main className="min-h-screen bg-[#05070B] text-white">
+    <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
         <Link
           href="/"
@@ -20,7 +20,7 @@ export default function CookiesPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="rounded-2xl border border-white/10 bg-[#0B111A]/80 p-8 backdrop-blur-sm"
+          className="rounded-2xl border border-white/10 bg-[#0B0B0B]/80 p-8 backdrop-blur-sm"
         >
           <h1 className="text-4xl font-bold text-[#D4AF37] mb-2">Política de Cookies</h1>
           <p className="text-zinc-400 mb-8">Última actualización: 2 de julio de 2026</p>

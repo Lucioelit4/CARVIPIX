@@ -1,0 +1,192 @@
+name: carvipix-local
+
+services:
+  app:
+    build:
+      context: .
+      target: runner
+    container_name: carvipix-app-local
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-carvipix}:${POSTGRES_PASSWORD:-carvipix}@postgres:5432/${POSTGRES_DB:-carvipix}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3010:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  heavy-worker:
+    image: node:20-alpine
+    profiles: ["heavy"]
+    container_name: carvipix-heavy-worker-local
+    working_dir: /workspace
+    environment:
+      HEAVY_TASK_MEMORY_MB: ${HEAVY_TASK_MEMORY_MB:-8192}
+      HEAVY_TASK_CONCURRENCY: ${HEAVY_TASK_CONCURRENCY:-0}
+    volumes:
+      - ./:/workspace
+    command: ["sh", "-c", "npm ci && npm run heavy:local -- npm run build"]
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: carvipix-postgres-local
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-carvipix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carvipix}
+      POSTGRES_DB: ${POSTGRES_DB:-carvipix}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-carvipix} -d ${POSTGRES_DB:-carvipix}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: carvipix-redis-local
+    ports:
+      - "6380:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data_local:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:17
+    container_name: carvipix-postgres-backup-local
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-carvipix}
+      POSTGRES_USER: ${POSTGRES_USER:-carvipix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-carvipix}
+      SCHEDULE: "0 */6 * * *"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 3
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - backups_local:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: carvipix-prometheus-local
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus_data_local:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: carvipix-blackbox-local
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+    volumes:
+      - ./infra/blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
+    ports:
+      - "9115:9115"
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: carvipix-node-exporter-local
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: carvipix-cadvisor-local
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.2.0
+    container_name: carvipix-loki-local
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki_data_local:/loki
+    ports:
+      - "3100:3100"
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.2.0
+    container_name: carvipix-promtail-local
+    command: ["-config.file=/etc/promtail/config.yml"]
+    volumes:
+      - ./infra/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/log:/var/log:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: carvipix-grafana-local
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data_local:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+
+volumes:
+  postgres_data_local:
+  redis_data_local:
+  backups_local:
+  prometheus_data_local:
+  grafana_data_local:
+  loki_data_local:

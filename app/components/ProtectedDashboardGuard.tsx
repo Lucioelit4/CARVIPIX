@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { AlertTriangle, ChevronLeft, LayoutDashboard } from 'lucide-react';
 import { getCurrentRole } from '@/app/lib/auth/session';
 
@@ -31,39 +30,15 @@ function isProtectedDashboardPath(pathname: string) {
 
 export default function ProtectedDashboardGuard({ children }: ProtectedDashboardGuardProps) {
   const pathname = usePathname();
-  const [isAllowed, setIsAllowed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isProtectedDashboardPath(pathname)) {
-      setIsAllowed(true);
-      setIsLoading(false);
-      return;
-    }
-
-    const role = getCurrentRole();
-    setIsAllowed(role === 'admin' || role === 'cliente');
-    setIsLoading(false);
-  }, [pathname]);
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-[#05070B] text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#D4AF37]/30 border-t-[#D4AF37] rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">Validando acceso...</p>
-        </div>
-      </main>
-    );
-  }
+  const isAllowed = !isProtectedDashboardPath(pathname) || ['admin', 'cliente'].includes(getCurrentRole());
 
   if (isAllowed) {
     return <>{children}</>;
   }
 
   return (
-    <main className="min-h-screen bg-[#05070B] text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B111A] to-[#05070B] p-8 shadow-2xl shadow-[#D4AF37]/10">
+    <main className="min-h-screen bg-[#030303] text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B0B0B] to-[#030303] p-8 shadow-2xl shadow-[#D4AF37]/10">
         <div className="mb-8 text-center">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-full border border-red-500/30 bg-red-500/10 mb-6">
             <AlertTriangle className="w-8 h-8 text-red-400" />
