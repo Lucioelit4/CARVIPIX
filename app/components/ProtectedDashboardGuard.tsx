@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, ChevronLeft, LayoutDashboard } from 'lucide-react';
-import { getCurrentRole } from '@/app/lib/auth/session';
+import { getCurrentRole, writeAuthSession } from '@/app/lib/auth/session';
 
 interface ProtectedDashboardGuardProps {
   children: React.ReactNode;
@@ -30,7 +31,47 @@ function isProtectedDashboardPath(pathname: string) {
 
 export default function ProtectedDashboardGuard({ children }: ProtectedDashboardGuardProps) {
   const pathname = usePathname();
-  const isAllowed = !isProtectedDashboardPath(pathname) || ['admin', 'cliente'].includes(getCurrentRole());
+  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const validate = async () => {
+      if (!isProtectedDashboardPath(pathname)) {
+        setIsAllowed(true);
+        return;
+      }
+
+      const currentRole = getCurrentRole();
+      if (currentRole === 'admin') {
+        setIsAllowed(true);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/auth/session', { cache: 'no-store' });
+        if (!response.ok) {
+          setIsAllowed(false);
+          return;
+        }
+
+        const data = (await response.json().catch(() => ({}))) as { authenticated?: boolean; membership?: { active?: boolean } };
+        if (data.authenticated && data.membership?.active) {
+          writeAuthSession('cliente');
+          setIsAllowed(true);
+          return;
+        }
+      } catch {
+        // No-op: denial fallback applied below.
+      }
+
+      setIsAllowed(false);
+    };
+
+    void validate();
+  }, [pathname]);
+
+  if (isAllowed === null) {
+    return null;
+  }
 
   if (isAllowed) {
     return <>{children}</>;
@@ -50,10 +91,10 @@ export default function ProtectedDashboardGuard({ children }: ProtectedDashboard
         </div>
 
         <div className="space-y-3">
-          <Link href="/dashboard" className="block">
+          <Link href="/servicios" className="block">
             <button className="w-full px-4 py-3 rounded-lg bg-[#D4AF37] text-black font-bold hover:bg-[#E5C158] transition duration-200 flex items-center justify-center gap-2">
               <LayoutDashboard size={16} />
-              Entrar al dashboard
+              Ver servicios
             </button>
           </Link>
 

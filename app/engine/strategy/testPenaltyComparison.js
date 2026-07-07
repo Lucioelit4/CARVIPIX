@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * TEST SCRIPT: TrendValidator v1.1.1 - Test Contradiction Penalty
  * 

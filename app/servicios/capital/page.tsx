@@ -8,20 +8,7 @@ import { LineChart, Line, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tool
 import { validateCapitalForm } from "@/app/lib/form-validators";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
 
-const capitalData = [
-  { month: "Ene", value: 10000 },
-  { month: "Feb", value: 10850 },
-  { month: "Mar", value: 11420 },
-  { month: "Abr", value: 11100 },
-  { month: "May", value: 11920 },
-  { month: "Jun", value: 12500 },
-  { month: "Jul", value: 12850 },
-  { month: "Ago", value: 12450 },
-  { month: "Sep", value: 13200 },
-  { month: "Oct", value: 13920 },
-  { month: "Nov", value: 13650 },
-  { month: "Dic", value: 14200 },
-];
+const capitalData: Array<{ month: string; value: number }> = [];
 
 export default function CapitalPage() {
   const [showModal, setShowModal] = useState(false);
@@ -203,15 +190,15 @@ export default function CapitalPage() {
             transition={{ duration: 0.6 }}
             className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-6"
           >
-            <h3 className="text-lg font-bold mb-6">Ejemplo demo</h3>
+            <h3 className="text-lg font-bold mb-6">Distribución de utilidades</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center pb-3 border-b border-white/10">
                 <span className="text-sm text-white/60">Capital asignado</span>
-                <span className="font-bold">10,000 USD</span>
+                <span className="font-bold">Se confirma al activar el servicio</span>
               </div>
               <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                <span className="text-sm text-white/60">Utilidad generada (demo)</span>
-                <span className="font-bold text-green-400">1,000 USD</span>
+                <span className="text-sm text-white/60">Utilidad generada</span>
+                <span className="font-bold text-green-400">Se refleja tras cierre operativo</span>
               </div>
               
               <div className="flex gap-1 h-8 rounded-lg overflow-hidden my-4 border border-white/10">
@@ -225,31 +212,31 @@ export default function CapitalPage() {
               
               <div className="flex justify-between items-center pb-3 border-b border-green-400/20 bg-green-400/5 px-3 py-2 rounded">
                 <span className="text-sm font-semibold text-green-400">Cliente recibe (60%)</span>
-                <span className="font-bold text-green-400">600 USD</span>
+                <span className="font-bold text-green-400">Según utilidad verificada</span>
               </div>
               <div className="flex justify-between items-center pt-2 px-3 py-2 bg-[#D4AF37]/5 rounded">
                 <span className="text-sm font-semibold text-[#D4AF37]">CARVIPIX (40%)</span>
-                <span className="font-bold text-[#D4AF37]">400 USD</span>
+                <span className="font-bold text-[#D4AF37]">Según utilidad verificada</span>
               </div>
-              <p className="text-xs text-white/40 mt-4 text-center">Ejemplo demo para explicar el modelo.</p>
+              <p className="text-xs text-white/40 mt-4 text-center">Distribución sujeta a resultados reales y términos vigentes.</p>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* Cuenta de ejemplo */}
+      {/* Estado de cuenta */}
       <div className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
-        <h2 className="text-3xl font-bold mb-8 text-center">Cuenta de ejemplo</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center">Estado de cuenta</h2>
 
         <div className="rounded-lg border border-[#D4AF37]/20 bg-gradient-to-br from-[#11161E] to-[#0B0B0B] p-6">
           <div className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
             {[
-              { label: "Capital asignado", value: "$12,500", color: "text-white" },
-              { label: "Balance actual", value: "$13,920", color: "text-green-400" },
-              { label: "Utilidad flotante", value: "+$1,420", color: "text-green-400" },
-              { label: "Cliente 60%", value: "$852", color: "text-green-400" },
-              { label: "CARVIPIX 40%", value: "$568", color: "text-[#D4AF37]" },
-              { label: "Rendimiento", value: "+11.36%", color: "text-green-400" },
+              { label: "Capital asignado", value: "Disponible al activar", color: "text-white" },
+              { label: "Balance actual", value: "Se muestra con datos operativos", color: "text-green-400" },
+              { label: "Utilidad flotante", value: "Se actualiza en tiempo real", color: "text-green-400" },
+              { label: "Cliente 60%", value: "Calculado por periodo", color: "text-green-400" },
+              { label: "CARVIPIX 40%", value: "Calculado por periodo", color: "text-[#D4AF37]" },
+              { label: "Rendimiento", value: "Disponible al consolidar resultados", color: "text-green-400" },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -293,7 +280,7 @@ export default function CapitalPage() {
             </LineChart>
           </ResponsiveContainer>
           <p className="text-xs text-white/40 text-center mt-4">
-            Simulación de crecimiento realista con variaciones normales de mercado.
+            El gráfico se habilita automáticamente cuando existan reportes operativos consolidados.
           </p>
         </div>
       </div>
@@ -350,7 +337,7 @@ export default function CapitalPage() {
             </motion.div>
           ))}
         </div>
-        <p className="text-xs text-white/40 text-center mt-4">Métodos demo sujetos a disponibilidad.</p>
+        <p className="text-xs text-white/40 text-center mt-4">Métodos sujetos a disponibilidad operativa.</p>
       </div>
 
       {/* Transparencia */}
@@ -383,7 +370,7 @@ export default function CapitalPage() {
         >
           <h3 className="text-3xl font-bold mb-3">¿Listo para solicitar revisión?</h3>
           <p className="text-white/70 mb-6 max-w-2xl mx-auto">
-            Envía una solicitud demo y revisaremos el monto, método y disponibilidad.
+            Envía una solicitud y revisaremos monto, método y disponibilidad.
           </p>
           <Link
             href="/checkout?product=capital"
@@ -681,7 +668,7 @@ export default function CapitalPage() {
                   className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3 disabled:opacity-50"
                   disabled={Object.keys(errors).length > 0}
                 >
-                  Enviar solicitud demo
+                  Enviar solicitud
                 </button>
 
                 <button
@@ -695,7 +682,7 @@ export default function CapitalPage() {
                 </button>
 
                 <p className="text-xs text-white/40 text-center mt-6">
-                  Esto es una demostración. CARVIPIX se contactará para confirmar detalles.
+                  CARVIPIX se contactará para confirmar detalles y próximos pasos.
                 </p>
               </>
             )}

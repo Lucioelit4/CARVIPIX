@@ -12,7 +12,7 @@ interface DisclaimerNoteProps {
 
 const disclaimerMessages: Record<DisclaimerVariant, { text: string; icon?: React.ReactNode }> = {
   demo: {
-    text: 'Vista demo. Este contenido es demostrativo y usa datos simulados.',
+    text: 'Contenido informativo sujeto a actualización operativa según disponibilidad del servicio.',
     icon: <Info size={14} />,
   },
   risk: {
@@ -36,11 +36,11 @@ const disclaimerMessages: Record<DisclaimerVariant, { text: string; icon?: React
     icon: <AlertTriangle size={14} />,
   },
   academy: {
-    text: 'La Academia está en desarrollo. El trading implica riesgo; CARVIPIX no garantiza resultados específicos.',
+    text: 'La Academia se habilita por etapas según el plan activo. El trading implica riesgo; CARVIPIX no garantiza resultados específicos.',
     icon: <Info size={14} />,
   },
   support: {
-    text: 'Centro de soporte demo lista para integración IA. Respuestas automáticas son simuladas.',
+    text: 'Centro de soporte CARVIPIX para consultas operativas y seguimiento de solicitudes.',
     icon: <Info size={14} />,
   },
 };

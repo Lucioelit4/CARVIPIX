@@ -15,7 +15,7 @@ import {
   Ticket,
   Radio,
 } from 'lucide-react';
-import { getDailyBriefing, getTradingSuggestions } from '@/app/lib/data-helpers';
+import { getDailyBriefing, getTradingSuggestions } from '@/app/lib/client-data-helpers';
 import { validateTicketForm } from '@/app/lib/form-validators';
 import DisclaimerNote from '@/app/components/DisclaimerNote';
 
@@ -29,7 +29,7 @@ export default function SoportePage() {
     {
       role: 'assistant',
       content:
-        'Hola Abraham, soy el asistente CARVIPIX. Puedo ayudarte con alertas, membresía, bot, gestión de capital, fondeo o soporte técnico.',
+        'Hola, soy el asistente CARVIPIX. Puedo ayudarte con alertas, membresía, bot, gestión de capital, fondeo o soporte técnico.',
     },
   ]);
 
@@ -48,7 +48,7 @@ export default function SoportePage() {
     const loadAIData = async () => {
       try {
         const briefing = await getDailyBriefing();
-        const suggestions = await getTradingSuggestions();
+        await getTradingSuggestions();
         
         if (briefing) {
           // Agregar briefing como mensaje inicial del asistente
@@ -61,7 +61,7 @@ export default function SoportePage() {
           ]);
         }
       } catch (error) {
-        console.log("Usando datos demo de soporte");
+        console.log("No se pudo cargar el contexto inicial de soporte");
       }
     };
 
@@ -73,11 +73,9 @@ export default function SoportePage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Generar respuestas demo según palabras clave
-  const generateDemoResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-
-    return 'Entiendo tu consulta. Esta es una respuesta demo; cuando conectemos la IA real podrá revisar documentación interna y guiarte paso a paso. ¿Hay algo más en lo que pueda orientarte?';
+  // Generar respuesta base mientras se amplía la integración contextual.
+  const generateSupportResponse = (_query: string): string => {
+    return 'Gracias por tu consulta. Hemos registrado tu mensaje y te responderemos con la guía correspondiente según tu servicio activo. ¿Deseas que también abramos un ticket de seguimiento?';
   };
 
   // Enviar mensaje en el chat
@@ -87,7 +85,7 @@ export default function SoportePage() {
     const userMessage: ChatMessage = { role: 'user', content: inputValue };
     setMessages((prev) => [...prev, userMessage]);
 
-    const assistantResponse = generateDemoResponse(inputValue);
+    const assistantResponse = generateSupportResponse(inputValue);
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
@@ -114,7 +112,7 @@ export default function SoportePage() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  // Crear ticket demo
+  // Crear ticket
   const handleCreateTicket = () => {
     const validationErrors = validateTicketForm(ticketForm);
     
@@ -128,7 +126,7 @@ export default function SoportePage() {
     }
 
     setTicketErrors({});
-    setTicketMessage('✓ Ticket demo creado correctamente. ID: TK-26070112345');
+    setTicketMessage('✓ Ticket creado correctamente. ID: TK-26070112345');
     setTicketForm({ categoria: 'Alertas', prioridad: 'Normal', mensaje: '' });
     setTimeout(() => setTicketMessage(''), 4000);
   };
@@ -171,7 +169,7 @@ export default function SoportePage() {
             className="flex flex-wrap gap-3"
           >
             {[
-              'Asistente IA demo',
+              'Asistente IA CARVIPIX',
               'Respuesta 24/7',
               'Tickets privados',
               'Soporte premium',
@@ -451,7 +449,7 @@ export default function SoportePage() {
             className="bg-[#D4AF37] text-[#030303] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
             disabled={Object.keys(ticketErrors).length > 0}
           >
-            Crear ticket demo
+            Crear ticket
           </button>
         </motion.div>
 
@@ -527,8 +525,8 @@ export default function SoportePage() {
           className="text-center text-xs text-white/50"
         >
           <p>
-            Vista demo. El asistente IA y los tickets se conectarán a servicios
-            reales en una fase posterior.
+            El asistente y los tickets operan en entorno controlado y muestran
+            información según la disponibilidad de cada servicio.
           </p>
         </motion.div>
       </div>

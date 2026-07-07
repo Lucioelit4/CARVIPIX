@@ -39,8 +39,8 @@ export default function ServiciosAlertasPage() {
               </p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
-              <h2 className="text-xl font-semibold text-white">Vista demo</h2>
-              <p className="mt-4 text-zinc-400">Datos simulados y enfoque comercial. La información real llegará con la integración de la membresía completa.</p>
+              <h2 className="text-xl font-semibold text-white">Estado del servicio</h2>
+              <p className="mt-4 text-zinc-400">La información operativa se actualizará automáticamente cuando el servicio esté activo en tu cuenta.</p>
             </div>
           </div>
 

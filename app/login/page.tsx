@@ -1,65 +1,133 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { LockKeyhole, ShieldCheck } from 'lucide-react';
+import { FormEvent, useState } from 'react';
+import { ShieldCheck } from 'lucide-react';
 import { CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
-import { getCurrentRole } from '@/app/lib/auth/session';
+import { writeAuthSession } from '@/app/lib/auth/session';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const role = getCurrentRole();
-
-    if (role === 'admin') {
-      router.replace('/admin');
+  const submitLogin = async () => {
+    if (loading) {
       return;
     }
 
-    if (role === 'cliente') {
-      router.replace('/dashboard');
+    setError('');
+    setLoading(true);
+    let shouldStopLoading = true;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const requestedPath = params.get('next') ?? '/dashboard';
+      const redirectPath = requestedPath.startsWith('/') ? requestedPath : '/dashboard';
+
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        requiresVerification?: boolean;
+        success?: boolean;
+      };
+
+      if (!response.ok) {
+        if (result.requiresVerification) {
+          setError('Debes verificar tu correo antes de iniciar sesión.');
+        } else {
+          setError(result.error || 'No se pudo iniciar sesión.');
+        }
+        return;
+      }
+
+      if (result.success === false) {
+        setError(result.error || 'No se pudo iniciar sesión.');
+        return;
+      }
+
+      writeAuthSession('cliente');
+
+      const sessionValidation = await fetch('/api/auth/session', { cache: 'no-store' });
+      if (!sessionValidation.ok) {
+        window.location.replace('/servicios');
+        return;
+      }
+
+      const sessionPayload = (await sessionValidation.json().catch(() => ({}))) as {
+        authenticated?: boolean;
+        membership?: { active?: boolean };
+      };
+
+      if (!sessionPayload.authenticated || !sessionPayload.membership?.active) {
+        window.location.replace('/servicios');
+        return;
+      }
+
+      shouldStopLoading = false;
+      window.location.replace(redirectPath);
+    } catch {
+      setError('No se pudo iniciar sesión.');
+    } finally {
+      if (shouldStopLoading) {
+        setLoading(false);
+      }
     }
-  }, [router]);
+  };
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    await submitLogin();
+  };
 
   return (
     <main className="min-h-screen bg-[#030303] text-white flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl">
         <h1 className="mb-2 text-center text-3xl font-bold text-white sm:text-4xl">Acceso CARVIPIX</h1>
-        <p className="mb-8 text-center text-sm text-white/70 sm:text-base">
-          Selecciona tu flujo de acceso. Esta vista reutiliza la sesión real ya definida en la plataforma.
-        </p>
+        <p className="mb-8 text-center text-sm text-white/70 sm:text-base">Inicia sesión para acceder a tu Dashboard.</p>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4">
           <CARVIPIXCard variant="default" padding="24" hover>
             <div className="mb-3 inline-flex rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-2">
               <ShieldCheck className="h-5 w-5 text-[#D4AF37]" />
             </div>
-            <h2 className="mb-2 text-xl font-semibold text-white">Acceso cliente</h2>
-            <p className="mb-5 text-sm text-white/70">
-              Ingresa al dashboard principal para operar módulos de usuario.
-            </p>
-            <Link href="/dashboard" className="block">
-              <CARVIPIXButton variant="premium" fullWidth>
-                Continuar como cliente
-              </CARVIPIXButton>
-            </Link>
-          </CARVIPIXCard>
+            <h2 className="mb-2 text-xl font-semibold text-white">Inicio de sesión</h2>
 
-          <CARVIPIXCard variant="admin" padding="24" hover>
-            <div className="mb-3 inline-flex rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-2">
-              <LockKeyhole className="h-5 w-5 text-[#D4AF37]" />
-            </div>
-            <h2 className="mb-2 text-xl font-semibold text-white">Acceso administrativo</h2>
-            <p className="mb-5 text-sm text-white/70">
-              Redirección al panel administrativo con validación de acceso correspondiente.
-            </p>
-            <Link href="/admin" className="block">
-              <CARVIPIXButton variant="secondary" fullWidth>
-                Ir al panel admin
+            <form className="space-y-3" onSubmit={onSubmit}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Correo"
+                className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm"
+                disabled={loading}
+                required
+              />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña"
+                className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm"
+                disabled={loading}
+                required
+              />
+              {error ? <p className="text-xs text-red-400">{error}</p> : null}
+              <CARVIPIXButton type="submit" variant="premium" fullWidth disabled={loading}>
+                {loading ? 'Ingresando...' : 'Ingresar'}
               </CARVIPIXButton>
-            </Link>
+            </form>
+
+            <div className="mt-3 flex items-center justify-between text-xs">
+              <Link href="/registro" className="text-[#D4AF37]">Crear cuenta</Link>
+              <Link href="/recuperar-password" className="text-white/70">Recuperar contraseña</Link>
+            </div>
           </CARVIPIXCard>
         </div>
       </div>

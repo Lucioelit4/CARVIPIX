@@ -104,7 +104,7 @@ export class ParameterOptimizer {
       bestCandidate: null,
     });
 
-    let runDurations: number[] = [];
+    const runDurations: number[] = [];
 
     // Ejecutar cada combinación en cada activo/timeframe
     for (const candidate of selectedCandidates) {

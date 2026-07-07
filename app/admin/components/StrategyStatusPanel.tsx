@@ -55,7 +55,7 @@ const ComponentStatusCard: React.FC<ComponentStatusDisplayProps> = ({
     }
   };
 
-  const StatusIcon = () => {
+  const statusIcon = () => {
     switch (status) {
       case 'FUNCIONAL':
         return <Clock className="w-5 h-5 text-yellow-600" />;
@@ -80,7 +80,7 @@ const ComponentStatusCard: React.FC<ComponentStatusDisplayProps> = ({
           <div>
             <h3 className="font-semibold text-gray-900">{name}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <StatusIcon />
+              {statusIcon()}
               <span className={`text-sm font-medium ${getStatusTextColor()}`}>{status}</span>
             </div>
           </div>

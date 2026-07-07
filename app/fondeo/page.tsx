@@ -1,13 +1,32 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { X, CheckCircle2, DollarSign, Calendar, Building2, Zap } from 'lucide-react';
+import { getFundingSnapshot } from '@/app/lib/client-data-helpers';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 export default function FondeoPage() {
   const [showModal, setShowModal] = useState(false);
   const termsRef = useRef<HTMLDivElement>(null);
+  const [fundingData, setFundingData] = useState({ activePrograms: 0, approvedAccounts: 0, totalCapital: 0 });
+
+  useEffect(() => {
+    const loadFunding = async () => {
+      try {
+        const snapshot = await getFundingSnapshot();
+        setFundingData({
+          activePrograms: Number(snapshot.activePrograms ?? 0),
+          approvedAccounts: Number(snapshot.approvedAccounts ?? 0),
+          totalCapital: Number(snapshot.totalCapital ?? 0),
+        });
+      } catch {
+        setFundingData({ activePrograms: 0, approvedAccounts: 0, totalCapital: 0 });
+      }
+    };
+
+    loadFunding();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
@@ -61,7 +80,9 @@ export default function FondeoPage() {
           >
             <CARVIPIXCard variant="premium" padding="24" hover={false}>
               <h2 className="text-2xl font-bold mb-2">Servicio completo</h2>
-              <p className="text-3xl font-bold text-[#D4AF37] mb-2">5,000 USD</p>
+              <p className="text-3xl font-bold text-[#D4AF37] mb-2">
+                {fundingData.totalCapital > 0 ? `${fundingData.totalCapital.toLocaleString()} USD` : 'Capital objetivo por confirmar'}
+              </p>
               <p className="text-sm text-white/70 mb-6">Pago único por gestión del proceso</p>
               <CARVIPIXButton onClick={() => setShowModal(true)} variant="premium" fullWidth>
                 Solicitar revisión
@@ -71,9 +92,21 @@ export default function FondeoPage() {
 
           {/* Metrics */}
           {[
-            { label: 'Capital objetivo', value: '200,000 USD', icon: '💰' },
-            { label: 'Duración estimada', value: '30 a 45 días', icon: '⏱️' },
-            { label: 'Empresas compatibles', value: 'FTMO + TopTier', icon: '🏢' },
+            {
+              label: 'Capital objetivo',
+                value: fundingData.totalCapital > 0 ? `${fundingData.totalCapital.toLocaleString()} USD` : 'Definición en curso',
+              icon: '💰',
+            },
+            {
+              label: 'Cuentas aprobadas',
+              value: fundingData.approvedAccounts > 0 ? String(fundingData.approvedAccounts) : '0',
+              icon: '⏱️',
+            },
+            {
+              label: 'Programas activos',
+              value: fundingData.activePrograms > 0 ? String(fundingData.activePrograms) : '0',
+              icon: '🏢',
+            },
           ].map((metric, i) => (
             <motion.div
               key={i}
@@ -283,7 +316,7 @@ export default function FondeoPage() {
                 <label className="block text-sm font-medium mb-2">Capital objetivo</label>
                 <input
                   type="text"
-                  value="200,000 USD"
+                  value={fundingData.totalCapital > 0 ? `${fundingData.totalCapital.toLocaleString()} USD` : 'Se definirá al validar tu solicitud'}
                   disabled
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white/60 cursor-not-allowed"
                 />
@@ -291,7 +324,7 @@ export default function FondeoPage() {
             </div>
 
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-6 text-xs text-white/70">
-              <p>✓ Esta es una solicitud demo. Los datos reales requieren validación.</p>
+              <p>✓ Esta solicitud requiere validación de datos.</p>
             </div>
 
             <div className="flex gap-3">
@@ -305,7 +338,7 @@ export default function FondeoPage() {
               <CARVIPIXButton
                 onClick={() => {
                   setShowModal(false);
-                  alert('✓ Solicitud de revisión enviada (demo). En producción, requiere validación completa.');
+                  alert('✓ Solicitud de revisión enviada. Requiere validación completa.');
                 }}
                 variant="premium"
                 fullWidth

@@ -59,7 +59,7 @@ export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTabl
 
       {alerts.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/65">
-          No hay alertas para los filtros aplicados.
+          Aún no hay alertas activas. Configura tus criterios para comenzar.
         </div>
       ) : (
         <div className="space-y-3">

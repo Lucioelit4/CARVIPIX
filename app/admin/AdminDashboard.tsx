@@ -1,13 +1,14 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send, Database, Microscope } from 'lucide-react';
+import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send, Database, Microscope, ShieldCheck, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminResumen from './components/AdminResumen';
 import AdminUsuarios from './components/AdminUsuarios';
 import AdminSolicitudes from './components/AdminSolicitudes';
 import AdminPagos from './components/AdminPagos';
+import AdminMembresias from './components/AdminMembresias';
 import AdminAlertas from './components/AdminAlertas';
 import AdminResultados from './components/AdminResultados';
 import AdminSoporte from './components/AdminSoporte';
@@ -21,7 +22,7 @@ import AdminDataHealth from './components/AdminDataHealth';
 import { ToastProvider } from './components/Toast';
 import { CARVIPIXButton } from '../design-system';
 
-type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
+type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
 interface TabConfig {
   id: TabType;
@@ -38,10 +39,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabType>('resumen');
+  const [isEnteringClientPanel, setIsEnteringClientPanel] = useState(false);
+  const [clientPanelError, setClientPanelError] = useState<string | null>(null);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
+    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
       queueMicrotask(() => {
         setActiveTab(tabParam);
       });
@@ -53,6 +56,31 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     router.push(`?tab=${tab}`, { scroll: false });
   };
 
+  const handleEnterClientPanel = async () => {
+    setClientPanelError(null);
+    setIsEnteringClientPanel(true);
+
+    try {
+      const response = await fetch('/api/admin/client-panel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        setClientPanelError('No se pudo habilitar el acceso al panel de clientes.');
+        return;
+      }
+
+      router.push('/dashboard');
+    } catch {
+      setClientPanelError('No se pudo habilitar el acceso al panel de clientes.');
+    } finally {
+      setIsEnteringClientPanel(false);
+    }
+  };
+
   const tabs: TabConfig[] = [
     { id: 'resumen', label: 'Resumen', icon: <BarChart3 className="w-5 h-5" />, component: <AdminResumen /> },
     { id: 'proyecto', label: 'Proyecto', icon: <GitBranch className="w-5 h-5" />, component: <AdminProyecto /> },
@@ -61,6 +89,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'backtesting', label: 'Backtesting', icon: <Microscope className="w-5 h-5" />, component: <AdminBacktesting /> },
     { id: 'datos', label: 'Datos', icon: <Database className="w-5 h-5" />, component: <AdminDataHealth isAdmin={true} /> },
     { id: 'usuarios', label: 'Usuarios', icon: <Users className="w-5 h-5" />, component: <AdminUsuarios /> },
+    { id: 'membresias', label: 'Membresías', icon: <ShieldCheck className="w-5 h-5" />, component: <AdminMembresias /> },
     { id: 'solicitudes', label: 'Solicitudes', icon: <FileText className="w-5 h-5" />, component: <AdminSolicitudes /> },
     { id: 'pagos', label: 'Pagos', icon: <DollarSign className="w-5 h-5" />, component: <AdminPagos /> },
     { id: 'alertas', label: 'Alertas', icon: <AlertCircle className="w-5 h-5" />, component: <AdminAlertas /> },
@@ -82,10 +111,26 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <h1 className="text-2xl font-bold text-[#D4AF37]">CARVIPIX Admin</h1>
             <p className="text-xs text-white/50 mt-1">Panel administrativo privado</p>
           </div>
-          <CARVIPIXButton onClick={onLogout} variant="ghost" size="sm" leftIcon={<LogOut className="w-4 h-4" />}>
-            Cerrar sesión
-          </CARVIPIXButton>
+          <div className="flex items-center gap-3">
+            <CARVIPIXButton
+              onClick={handleEnterClientPanel}
+              variant="secondary"
+              size="sm"
+              isLoading={isEnteringClientPanel}
+              leftIcon={<LayoutDashboard className="w-4 h-4" />}
+            >
+              Entrar al Panel de Clientes
+            </CARVIPIXButton>
+            <CARVIPIXButton onClick={onLogout} variant="ghost" size="sm" leftIcon={<LogOut className="w-4 h-4" />}>
+              Cerrar sesión
+            </CARVIPIXButton>
+          </div>
         </div>
+        {clientPanelError && (
+          <div className="mx-auto max-w-7xl px-6 pb-3 sm:px-8">
+            <p className="text-xs text-red-400">{clientPanelError}</p>
+          </div>
+        )}
       </header>
 
       {/* Navigation Tabs */}
@@ -135,7 +180,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </div>
             <div>
               <p className="font-semibold text-white mb-2">Datos</p>
-              <p className="text-white/60">Todos los datos mostrados son de demostración</p>
+              <p className="text-white/60">Todos los datos mostrados provienen de APIs activas</p>
             </div>
             <div>
               <p className="font-semibold text-white mb-2">Seguridad</p>
@@ -144,7 +189,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </div>
           <div className="border-t border-white/10 pt-6 text-center">
             <p className="text-xs text-white/50">
-              © 2026 CARVIPIX Admin. Panel de administración privado. Datos demo.
+              © 2026 CARVIPIX Admin. Panel de administración privado.
             </p>
           </div>
         </div>

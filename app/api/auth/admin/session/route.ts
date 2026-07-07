@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { rateLimiter } from '@/app/backend';
+import { getClientIp, isSameOriginRequest } from '@/app/api/admin/_shared/security';
+
+const ADMIN_COOKIE_NAME = 'carvipix_admin_session';
+const ADMIN_DASHBOARD_ACCESS_COOKIE = 'carvipix_admin_dashboard_access';
+
+function isValidAdminCode(code: unknown): boolean {
+  if (typeof code !== 'string' || !code.trim()) {
+    return false;
+  }
+
+  const configuredCode = process.env.ADMIN_ACCESS_CODE;
+  if (!configuredCode) {
+    return false;
+  }
+
+  return code.trim() === configuredCode;
+}
+
+export async function GET(request: NextRequest) {
+  const session = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  if (session === '1') {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  return NextResponse.json({ ok: false }, { status: 401 });
+}
+
+export async function POST(request: NextRequest) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ ok: false, error: 'Origen no permitido' }, { status: 403 });
+  }
+
+  const rateLimit = rateLimiter.check({
+    scope: 'auth.admin.login',
+    key: getClientIp(request),
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Demasiados intentos',
+        retryAfter: rateLimit.resetAt.toISOString(),
+      },
+      { status: 429 }
+    );
+  }
+
+  const body = (await request.json().catch(() => ({}))) as { code?: unknown };
+
+  if (!isValidAdminCode(body.code)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
+  rateLimiter.reset('auth.admin.login', getClientIp(request));
+
+  const response = NextResponse.json({ ok: true }, { status: 200 });
+  response.cookies.set({
+    name: ADMIN_COOKIE_NAME,
+    value: '1',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 12,
+  });
+
+  return response;
+}
+
+export async function DELETE() {
+  const response = NextResponse.json({ ok: true }, { status: 200 });
+  response.cookies.set({
+    name: ADMIN_COOKIE_NAME,
+    value: '',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  });
+  response.cookies.set({
+    name: ADMIN_DASHBOARD_ACCESS_COOKIE,
+    value: '',
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 0,
+  });
+
+  return response;
+}

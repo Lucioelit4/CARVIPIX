@@ -17,35 +17,36 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [status, setStatus] = useState<LoginStatus>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
-  const ADMIN_CODE = 'CARVIPIX-ADMIN';
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
     setStatusMessage('Validando credenciales...');
 
-    setTimeout(() => {
-      try {
-        if (code.toUpperCase() === ADMIN_CODE) {
-          writeAuthSession('admin');
-          logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
-          setStatus('success');
-          setStatusMessage('Acceso correcto. Ingresando al panel administrativo...');
+    try {
+      const response = await fetch('/api/auth/admin/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
 
-          setTimeout(() => {
-            onLogin();
-          }, 350);
-          return;
-        }
-
-        setStatus('denied');
-        setStatusMessage('Acceso denegado. Verifica tus credenciales e intenta nuevamente.');
-        setCode('');
-      } catch {
-        setStatus('error');
-        setStatusMessage('Ocurrió un error al validar el acceso. Intenta de nuevo.');
+      if (response.ok) {
+        writeAuthSession('admin');
+        logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
+        setStatus('success');
+        setStatusMessage('Acceso correcto. Ingresando al panel administrativo...');
+        setTimeout(() => {
+          onLogin();
+        }, 250);
+        return;
       }
-    }, 600);
+
+      setStatus('denied');
+      setStatusMessage('Acceso denegado. Verifica tus credenciales e intenta nuevamente.');
+      setCode('');
+    } catch {
+      setStatus('error');
+      setStatusMessage('Ocurrió un error al validar el acceso. Intenta de nuevo.');
+    }
   };
 
   return (

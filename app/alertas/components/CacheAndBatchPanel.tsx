@@ -243,7 +243,7 @@ function CacheTab({
       <div className="bg-slate-800 rounded p-4">
         <h4 className="font-bold text-slate-300 mb-2">Cobertura anual detectada</h4>
         <div className="text-sm text-slate-300 break-all">
-          {inventory?.availableYears.length ? inventory.availableYears.join(', ') : 'Sin datos'}
+          {inventory?.availableYears.length ? inventory.availableYears.join(', ') : 'Pendiente de carga de datasets'}
         </div>
       </div>
 

@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
+import { clearAuthSession } from "@/app/lib/auth/session";
 
 const menuItems = [
   { name: "Dashboard", href: "/dashboard" },
@@ -24,8 +25,29 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return;
+    }
+
+    setIsLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // No-op: local cleanup is always applied.
+    } finally {
+      clearAuthSession();
+      setMobileOpen(false);
+      router.replace('/login');
+      router.refresh();
+      setIsLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     if (!mobileOpen) {
@@ -114,6 +136,14 @@ export default function Sidebar() {
             >
               Ver planes
             </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-full border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition duration-200 hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+            </button>
           </div>
         </div>
       </aside>
@@ -168,6 +198,14 @@ export default function Sidebar() {
                 );
               })}
               <AdminMenuItem onNavigate={() => setMobileOpen(false)} compact />
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-2xl border border-white/15 px-4 py-3 text-sm font-semibold text-white transition duration-200 hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+              </button>
             </nav>
           </div>
         </div>

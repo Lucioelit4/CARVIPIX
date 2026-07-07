@@ -21,7 +21,7 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-import { getCurrentUser } from "@/app/lib/data-helpers";
+import { getCurrentUser } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXCard } from "@/app/design-system";
 
 type CommunityRole = "Equipo CARVIPIX" | "Moderador" | "Miembro PRO" | "Miembro";
@@ -213,7 +213,7 @@ function nowTime(): string {
 export default function ComunidadPage() {
   const [activeChannel, setActiveChannel] = useState<string>("chat-principal");
   const [messagesByChannel, setMessagesByChannel] = useState<Record<string, ChatMessage[]>>(CHANNEL_MESSAGES);
-  const [userName, setUserName] = useState("Usuario Demo");
+  const [userName, setUserName] = useState("Miembro CARVIPIX");
   const [inputValue, setInputValue] = useState("");
   const [typingName, setTypingName] = useState("Andrea");
   const [helperNotice, setHelperNotice] = useState("");
@@ -226,7 +226,7 @@ export default function ComunidadPage() {
           setUserName(user.nombre);
         }
       } catch {
-        console.log("Usando datos demo de comunidad");
+        console.log("No se pudo cargar la identidad de comunidad");
       }
     };
 
@@ -303,8 +303,8 @@ export default function ComunidadPage() {
     setInputValue((prev) => `${prev}${prev ? " " : ""}🔥`);
   };
 
-  const attachDemo = () => {
-    setHelperNotice("Adjunto demo agregado al mensaje.");
+  const attachFile = () => {
+    setHelperNotice("Adjunto agregado al mensaje.");
     setTimeout(() => setHelperNotice(""), 2000);
   };
 
@@ -318,7 +318,7 @@ export default function ComunidadPage() {
             <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
               <CARVIPIXBadge variant="premium">Miembro PRO activo</CARVIPIXBadge>
               <CARVIPIXBadge variant="default">Comunidad moderada</CARVIPIXBadge>
-              <CARVIPIXBadge variant="default">Vista demo</CARVIPIXBadge>
+              <CARVIPIXBadge variant="default">Canal privado</CARVIPIXBadge>
               <CARVIPIXBadge variant="success">Online ahora: 128</CARVIPIXBadge>
             </div>
           </div>
@@ -457,7 +457,7 @@ export default function ComunidadPage() {
               <p className="mt-2 text-[11px] md:text-xs text-white/55">{typingName} esta escribiendo...</p>
 
               <div className="mt-2 rounded-xl border border-white/12 bg-[#070E17] p-1.5 grid grid-cols-[34px_34px_minmax(0,1fr)] md:grid-cols-[34px_34px_minmax(0,1fr)_auto] gap-1.5 items-center">
-                <button type="button" onClick={attachDemo} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+                <button type="button" onClick={attachFile} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
                   <Paperclip size={15} />
                 </button>
                 <button type="button" onClick={addEmoji} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">

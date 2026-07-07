@@ -59,3 +59,7 @@ Esto ajusta memoria y pool de hilos para aprovechar CPU/RAM local sin cambiar la
 ## Documentacion DevOps
 
 Ver detalles operativos en `docs/DEPLOYMENT_DEVOPS.md`.
+
+## Email transaccional
+
+Guia de Brevo SMTP para registro y autenticacion de dominio en `docs/BREVO_SMTP_SETUP.md`.

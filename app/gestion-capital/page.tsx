@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { ShieldCheck, FileCheck2, Landmark, Scale, X, CircleCheckBig, LockKeyhole, BadgeCheck, BarChart3 } from 'lucide-react';
-import { getCapitalAccount, getCapitalMovements, getCapitalMonthlyReports } from '@/app/lib/data-helpers';
+import { getCapitalAccount, getCapitalMovements, getCapitalMonthlyReports } from '@/app/lib/client-data-helpers';
 import { CARVIPIXButton } from '@/app/design-system';
 import type { CapitalMovement, MonthlyReport } from '@/app/lib/modules/capital/types';
 
@@ -13,15 +13,15 @@ export default function GestionCapitalPage() {
   const [scrollToMovements, setScrollToMovements] = useState(false);
   const [selectedCrypto, setSelectedCrypto] = useState<string>('USDT');
 
-  const [capitalAsignado, setCapitalAsignado] = useState(12500);
-  const [balanceActual, setBalanceActual] = useState(13180);
+  const [capitalAsignado, setCapitalAsignado] = useState(0);
+  const [balanceActual, setBalanceActual] = useState(0);
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
   const [movimientos, setMovimientos] = useState<CapitalMovement[]>([]);
   const [fechaInicioGestion, setFechaInicioGestion] = useState<Date | null>(null);
   const movimientosRef = useRef<HTMLDivElement | null>(null);
 
   const ganancia = balanceActual - capitalAsignado;
-  const rendimiento = ((ganancia / capitalAsignado) * 100).toFixed(2);
+  const rendimiento = capitalAsignado > 0 ? ((ganancia / capitalAsignado) * 100).toFixed(2) : "0.00";
 
   useEffect(() => {
     const loadCapitalData = async () => {
@@ -41,7 +41,11 @@ export default function GestionCapitalPage() {
         setMovimientos(movimientosData);
         setMonthlyReports(reports);
       } catch {
-        console.log('Usando datos demo de capital');
+        setCapitalAsignado(0);
+        setBalanceActual(0);
+        setFechaInicioGestion(null);
+        setMovimientos([]);
+        setMonthlyReports([]);
       }
     };
 
@@ -56,14 +60,14 @@ export default function GestionCapitalPage() {
   }, [scrollToMovements]);
 
   const mesesGestionados = useMemo(() => {
-    if (!fechaInicioGestion) return 8;
+    if (!fechaInicioGestion) return 0;
     const now = new Date();
     const months = (now.getFullYear() - fechaInicioGestion.getFullYear()) * 12 + (now.getMonth() - fechaInicioGestion.getMonth());
     return Math.max(1, months + 1);
   }, [fechaInicioGestion]);
 
   const consistencia = useMemo(() => {
-    if (monthlyReports.length === 0) return 92;
+    if (monthlyReports.length === 0) return 0;
     const positivos = monthlyReports.filter((report) => report.rendimiento >= 0).length;
     return Math.round((positivos / monthlyReports.length) * 100);
   }, [monthlyReports]);
@@ -76,14 +80,7 @@ export default function GestionCapitalPage() {
       }));
     }
 
-    return [
-      { mes: 'Ene', balance: 12500 },
-      { mes: 'Feb', balance: 12680 },
-      { mes: 'Mar', balance: 12790 },
-      { mes: 'Abr', balance: 12960 },
-      { mes: 'May', balance: 13070 },
-      { mes: 'Jun', balance: 13180 },
-    ];
+    return [];
   }, [monthlyReports]);
 
   const resultadosRecientes = useMemo(() => {
@@ -91,12 +88,7 @@ export default function GestionCapitalPage() {
       return [...monthlyReports].slice(-6).reverse();
     }
 
-    return [
-      { mes: 'Jun 2026', capitalInicial: 12970, capitalFinal: 13180, utilidad: 210, rendimiento: 1.62 },
-      { mes: 'May 2026', capitalInicial: 12840, capitalFinal: 12970, utilidad: 130, rendimiento: 1.01 },
-      { mes: 'Abr 2026', capitalInicial: 12720, capitalFinal: 12840, utilidad: 120, rendimiento: 0.94 },
-      { mes: 'Mar 2026', capitalInicial: 12610, capitalFinal: 12720, utilidad: 110, rendimiento: 0.87 },
-    ];
+    return [];
   }, [monthlyReports]);
 
   const movimientosTabla = useMemo(() => {
@@ -104,12 +96,7 @@ export default function GestionCapitalPage() {
       return movimientos.slice(0, 6);
     }
 
-    return [
-      { id: 'm1', type: 'deposit', amount: 10000, fecha: new Date('2026-07-01'), description: 'Asignación inicial', balanceAfter: 12500 },
-      { id: 'm2', type: 'profit', amount: 320, fecha: new Date('2026-06-28'), description: 'Rendimiento mensual', balanceAfter: 13180 },
-      { id: 'm3', type: 'fee', amount: -85, fecha: new Date('2026-06-25'), description: 'Ajuste operativo', balanceAfter: 12860 },
-      { id: 'm4', type: 'withdrawal', amount: -250, fecha: new Date('2026-06-22'), description: 'Retiro parcial', balanceAfter: 12945 },
-    ];
+    return [];
   }, [movimientos]);
 
   const cryptoMethods = [
@@ -210,7 +197,9 @@ export default function GestionCapitalPage() {
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div className="rounded-xl border border-[#2A2A2A] bg-[#121212]/80 p-3">
                   <p className="text-xs text-white/55">Rentabilidad acumulada</p>
-                  <p className="mt-1 text-xl font-semibold text-[#2ECC71]">+${ganancia.toLocaleString()}</p>
+                  <p className="mt-1 text-xl font-semibold text-[#2ECC71]">
+                    {ganancia > 0 ? '+' : ''}${ganancia.toLocaleString()}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-[#2A2A2A] bg-[#121212]/80 p-3">
                   <p className="text-xs text-white/55">Tiempo gestionado</p>
@@ -329,19 +318,25 @@ export default function GestionCapitalPage() {
                 </tr>
               </thead>
               <tbody>
-                {resultadosRecientes.map((item, i) => (
-                  <tr key={`${item.mes}-${i}`} className="border-t border-white/5 bg-[#0F0F0F]/75">
-                    <td className="px-5 py-4 text-white/85">{item.mes}</td>
-                    <td className="px-5 py-4 text-white/85">${Math.round(item.capitalInicial).toLocaleString()}</td>
-                    <td className="px-5 py-4 text-white/85">${Math.round(item.capitalFinal).toLocaleString()}</td>
-                    <td className={`px-5 py-4 font-medium ${item.utilidad >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
-                      {item.utilidad >= 0 ? '+' : ''}${Math.round(item.utilidad).toLocaleString()}
-                    </td>
-                    <td className={`px-5 py-4 font-medium ${item.rendimiento >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
-                      {item.rendimiento >= 0 ? '+' : ''}{item.rendimiento.toFixed(2)}%
-                    </td>
+                {resultadosRecientes.length === 0 ? (
+                  <tr className="border-t border-white/5 bg-[#0F0F0F]/75">
+                    <td className="px-5 py-6 text-white/65" colSpan={5}>Los reportes mensuales estarán disponibles al cerrar el primer periodo operativo.</td>
                   </tr>
-                ))}
+                ) : (
+                  resultadosRecientes.map((item, i) => (
+                    <tr key={`${item.mes}-${i}`} className="border-t border-white/5 bg-[#0F0F0F]/75">
+                      <td className="px-5 py-4 text-white/85">{item.mes}</td>
+                      <td className="px-5 py-4 text-white/85">${Math.round(item.capitalInicial).toLocaleString()}</td>
+                      <td className="px-5 py-4 text-white/85">${Math.round(item.capitalFinal).toLocaleString()}</td>
+                      <td className={`px-5 py-4 font-medium ${item.utilidad >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
+                        {item.utilidad >= 0 ? '+' : ''}${Math.round(item.utilidad).toLocaleString()}
+                      </td>
+                      <td className={`px-5 py-4 font-medium ${item.rendimiento >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
+                        {item.rendimiento >= 0 ? '+' : ''}{item.rendimiento.toFixed(2)}%
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -391,23 +386,29 @@ export default function GestionCapitalPage() {
                 </tr>
               </thead>
               <tbody>
-                {movimientosTabla.map((mov, i) => (
-                  <motion.tr
-                    key={mov.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.84 + i * 0.05 }}
-                    className="border-b border-white/5 bg-[#0F0F0F]/75"
-                  >
-                    <td className="px-4 py-3 text-white/80">{new Date(mov.fecha).toLocaleDateString('es-ES')}</td>
-                    <td className="px-4 py-3 text-white/80 capitalize">{mov.type}</td>
-                    <td className="px-4 py-3 text-white/65">{mov.description}</td>
-                    <td className={`px-4 py-3 font-medium ${mov.amount >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
-                      {mov.amount >= 0 ? '+' : ''}${Math.abs(mov.amount).toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-white/85">${mov.balanceAfter.toLocaleString()}</td>
-                  </motion.tr>
-                ))}
+                {movimientosTabla.length === 0 ? (
+                  <tr className="border-b border-white/5 bg-[#0F0F0F]/75">
+                    <td className="px-4 py-6 text-white/65" colSpan={5}>Aún no hay movimientos registrados. Inicia una asignación para habilitar trazabilidad.</td>
+                  </tr>
+                ) : (
+                  movimientosTabla.map((mov, i) => (
+                    <motion.tr
+                      key={mov.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.84 + i * 0.05 }}
+                      className="border-b border-white/5 bg-[#0F0F0F]/75"
+                    >
+                      <td className="px-4 py-3 text-white/80">{new Date(mov.fecha).toLocaleDateString('es-ES')}</td>
+                      <td className="px-4 py-3 text-white/80 capitalize">{mov.type}</td>
+                      <td className="px-4 py-3 text-white/65">{mov.description}</td>
+                      <td className={`px-4 py-3 font-medium ${mov.amount >= 0 ? 'text-[#2ECC71]' : 'text-[#E74C3C]'}`}>
+                        {mov.amount >= 0 ? '+' : ''}${Math.abs(mov.amount).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-white/85">${mov.balanceAfter.toLocaleString()}</td>
+                    </motion.tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -452,7 +453,7 @@ export default function GestionCapitalPage() {
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="mt-8 border-t border-white/10 pt-8 text-xs text-white/40">
           <p className="leading-relaxed">
-            <strong className="text-white/50">Vista demo.</strong> La gestión de capital implica riesgo y los resultados pueden variar.
+            <strong className="text-white/50">Aviso.</strong> La gestión de capital implica riesgo y los resultados pueden variar.
             CARVIPIX no garantiza rendimientos específicos. Los servicios reales de asignación, custodia, pagos o gestión
             de fondos requieren términos publicados y validación legal previa.
           </p>
@@ -507,7 +508,7 @@ export default function GestionCapitalPage() {
             </div>
 
             <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mb-6 text-xs text-white/70">
-              <p>✓ Esto es una solicitud demo. En modo real, necesitarás confirmar términos y validación.</p>
+              <p>✓ Esta solicitud requiere confirmar términos y validación.</p>
             </div>
 
             <div className="flex gap-3">
@@ -521,7 +522,7 @@ export default function GestionCapitalPage() {
               <CARVIPIXButton
                 onClick={() => {
                   setShowModal(false);
-                  alert('✓ Solicitud de asignación enviada (demo). En producción, requiere validación y términos de aceptación.');
+                  alert('✓ Solicitud de asignación enviada. Requiere validación y términos de aceptación.');
                 }}
                 variant="premium"
                 fullWidth

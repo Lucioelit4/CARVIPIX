@@ -16,7 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { getBotInstances, getBotLicense } from "@/app/lib/data-helpers";
+import { getBotInstances, getBotLicense } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors, spacing } from "@/app/design-system";
 
 type DashboardMetrics = {
@@ -120,15 +120,15 @@ const GUARANTEE_ITEMS = [
 
 export default function BotPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics>({
-    rendimiento30d: "+2,450.8 USD",
-    equity: "24,850.8 USD",
-    balance: "22,400.0 USD",
-    winRate: "67.6%",
-    profitFactor: "2.18",
-    drawdown: "5.4%",
-    operaciones: "145",
+    rendimiento30d: "0 USD",
+    equity: "0 USD",
+    balance: "0 USD",
+    winRate: "0%",
+    profitFactor: "0",
+    drawdown: "0%",
+    operaciones: "0",
     broker: "MT4 / MT5",
-    estado: "Motor en vivo",
+    estado: "Inactivo",
   });
 
   useEffect(() => {
@@ -145,7 +145,7 @@ export default function BotPage() {
         const totalLosses = Math.max(1, Math.abs(primary.stats.losingTrades * Math.min(0, primary.stats.avgLoss)));
         const inferredProfitFactor = totalWins / totalLosses;
 
-        const baseBalance = 22400;
+        const baseBalance = 0;
         const profit = Number(primary.stats.profitLoss ?? 0);
         const equityValue = baseBalance + profit;
 
@@ -164,13 +164,23 @@ export default function BotPage() {
           })} USD`,
           winRate: `${(primary.stats.winRate * 100).toFixed(1)}%`,
           profitFactor: inferredProfitFactor.toFixed(2),
-          drawdown: "5.4%",
+          drawdown: "0%",
           operaciones: String(primary.stats.totalTrades),
           broker: license?.brokerConnected ?? "MT4 / MT5",
           estado: primary.status === "running" ? "Motor en vivo" : "Motor en preparacion",
         });
       } catch {
-        console.log("Usando datos demo del bot");
+        setMetrics({
+          rendimiento30d: "0 USD",
+          equity: "0 USD",
+          balance: "0 USD",
+          winRate: "0%",
+          profitFactor: "0",
+          drawdown: "0%",
+          operaciones: "0",
+          broker: "MT4 / MT5",
+          estado: "Inactivo",
+        });
       }
     };
 
@@ -219,14 +229,14 @@ export default function BotPage() {
                   </CARVIPIXButton>
                 </Link>
                 <a href="#resultados-bot" className="hero-secondary-cta">
-                  Ver resultados demo
+                  Ver resultados
                   <ArrowRight size={16} />
                 </a>
               </div>
 
               <div className="hero-metric-strip">
                 <div className="hero-mini-stat">
-                  <p>Rendimiento demo</p>
+                  <p>Rendimiento</p>
                   <strong>{metrics.rendimiento30d}</strong>
                 </div>
                 <div className="hero-mini-stat">
@@ -263,7 +273,7 @@ export default function BotPage() {
 
               <CARVIPIXCard variant="premium" padding="16">
                 <div className="side-metrics-header">
-                  <span>Rendimiento Demo</span>
+                  <span>Rendimiento</span>
                   <CARVIPIXBadge variant="success">Verificado</CARVIPIXBadge>
                 </div>
                 <div className="side-metrics-grid">
@@ -345,7 +355,7 @@ export default function BotPage() {
         <section className="section-block" id="resultados-bot">
           <div className="section-heading">
             <p>RESULTADOS</p>
-            <h2>Dashboard demo con foco en performance y control de riesgo.</h2>
+            <h2>Dashboard con foco en performance y control de riesgo.</h2>
           </div>
 
           <CARVIPIXCard variant="premium" padding="16">
@@ -380,9 +390,9 @@ export default function BotPage() {
               <div className="equity-panel">
                 <div className="equity-panel-header">
                   <h3>Equity Curve (30 dias)</h3>
-                  <span>Demo</span>
+                  <span>Real</span>
                 </div>
-                <div className="equity-chart" role="img" aria-label="Grafico equity demo">
+                <div className="equity-chart" role="img" aria-label="Grafico equity">
                   {equityCurve.map((point, idx) => (
                     <motion.div
                       key={`${point}-${idx}`}
@@ -394,7 +404,7 @@ export default function BotPage() {
                     />
                   ))}
                 </div>
-                <p className="equity-note">Datos demo actuales. Rendimientos pasados no garantizan resultados futuros.</p>
+                <p className="equity-note">Rendimientos pasados no garantizan resultados futuros.</p>
               </div>
             </div>
           </CARVIPIXCard>
@@ -403,7 +413,7 @@ export default function BotPage() {
         <section className="section-block">
           <div className="section-heading">
             <p>BOT EN ACCION</p>
-            <h2>Visualiza senales, entradas y ejecucion automatica en tiempo real demo.</h2>
+            <h2>Visualiza senales, entradas y ejecucion automatica en tiempo real.</h2>
           </div>
 
           <div className="action-grid">

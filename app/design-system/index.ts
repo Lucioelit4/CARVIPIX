@@ -5,6 +5,7 @@
 
 export * from './tokens';
 export { CARVIPIXButton } from './components/Button';
+export { CARVIPIXButtonLink } from './components/ButtonLink';
 export { CARVIPIXCard } from './components/Card';
 export { CARVIPIXStatCard } from './components/StatCard';
 export { CARVIPIXBadge } from './components/Badge';

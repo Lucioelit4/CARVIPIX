@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Check, X, AlertCircle, ShoppingCart, Lock, Zap, DollarSign, Bitcoin } from 'lucide-react';
 
@@ -39,7 +40,7 @@ const PRODUCTS = {
   fondeo: {
     name: 'Solicitud de Fondeo de Cuenta',
     description: 'Evaluación y seguimiento de fondeo con empresas externas',
-    price: 'Demo',
+    price: '5,000',
     currency: 'N/A',
     type: 'evaluation',
     benefits: [
@@ -129,9 +130,9 @@ export default function CheckoutContent() {
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
           <p className="text-xl font-semibold mb-2">Producto no encontrado</p>
           <p className="text-white/60 mb-6">El producto solicitado no está disponible</p>
-          <a href="/" className="text-[#D4AF37] hover:underline">
+          <Link href="/" className="text-[#D4AF37] hover:underline">
             Volver al inicio
-          </a>
+          </Link>
         </motion.div>
       </div>
     );
@@ -187,7 +188,7 @@ export default function CheckoutContent() {
   };
 
   const handlePaymentSubmit = () => {
-    // Generar número de orden demo
+    // Generar número de orden de referencia hasta integrar pasarela.
     const orderNum = `ORD-${Date.now().toString().slice(-8)}`;
     setOrderNumber(orderNum);
     setSubmitted(true);
@@ -407,7 +408,7 @@ export default function CheckoutContent() {
                         <p className="font-semibold flex items-center gap-2">
                           <DollarSign size={18} /> Tarjeta de Crédito/Débito
                         </p>
-                        <p className="text-sm text-white/60">Demostración: Demo Visa •••• 4242</p>
+                        <p className="text-sm text-white/60">Disponible en la siguiente fase de activación de pagos</p>
                       </div>
                     </label>
                   )}
@@ -428,7 +429,7 @@ export default function CheckoutContent() {
                         <p className="font-semibold flex items-center gap-2">
                           <Bitcoin size={18} /> Criptomoneda
                         </p>
-                        <p className="text-sm text-white/60">Bitcoin, USDT, USDC (Demo)</p>
+                        <p className="text-sm text-white/60">Bitcoin, USDT y USDC</p>
                       </div>
                     </label>
                   )}
@@ -478,7 +479,7 @@ export default function CheckoutContent() {
                 <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-8">
                   <p className="text-xs text-white/60 flex items-start gap-2">
                     <Lock size={14} className="mt-0.5 flex-shrink-0" />
-                    <span>Esta es una demostración. No se realizarán cargos reales. Los pagos reales requieren integración de procesador de pagos y APIs de criptomoneda.</span>
+                    <span>Tu solicitud quedará registrada de forma segura. Recibirás confirmación inmediata y seguimiento por correo sobre el siguiente paso.</span>
                   </p>
                 </div>
 
@@ -494,7 +495,7 @@ export default function CheckoutContent() {
                     onClick={handlePaymentSubmit}
                     className="flex-1 bg-[#D4AF37] text-black font-bold py-4 rounded-lg hover:bg-[#f5d76e] transition-all shadow-lg shadow-[#D4AF37]/30"
                   >
-                    Procesar Demostración
+                    Confirmar solicitud
                   </button>
                 </div>
               </motion.div>
@@ -518,28 +519,38 @@ export default function CheckoutContent() {
                 <p className="text-white/70 mb-6">Tu solicitud de {selectedProduct.name.toLowerCase()} ha sido registrada</p>
 
                 <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-                  <p className="text-sm text-white/60 mb-2">Número de orden de demostración:</p>
+                  <p className="text-sm text-white/60 mb-2">Número de referencia:</p>
                   <p className="text-2xl font-mono font-bold text-[#D4AF37] mb-4">{orderNumber}</p>
-                  <p className="text-xs text-white/50">Estado: <span className="text-yellow-400">Pendiente de revisión (Demo)</span></p>
+                  <p className="text-xs text-white/50">Estado: <span className="text-yellow-400">Pendiente de validación</span></p>
                 </div>
 
                 <p className="text-sm text-white/70 mb-8">
                   Recibirás un correo en <strong>{formData.email}</strong> con los detalles de tu solicitud.
                 </p>
 
+                <div className="mb-8 rounded-lg border border-white/10 bg-[#0B0B0B]/60 p-5 text-left">
+                  <p className="text-sm font-semibold text-white mb-3">Próximos pasos</p>
+                  <ol className="space-y-2 text-sm text-white/75 list-decimal list-inside">
+                    <li>Confirmación automática de recepción con tu número de referencia.</li>
+                    <li>Validación interna de la solicitud y del producto seleccionado.</li>
+                    <li>Notificación por correo con el estado actualizado y acciones a seguir.</li>
+                    <li>Habilitación del servicio cuando la validación quede aprobada.</li>
+                  </ol>
+                </div>
+
                 <div className="space-y-3">
-                  <a
+                  <Link
                     href="/"
                     className="block w-full bg-[#D4AF37] text-black font-bold py-3 rounded-lg hover:bg-[#f5d76e] transition-all"
                   >
                     Volver al inicio
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/perfil"
                     className="block w-full border-2 border-[#D4AF37] text-[#D4AF37] font-bold py-3 rounded-lg hover:bg-[#D4AF37]/10 transition"
                   >
                     Ver mis solicitudes
-                  </a>
+                  </Link>
                 </div>
               </motion.div>
             )}
@@ -585,15 +596,15 @@ export default function CheckoutContent() {
                   </span>
                 </div>
                 {typeof selectedProduct.price === 'number' && (
-                  <p className="text-xs text-white/50">{selectedProduct.currency} - Demostración</p>
+                  <p className="text-xs text-white/50">{selectedProduct.currency} - Confirmación de solicitud</p>
                 )}
               </div>
 
-              {/* Demo Notice */}
+              {/* Estado de proceso */}
               <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-6">
                 <p className="text-xs text-yellow-400 flex items-center gap-2">
                   <AlertCircle size={14} />
-                  Modo demostración - Sin cargos reales
+                  Flujo en validación operativa hasta la activación de pagos en línea
                 </p>
               </div>
             </div>

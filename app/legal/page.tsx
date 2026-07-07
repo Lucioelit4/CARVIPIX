@@ -13,7 +13,7 @@ export default function LegalPage() {
           className="inline-flex items-center gap-2 mb-8 text-[#D4AF37] hover:text-[#F5DEB3] transition"
         >
           <ArrowLeft size={18} />
-          Volver al Dashboard
+          Volver al inicio
         </Link>
 
         <motion.div
@@ -63,15 +63,15 @@ export default function LegalPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-white mb-4">4. Datos Demo</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">4. Disponibilidad de la Información</h2>
               <p>
-                Parte del contenido de CARVIPIX utiliza datos simulados o &quot;demo&quot; claramente identificados. Estos datos:
+                La información mostrada en CARVIPIX depende de la activación de servicios y de la disponibilidad operativa de cada módulo.
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>NO representan datos reales de mercado</li>
-                <li>NO garantizan resultados futuros</li>
-                <li>Se utilizan únicamente con fines educativos y de demostración</li>
-                <li>Se reemplazarán con datos reales en futuras integraciones</li>
+                <li>Los datos se publican una vez validados por el sistema</li>
+                <li>La ausencia de métricas no implica error de la plataforma</li>
+                <li>Los estados de preparación indican próximos pasos para el usuario</li>
+                <li>La actualización de información se realiza de forma progresiva por servicio</li>
               </ul>
             </section>
 

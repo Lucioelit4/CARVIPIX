@@ -1,5 +1,6 @@
+import "server-only";
+
 import type { EcosystemServiceLayer } from "./contracts";
-import { TradingEngineGatewayAdapter } from "./adapters/trading-engine-gateway-adapter";
 import { NoopAuthorizationPort } from "./core/auth";
 import { InMemoryBackendCache } from "./core/cache";
 import { backendConfig } from "./core/config";
@@ -16,16 +17,17 @@ import { AlertsDomainService } from "./services/alerts-domain-service";
 import { BotDomainService } from "./services/bot-domain-service";
 import { CapitalDomainService } from "./services/capital-domain-service";
 import { MembershipsDomainService } from "./services/memberships-domain-service";
+import { OperationsDomainService } from "./services/operations-domain-service";
 import { PaymentsDomainService } from "./services/payments-domain-service";
 import { ResultsDomainService } from "./services/results-domain-service";
 import {
-  AdminDomainServiceStub,
-  AIDomainServiceStub,
-  DashboardDomainServiceStub,
-  FundingDomainServiceStub,
-  HistoryDomainServiceStub,
-  StatsDomainServiceStub,
-} from "./services/stub-domain-services";
+  AdminDomainService,
+  AIDomainService,
+  DashboardDomainService,
+  FundingDomainService,
+  HistoryDomainService,
+  StatsDomainService,
+} from "./services/system-domain-services";
 
 function instrumentService<TService extends object>(
   serviceName: string,
@@ -95,21 +97,16 @@ const scheduler = new InMemoryScheduler(backendConfig.scheduler.maxTasks);
 const rateLimiter = new InMemoryRateLimiter();
 const cache = new InMemoryBackendCache(backendConfig.cache.defaultTtlMs, backendConfig.cache.maxEntries);
 const enterpriseAudit = new InMemoryEnterpriseAuditTrail(backendConfig.audit.maxRecords);
-const engineGateway = new TradingEngineGatewayAdapter({
-  seedFromScenarios: backendConfig.engine.seedFromScenarios,
-  logger,
-  observability,
-});
 
 const alertsService = instrumentService(
   "alerts",
-  new AlertsDomainService(engineGateway, eventBus),
+  new AlertsDomainService(eventBus),
   observability,
   logger
 );
 const resultsService = instrumentService(
   "results",
-  new ResultsDomainService(engineGateway, eventBus),
+  new ResultsDomainService(eventBus),
   observability,
   logger
 );
@@ -120,13 +117,14 @@ const ecosystemServices: EcosystemServiceLayer = {
   payments: instrumentService("payments", new PaymentsDomainService(eventBus), observability, logger),
   bot: instrumentService("bot", new BotDomainService(eventBus), observability, logger),
   capital: instrumentService("capital", new CapitalDomainService(eventBus), observability, logger),
-  funding: instrumentService("funding", new FundingDomainServiceStub(), observability, logger),
-  dashboard: instrumentService("dashboard", new DashboardDomainServiceStub(), observability, logger),
+  operations: instrumentService("operations", new OperationsDomainService(eventBus), observability, logger),
+  funding: instrumentService("funding", new FundingDomainService(), observability, logger),
+  dashboard: instrumentService("dashboard", new DashboardDomainService(), observability, logger),
   results: resultsService,
-  admin: instrumentService("admin", new AdminDomainServiceStub(), observability, logger),
-  ai: instrumentService("ai", new AIDomainServiceStub(), observability, logger),
-  history: instrumentService("history", new HistoryDomainServiceStub(), observability, logger),
-  stats: instrumentService("stats", new StatsDomainServiceStub(), observability, logger),
+  admin: instrumentService("admin", new AdminDomainService(), observability, logger),
+  ai: instrumentService("ai", new AIDomainService(), observability, logger),
+  history: instrumentService("history", new HistoryDomainService(), observability, logger),
+  stats: instrumentService("stats", new StatsDomainService(), observability, logger),
 };
 
 container.register("config", backendConfig);
@@ -139,7 +137,6 @@ container.register("rateLimiter", rateLimiter);
 container.register("cache", cache);
 container.register("enterpriseAudit", enterpriseAudit);
 container.register("eventBus", eventBus);
-container.register("engineGateway", engineGateway);
 container.register("ecosystemServices", ecosystemServices);
 
 export {

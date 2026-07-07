@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * TEST SCRIPT: TrendValidator v1.1 con 1 mes de datos XAUUSD
  * Ejecutar: node app/engine/strategy/testTrendValidator.js

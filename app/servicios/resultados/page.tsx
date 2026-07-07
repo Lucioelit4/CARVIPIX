@@ -35,22 +35,22 @@ const serviceResults = [
   {
     name: "Bot CARVIPIX",
     icon: Bot,
-    result: "+12.8%",
-    status: "Activo",
-    description: "Automatización MT4/MT5 en seguimiento demo.",
+    result: "Pendiente",
+    status: "En configuración",
+    description: "Automatización MT4/MT5 con publicación al activar el servicio.",
   },
   {
     name: "Alertas en Vivo",
     icon: Zap,
-    result: "72.4% W/R",
-    status: "Activas",
+    result: "Pendiente",
+    status: "Disponible",
     description: "Señales operativas con seguimiento.",
   },
   {
     name: "Gestión de Capital",
     icon: Wallet,
-    result: "+5.44%",
-    status: "Demo privado",
+    result: "Pendiente",
+    status: "En validación",
     description: "Balance y movimientos de capital asignado.",
   },
   {
@@ -63,9 +63,9 @@ const serviceResults = [
 ];
 
 const recentActivity = [
-  "Bot CARVIPIX actualizó rendimiento mensual",
-  "Alertas cerraron 8 operaciones esta semana",
-  "Gestión de Capital actualizó balance demo",
+  "Bot CARVIPIX actualizará métricas al activarse el servicio",
+  "Alertas publicará cierres cuando exista historial operativo",
+  "Gestión de Capital mostrará balance tras validación de cuenta",
   "Fondeo recibió nueva solicitud de revisión",
   "Comunidad activa con seguimiento operativo",
 ];
@@ -109,7 +109,7 @@ export default function ResultadosComercialPage() {
             className="flex flex-wrap gap-3"
           >
             {[
-              "Vista demo",
+              "Estado operativo",
               "Resultados globales",
               "Transparencia",
               "Plataforma activa",
@@ -136,24 +136,24 @@ export default function ResultadosComercialPage() {
         >
           {[
             {
-              label: "Rendimiento global demo",
-              value: "+18.4%",
+              label: "Rendimiento global",
+              value: "Disponible al consolidar actividad",
               icon: TrendingUp,
             },
-            { label: "Alertas cerradas", value: "126", icon: CheckCircle2 },
+            { label: "Alertas cerradas", value: "Pendiente", icon: CheckCircle2 },
             {
               label: "Win rate general",
-              value: "72.4%",
+              value: "Pendiente",
               icon: Zap,
             },
             {
               label: "Bot CARVIPIX resultado",
-              value: "+12.8%",
+              value: "Pendiente",
               icon: Bot,
             },
             {
               label: "Capital gestionado",
-              value: "$248.5K",
+              value: "Pendiente",
               icon: Wallet,
             },
             {
@@ -296,9 +296,9 @@ export default function ResultadosComercialPage() {
                 </p>
               </div>
               <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 rounded-lg p-4">
-                <h3 className="font-bold text-sm mb-2">Datos demo preparados</h3>
+                <h3 className="font-bold text-sm mb-2">Datos listos para publicación</h3>
                 <p className="text-xs text-white/70">
-                  Todos los datos mostrados son simulados y listos para ser conectados a datos reales.
+                  Las métricas se publican automáticamente cuando el servicio correspondiente esté activo.
                 </p>
               </div>
             </div>
@@ -312,7 +312,7 @@ export default function ResultadosComercialPage() {
           transition={{ delay: 0.6 }}
           className="bg-[#0B0B0B] border border-white/10 rounded-lg p-6 mb-12"
         >
-          <h3 className="text-lg font-bold mb-4">Top de actividad demo</h3>
+          <h3 className="text-lg font-bold mb-4">Top de actividad</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-white/60 border-b border-white/10">
@@ -336,7 +336,7 @@ export default function ResultadosComercialPage() {
             </table>
           </div>
           <p className="text-xs text-white/50 mt-4">
-            Lista demo de actividad. Para resultados detallados ver perfil o reportes.
+            Este listado se consolida con actividad real y validada de la plataforma.
           </p>
         </motion.div>
 
@@ -348,9 +348,7 @@ export default function ResultadosComercialPage() {
           className="text-center text-xs text-white/50"
         >
           <p>
-            Vista demo. Las métricas mostradas son simuladas para diseño y serán
-            reemplazadas por datos reales cuando se conecten los servicios
-            correspondientes.
+            Las métricas se muestran únicamente cuando los servicios estén activos y con datos operativos validados.
           </p>
         </motion.div>
       </div>

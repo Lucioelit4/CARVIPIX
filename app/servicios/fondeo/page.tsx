@@ -463,7 +463,7 @@ export default function FondeoPage() {
                   className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] mb-3 disabled:opacity-50"
                   disabled={Object.keys(errors).length > 0}
                 >
-                  Enviar solicitud demo
+                  Enviar solicitud
                 </button>
 
                 <button
@@ -477,7 +477,7 @@ export default function FondeoPage() {
                 </button>
 
                 <p className="text-xs text-white/40 text-center mt-6">
-                  Esto es una demostración. CARVIPIX se contactará para revisar compatibilidad.
+                  CARVIPIX se contactará para revisar compatibilidad y próximos pasos.
                 </p>
               </>
             )}

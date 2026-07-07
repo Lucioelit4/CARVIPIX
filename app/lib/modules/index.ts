@@ -25,15 +25,15 @@ export type { CapitalAccount, CapitalMovement, MonthlyReport, InvestorStats } fr
 export type { PlatformResults, ResultsBySource, ResultsHistory } from "./results/types";
 export type { AIConversation, AIBriefing, AISuggestion, AIMessage } from "./ai-support/types";
 
-// Helper to get all demo data
+// Helper legacy: mantiene compatibilidad sin activar mocks
 export function initializeDemo() {
-  membershipsService.setDemoMode(true);
-  paymentsService.setDemoMode(true);
-  alertsService.setDemoMode(true);
-  botService.setDemoMode(true);
-  capitalService.setDemoMode(true);
-  resultsService.setDemoMode(true);
-  aiSupportService.setDemoMode(true);
+  membershipsService.setDemoMode(false);
+  paymentsService.setDemoMode(false);
+  alertsService.setDemoMode(false);
+  botService.setDemoMode(false);
+  capitalService.setDemoMode(false);
+  resultsService.setDemoMode(false);
+  aiSupportService.setDemoMode(false);
 }
 
 // Helper to connect to production APIs (when ready)

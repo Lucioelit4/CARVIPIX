@@ -5,80 +5,87 @@ import type {
   ServiceBotSnapshot,
   ServiceBotUpdate,
 } from "../contracts";
+import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
-
-const DEMO_BOT_LICENSE: ServiceBotLicense = {
-  userId: "demo-user-001",
-  licenseKey: "CARVIPIX-DEMO-KEY-12345",
-  purchaseDate: new Date(2024, 0, 1),
-  active: true,
-  brokerConnected: undefined,
-};
-
-const DEMO_BOT_INSTANCE: ServiceBotInstance = {
-  id: "bot-demo-001",
-  userId: "demo-user-001",
-  name: "Grid Trading EURUSD",
-  strategy: "grid",
-  status: "running",
-  symbol: "EURUSD",
-  riskLevel: "medium",
-  configuration: {
-    gridLevels: 10,
-    orderSize: 0.1,
-    profitTarget: 100,
-  },
-  createdAt: new Date(2024, 0, 1),
-  startedAt: new Date(Date.now() - 24 * 3600000),
-  stats: {
-    totalTrades: 145,
-    winningTrades: 98,
-    losingTrades: 47,
-    profitLoss: 2450.75,
-    winRate: 0.676,
-    avgWin: 25.0,
-    avgLoss: -12.5,
-  },
-};
-
-const DEMO_BOT_UPDATES: ServiceBotUpdate[] = [
-  {
-    version: "2.1.0",
-    releaseDate: new Date(2024, 5, 15),
-    features: ["Soporte para USDT", "Modo demo mejorado"],
-    improvements: ["Performance 30% mejor", "UI mas intuitiva"],
-    bugFixes: ["Corrige lag en ordenes rapidas"],
-  },
-  {
-    version: "2.0.5",
-    releaseDate: new Date(2024, 4, 1),
-    features: ["Analisis de riesgo en vivo"],
-    improvements: ["Conexion mas rapida"],
-    bugFixes: ["Corrige desconexiones ocasionales"],
-  },
-];
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function cloneInstance(instance: ServiceBotInstance): ServiceBotInstance {
+type BotLicenseRow = {
+  user_id: string;
+  license_key: string;
+  purchase_date: Date;
+  expiry_date: Date | null;
+  active: boolean;
+  broker_connected: "MT4" | "MT5" | null;
+};
+
+type BotInstanceRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  strategy: ServiceBotInstance["strategy"];
+  status: ServiceBotInstance["status"];
+  symbol: string;
+  risk_level: ServiceBotInstance["riskLevel"];
+  configuration: unknown;
+  created_at: Date;
+  started_at: Date | null;
+  stats: unknown;
+};
+
+function toLicense(row: BotLicenseRow): ServiceBotLicense {
   return {
-    ...instance,
-    configuration: { ...instance.configuration },
-    createdAt: new Date(instance.createdAt),
-    startedAt: instance.startedAt ? new Date(instance.startedAt) : undefined,
-    stats: { ...instance.stats },
+    userId: row.user_id,
+    licenseKey: row.license_key,
+    purchaseDate: new Date(row.purchase_date),
+    expiryDate: row.expiry_date ? new Date(row.expiry_date) : undefined,
+    active: row.active,
+    brokerConnected: row.broker_connected ?? undefined,
+  };
+}
+
+function toInstance(row: BotInstanceRow): ServiceBotInstance {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    strategy: row.strategy,
+    status: row.status,
+    symbol: row.symbol,
+    riskLevel: row.risk_level,
+    configuration: typeof row.configuration === "object" && row.configuration ? (row.configuration as Record<string, unknown>) : {},
+    createdAt: new Date(row.created_at),
+    startedAt: row.started_at ? new Date(row.started_at) : undefined,
+    stats: typeof row.stats === "object" && row.stats
+      ? (row.stats as ServiceBotInstance["stats"])
+      : {
+          totalTrades: 0,
+          winningTrades: 0,
+          losingTrades: 0,
+          profitLoss: 0,
+          winRate: 0,
+          avgWin: 0,
+          avgLoss: 0,
+        },
   };
 }
 
 export class BotDomainService implements IBotDomainService {
-  private readonly botInstances: ServiceBotInstance[] = [cloneInstance(DEMO_BOT_INSTANCE)];
-
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getLicense(userId: string): Promise<ServiceBotLicense | null> {
-    const license = userId === DEMO_BOT_LICENSE.userId ? { ...DEMO_BOT_LICENSE } : null;
+    const { rows } = await backendDatabase.query<BotLicenseRow>(
+      `
+      SELECT user_id, license_key, purchase_date, expiry_date, active, broker_connected
+      FROM bot_licenses
+      WHERE user_id = $1
+      LIMIT 1
+      `,
+      [userId]
+    );
+    const license = rows[0] ? toLicense(rows[0]) : null;
 
     this.eventBus.publish("bot.license.read", {
       userId,
@@ -95,7 +102,16 @@ export class BotDomainService implements IBotDomainService {
   }
 
   async getBotInstances(userId: string): Promise<ServiceBotInstance[]> {
-    const instances = this.botInstances.filter((item) => item.userId === userId).map(cloneInstance);
+    const { rows } = await backendDatabase.query<BotInstanceRow>(
+      `
+      SELECT id, user_id, name, strategy, status, symbol, risk_level, configuration, created_at, started_at, stats
+      FROM bot_instances
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      `,
+      [userId]
+    );
+    const instances = rows.map(toInstance);
 
     this.eventBus.publish("bot.instances.read", {
       userId,
@@ -126,7 +142,37 @@ export class BotDomainService implements IBotDomainService {
       },
     };
 
-    this.botInstances.unshift(created);
+    await backendDatabase.query(
+      `
+      INSERT INTO bot_instances (
+        id,
+        user_id,
+        name,
+        strategy,
+        status,
+        symbol,
+        risk_level,
+        configuration,
+        created_at,
+        started_at,
+        stats
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11::jsonb)
+      `,
+      [
+        created.id,
+        created.userId,
+        created.name,
+        created.strategy,
+        created.status,
+        created.symbol,
+        created.riskLevel,
+        JSON.stringify(created.configuration),
+        created.createdAt,
+        created.startedAt ?? null,
+        JSON.stringify(created.stats),
+      ]
+    );
 
     this.eventBus.publish("bot.instance.created", {
       userId,
@@ -134,22 +180,38 @@ export class BotDomainService implements IBotDomainService {
       queriedAt: new Date(),
     });
 
-    return cloneInstance(created);
+    return created;
   }
 
   async getAvailableUpdates(): Promise<ServiceBotUpdate[]> {
+    const { rows } = await backendDatabase.query<{
+      version: string;
+      release_date: Date;
+      features: unknown;
+      improvements: unknown;
+      bug_fixes: unknown;
+    }>(
+      `
+      SELECT version, release_date, features, improvements, bug_fixes
+      FROM bot_updates
+      ORDER BY release_date DESC
+      `
+    );
+
+    const updates = rows.map((item) => ({
+      version: item.version,
+      releaseDate: new Date(item.release_date),
+      features: Array.isArray(item.features) ? (item.features as string[]) : [],
+      improvements: Array.isArray(item.improvements) ? (item.improvements as string[]) : [],
+      bugFixes: Array.isArray(item.bug_fixes) ? (item.bug_fixes as string[]) : [],
+    }));
+
     this.eventBus.publish("bot.updates.read", {
-      count: DEMO_BOT_UPDATES.length,
+      count: updates.length,
       queriedAt: new Date(),
     });
 
-    return DEMO_BOT_UPDATES.map((item) => ({
-      ...item,
-      releaseDate: new Date(item.releaseDate),
-      features: [...item.features],
-      improvements: [...item.improvements],
-      bugFixes: [...item.bugFixes],
-    }));
+    return updates;
   }
 
   async connectBroker(
@@ -161,12 +223,26 @@ export class BotDomainService implements IBotDomainService {
       password: string;
     }
   ): Promise<boolean> {
-    const bot = this.botInstances.find((item) => item.id === botId);
+    const botResult = await backendDatabase.query<{ id: string; user_id: string }>(
+      `SELECT id, user_id FROM bot_instances WHERE id = $1 LIMIT 1`,
+      [botId]
+    );
+    const bot = botResult.rows[0];
     if (!bot) {
       throw new Error("Bot no encontrado");
     }
 
     void credentials;
+
+    await backendDatabase.query(
+      `
+      INSERT INTO bot_licenses (user_id, license_key, purchase_date, active, broker_connected)
+      VALUES ($1, $2, NOW(), true, $3)
+      ON CONFLICT (user_id)
+      DO UPDATE SET broker_connected = EXCLUDED.broker_connected, active = true
+      `,
+      [bot.user_id, `CARVIPIX-${bot.user_id.toUpperCase()}-LICENSE`, brokerType]
+    );
 
     this.eventBus.publish("bot.broker.connected", {
       botId,
@@ -178,15 +254,30 @@ export class BotDomainService implements IBotDomainService {
   }
 
   async getSnapshot(userId?: string): Promise<ServiceBotSnapshot> {
-    const source = userId ? this.botInstances.filter((item) => item.userId === userId) : this.botInstances;
+    const { rows } = await backendDatabase.query<{ running_instances: number; connected_accounts: number }>(
+      userId
+        ? `
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'running') AS running_instances,
+            COUNT(*) FILTER (WHERE status IN ('running', 'paused')) AS connected_accounts
+          FROM bot_instances
+          WHERE user_id = $1
+          `
+        : `
+          SELECT
+            COUNT(*) FILTER (WHERE status = 'running') AS running_instances,
+            COUNT(*) FILTER (WHERE status IN ('running', 'paused')) AS connected_accounts
+          FROM bot_instances
+          `,
+      userId ? [userId] : []
+    );
 
-    const connectedAccounts = source.filter((item) => item.status === "running" || item.status === "paused").length;
-    const runningInstances = source.filter((item) => item.status === "running").length;
+    const snapshot = rows[0] ?? { running_instances: 0, connected_accounts: 0 };
 
     return {
       generatedAt: new Date(),
-      runningInstances,
-      connectedAccounts,
+      runningInstances: Number(snapshot.running_instances ?? 0),
+      connectedAccounts: Number(snapshot.connected_accounts ?? 0),
       health: "healthy",
     };
   }

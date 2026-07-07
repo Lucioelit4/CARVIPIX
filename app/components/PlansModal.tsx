@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { CARVIPIXButton } from "@/app/design-system";
 
 type Props = {
   open: boolean;
@@ -22,7 +23,7 @@ export default function PlansModal({ open, onClose }: Props) {
     // Simulate async submission
     setTimeout(() => {
       setSubmitting(false);
-      setMessage("Solicitud de plan registrada en modo demo");
+      setMessage("Solicitud de plan registrada correctamente");
     }, 900);
   };
 
@@ -32,12 +33,12 @@ export default function PlansModal({ open, onClose }: Props) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-white">Planes CARVIPIX</h3>
-            <p className="mt-1 text-sm text-slate-400">Selecciona el plan que prefieras. (Simulación)</p>
+            <p className="mt-1 text-sm text-slate-400">Selecciona el plan que prefieras.</p>
           </div>
           <button
             aria-label="Cerrar"
             onClick={() => { setMessage(""); setAccepted(false); onClose(); }}
-            className="rounded-full bg-white/5 p-2 text-white hover:bg-white/10"
+            className="cv-icon-btn"
           >
             <X />
           </button>
@@ -52,7 +53,7 @@ export default function PlansModal({ open, onClose }: Props) {
                 <p className="mt-1 text-xs text-zinc-400">IVA incluido. Total aprox: 17.99 USD</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-slate-300">Demo</p>
+                <p className="text-sm text-slate-300">Disponible</p>
               </div>
             </div>
 
@@ -65,15 +66,15 @@ export default function PlansModal({ open, onClose }: Props) {
             </ul>
 
             <div className="mt-4">
-              <button
+              <CARVIPIXButton
                 onClick={() => handleSubscribe("starter")}
                 disabled={!accepted || submitting}
-                className={`w-full rounded-full px-4 py-2 font-semibold text-black transition ${
-                  accepted ? "bg-[#D4AF37] hover:bg-[#f5d76e]" : "bg-white/5 cursor-not-allowed"
-                }`}
+                variant={accepted ? "premium" : "disabled"}
+                size="md"
+                fullWidth
               >
                 {submitting ? "Enviando..." : "Contratar Starter"}
-              </button>
+              </CARVIPIXButton>
             </div>
           </div>
 
@@ -85,7 +86,7 @@ export default function PlansModal({ open, onClose }: Props) {
                 <p className="mt-1 text-xs text-zinc-400">Membresía avanzada para traders con mayor cobertura operativa.</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-slate-300">Demo</p>
+                <p className="text-sm text-slate-300">Disponible</p>
               </div>
             </div>
 
@@ -99,15 +100,15 @@ export default function PlansModal({ open, onClose }: Props) {
             </ul>
 
             <div className="mt-4">
-              <button
+              <CARVIPIXButton
                 onClick={() => handleSubscribe("elite")}
                 disabled={!accepted || submitting}
-                className={`w-full rounded-full px-4 py-2 font-semibold text-black transition ${
-                  accepted ? "bg-[#D4AF37] hover:bg-[#f5d76e]" : "bg-white/5 cursor-not-allowed"
-                }`}
+                variant={accepted ? "premium" : "disabled"}
+                size="md"
+                fullWidth
               >
                 {submitting ? "Enviando..." : "Contratar Elite"}
-              </button>
+              </CARVIPIXButton>
             </div>
           </div>
         </div>

@@ -60,8 +60,8 @@ export default function BotPage() {
                   >
                     Comprar Bot CARVIPIX
                   </Link>
-                  <Link href="#resultados-demo" className="block w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 text-center">
-                    Ver funcionamiento demo
+                  <Link href="#estado-operativo" className="block w-full rounded-lg border-2 border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:border-[#D4AF37]/60 hover:bg-[#D4AF37]/5 text-center">
+                    Ver estado operativo
                   </Link>
                 </div>
               </motion.div>
@@ -187,8 +187,8 @@ export default function BotPage() {
         </div>
       </div>
 
-      {/* Resultados Demo */}
-      <div id="resultados-demo" className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
+      {/* Estado operativo */}
+      <div id="estado-operativo" className="border-t border-white/10 mx-auto max-w-7xl px-6 py-12 sm:px-8">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -196,19 +196,19 @@ export default function BotPage() {
           className="text-center mb-8"
         >
           <span className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37] uppercase">
-            Datos demo
+            Estado del servicio
           </span>
-          <h2 className="mt-4 text-3xl font-bold">Resultados Demo del Bot</h2>
+          <h2 className="mt-4 text-3xl font-bold">Panel de rendimiento del Bot</h2>
         </motion.div>
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { label: "Rendimiento", value: "+12.8%", color: "text-green-400" },
-            { label: "Operaciones", value: "64", color: "text-[#D4AF37]" },
-            { label: "Win Rate", value: "71%", color: "text-[#D4AF37]" },
-            { label: "Drawdown", value: "5.4%", color: "text-white" },
-            { label: "Estado", value: "Activo", color: "text-green-400" },
-            { label: "Modo", value: "Demo", color: "text-white/70" },
+            { label: "Rendimiento", value: "Disponible al activar servicio", color: "text-white" },
+            { label: "Operaciones", value: "Pendiente", color: "text-[#D4AF37]" },
+            { label: "Win Rate", value: "Pendiente", color: "text-[#D4AF37]" },
+            { label: "Drawdown", value: "Pendiente", color: "text-white" },
+            { label: "Estado", value: "En configuración", color: "text-[#D4AF37]" },
+            { label: "Motor", value: "Se habilita con Trading Engine", color: "text-white/70" },
           ].map((item, i) => (
             <motion.div
               key={i}
@@ -226,7 +226,7 @@ export default function BotPage() {
 
       {/* Panel de Control */}
       <div className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
-        <h2 className="text-3xl font-bold mb-8 text-center">Panel de Control Demo</h2>
+        <h2 className="text-3xl font-bold mb-8 text-center">Panel de Control</h2>
 
         <motion.div
           initial={{ opacity: 0 }}
@@ -251,16 +251,16 @@ export default function BotPage() {
                 opacity="0.5"
               />
             </svg>
-            <p className="absolute bottom-1 right-2 text-xs text-white/40">Mercado simulado</p>
+            <p className="absolute bottom-1 right-2 text-xs text-white/40">Datos disponibles al activar el motor</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {[
-              { title: "Estado del bot", value: "Operando", status: "success" },
-              { title: "Última operación", value: "XAUUSD", status: "neutral" },
-              { title: "Riesgo actual", value: "Bajo", status: "success" },
-              { title: "Mercado", value: "En seguimiento", status: "success" },
-              { title: "Próxima revisión", value: "12:45 UTC", status: "neutral" },
+              { title: "Estado del bot", value: "Pendiente de activación", status: "neutral" },
+              { title: "Última operación", value: "Disponible al activar servicio", status: "neutral" },
+              { title: "Riesgo actual", value: "Se define al activar", status: "neutral" },
+              { title: "Mercado", value: "Monitoreo pendiente", status: "neutral" },
+              { title: "Próxima revisión", value: "Se programa tras activación", status: "neutral" },
             ].map((item, i) => (
               <div key={i} className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                 <p className="text-xs uppercase text-zinc-400 mb-2">{item.title}</p>
@@ -279,7 +279,7 @@ export default function BotPage() {
           </div>
 
           <p className="text-xs text-white/40 mt-6 text-center">
-            Simulación de demostración. El bot trabajaría automáticamente en MT4/MT5 conectado a una cuenta real.
+            Este panel se actualiza automáticamente cuando el servicio esté activo y conectado.
           </p>
         </motion.div>
       </div>
@@ -445,14 +445,14 @@ export default function BotPage() {
                 href="/checkout?product=bot"
                 className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] text-lg mb-3 text-center"
               >
-                Continuar compra demo
+                Continuar compra
               </Link>
             ) : (
               <button
                 disabled
                 className="w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] disabled:opacity-50 disabled:cursor-not-allowed text-lg mb-3"
               >
-                Continuar compra demo
+                Continuar compra
               </button>
             )}
 
@@ -464,7 +464,7 @@ export default function BotPage() {
             </button>
 
             <p className="text-xs text-white/40 text-center mt-6">
-              Esto es una demostración. No se procesa pago real en este momento.
+              Esta solicitud queda registrada y seguirá el flujo de validación correspondiente.
             </p>
           </motion.div>
         </div>

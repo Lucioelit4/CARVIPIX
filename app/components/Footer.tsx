@@ -83,7 +83,7 @@ export default function Footer() {
         {/* Disclaimer */}
         <div className="border-t border-[#2A2A2A] pt-6">
           <p className="text-xs leading-relaxed text-[#B5B5B5]">
-            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo, incluida pérdida total de capital. CARVIPIX no garantiza rendimientos ni resultados específicos. Consulta asesores financieros autorizados antes de decisiones de inversión. Parte del contenido puede utilizar datos simulados.
+            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo, incluida pérdida total de capital. CARVIPIX no garantiza rendimientos ni resultados específicos. Consulta asesores financieros autorizados antes de decisiones de inversión.
           </p>
         </div>
 

@@ -13,7 +13,7 @@ export default function RiskDisclosurePage() {
           className="inline-flex items-center gap-2 mb-8 text-[#D4AF37] hover:text-[#F5DEB3] transition"
         >
           <ArrowLeft size={18} />
-          Volver al Dashboard
+          Volver al inicio
         </Link>
 
         <motion.div
@@ -91,7 +91,7 @@ export default function RiskDisclosurePage() {
                 <li>Edúcate en trading y gestión de riesgo</li>
                 <li>Comienza con capital que puedas permitirte perder</li>
                 <li>Usa stop losses en TODAS las operaciones</li>
-                <li>Practica con cuenta demo antes de dinero real</li>
+                <li>Practica en entorno de bajo riesgo antes de operar capital real</li>
                 <li>Diversifica y no apuestes todo a una estrategia</li>
                 <li>Consulta asesores financieros si es necesario</li>
                 <li>Lee y entiende todos los términos y condiciones</li>
@@ -100,15 +100,15 @@ export default function RiskDisclosurePage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-white mb-4">5. Datos Demo vs. Datos Reales</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">5. Disponibilidad de Datos Operativos</h2>
               <p>
-                CARVIPIX actualmente utiliza datos simulados en ciertas secciones:
+                CARVIPIX puede mostrar estados de preparación en módulos dependientes de activación operativa:
               </p>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Los datos demo NO son datos reales de mercado</li>
-                <li>El desempeño en demo NO predice desempeño real</li>
-                <li>Las ganancias demo NO son ganancias reales</li>
-                <li>Estos datos se reemplazarán con datos reales en futuras versiones</li>
+                <li>La ausencia temporal de métricas no implica fallo técnico</li>
+                <li>El rendimiento solo se publica cuando existe operación validada</li>
+                <li>No debe inferirse desempeño futuro a partir de estados preliminares</li>
+                <li>La información se actualiza conforme a disponibilidad del servicio</li>
               </ul>
             </section>
 

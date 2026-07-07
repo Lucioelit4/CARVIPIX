@@ -1,13 +1,13 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Plus, TrendingUp, TrendingDown, Clock, Eye } from 'lucide-react';
-import { useState } from 'react';
-import { getAdminData, updateAlerta, createAlerta } from '@/app/admin/lib/admin-helpers';
-import { useToast } from './Toast';
+import { TrendingUp, TrendingDown, Clock, Eye } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { getAlerts } from '@/app/lib/client-data-helpers';
 import DetailModal from './DetailModal';
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
-interface Alerta {
+type Alerta = {
   id: string;
   symbol: string;
   tipo: string;
@@ -16,164 +16,62 @@ interface Alerta {
   tp: string;
   sl: string;
   fecha: string;
+};
+
+function toEstado(status: string): Alerta['estado'] {
+  if (status === 'triggered') return 'ganada';
+  if (status === 'resolved' || status === 'archived') return 'perdida';
+  return 'activa';
 }
 
 export default function AdminAlertas() {
-  const [showCreate, setShowCreate] = useState(false);
-  const [alertas, setAlertas] = useState<Alerta[]>(() => getAdminData().alertas);
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [selectedAlerta, setSelectedAlerta] = useState<Alerta | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ symbol: '', tipo: 'Compra', entrada: '', tp: '', sl: '' });
-  const { showToast } = useToast();
 
-  const handleUpdateAlerta = (id: string, nuevoEstado: Alerta['estado']) => {
-    if (updateAlerta(id, nuevoEstado)) {
-      const data = getAdminData();
-      setAlertas(data.alertas);
-      showToast(`Alerta marcada como ${nuevoEstado}`, 'success');
-    }
-  };
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const rows = await getAlerts(50);
+        setAlertas(
+          rows.map((item) => ({
+            id: item.id,
+            symbol: item.symbol,
+            tipo: String(item.data?.direction ?? 'Sin datos'),
+            estado: toEstado(item.status),
+            entrada: String(item.data?.entryPrice ?? 'Sin datos'),
+            tp: String(item.data?.takeProfitPrice ?? 'Sin datos'),
+            sl: String(item.data?.stopLossPrice ?? 'Sin datos'),
+            fecha: item.timestamp ? new Date(item.timestamp).toLocaleString('es-ES') : 'Sin datos',
+          }))
+        );
+      } catch {
+        setAlertas([]);
+      }
+    };
 
-  const handleCreateAlerta = () => {
-    if (!formData.symbol || !formData.entrada || !formData.tp || !formData.sl) {
-      showToast('Completa todos los campos', 'error');
-      return;
-    }
+    load();
+  }, []);
 
-    createAlerta({
-      symbol: formData.symbol,
-      tipo: formData.tipo,
-      estado: 'activa',
-      entrada: formData.entrada,
-      tp: formData.tp,
-      sl: formData.sl,
-      fecha: new Date().toLocaleString('es-ES'),
-    });
-
-    const data = getAdminData();
-    setAlertas(data.alertas);
-    setFormData({ symbol: '', tipo: 'Compra', entrada: '', tp: '', sl: '' });
-    setShowCreate(false);
-    showToast('Alerta creada exitosamente', 'success');
-  };
-
-  const getEstadoIcon = (estado: string) => {
-    if (estado === 'ganada') return <TrendingUp className="w-5 h-5 text-green-400" />;
-    if (estado === 'perdida') return <TrendingDown className="w-5 h-5 text-red-400" />;
-    return <Clock className="w-5 h-5 text-yellow-400" />;
-  };
-
-  const getEstadoColor = (estado: string) => {
-    if (estado === 'ganada') return 'bg-green-500/20 text-green-300';
-    if (estado === 'perdida') return 'bg-red-500/20 text-red-300';
-    if (estado === 'activa') return 'bg-blue-500/20 text-blue-300';
-    return 'bg-yellow-500/20 text-yellow-300';
-  };
-
-  const getTipoIcon = (tipo: string) => {
-    return tipo === 'Compra' ? '📈' : '📉';
-  };
-
-  const stats = [
-    { label: 'Alertas ganadas', value: alertas.filter((a) => a.estado === 'ganada').length, icon: TrendingUp, color: 'text-green-400' },
-    { label: 'En seguimiento', value: alertas.filter((a) => a.estado === 'seguimiento').length, icon: Clock, color: 'text-yellow-400' },
-    { label: 'Alertas perdidas', value: alertas.filter((a) => a.estado === 'perdida').length, icon: TrendingDown, color: 'text-red-400' },
-  ];
+  const stats = useMemo(
+    () => [
+      { label: 'Alertas ganadas', value: alertas.filter((a) => a.estado === 'ganada').length, icon: TrendingUp, color: 'text-green-400' },
+      { label: 'En seguimiento', value: alertas.filter((a) => a.estado === 'seguimiento' || a.estado === 'activa').length, icon: Clock, color: 'text-yellow-400' },
+      { label: 'Alertas perdidas', value: alertas.filter((a) => a.estado === 'perdida').length, icon: TrendingDown, color: 'text-red-400' },
+    ],
+    [alertas]
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-start justify-between"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">Gestión de Alertas</h2>
-          <p className="text-white/60">Monitoreo de alertas de trading demo</p>
+          <p className="text-white/60">Monitoreo de alertas de trading</p>
         </div>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4AF37] text-black font-bold hover:bg-[#f5d76e] transition"
-        >
-          <Plus className="w-5 h-5" />
-          Nueva alerta demo
-        </button>
       </motion.div>
 
-      {/* Create Alert Form */}
-      {showCreate && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-6"
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Símbolo (ej: EURUSD)"
-                value={formData.symbol}
-                onChange={(e) => setFormData({ ...formData, symbol: e.target.value.toUpperCase() })}
-                className="px-3 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/40 outline-none focus:border-[#D4AF37]"
-              />
-              <select
-                value={formData.tipo}
-                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                className="px-3 py-2 rounded bg-white/10 border border-white/20 text-white outline-none focus:border-[#D4AF37]"
-              >
-                <option>Compra</option>
-                <option>Venta</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <input
-                type="text"
-                placeholder="Entrada"
-                value={formData.entrada}
-                onChange={(e) => setFormData({ ...formData, entrada: e.target.value })}
-                className="px-3 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/40 outline-none focus:border-[#D4AF37]"
-              />
-              <input
-                type="text"
-                placeholder="TP (Target Profit)"
-                value={formData.tp}
-                onChange={(e) => setFormData({ ...formData, tp: e.target.value })}
-                className="px-3 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/40 outline-none focus:border-[#D4AF37]"
-              />
-              <input
-                type="text"
-                placeholder="SL (Stop Loss)"
-                value={formData.sl}
-                onChange={(e) => setFormData({ ...formData, sl: e.target.value })}
-                className="px-3 py-2 rounded bg-white/10 border border-white/20 text-white placeholder-white/40 outline-none focus:border-[#D4AF37]"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleCreateAlerta}
-                className="px-4 py-2 rounded text-sm bg-[#D4AF37] text-black font-bold hover:bg-[#f5d76e] transition"
-              >
-                Crear alerta
-              </button>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="px-4 py-2 rounded text-sm bg-white/10 hover:bg-white/20 text-white transition"
-              >
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-3 gap-4"
-      >
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-3 gap-4">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -190,13 +88,7 @@ export default function AdminAlertas() {
         })}
       </motion.div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="rounded-lg border border-white/10 bg-white/5 overflow-hidden"
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="rounded-lg border border-white/10 bg-white/5 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-white/10 bg-white/5">
@@ -212,143 +104,48 @@ export default function AdminAlertas() {
               </tr>
             </thead>
             <tbody>
-              {alertas.map((alerta, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
-                  <td className="px-6 py-4 text-sm font-mono text-white/70">{alerta.id}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-white">{alerta.symbol}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className="text-lg">{getTipoIcon(alerta.tipo)}</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-white">{alerta.entrada}</td>
-                  <td className="px-6 py-4 text-sm text-green-400">{alerta.tp}</td>
-                  <td className="px-6 py-4 text-sm text-red-400">{alerta.sl}</td>
-                  <td className="px-6 py-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded capitalize flex items-center gap-1 w-fit ${getEstadoColor(alerta.estado)}`}>
-                      {getEstadoIcon(alerta.estado)}
-                      {alerta.estado}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-1 flex-wrap">
-                      <button
-                        onClick={() => {
-                          setSelectedAlerta(alerta);
-                          setIsModalOpen(true);
-                        }}
-                        className="px-2 py-1 text-xs rounded bg-white/10 text-white hover:bg-white/20 transition flex items-center gap-1"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Ver
-                      </button>
-                      {alerta.estado !== 'ganada' && (
-                        <button
-                          onClick={() => handleUpdateAlerta(alerta.id, 'ganada')}
-                          className="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300 hover:bg-green-500/30 transition"
-                        >
-                          Ganada
-                        </button>
-                      )}
-                      {alerta.estado !== 'perdida' && (
-                        <button
-                          onClick={() => handleUpdateAlerta(alerta.id, 'perdida')}
-                          className="px-2 py-1 text-xs rounded bg-red-500/20 text-red-300 hover:bg-red-500/30 transition"
-                        >
-                          Perdida
-                        </button>
-                      )}
-                      {alerta.estado !== 'seguimiento' && (
-                        <button
-                          onClick={() => handleUpdateAlerta(alerta.id, 'seguimiento')}
-                          className="px-2 py-1 text-xs rounded bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 transition"
-                        >
-                          Seguimiento
-                        </button>
-                      )}
-                    </div>
-                  </td>
+              {alertas.length === 0 ? (
+                <tr>
+                  <td className="px-6 py-8 text-white/60" colSpan={8}>Sin alertas</td>
                 </tr>
-              ))}
+              ) : (
+                alertas.map((alerta) => (
+                  <tr key={alerta.id} className="border-b border-white/5 hover:bg-white/5 transition">
+                    <td className="px-6 py-4 text-sm font-mono text-white/70">{alerta.id}</td>
+                    <td className="px-6 py-4 text-sm font-bold text-white">{alerta.symbol}</td>
+                    <td className="px-6 py-4 text-sm text-white">{alerta.tipo}</td>
+                    <td className="px-6 py-4 text-sm text-white">{alerta.entrada}</td>
+                    <td className="px-6 py-4 text-sm text-green-400">{alerta.tp}</td>
+                    <td className="px-6 py-4 text-sm text-red-400">{alerta.sl}</td>
+                    <td className="px-6 py-4">
+                      <CARVIPIXBadge variant={alerta.estado === 'ganada' ? 'success' : alerta.estado === 'perdida' ? 'danger' : 'warning'}>{alerta.estado}</CARVIPIXBadge>
+                    </td>
+                    <td className="px-6 py-4">
+                      <CARVIPIXButton onClick={() => { setSelectedAlerta(alerta); setIsModalOpen(true); }} variant="ghost" size="sm" leftIcon={<Eye className="w-4 h-4" />}>
+                        Ver
+                      </CARVIPIXButton>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </motion.div>
 
-      {/* Info */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="rounded-lg border border-white/10 bg-white/5 p-4"
-      >
-        <p className="text-sm text-white/70">
-          Crea alertas demo y gestiona su estado. Los cambios se guardan en localStorage de la sesión del administrador.
-        </p>
-      </motion.div>
-
-      {/* Detail Modal */}
-      <DetailModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Detalles de Alerta"
-      >
+      <DetailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Detalles de Alerta">
         {selectedAlerta && (
           <div className="space-y-6">
-            {/* ID y Estado */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-white/60 mb-1">ID de Alerta</p>
-                <p className="font-mono text-sm text-[#D4AF37]">{selectedAlerta.id}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/60 mb-1">Estado</p>
-                <span className={`text-xs font-bold px-2 py-1 rounded capitalize w-fit block flex items-center gap-1 ${getEstadoColor(selectedAlerta.estado)}`}>
-                  {getEstadoIcon(selectedAlerta.estado)}
-                  {selectedAlerta.estado}
-                </span>
-              </div>
-            </div>
-
-            {/* Símbolo */}
             <div>
-              <p className="text-xs text-white/60 mb-1">Símbolo del Activo</p>
-              <p className="text-white font-semibold text-lg">{selectedAlerta.symbol}</p>
+              <p className="text-xs text-white/60 mb-1">ID de Alerta</p>
+              <p className="font-mono text-sm text-[#D4AF37]">{selectedAlerta.id}</p>
             </div>
-
-            {/* Tipo */}
             <div>
-              <p className="text-xs text-white/60 mb-1">Tipo de Operación</p>
-              <p className="text-white bg-white/5 px-3 py-2 rounded">{selectedAlerta.tipo} {getTipoIcon(selectedAlerta.tipo)}</p>
+              <p className="text-xs text-white/60 mb-1">Símbolo</p>
+              <p className="text-white font-semibold">{selectedAlerta.symbol}</p>
             </div>
-
-            {/* Precios */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-xs text-white/60 mb-1">Entrada</p>
-                <p className="text-white font-semibold">{selectedAlerta.entrada}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/60 mb-1">Target Profit (TP)</p>
-                <p className="text-green-400 font-semibold">{selectedAlerta.tp}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/60 mb-1">Stop Loss (SL)</p>
-                <p className="text-red-400 font-semibold">{selectedAlerta.sl}</p>
-              </div>
-            </div>
-
-            {/* Riesgo */}
             <div>
-              <p className="text-xs text-white/60 mb-2">Análisis de Riesgo</p>
-              <div className="bg-white/5 rounded p-3 text-sm text-white/70 space-y-1">
-                <p>• Entrada: <span className="text-white">{selectedAlerta.entrada}</span></p>
-                <p>• Riesgo potencial: Hasta SL en <span className="text-red-400">{selectedAlerta.sl}</span></p>
-                <p>• Ganancia potencial: Hasta TP en <span className="text-green-400">{selectedAlerta.tp}</span></p>
-              </div>
-            </div>
-
-            {/* Fecha */}
-            <div>
-              <p className="text-xs text-white/60 mb-1">Fecha de Creación</p>
+              <p className="text-xs text-white/60 mb-1">Fecha</p>
               <p className="text-white/70">{selectedAlerta.fecha}</p>
             </div>
           </div>

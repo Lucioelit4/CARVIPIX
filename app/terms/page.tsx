@@ -13,7 +13,7 @@ export default function TermsPage() {
           className="inline-flex items-center gap-2 mb-8 text-[#D4AF37] hover:text-[#F5DEB3] transition"
         >
           <ArrowLeft size={18} />
-          Volver al Dashboard
+          Volver al inicio
         </Link>
 
         <motion.div
@@ -74,9 +74,9 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-white mb-4">5. Datos Demo y Contenido</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">5. Disponibilidad de Contenido</h2>
               <p>
-                Mientras la plataforma se integra con datos reales, ciertos contenidos incluyen datos simulados claramente marcados como &quot;demo&quot; o &quot;vista demo&quot;. Estos no representan datos reales de mercado ni resultados garantizados.
+                Algunos módulos pueden mostrar estados de preparación mientras se completa la activación del servicio correspondiente. Esto no constituye una promesa de rendimiento ni sustituye condiciones operativas específicas.
               </p>
             </section>
 

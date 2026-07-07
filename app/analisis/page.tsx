@@ -541,7 +541,7 @@ export default function AnalisisPage() {
       {/* Footer */}
       <div className="mt-8 text-center text-xs text-white/40">
         <p>
-          Datos demo para aprendizaje. El trading real implica riesgo. Operar solo con capital que puedas perder.
+          Información educativa y operativa. El trading real implica riesgo; opera solo con capital que puedas asumir.
         </p>
       </div>
     </main>

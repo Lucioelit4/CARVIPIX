@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion, type HTMLMotionProps } from 'framer-motion';
-import { colors, spacing, animations, sizes, typography, borders, shadows } from '../tokens';
+import { borders, sizes } from '../tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'success' | 'premium' | 'disabled' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -20,150 +20,6 @@ interface CARVIPIXButtonProps
   rightIcon?: React.ReactNode;
   children?: React.ReactNode;
 }
-
-const getVariantStyles = (variant: ButtonVariant) => {
-  const baseStyle = {
-    fontFamily: typography.fonts.sans,
-    fontWeight: typography.weights.semibold,
-    border: 'none',
-    cursor: 'pointer',
-    transition: `all ${animations.durations.fast} ${animations.easing.responsive}`,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[8],
-    position: 'relative' as const,
-  };
-
-  const variants = {
-    primary: {
-      ...baseStyle,
-      backgroundColor: colors.gold.primary,
-      color: colors.black.pure,
-      border: `${borders.width.thin} solid ${colors.gold.primary}`,
-      boxShadow: shadows.glow.md,
-      
-      '&:hover:not(:disabled)': {
-        backgroundColor: colors.gold.bright,
-        boxShadow: shadows.glow.lg,
-        transform: 'translateY(-2px)',
-      },
-      
-      '&:active:not(:disabled)': {
-        transform: 'translateY(0)',
-      },
-      
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    secondary: {
-      ...baseStyle,
-      backgroundColor: 'transparent',
-      color: colors.gold.primary,
-      border: `${borders.width.thin} solid ${colors.gold.primary}`,
-      
-      '&:hover:not(:disabled)': {
-        backgroundColor: `rgba(212, 175, 55, 0.1)`,
-        boxShadow: shadows.glow.md,
-      },
-      
-      '&:active:not(:disabled)': {
-        backgroundColor: `rgba(212, 175, 55, 0.2)`,
-      },
-      
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    ghost: {
-      ...baseStyle,
-      backgroundColor: 'transparent',
-      color: colors.white.pure,
-      border: `${borders.width.thin} solid rgba(255, 255, 255, 0.2)`,
-      
-      '&:hover:not(:disabled)': {
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        borderColor: 'rgba(255, 255, 255, 0.4)',
-      },
-      
-      '&:active:not(:disabled)': {
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      },
-      
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    danger: {
-      ...baseStyle,
-      backgroundColor: 'transparent',
-      color: colors.error,
-      border: `${borders.width.thin} solid ${colors.error}`,
-      
-      '&:hover:not(:disabled)': {
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      },
-      
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    success: {
-      ...baseStyle,
-      backgroundColor: 'rgba(46, 204, 113, 0.12)',
-      color: colors.success,
-      border: `${borders.width.thin} solid rgba(46, 204, 113, 0.35)`,
-
-      '&:hover:not(:disabled)': {
-        backgroundColor: 'rgba(46, 204, 113, 0.18)',
-        boxShadow: '0 0 12px rgba(46, 204, 113, 0.28)',
-      },
-
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    premium: {
-      ...baseStyle,
-      background: 'linear-gradient(135deg, rgba(212, 175, 55, 1) 0%, rgba(230, 197, 71, 1) 100%)',
-      color: colors.black.pure,
-      border: `${borders.width.thin} solid rgba(212, 175, 55, 0.65)`,
-      boxShadow: shadows.glow.lg,
-
-      '&:hover:not(:disabled)': {
-        filter: 'brightness(1.05)',
-        transform: 'translateY(-2px)',
-      },
-
-      '&:disabled': {
-        opacity: 0.5,
-        cursor: 'not-allowed',
-      },
-    },
-
-    disabled: {
-      ...baseStyle,
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      color: colors.white.secondary,
-      border: `${borders.width.thin} solid rgba(255, 255, 255, 0.1)`,
-      cursor: 'not-allowed',
-      opacity: 0.55,
-    },
-  };
-
-  return variants[variant];
-};
 
 const getSizeStyles = (size: ButtonSize) => {
   const sizeMap = {
@@ -195,25 +51,38 @@ export const CARVIPIXButton: React.FC<CARVIPIXButtonProps> = ({
   size = 'md',
   fullWidth = false,
   isLoading = false,
+  type = 'button',
   leftIcon,
   rightIcon,
   children,
   disabled,
+  className,
   ...props
 }) => {
-  const variantStyles = getVariantStyles(variant);
   const sizeStyles = getSizeStyles(size);
   const forceDisabled = variant === 'disabled';
+  const buttonClassName = [
+    'cv-button',
+    `cv-button--${variant}`,
+    `cv-button--${size}`,
+    fullWidth ? 'cv-button--fullWidth' : null,
+    isLoading ? 'is-loading' : null,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <motion.button
+      type={type}
       whileHover={{ y: disabled || forceDisabled ? 0 : -2 }}
       whileTap={{ y: disabled || forceDisabled ? 0 : 0 }}
+      aria-busy={isLoading || undefined}
+      className={buttonClassName}
       style={{
-        ...variantStyles,
         ...sizeStyles,
         width: fullWidth ? '100%' : 'auto',
-        minWidth: sizes.touchTarget,
+        minWidth: size === 'sm' ? 40 : sizes.touchTarget,
       }}
       disabled={disabled || isLoading || forceDisabled}
       {...props}

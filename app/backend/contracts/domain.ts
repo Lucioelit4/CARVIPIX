@@ -24,6 +24,25 @@ export interface ServiceAlertStats {
   resolved: number;
 }
 
+export interface ServiceAlertRule {
+  id: string;
+  userId: string;
+  name: string;
+  enabled: boolean;
+  condition: string;
+  symbols: string[];
+  alertTypes: ServiceAlertType[];
+  createdAt: Date;
+}
+
+export interface ServiceAlertHistory {
+  id: string;
+  userId: string;
+  alertId: string;
+  action: "viewed" | "dismissed" | "triggered";
+  timestamp: Date;
+}
+
 export interface ServiceResultsBySource {
   alertas: {
     totalTrades: number;
@@ -305,4 +324,24 @@ export interface ServiceInvestorStats {
     month: string;
     return: number;
   };
+}
+
+export interface ServiceOperationRecord {
+  id: string;
+  userId: string;
+  accountId?: string;
+  symbol: string;
+  side: string;
+  status: string;
+  pnl: number;
+  executedAt: Date;
+  metadata: Record<string, unknown>;
+}
+
+export interface ServiceOperationSummary {
+  totalOperations: number;
+  winningOperations: number;
+  losingOperations: number;
+  totalPnl: number;
+  winRate: number;
 }

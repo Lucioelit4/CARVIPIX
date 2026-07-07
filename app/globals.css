@@ -244,11 +244,16 @@ a:hover {
   justify-content: center;
   gap: 10px;
   min-height: 52px;
+  min-width: 52px;
   border-radius: 999px;
   padding: 0 22px;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.01em;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  text-decoration: none;
   transition:
     transform 160ms ease,
     border-color 180ms ease,
@@ -257,8 +262,25 @@ a:hover {
     box-shadow 180ms ease;
 }
 
-.cv-button:hover {
+.cv-button:focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: 3px;
+}
+
+.cv-button:disabled,
+.cv-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
+}
+
+.cv-button:hover:not(:disabled):not([aria-disabled="true"]) {
   transform: translateY(-1px);
+}
+
+.cv-button:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(0);
 }
 
 .cv-button--primary {
@@ -279,10 +301,75 @@ a:hover {
   color: #f5f1e8;
 }
 
+.cv-button--secondary {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
 .cv-button--secondary:hover,
 .cv-button--ghost:hover {
   border-color: rgba(212, 175, 55, 0.24);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.cv-button--danger {
+  border: 1px solid rgba(231, 76, 60, 0.45);
+  background: rgba(231, 76, 60, 0.1);
+  color: #ffd8d4;
+}
+
+.cv-button--success {
+  border: 1px solid rgba(46, 204, 113, 0.35);
+  background: rgba(46, 204, 113, 0.12);
+  color: #dcffe7;
+}
+
+.cv-button--premium {
+  border: 1px solid rgba(212, 175, 55, 0.55);
+  background: linear-gradient(135deg, #d4af37 0%, #e9c85b 100%);
+  color: #060606;
+  box-shadow: 0 16px 42px rgba(212, 175, 55, 0.22);
+}
+
+.cv-button--premium:hover:not(:disabled):not([aria-disabled="true"]) {
+  box-shadow: 0 20px 52px rgba(212, 175, 55, 0.28);
+}
+
+.cv-button--disabled {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  color: #7e7e7e;
+}
+
+.cv-button--sm {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+.cv-button--md {
+  min-height: 48px;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+.cv-button--lg {
+  min-height: 56px;
+  padding: 0 24px;
+  font-size: 15px;
+}
+
+.cv-button--fullWidth {
+  width: 100%;
+}
+
+.cv-button--iconOnly {
+  width: 44px;
+  min-width: 44px;
+  padding-inline: 0;
+}
+
+a.cv-button {
+  display: inline-flex;
 }
 
 .cv-hover-lift {
@@ -382,6 +469,15 @@ a:hover {
   background: #121212;
   color: #d4af37;
   transition: all 180ms ease;
+}
+
+.cv-icon-btn:focus-visible {
+  outline: 2px solid var(--color-gold-bright);
+  outline-offset: 3px;
+}
+
+.cv-icon-btn:active {
+  transform: translateY(0);
 }
 
 .cv-icon-btn:hover {

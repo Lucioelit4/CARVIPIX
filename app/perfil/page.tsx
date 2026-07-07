@@ -4,19 +4,16 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3, AlertCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
-import { getCurrentUser } from '@/app/lib/data-helpers';
+import { getAlertStats, getCurrentMembership, getCurrentUser, getPlatformResults } from '@/app/lib/client-data-helpers';
 import { validateProfileForm } from '@/app/lib/form-validators';
 
-const PROFILE_STORAGE_KEY = 'carvipix_profile_data';
-const PREFERENCES_STORAGE_KEY = 'carvipix_preferences_data';
-
 const DEFAULT_USER_DATA = {
-  nombre: 'Abraham B.',
-  correo: 'abraham@example.com',
-  telefono: '+1 (555) 123-4567',
-  pais: 'Estados Unidos',
+  nombre: '',
+  correo: '',
+  telefono: '',
+  pais: '',
   idioma: 'Español',
-  zonaHoraria: 'UTC-5',
+  zonaHoraria: 'UTC',
 };
 
 const DEFAULT_PREFERENCES = {
@@ -32,6 +29,8 @@ export default function PerfilPage() {
   const [saveMessage, setSaveMessage] = useState('');
   const [profileErrors, setProfileErrors] = useState<{ [key: string]: string }>({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const [membership, setMembership] = useState<{ plan: string; estado: string; fechaInicio: string; fechaFin: string } | null>(null);
+  const [profileStats, setProfileStats] = useState<{ alertas: number; operaciones: number }>({ alertas: 0, operaciones: 0 });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [userData, setUserData] = useState(DEFAULT_USER_DATA);
@@ -41,29 +40,41 @@ export default function PerfilPage() {
   useEffect(() => {
     const loadProfileData = async () => {
       try {
-        // Try to load from localStorage first
-        const savedUserData = localStorage.getItem(PROFILE_STORAGE_KEY);
-        const savedPreferences = localStorage.getItem(PREFERENCES_STORAGE_KEY);
+        const [user, currentMembership, alertStats, results] = await Promise.all([
+          getCurrentUser(),
+          getCurrentMembership(),
+          getAlertStats(),
+          getPlatformResults('monthly'),
+        ]);
 
-        if (savedUserData) {
-          setUserData(JSON.parse(savedUserData));
-        } else {
-          // If no localStorage, try to load from modules
-          const user = await getCurrentUser();
-          if (user) {
-            setUserData(prev => ({
-              ...prev,
-              nombre: `${user.nombre} ${user.apellido}`,
-              correo: user.email,
-            }));
-          }
+        if (user) {
+          setUserData((prev) => ({
+            ...prev,
+            nombre: `${user.nombre} ${user.apellido}`.trim(),
+            correo: user.email,
+          }));
         }
 
-        if (savedPreferences) {
-          setPreferencias(JSON.parse(savedPreferences));
+        if (currentMembership) {
+          setMembership({
+            plan: String(currentMembership.plan || '').toUpperCase() || 'SIN MEMBRESIA',
+            estado: currentMembership.estado || 'inactivo',
+            fechaInicio: currentMembership.fechaInicio
+              ? new Date(currentMembership.fechaInicio).toLocaleDateString('es-ES')
+              : 'Pendiente de activación',
+            fechaFin: currentMembership.fechaFin
+              ? new Date(currentMembership.fechaFin).toLocaleDateString('es-ES')
+              : 'Pendiente de definición',
+          });
         }
-      } catch (error) {
-        console.log("Usando datos demo de perfil");
+
+        setProfileStats({
+          alertas: Number(alertStats.total ?? 0),
+          operaciones: Number(results.combinedStats.totalTrades ?? 0),
+        });
+      } catch {
+        setMembership(null);
+        setProfileStats({ alertas: 0, operaciones: 0 });
       }
       setIsLoaded(true);
     };
@@ -98,12 +109,8 @@ export default function PerfilPage() {
       return;
     }
 
-    // Save to localStorage
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(userData));
-    localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferencias));
-
     setProfileErrors({});
-    setSaveMessage('✓ Perfil actualizado en modo demo.');
+    setSaveMessage('✓ Perfil actualizado.');
     setTimeout(() => setSaveMessage(''), 3000);
     setEditMode(false);
   };
@@ -111,8 +118,6 @@ export default function PerfilPage() {
   const handleRestoreDefaults = () => {
     setUserData(DEFAULT_USER_DATA);
     setPreferencias(DEFAULT_PREFERENCES);
-    localStorage.removeItem(PROFILE_STORAGE_KEY);
-    localStorage.removeItem(PREFERENCES_STORAGE_KEY);
     setProfileErrors({});
     setSaveMessage('✓ Datos de perfil restaurados.');
     setTimeout(() => setSaveMessage(''), 3000);
@@ -188,27 +193,29 @@ export default function PerfilPage() {
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-3xl font-bold">{userData.nombre}</h2>
                 <span className="bg-[#D4AF37]/20 text-[#D4AF37] px-4 py-1 rounded-full text-xs font-bold">
-                  MIEMBRO PRO
+                  {membership?.plan || 'SIN MEMBRESIA'}
                 </span>
               </div>
-              <p className="text-[#D4AF37] font-semibold mb-4">Miembro CARVIPIX PRO</p>
+              <p className="text-[#D4AF37] font-semibold mb-4">
+                {membership ? `Miembro CARVIPIX ${membership.plan}` : 'Membresía pendiente de activación'}
+              </p>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                 <div>
                   <p className="text-white/60">Estado</p>
-                  <p className="font-bold text-green-400">Activo</p>
+                  <p className="font-bold text-green-400">{membership?.estado || 'Sin balance'}</p>
                 </div>
                 <div>
                   <p className="text-white/60">ID Miembro</p>
-                  <p className="font-bold">CVX-2026-001</p>
+                  <p className="font-bold">{membership ? 'ASIGNADO' : 'Pendiente de asignación'}</p>
                 </div>
                 <div>
                   <p className="text-white/60">Ingreso</p>
-                  <p className="font-bold">01/07/2026</p>
+                  <p className="font-bold">{membership?.fechaInicio || 'Disponible al activar el servicio'}</p>
                 </div>
                 <div>
                   <p className="text-white/60">Renovación</p>
-                  <p className="font-bold text-[#D4AF37]">18/07/2026</p>
+                  <p className="font-bold text-[#D4AF37]">{membership?.fechaFin || 'Se mostrará con tu plan activo'}</p>
                 </div>
               </div>
             </div>
@@ -223,12 +230,12 @@ export default function PerfilPage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
         >
           {[
-            { label: 'Plan actual', value: 'CARVIPIX PRO', Icon: CreditCard },
-            { label: 'Alertas recibidas', value: '24', Icon: Bell },
-            { label: 'Operaciones seguidas', value: '18', Icon: BarChart3 },
+            { label: 'Plan actual', value: membership?.plan || 'SIN MEMBRESIA', Icon: CreditCard },
+            { label: 'Alertas recibidas', value: profileStats.alertas > 0 ? String(profileStats.alertas) : 'Aún no has recibido alertas', Icon: Bell },
+            { label: 'Operaciones seguidas', value: profileStats.operaciones > 0 ? String(profileStats.operaciones) : 'Activa una estrategia para comenzar', Icon: BarChart3 },
             { label: 'Comunidad', value: 'Activa', Icon: Users },
             { label: 'Nivel', value: 'Premium', Icon: Star },
-            { label: 'Estado de cuenta', value: 'Verificada demo', Icon: CheckCircle2 },
+            { label: 'Estado de cuenta', value: membership?.estado || 'Sin balance', Icon: CheckCircle2 },
           ].map((card, i) => {
             const CardIcon = card.Icon;
             return (
@@ -259,7 +266,7 @@ export default function PerfilPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleRestoreDefaults}
-                title="Restaurar datos demo"
+                title="Restaurar datos"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 transition-all text-sm"
               >
                 <RotateCcw size={16} />
@@ -456,15 +463,15 @@ export default function PerfilPage() {
             <div className="space-y-3 mb-6">
               <div>
                 <p className="text-white/60 text-sm">Plan</p>
-                <p className="text-xl font-bold text-[#D4AF37]">CARVIPIX PRO</p>
+                <p className="text-xl font-bold text-[#D4AF37]">{membership?.plan || 'SIN MEMBRESIA'}</p>
               </div>
               <div>
                 <p className="text-white/60 text-sm">Renovación</p>
-                <p className="text-lg font-bold">18/07/2026</p>
+                <p className="text-lg font-bold">{membership?.fechaFin || 'Se definirá al confirmar tu plan'}</p>
               </div>
               <div>
                 <p className="text-white/60 text-sm">Estado</p>
-                <p className="text-lg font-bold text-green-400">Activa</p>
+                <p className="text-lg font-bold text-green-400">{membership?.estado || 'Pendiente de activación'}</p>
               </div>
             </div>
             <div className="flex gap-3">

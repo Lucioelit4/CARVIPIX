@@ -2,7 +2,9 @@ import type {
   ServiceAdminSnapshot,
   ServiceAIContext,
   ServiceAlertRecord,
+  ServiceAlertRule,
   ServiceAlertStats,
+  ServiceAlertHistory,
   ServiceBotInstance,
   ServiceBotLicense,
   ServiceBotUpdate,
@@ -17,6 +19,8 @@ import type {
   ServiceMembership,
   ServiceMonthlyReport,
   ServiceOrder,
+  ServiceOperationRecord,
+  ServiceOperationSummary,
   ServicePlatformResults,
   ServiceProduct,
   ServicePayment,
@@ -35,6 +39,13 @@ export interface AlertsQuery {
 export interface IAlertsDomainService {
   getAlerts(query?: AlertsQuery): Promise<ServiceAlertRecord[]>;
   getAlertStats(userId?: string): Promise<ServiceAlertStats>;
+  getAlertRules(userId: string): Promise<ServiceAlertRule[]>;
+  createAlertRule(userId: string, rule: Omit<ServiceAlertRule, "id" | "userId" | "createdAt">): Promise<ServiceAlertRule>;
+  logAlertAction(
+    userId: string,
+    alertId: string,
+    action: ServiceAlertHistory["action"]
+  ): Promise<void>;
 }
 
 export interface IResultsDomainService {
@@ -89,6 +100,14 @@ export interface ICapitalDomainService {
   getSnapshot(userId?: string): Promise<ServiceCapitalSnapshot>;
 }
 
+export interface IOperationsDomainService {
+  getOperations(userId?: string, limit?: number): Promise<ServiceOperationRecord[]>;
+  createOperation(
+    operation: Omit<ServiceOperationRecord, "id" | "executedAt"> & { id?: string; executedAt?: Date }
+  ): Promise<ServiceOperationRecord>;
+  getSummary(userId?: string): Promise<ServiceOperationSummary>;
+}
+
 export interface IFundingDomainService {
   getSnapshot(userId?: string): Promise<ServiceFundingSnapshot>;
 }
@@ -119,6 +138,7 @@ export interface EcosystemServiceLayer {
   payments: IPaymentsDomainService;
   bot: IBotDomainService;
   capital: ICapitalDomainService;
+  operations: IOperationsDomainService;
   funding: IFundingDomainService;
   dashboard: IDashboardDomainService;
   results: IResultsDomainService;

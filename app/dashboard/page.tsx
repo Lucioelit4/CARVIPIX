@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -15,7 +16,8 @@ import {
   Trophy,
   UserCircle2,
 } from 'lucide-react';
-import { getCurrentRole, writeAuthSession } from '@/app/lib/auth/session';
+import { writeAuthSession } from '@/app/lib/auth/session';
+import { getAlertStats, getBotInstances, getPlatformResults, getResultsHistory } from '@/app/lib/client-data-helpers';
 import { CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 const moduleCards = [
@@ -53,76 +55,162 @@ const moduleCards = [
   },
 ];
 
-const kpis = [
-  {
-    label: 'Alertas hoy',
-    value: '23',
-    note: '+15% vs ayer',
-    icon: Bell,
-    tone: 'text-[#2ECC71]',
-  },
-  {
-    label: 'Operaciones',
-    value: '156',
-    note: '+8% vs ayer',
-    icon: Gauge,
-    tone: 'text-[#2ECC71]',
-  },
-  {
-    label: 'Ganancia neta',
-    value: '+2.48%',
-    note: 'Performance',
-    icon: CircleDollarSign,
-    tone: 'text-[#F4C542]',
-  },
-  {
-    label: 'Win Rate',
-    value: '78.6%',
-    note: 'Ultimos 30 dias',
-    icon: Trophy,
-    tone: 'text-white',
-  },
-  {
-    label: 'Drawdown',
-    value: '4.21%',
-    note: 'Riesgo controlado',
-    icon: ShieldCheck,
-    tone: 'text-white',
-  },
-  {
-    label: 'Estado del bot',
-    value: 'ACTIVO',
-    note: 'Operando',
-    icon: Timer,
-    tone: 'text-[#2ECC71]',
-  },
-];
+type DashboardKPI = {
+  label: string;
+  value: string;
+  note: string;
+  icon: typeof Bell;
+  tone: string;
+};
 
-const news = [
-  {
-    time: '10:42',
-    title: 'Actualizacion del Bot CARVIPIX',
-    desc: 'Nueva version 2.4.0 disponible',
-  },
-  {
-    time: '09:15',
-    title: 'Reporte de resultados semanal',
-    desc: 'Ya disponible en tu panel',
-  },
-  {
-    time: 'Ayer',
-    title: 'Nuevas estrategias anadidas',
-    desc: 'Optimizacion de rendimiento',
-  },
+const EMPTY_KPIS: DashboardKPI[] = [
+  { label: 'Alertas hoy', value: '0', note: 'Activa alertas para comenzar', icon: Bell, tone: 'text-white' },
+  { label: 'Operaciones', value: '0', note: 'Se mostrarán al cerrar actividad', icon: Gauge, tone: 'text-white' },
+  { label: 'Ganancia neta', value: '0%', note: 'Disponible con historial operativo', icon: CircleDollarSign, tone: 'text-white' },
+  { label: 'Win Rate', value: '0%', note: 'Disponible con historial operativo', icon: Trophy, tone: 'text-white' },
+  { label: 'Drawdown', value: '0%', note: 'Disponible con historial operativo', icon: ShieldCheck, tone: 'text-white' },
+  { label: 'Estado del bot', value: 'INACTIVO', note: 'Disponible al activar el servicio', icon: Timer, tone: 'text-white' },
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [kpis, setKpis] = useState<DashboardKPI[]>(EMPTY_KPIS);
+  const [news, setNews] = useState<Array<{ time: string; title: string; desc: string }>>([]);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
+
   useEffect(() => {
-    if (getCurrentRole() === 'invitado') {
-      writeAuthSession('cliente');
+    const loadDashboardData = async () => {
+      try {
+        const [sessionResponse, adminSessionResponse] = await Promise.all([
+          fetch('/api/auth/session', { cache: 'no-store' }),
+          fetch('/api/auth/admin/session', { cache: 'no-store' }),
+        ]);
+
+        const isAdmin = adminSessionResponse.ok;
+        setIsAdminView(isAdmin);
+
+        if (!sessionResponse.ok && !isAdmin) {
+          router.replace('/servicios');
+          return;
+        }
+
+        const payload = sessionResponse.ok
+          ? ((await sessionResponse.json().catch(() => ({}))) as {
+              authenticated?: boolean;
+              membership?: { active?: boolean };
+            })
+          : { authenticated: false, membership: { active: false } };
+
+        if (!isAdmin && (!payload.authenticated || !payload.membership?.active)) {
+          router.replace('/servicios');
+          return;
+        }
+
+        writeAuthSession(isAdmin ? 'admin' : 'cliente');
+      } catch {
+        router.replace('/servicios');
+        return;
+      }
+
+      try {
+        const [alertStats, platformResults, botInstances, history] = await Promise.all([
+          getAlertStats(),
+          getPlatformResults('monthly'),
+          getBotInstances(),
+          getResultsHistory(3),
+        ]);
+
+        setIsAuthorized(true);
+
+        const runningBots = botInstances.filter((item) => item.status === 'running').length;
+        const hasTrades = platformResults.combinedStats.totalTrades > 0;
+        const totalProfit = Number(platformResults.combinedStats.totalProfit ?? 0);
+
+        setKpis([
+          {
+            label: 'Alertas hoy',
+            value: String(alertStats.active ?? 0),
+            note: (alertStats.active ?? 0) > 0 ? 'Alertas activas' : 'Activa alertas para comenzar',
+            icon: Bell,
+            tone: (alertStats.active ?? 0) > 0 ? 'text-[#2ECC71]' : 'text-white',
+          },
+          {
+            label: 'Operaciones',
+            value: String(platformResults.combinedStats.totalTrades ?? 0),
+            note: hasTrades ? 'Operaciones cerradas' : 'Se mostrarán al cerrar actividad',
+            icon: Gauge,
+            tone: hasTrades ? 'text-[#2ECC71]' : 'text-white',
+          },
+          {
+            label: 'Ganancia neta',
+            value: hasTrades ? `${totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}%` : '0%',
+            note: hasTrades ? 'Performance' : 'Disponible con historial operativo',
+            icon: CircleDollarSign,
+            tone: hasTrades ? 'text-[#F4C542]' : 'text-white',
+          },
+          {
+            label: 'Win Rate',
+            value: hasTrades ? `${Number(platformResults.combinedStats.avgWinRate ?? 0).toFixed(1)}%` : '0%',
+            note: hasTrades ? 'Ultimos 30 dias' : 'Disponible con historial operativo',
+            icon: Trophy,
+            tone: 'text-white',
+          },
+          {
+            label: 'Drawdown',
+            value: hasTrades ? `${Math.max(0, Number(platformResults.bySource.alertas.profitLoss < 0 ? Math.abs(platformResults.bySource.alertas.profitLoss) : 0)).toFixed(2)}%` : '0%',
+            note: hasTrades ? 'Riesgo monitorizado' : 'Disponible con historial operativo',
+            icon: ShieldCheck,
+            tone: 'text-white',
+          },
+          {
+            label: 'Estado del bot',
+            value: runningBots > 0 ? 'ACTIVO' : 'INACTIVO',
+            note: runningBots > 0 ? 'Operando' : 'Disponible al activar el servicio',
+            icon: Timer,
+            tone: runningBots > 0 ? 'text-[#2ECC71]' : 'text-white',
+          },
+        ]);
+
+        setNews(
+          (history ?? []).map((entry) => ({
+            time: entry.month || 'N/A',
+            title: `Reporte ${entry.month || 'sin periodo'}`,
+            desc:
+              Number(entry.metrics.alertas.totalTrades ?? 0) > 0
+                ? `${entry.metrics.alertas.totalTrades} operaciones en alertas`
+                : 'Pendiente de actividad operativa',
+          }))
+        );
+      } catch {
+        setKpis(EMPTY_KPIS);
+        setNews([]);
+        setIsAuthorized(true);
+      }
+    };
+
+    void loadDashboardData();
+
+  }, [router]);
+
+  useEffect(() => {
+    if (!isAdminView) {
+      return;
     }
 
-  }, []);
+    return () => {
+      void fetch('/api/admin/client-panel', {
+        method: 'DELETE',
+        keepalive: true,
+      }).catch(() => {
+        // No-op: seguridad best-effort para limpieza al salir.
+      });
+    };
+  }, [isAdminView]);
+
+  if (!isAuthorized) {
+    return null;
+  }
 
   return (
     <main className="space-y-5 pb-6">
@@ -247,13 +335,21 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          {news.map((item) => (
-            <article key={item.title} className="rounded-xl border border-[#2A2A2A] bg-[#181818] p-4">
-              <p className="text-xs text-[#B5B5B5]">{item.time}</p>
-              <h4 className="mt-2 text-sm font-semibold text-white">{item.title}</h4>
-              <p className="mt-1 text-xs text-[#B5B5B5]">{item.desc}</p>
+          {news.length === 0 ? (
+            <article className="rounded-xl border border-[#2A2A2A] bg-[#181818] p-4">
+              <p className="text-xs text-[#B5B5B5]">N/A</p>
+              <h4 className="mt-2 text-sm font-semibold text-white">Reportes en preparación</h4>
+              <p className="mt-1 text-xs text-[#B5B5B5]">Se publicarán cuando exista actividad validada.</p>
             </article>
-          ))}
+          ) : (
+            news.map((item) => (
+              <article key={item.title} className="rounded-xl border border-[#2A2A2A] bg-[#181818] p-4">
+                <p className="text-xs text-[#B5B5B5]">{item.time}</p>
+                <h4 className="mt-2 text-sm font-semibold text-white">{item.title}</h4>
+                <p className="mt-1 text-xs text-[#B5B5B5]">{item.desc}</p>
+              </article>
+            ))
+          )}
         </div>
       </section>
     </main>

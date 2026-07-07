@@ -14,7 +14,7 @@ interface CARVIPIXDataTableProps<T> {
   emptyLabel?: string;
 }
 
-export function CARVIPIXDataTable<T>({ columns, rows, rowKey, emptyLabel = 'Sin datos disponibles' }: CARVIPIXDataTableProps<T>) {
+export function CARVIPIXDataTable<T>({ columns, rows, rowKey, emptyLabel = 'No hay información disponible por el momento' }: CARVIPIXDataTableProps<T>) {
   if (rows.length === 0) {
     return (
       <div style={{ borderRadius: borders.radius.lg, border: '1px solid rgba(255, 255, 255, 0.1)', padding: spacing[16], color: colors.white.secondary, fontSize: typography.sizes.sm }}>

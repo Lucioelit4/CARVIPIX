@@ -1,51 +1,17 @@
 // Servicio para Resultados (agregador de métricas)
 
 import { PlatformResults, ResultsHistory, ResultsBySource } from "./types";
-import { getDemoPlatformResults, getDemoResultsHistory } from "./demo-data";
 import { ecosystemServices } from "@/app/backend";
 
 export class ResultsService {
-  private isDemoMode = true;
-
   // Obtener resultados actuales de la plataforma
   async getPlatformResults(period: "monthly" | "yearly" | "all-time" = "monthly"): Promise<PlatformResults> {
-    const engineResults = await ecosystemServices.results.getPlatformResults(period);
-    if (engineResults.combinedStats.totalTrades > 0) {
-      return engineResults;
-    }
-
-    if (this.isDemoMode) {
-      return getDemoPlatformResults();
-    }
-
-    // FUTURE: Agregar métricas reales de:
-    // - Servicio de alertas
-    // - Servicio de bot
-    // - Servicio de capital
-    // - Servicio de fondeo
-    // const results = await Promise.all([
-    //   alertsService.getMetrics(period),
-    //   botService.getMetrics(period),
-    //   capitalService.getMetrics(period),
-    //   fondeoService.getMetrics(period)
-    // ]);
-
-    throw new Error("API no conectada todavía");
+    return ecosystemServices.results.getPlatformResults(period);
   }
 
   // Obtener histórico de resultados
   async getResultsHistory(months: number = 12): Promise<ResultsHistory[]> {
-    const engineHistory = await ecosystemServices.results.getHistory(months);
-    if (engineHistory.length > 0) {
-      return engineHistory;
-    }
-
-    if (this.isDemoMode) {
-      return getDemoResultsHistory().slice(0, months);
-    }
-
-    // FUTURE: Obtener desde base de datos
-    throw new Error("API no conectada todavía");
+    return ecosystemServices.results.getHistory(months);
   }
 
   // Obtener métricas por fuente específica
@@ -70,8 +36,9 @@ export class ResultsService {
     };
   }
 
-  setDemoMode(isDemoMode: boolean) {
-    this.isDemoMode = isDemoMode;
+  setDemoMode(_isDemoMode: boolean) {
+    void _isDemoMode;
+    // No-op: la fuente de datos oficial es Backend Enterprise.
   }
 }
 

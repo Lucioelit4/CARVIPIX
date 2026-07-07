@@ -6,6 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test:payments-state": "tsx --test app/backend/payments/core/state-machine.test.ts",
+    "test:payments-phase2": "tsx --test app/backend/payments/core/payment-order-logic.test.ts app/backend/payments/core/provider-adapter-logic.test.ts",
+    "test:payments-phase3": "tsx --test app/backend/payments/core/webhook-logic.test.ts app/backend/payments/core/provider-adapter-logic.test.ts",
+    "test:payments-phase4": "tsx --test app/backend/payments/core/membership-activation-logic.test.ts app/backend/payments/core/webhook-logic.test.ts app/backend/payments/core/provider-adapter-logic.test.ts",
+    "test:payments-phase5": "tsx --test app/backend/payments/core/email-outbox-logic.test.ts app/backend/notifications/templates.test.ts app/backend/payments/core/webhook-logic.test.ts app/backend/payments/core/provider-adapter-logic.test.ts",
+    "test:payments-phase6": "tsx --test app/api/admin/payments/orders/query-helpers.test.ts app/admin/lib/payments-admin.test.ts",
+    "test:payments-phase7": "tsx --test app/backend/payments/core/webhook-security-logic.test.ts app/api/admin/_shared/security.test.ts app/backend/payments/core/email-outbox-worker-queries.test.ts app/backend/payments/core/email-outbox-logic.test.ts app/backend/payments/core/webhook-logic.test.ts app/backend/payments/core/provider-adapter-logic.test.ts",
+    "worker:payments-email-once": "tsx app/backend/payments/core/email-outbox-worker-runner.ts",
     "lint": "eslint",
     "audit:architecture": "node scripts/audit-prohibited-engine-imports.mjs",
     "heavy:local": "node scripts/heavy-runner.mjs",
@@ -30,19 +38,25 @@
     "jszip": "^3.10.1",
     "lucide-react": "^1.23.0",
     "next": "16.2.9",
+    "nodemailer": "^9.0.3",
+    "pg": "^8.13.1",
     "react": "19.2.4",
     "react-countup": "^6.5.3",
     "react-dom": "19.2.4",
-    "recharts": "^3.9.1"
+    "recharts": "^3.9.1",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.0",
     "typescript": "^5"
   }
 }

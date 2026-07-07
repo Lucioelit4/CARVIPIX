@@ -12,8 +12,18 @@ type AppShellProps = {
 
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const isStandaloneRoute = pathname === "/" || pathname === "/login";
-  const isAdminLogin = pathname === "/admin";
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isStandaloneRoute =
+    pathname === "/" ||
+    pathname === "/servicios" ||
+    pathname.startsWith("/servicios/") ||
+    pathname === "/checkout" ||
+    pathname === "/login" ||
+    pathname === "/crear-cuenta" ||
+    pathname === "/registro" ||
+    pathname === "/recuperar-password" ||
+    pathname === "/verificar-correo" ||
+    isAdminRoute;
 
   if (isStandaloneRoute) {
     return <>{children}</>;
@@ -23,7 +33,7 @@ export default function AppShell({ children }: AppShellProps) {
     <>
       <Sidebar />
       <div className="cv-app-shell flex min-h-screen flex-1 flex-col pt-[76px] lg:ml-72 lg:pt-0">
-        {!isAdminLogin ? <WorkspaceHero /> : null}
+        <WorkspaceHero />
         <div className="cv-workspace cv-page-content">
           <ProtectedDashboardGuard>{children}</ProtectedDashboardGuard>
         </div>

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CARVIPIXButtonLink } from "@/app/design-system";
 
 export default function Header() {
   return (
@@ -25,12 +26,9 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex min-h-[44px] items-center rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-200 hover:scale-[1.02] hover:bg-[#f0c94a] sm:px-8 sm:text-base"
-          >
+          <CARVIPIXButtonLink href="/dashboard" variant="primary" size="lg">
             Comenzar
-          </Link>
+          </CARVIPIXButtonLink>
         </div>
       </div>
     </header>
