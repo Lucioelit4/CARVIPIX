@@ -70,11 +70,33 @@ export class DataValidator {
   private errors: DataError[] = [];
   private maxErrors: number = 100;
 
+  private isFinitePositive(value: number): boolean {
+    return Number.isFinite(value) && value > 0;
+  }
+
   /**
    * Validar vela OHLC
    */
   validateCandle(candle: Candle): { valid: boolean; errors: DataError[] } {
     const errors: DataError[] = [];
+
+    if (
+      !Number.isFinite(candle.timestamp) ||
+      !this.isFinitePositive(candle.open) ||
+      !this.isFinitePositive(candle.high) ||
+      !this.isFinitePositive(candle.low) ||
+      !this.isFinitePositive(candle.close) ||
+      !Number.isFinite(candle.volume)
+    ) {
+      errors.push({
+        timestamp: Date.now(),
+        asset: candle.asset,
+        timeframe: candle.timeframe,
+        errorType: 'invalid',
+        message: 'Candle contiene valores no finitos o inválidos',
+        severity: 'error',
+      });
+    }
 
     // Validar que open, high, low, close sean válidos
     if (candle.open <= 0 || candle.high <= 0 || candle.low <= 0 || candle.close <= 0) {
@@ -161,6 +183,21 @@ export class DataValidator {
   validateTick(tick: Tick): { valid: boolean; errors: DataError[] } {
     const errors: DataError[] = [];
 
+    if (
+      !Number.isFinite(tick.timestamp) ||
+      !this.isFinitePositive(tick.bid) ||
+      !this.isFinitePositive(tick.ask) ||
+      !Number.isFinite(tick.lastUpdate)
+    ) {
+      errors.push({
+        timestamp: Date.now(),
+        asset: tick.asset,
+        errorType: 'invalid',
+        message: 'Tick contiene valores no finitos o inválidos',
+        severity: 'error',
+      });
+    }
+
     // Validar bid/ask válidos
     if (tick.bid <= 0 || tick.ask <= 0) {
       errors.push({
@@ -221,6 +258,27 @@ export class DataValidator {
    */
   validateIndicators(indicators: TechnicalIndicators, asset: Asset): { valid: boolean; errors: DataError[] } {
     const errors: DataError[] = [];
+
+    const numericFields = [
+      indicators.ema20,
+      indicators.ema50,
+      indicators.ema200,
+      indicators.atr,
+      indicators.rsi,
+      indicators.spread,
+      indicators.volatility,
+      indicators.timestamp,
+    ];
+
+    if (numericFields.some((value) => !Number.isFinite(value))) {
+      errors.push({
+        timestamp: Date.now(),
+        asset,
+        errorType: 'invalid',
+        message: 'Indicadores contienen valores no finitos',
+        severity: 'error',
+      });
+    }
 
     // Validar que EMA 20 < 50 < 200 (tendencia típica)
     // Nota: puede haber excepciones en mercados extremos

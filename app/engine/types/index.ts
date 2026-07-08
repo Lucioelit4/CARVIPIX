@@ -3,6 +3,8 @@
  * Core data models for professional trading analysis
  */
 
+import type { CertifiedInputContract, ResearchProposalEnvelope } from './certifiedData';
+
 // ============================================
 // AGENT TYPES
 // ============================================
@@ -34,6 +36,124 @@ export interface AgentScore {
 // ============================================
 
 export type DecisionOutcome = 'approved' | 'rejected' | 'pending';
+
+export type EngineAction = 'EXECUTE_BLOCKED' | 'WAIT' | 'NO_TRADE' | 'ALERT_CREATED';
+
+export type PriorityLevel = 'low' | 'medium' | 'high' | 'critical';
+
+export interface ConflictDescriptor {
+  source: string;
+  severity: PriorityLevel;
+  reason: string;
+}
+
+export interface SafetyGateFailure {
+  gate: string;
+  reason: string;
+  reason_isDataMissing?: boolean;
+}
+
+export interface SafetyGateEvaluation {
+  allPassed: boolean;
+  modeProvisional: boolean;
+  criticalFailures: SafetyGateFailure[];
+}
+
+export type EvidenceSource = 'market' | 'risk' | 'news' | 'session' | 'structure' | 'research' | 'memory' | 'context';
+
+export interface EvidenceItem {
+  id: string;
+  source: EvidenceSource;
+  key: string;
+  value: number;
+  weight: number;
+  confidence: number;
+  uncertainty: number;
+  context?: Record<string, unknown>;
+  createdAt: number;
+  expiresAt: number;
+}
+
+export interface EvidenceInput {
+  items: EvidenceItem[];
+}
+
+export interface EvidenceValidationIssue {
+  itemId: string;
+  reason: string;
+  severity: 'warning' | 'critical';
+}
+
+export interface EvidenceValidationResult {
+  valid: boolean;
+  issues: EvidenceValidationIssue[];
+}
+
+export interface EvidenceConflict {
+  leftId: string;
+  rightId: string;
+  reason: string;
+  severity: PriorityLevel;
+}
+
+export interface EvidenceAssessment {
+  evidenceCount: number;
+  probability: number;
+  confidence: number;
+  uncertainty: number;
+  decisionQuality: number;
+  ranking: EvidenceItem[];
+  conflicts: EvidenceConflict[];
+  explainability: string[];
+  valid: boolean;
+  issues: EvidenceValidationIssue[];
+}
+
+export interface KnowledgeRecord {
+  id: string;
+  key: string;
+  score: number;
+  context?: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+  uses: number;
+}
+
+export interface RuntimeProfileSnapshot {
+  section: string;
+  elapsedMs: number;
+  timestamp: number;
+}
+
+export interface BenchmarkResult {
+  runId: string;
+  iterations: number;
+  averageMs: number;
+  minMs: number;
+  maxMs: number;
+  p95Ms: number;
+  totalMs: number;
+}
+
+export interface CreateAlertOptions {
+  conflicts?: ConflictDescriptor[];
+  priority?: PriorityLevel;
+  executionRequested?: boolean;
+  dataIntegrityValid?: boolean;
+  certifiedInput?: CertifiedInputContract;
+  researchProposalEnvelope?: ResearchProposalEnvelope;
+  evidenceInput?: EvidenceInput;
+  knowledgeHints?: string[];
+  contextSnapshot?: Record<string, unknown>;
+}
+
+export interface LifecycleTransitionRecord {
+  from: AlertState;
+  to: AlertState;
+  allowed: boolean;
+  reason: string;
+  timestamp: number;
+}
 
 export interface ConsensusResult {
   outcome: DecisionOutcome;
@@ -108,6 +228,9 @@ export interface DecisionLogEntry {
   
   // Analysis result
   consensus: ConsensusResult;
+  action?: EngineAction;
+  priority?: PriorityLevel;
+  conflicts?: ConflictDescriptor[];
   
   // Action taken
   alertCreated?: string; // Alert ID if created
@@ -182,6 +305,7 @@ export interface EngineConfig {
   maxActiveAlerts: number; // Max concurrent alerts
   alertExpiry: number; // milliseconds
   enableLearning: boolean;
+  safeMode: boolean;
 }
 
 // ============================================
@@ -246,6 +370,14 @@ export type {
   ProviderSelectionConfig,
   ProviderResolution,
 } from './brokerProvider';
+
+export type {
+  CertifiedDatasetEnvelope,
+  CertifiedDatasetSource,
+  CertifiedDatasetStatus,
+  CertifiedInputContract,
+  ResearchProposalEnvelope,
+} from './certifiedData';
 
 // ============================================
 // BACKTESTING TYPES (Privado - Admin Only)

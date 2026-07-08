@@ -618,6 +618,130 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS ie_market_ticks (
+        id TEXT PRIMARY KEY,
+        symbol TEXT NOT NULL,
+        bid NUMERIC(18, 8) NOT NULL,
+        ask NUMERIC(18, 8) NOT NULL,
+        spread NUMERIC(18, 8) NOT NULL,
+        mid_price NUMERIC(18, 8) NOT NULL,
+        source TEXT NOT NULL,
+        tick_time TIMESTAMPTZ NOT NULL,
+        ingest_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        CHECK (ask >= bid)
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_candles (
+        id TEXT PRIMARY KEY,
+        symbol TEXT NOT NULL,
+        timeframe TEXT NOT NULL,
+        open_time TIMESTAMPTZ NOT NULL,
+        close_time TIMESTAMPTZ NOT NULL,
+        open NUMERIC(18, 8) NOT NULL,
+        high NUMERIC(18, 8) NOT NULL,
+        low NUMERIC(18, 8) NOT NULL,
+        close NUMERIC(18, 8) NOT NULL,
+        volume NUMERIC(24, 8) NOT NULL DEFAULT 0,
+        spread_min NUMERIC(18, 8),
+        spread_max NUMERIC(18, 8),
+        spread_avg NUMERIC(18, 8),
+        source TEXT NOT NULL,
+        ingest_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        CHECK (high >= low),
+        CHECK (close_time > open_time)
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_economic_news (
+        id TEXT PRIMARY KEY,
+        provider TEXT NOT NULL,
+        event_id TEXT,
+        title TEXT NOT NULL,
+        country_code CHAR(2),
+        currency CHAR(3),
+        impact TEXT,
+        actual_value TEXT,
+        forecast_value TEXT,
+        previous_value TEXT,
+        published_at TIMESTAMPTZ NOT NULL,
+        event_time TIMESTAMPTZ,
+        tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        ingest_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_system_logs (
+        id TEXT PRIMARY KEY,
+        module TEXT NOT NULL,
+        level TEXT NOT NULL,
+        message TEXT NOT NULL,
+        context JSONB NOT NULL DEFAULT '{}'::jsonb,
+        trace_id TEXT,
+        logged_at TIMESTAMPTZ NOT NULL,
+        ingest_time TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_data_quality_reports (
+        id TEXT PRIMARY KEY,
+        dataset TEXT NOT NULL,
+        symbol TEXT,
+        timeframe TEXT,
+        date_from TIMESTAMPTZ,
+        date_to TIMESTAMPTZ,
+        total_rows BIGINT NOT NULL DEFAULT 0,
+        missing_rows BIGINT NOT NULL DEFAULT 0,
+        duplicate_rows BIGINT NOT NULL DEFAULT 0,
+        invalid_rows BIGINT NOT NULL DEFAULT 0,
+        latency_ms_p95 INT,
+        score NUMERIC(6, 3),
+        status TEXT NOT NULL,
+        details JSONB NOT NULL DEFAULT '{}'::jsonb,
+        generated_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_engine_decisions (
+        id TEXT PRIMARY KEY,
+        decision_type TEXT NOT NULL,
+        symbol TEXT,
+        timeframe TEXT,
+        decided_at TIMESTAMPTZ NOT NULL,
+        state TEXT NOT NULL,
+        rationale TEXT,
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_operation_results (
+        id TEXT PRIMARY KEY,
+        decision_id TEXT REFERENCES ie_engine_decisions(id) ON DELETE SET NULL,
+        symbol TEXT,
+        timeframe TEXT,
+        side TEXT,
+        status TEXT NOT NULL,
+        entry_price NUMERIC(18, 8),
+        exit_price NUMERIC(18, 8),
+        stop_loss NUMERIC(18, 8),
+        take_profit NUMERIC(18, 8),
+        quantity NUMERIC(24, 8),
+        pnl NUMERIC(24, 8),
+        executed_at TIMESTAMPTZ,
+        closed_at TIMESTAMPTZ,
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS ie_system_versions (
+        id TEXT PRIMARY KEY,
+        component TEXT NOT NULL,
+        version TEXT NOT NULL,
+        build_hash TEXT,
+        release_channel TEXT,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        deployed_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE INDEX IF NOT EXISTS idx_memberships_plan_estado
         ON memberships(plan, estado);
 
@@ -719,6 +843,51 @@ class BackendDatabase {
       CREATE UNIQUE INDEX IF NOT EXISTS ux_payment_method_refs_default_active_per_user
         ON payment_method_references(user_id)
         WHERE is_default = true AND status = 'active';
+
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_ie_candles_symbol_tf_open
+        ON ie_candles(symbol, timeframe, open_time);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_candles_symbol_open
+        ON ie_candles(symbol, open_time DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_candles_timeframe_open
+        ON ie_candles(timeframe, open_time DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_candles_open_time_brin
+        ON ie_candles USING BRIN(open_time);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_market_ticks_symbol_time
+        ON ie_market_ticks(symbol, tick_time DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_market_ticks_time_brin
+        ON ie_market_ticks USING BRIN(tick_time);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_market_ticks_spread_time
+        ON ie_market_ticks(symbol, spread, tick_time DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_news_published
+        ON ie_economic_news(published_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_news_country_currency
+        ON ie_economic_news(country_code, currency, published_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_logs_module_time
+        ON ie_system_logs(module, logged_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_logs_level_time
+        ON ie_system_logs(level, logged_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_dq_dataset_generated
+        ON ie_data_quality_reports(dataset, generated_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_decisions_symbol_time
+        ON ie_engine_decisions(symbol, decided_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_ie_results_symbol_exec
+        ON ie_operation_results(symbol, executed_at DESC);
+
+      CREATE UNIQUE INDEX IF NOT EXISTS ux_ie_versions_component_version
+        ON ie_system_versions(component, version);
     `);
 
     await this.seedBaseData();

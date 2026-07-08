@@ -1,21 +1,46 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * CARVIPIX Trading Engine - Core Decision Engine
  * Handles consensus, decision logging, and alert lifecycle
  */
 
 import {
+  AgentType,
+  DecisionLogEntry,
+  LifecycleTransitionRecord,
   TradeAlert,
   TradeSignal,
   ConsensusResult,
-  DecisionLogEntry,
-  DecisionOutcome,
   AgentScore,
   AlertState,
   EngineState,
   EngineMetrics,
   EngineConfig,
+  CreateAlertOptions,
+  SafetyGateEvaluation,
 } from '../types/index';
+import { AuditEngine } from './auditEngine';
+import { ConflictResolutionEngine } from './conflictResolutionEngine';
+import { DecisionEngine } from './decisionEngine';
+import { EvidenceEngine } from './evidenceEngine';
+import { IntelligenceDirector } from './intelligenceDirector';
+import { LifecycleManager } from './lifecycleManager';
+import { PriorityEngine } from './priorityEngine';
+import { ResearchProposalLoader } from './researchProposalLoader';
+import { SafeModePolicy } from './safeModePolicy';
+
+const ENGINE_AGENTS: AgentType[] = [
+  'MarketRegimeAnalyst',
+  'TrendAnalyst',
+  'StructureAnalyst',
+  'MomentumAnalyst',
+  'PullbackAnalyst',
+  'SessionAnalyst',
+  'NewsAnalyst',
+  'RiskManager',
+  'ConfidenceScoring',
+  'TradeValidator',
+  'LearningEngine',
+];
 
 /**
  * Central Trading Engine
@@ -23,9 +48,17 @@ import {
  */
 export class CARVIPIXEngine {
   private alerts: Map<string, TradeAlert> = new Map();
-  private decisionLog: DecisionLogEntry[] = [];
-  private config: EngineConfig;
+  private readonly config: EngineConfig;
   private metrics: EngineMetrics;
+  private readonly decisionEngine: DecisionEngine;
+  private readonly auditEngine: AuditEngine;
+  private readonly lifecycleManager: LifecycleManager;
+  private readonly priorityEngine: PriorityEngine;
+  private readonly conflictResolutionEngine: ConflictResolutionEngine;
+  private readonly researchProposalLoader: ResearchProposalLoader;
+  private readonly safeModePolicy: SafeModePolicy;
+  private readonly intelligenceDirector: IntelligenceDirector;
+  private readonly evidenceEngine: EvidenceEngine;
 
   constructor(config?: Partial<EngineConfig>) {
     this.config = {
@@ -35,6 +68,7 @@ export class CARVIPIXEngine {
       maxActiveAlerts: 10,
       alertExpiry: 7 * 24 * 60 * 60 * 1000, // 7 días
       enableLearning: true,
+      safeMode: true,
       ...config,
     };
 
@@ -49,6 +83,22 @@ export class CARVIPIXEngine {
       consensusApprovalRate: 0,
       lastDecisionTime: 0,
     };
+
+    this.auditEngine = new AuditEngine();
+    this.priorityEngine = new PriorityEngine();
+    this.conflictResolutionEngine = new ConflictResolutionEngine();
+    this.researchProposalLoader = new ResearchProposalLoader();
+    this.safeModePolicy = new SafeModePolicy(this.config.safeMode);
+    this.evidenceEngine = new EvidenceEngine();
+    this.lifecycleManager = new LifecycleManager(this.auditEngine);
+    this.decisionEngine = new DecisionEngine(this.config);
+    this.intelligenceDirector = new IntelligenceDirector(
+      this.auditEngine,
+      this.priorityEngine,
+      this.conflictResolutionEngine,
+      this.safeModePolicy,
+      this.evidenceEngine,
+    );
   }
 
   /**
@@ -61,128 +111,9 @@ export class CARVIPIXEngine {
    * - Mejor reasoning en rechazos
    */
   evaluateConsensus(agentScores: AgentScore[]): ConsensusResult {
-    if (agentScores.length === 0) {
-      return {
-        outcome: 'rejected',
-        agentScores: [],
-        approvalCount: 0,
-        rejectionCount: 0,
-        consensusThreshold: this.config.consensusThreshold,
-        averageScore: 0,
-        overallConfidence: 0,
-        reasonForDecision: 'No agents evaluated',
-        timestamp: Date.now(),
-      };
-    }
-
-    // AGENT WEIGHTING - Algunos agentes son más importantes
-    const agentWeights: Record<string, number> = {
-      'RiskManager': 1.5,           // CRÍTICO: Si RR es malo, rechazar
-      'MarketRegimeAnalyst': 1.3,   // IMPORTANTE: Mercado correcto fundamental
-      'TrendAnalyst': 1.3,          // IMPORTANTE: Tendencia es core
-      'TradeValidator': 1.2,        // IMPORTANTE: Validación final
-      'StructureAnalyst': 1.1,      // Importante pero menos que los 4 arriba
-      'MomentumAnalyst': 1.0,       // Normal
-      'ConfidenceScoring': 1.0,     // Normal
-      'PullbackAnalyst': 1.0,       // Normal
-      'SessionAnalyst': 0.9,        // Secundario
-      'NewsAnalyst': 1.1,           // Importante pero contextual
-      'LearningEngine': 0.85,       // Secundario
-    };
-
-    // CALCULAR WEIGHTED CONSENSUS
-    let weightedSum = 0;
-    let weightSum = 0;
-    
-    for (const agent of agentScores) {
-      const weight = agentWeights[agent.agent] || 1.0;
-      weightedSum += agent.score * weight;
-      weightSum += weight;
-    }
-    
-    const weightedAverageScore = weightSum > 0 ? weightedSum / weightSum : 0;
-
-    // CONTAR APROBACIONES/RECHAZOS PONDERADOS
-    const approvals = agentScores.filter((s) => s.score >= 60).length;
-    const rejections = agentScores.filter((s) => s.score < 40).length;
-    const criticalRejections = agentScores
-      .filter(s => ['RiskManager', 'MarketRegimeAnalyst', 'TradeValidator'].includes(s.agent))
-      .filter(s => s.score < 40).length;
-
-    // CALCULAR CONFIANZA PONDERADA
-    const overallConfidence =
-      agentScores.reduce((sum, s) => sum + (s.confidence * (agentWeights[s.agent] || 1.0)), 0) /
-      agentScores.reduce((sum, s) => sum + (agentWeights[s.agent] || 1.0), 0);
-
-    // DYNAMIC THRESHOLD - Se adapta según calidad del setup
-    const averageScore = agentScores.reduce((sum, s) => sum + s.score, 0) / agentScores.length;
-    const scoreVariance = agentScores.reduce((sum, s) => sum + Math.pow(s.score - averageScore, 2), 0) / agentScores.length;
-    const scoreStdDev = Math.sqrt(scoreVariance);
-
-    let dynamicThreshold = this.config.consensusThreshold;
-    
-    // Si setup es excellent (high average, low variance) → threshold BAJA
-    if (averageScore > 80 && scoreStdDev < 12) {
-      dynamicThreshold = 8; // Excelente setup → 8/11 OK
-    } 
-    // Si setup es mediocre → threshold SUBE
-    else if (averageScore < 65 && scoreStdDev > 15) {
-      dynamicThreshold = 10; // Mediocre setup → 10/11 requerido
-    }
-    // Si setup es pobre → casi unánime requerido
-    else if (averageScore < 55) {
-      dynamicThreshold = 11; // Pobre → casi unánime o reject
-    }
-
-    // LÓGICA DE DECISIÓN
-    let outcome: DecisionOutcome = 'pending';
-    let reasonForDecision = '';
-
-    // CRITICAL REJECTION: Si RiskManager o MarketRegime rechazan severamente
-    if (criticalRejections > 0) {
-      const criticalAgents = agentScores.filter(s => 
-        ['RiskManager', 'MarketRegimeAnalyst', 'TradeValidator'].includes(s.agent) && s.score < 40
-      );
-      
-      outcome = 'rejected';
-      reasonForDecision = `RECHAZO CRÍTICO: ${criticalAgents.map(a => a.agent).join(', ')} rechaza. ${criticalAgents[0]?.reasoning}`;
-    }
-    // SUCCESS: Threshold dinámico cumplido + confianza suficiente
-    else if (
-      approvals >= dynamicThreshold &&
-      overallConfidence >= this.config.confidenceThreshold
-    ) {
-      outcome = 'approved';
-      reasonForDecision = `✓ APROBADO: ${approvals}/${agentScores.length} agentes (threshold dinámico: ${dynamicThreshold}). Confianza: ${overallConfidence.toFixed(1)}%. Score ponderado: ${weightedAverageScore.toFixed(1)}/100`;
-    }
-    // INSUFICIENTE CONSENSO
-    else if (approvals < dynamicThreshold) {
-      outcome = 'rejected';
-      reasonForDecision = `✗ Consenso insuficiente: ${approvals} aprobaciones vs ${dynamicThreshold} requeridas (threshold dinámico)`;
-    }
-    // BAJA CONFIANZA
-    else if (overallConfidence < this.config.confidenceThreshold) {
-      outcome = 'rejected';
-      reasonForDecision = `✗ Confianza baja: ${overallConfidence.toFixed(1)}% < ${this.config.confidenceThreshold}% requerido`;
-    }
-    else {
-      reasonForDecision = `? PENDIENTE: Señales mixtas. ${approvals} aprobaciones, ${rejections} rechazos`;
-    }
-
-    // Update metrics
+    const result = this.decisionEngine.evaluateConsensus(agentScores);
     this.metrics.lastDecisionTime = Date.now();
-
-    return {
-      outcome,
-      agentScores: agentScores.sort((a, b) => (agentWeights[b.agent] || 1.0) * b.score - (agentWeights[a.agent] || 1.0) * a.score),
-      approvalCount: approvals,
-      rejectionCount: rejections,
-      consensusThreshold: dynamicThreshold,
-      averageScore: weightedAverageScore,
-      overallConfidence,
-      reasonForDecision,
-      timestamp: Date.now(),
-    };
+    return result;
   }
 
   /**
@@ -197,69 +128,82 @@ export class CARVIPIXEngine {
   createAlert(
     signal: TradeSignal,
     consensusResult: ConsensusResult,
-    safetyGateResults?: { 
-      allPassed: boolean; 
-      modeProvisional: boolean;
-      criticalFailures: Array<{ gate: string; reason: string; reason_isDataMissing?: boolean }> 
-    }
+    safetyGateResults?: SafetyGateEvaluation,
+    options?: CreateAlertOptions,
   ): TradeAlert | null {
-    // GATE VALIDATION: Rechazar SOLO si hay fallo crítico y NO es por datos faltantes
-    if (safetyGateResults && safetyGateResults.criticalFailures && safetyGateResults.criticalFailures.length > 0) {
-      // Filtrar fallos que son REALES (no solo por falta de datos)
-      const realFailures = safetyGateResults.criticalFailures.filter(f => !f.reason.includes('NO DISPONIBLES'));
-      
-      if (realFailures.length > 0) {
-        const failedGates = realFailures.map(f => `${f.gate}: ${f.reason}`).join(' | ');
-        console.log(`Señal ${signal.id} RECHAZADA por safety gates críticos: ${failedGates}`);
-        return null;
-      }
-      
-      // Si solo hay fallos por datos faltantes, log pero continúa
-      if (safetyGateResults.modeProvisional) {
-        const missingDataGates = safetyGateResults.criticalFailures.filter(f => f.reason.includes('NO DISPONIBLES'));
-        console.log(`⚠️ Modo provisional: ${missingDataGates.length} gates sin datos reales. Continuando con consenso...`);
-      }
-    }
-
-    // CONSENSUS VALIDATION
-    if (consensusResult.outcome !== 'approved') {
-      console.log(`Señal ${signal.id} no aprobada por consenso. Razón: ${consensusResult.reasonForDecision}`);
+    if (this.metrics.activeAlerts >= this.config.maxActiveAlerts) {
+      this.auditEngine.recordDecision({
+        symbol: signal.symbol,
+        type: signal.type,
+        timeframe: signal.timeframe,
+        consensus: consensusResult,
+        action: 'WAIT',
+        priority: this.priorityEngine.normalizePriority(options?.priority),
+        conflicts: options?.conflicts,
+        reason: `Límite de alertas activas alcanzado (${this.metrics.activeAlerts}/${this.config.maxActiveAlerts})`,
+      });
       return null;
     }
 
-    const alertId = `ALERT_${signal.symbol}_${Date.now()}`;
-    const alert: TradeAlert = {
-      id: alertId,
-      symbol: signal.symbol,
-      type: signal.type,
-      state: 'activa',
-      entryPrice: signal.entryPrice,
-      takeProfitPrice: signal.takeProfitPrice,
-      stopLossPrice: signal.stopLossPrice,
-      timeframe: signal.timeframe,
-      riskRewardRatio: signal.riskRewardRatio,
-      consensusResult: consensusResult,
-      createdAt: Date.now(),
-      reasoning: signal.primaryReason,
-      tags: ['engine-generated', ...signal.agentContributions],
-      source: 'engine',
-    };
+    return this.intelligenceDirector.decideAlertCreation({
+      signal,
+      consensusResult,
+      safetyGateResults,
+      options,
+      metrics: this.metrics,
+      createAlert: () => {
+        const alertId = `ALERT_${signal.symbol}_${Date.now()}`;
+        const alert: TradeAlert = {
+          id: alertId,
+          symbol: signal.symbol,
+          type: signal.type,
+          state: 'activa',
+          entryPrice: signal.entryPrice,
+          takeProfitPrice: signal.takeProfitPrice,
+          stopLossPrice: signal.stopLossPrice,
+          timeframe: signal.timeframe,
+          riskRewardRatio: signal.riskRewardRatio,
+          consensusResult,
+          createdAt: Date.now(),
+          reasoning: signal.primaryReason,
+          tags: ['engine-generated', ...signal.agentContributions],
+          source: 'engine',
+        };
 
-    this.alerts.set(alertId, alert);
-    this.metrics.totalAlertsGenerated++;
-    this.metrics.activeAlerts++;
-
-    // Registrar decisión
-    this.logDecision({
-      symbol: signal.symbol,
-      type: signal.type,
-      timeframe: signal.timeframe,
-      consensus: consensusResult,
-      alertCreated: alertId,
-      reason: `Alerta creada: ${alertId}`,
+        this.alerts.set(alertId, alert);
+        this.metrics.totalAlertsGenerated++;
+        this.metrics.activeAlerts++;
+        return alert;
+      },
     });
+  }
 
-    return alert;
+  createAlertFromResearchProposalJson(
+    signal: TradeSignal,
+    consensusResult: ConsensusResult,
+    proposalJson: string,
+    safetyGateResults?: SafetyGateEvaluation,
+    options?: Omit<CreateAlertOptions, 'researchProposalEnvelope'>,
+  ): TradeAlert | null {
+    const loaded = this.researchProposalLoader.loadFromJson(proposalJson);
+    if (loaded.issues.length > 0 || !loaded.envelope) {
+      this.auditEngine.recordDecision({
+        symbol: signal.symbol,
+        type: signal.type,
+        timeframe: signal.timeframe,
+        consensus: consensusResult,
+        action: 'NO_TRADE',
+        priority: this.priorityEngine.normalizePriority(options?.priority),
+        conflicts: options?.conflicts,
+        reason: `Research Proposal JSON inválido para ${signal.id}: ${loaded.issues.join(', ')}`,
+      });
+      return null;
+    }
+
+    return this.createAlert(signal, consensusResult, safetyGateResults, {
+      ...options,
+      researchProposalEnvelope: loaded.envelope as CreateAlertOptions['researchProposalEnvelope'],
+    });
   }
 
   /**
@@ -273,59 +217,15 @@ export class CARVIPIXEngine {
     }
 
     const oldState = alert.state;
-    alert.state = newState;
-    alert.closedAt = newState !== 'activa' ? Date.now() : undefined;
+    const transition = this.lifecycleManager.transitionAlertState(alert, newState, this.metrics);
+    this.metrics = transition.metrics;
 
-    // Update metrics
-    if (
-      newState === 'tp' ||
-      newState === 'sl' ||
-      newState === 'breakeven' ||
-      newState === 'cancelada'
-    ) {
-      this.metrics.activeAlerts = Math.max(0, this.metrics.activeAlerts - 1);
-      this.metrics.closedAlerts++;
-
-      if (newState === 'tp') {
-        this.metrics.successfulTrades++;
-      } else if (newState === 'sl') {
-        this.metrics.failedTrades++;
-      }
+    if (!transition.updated) {
+      return false;
     }
 
     console.log(`Alert ${alertId}: ${oldState} → ${newState}`);
     return true;
-  }
-
-  /**
-   * REGISTRAR DECISIÓN
-   * Cada decisión se registra con razonamiento completo
-   */
-  private logDecision(data: {
-    symbol: string;
-    type: 'compra' | 'venta';
-    timeframe: string;
-    consensus: ConsensusResult;
-    alertCreated?: string;
-    reason: string;
-  }): void {
-    const entry: DecisionLogEntry = {
-      id: `LOG_${Date.now()}`,
-      timestamp: Date.now(),
-      symbol: data.symbol,
-      type: data.type,
-      timeframe: data.timeframe,
-      consensus: data.consensus,
-      alertCreated: data.alertCreated,
-      reason: data.reason,
-    };
-
-    this.decisionLog.push(entry);
-
-    // Keep last 100 entries
-    if (this.decisionLog.length > 100) {
-      this.decisionLog = this.decisionLog.slice(-100);
-    }
   }
 
   /**
@@ -336,21 +236,9 @@ export class CARVIPIXEngine {
       isRunning: true,
       lastUpdate: Date.now(),
       alerts: Array.from(this.alerts.values()),
-      decisionLog: this.decisionLog,
+      decisionLog: this.auditEngine.getDecisionLog(),
       metrics: this.calculateMetrics(),
-      agents: [
-        'MarketRegimeAnalyst',
-        'TrendAnalyst',
-        'StructureAnalyst',
-        'MomentumAnalyst',
-        'PullbackAnalyst',
-        'SessionAnalyst',
-        'NewsAnalyst',
-        'RiskManager',
-        'ConfidenceScoring',
-        'TradeValidator',
-        'LearningEngine',
-      ] as any,
+      agents: ENGINE_AGENTS,
     };
   }
 
@@ -388,7 +276,27 @@ export class CARVIPIXEngine {
    * GET DECISION LOG
    */
   getDecisionLog(): DecisionLogEntry[] {
-    return this.decisionLog;
+    return this.auditEngine.getDecisionLog();
+  }
+
+  getLifecycleLog(): LifecycleTransitionRecord[] {
+    return this.auditEngine.getLifecycleLog();
+  }
+
+  getEvidenceRuntimeProfile() {
+    return this.evidenceEngine.getRecentProfile();
+  }
+
+  benchmarkEvidencePipeline(signal: TradeSignal, consensusResult: ConsensusResult, iterations = 100) {
+    return this.evidenceEngine.benchmark({
+      signal,
+      consensus: consensusResult,
+      iterations,
+    });
+  }
+
+  isSafeModeEnabled(): boolean {
+    return this.safeModePolicy.isEnabled();
   }
 
   /**
@@ -396,7 +304,8 @@ export class CARVIPIXEngine {
    */
   reset(): void {
     this.alerts.clear();
-    this.decisionLog = [];
+    this.auditEngine.reset();
+    this.evidenceEngine.reset();
     this.metrics = {
       totalAlertsGenerated: 0,
       activeAlerts: 0,
