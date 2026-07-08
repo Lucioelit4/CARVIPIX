@@ -5,6 +5,8 @@ import type {
   EvidenceConflict,
   EvidenceItem,
   EvidenceValidationIssue,
+  KnowledgeCard,
+  KnowledgeEvolutionReport,
   TradeSignal,
 } from '../types';
 import { EvidenceBuilder } from './evidenceBuilder';
@@ -97,6 +99,22 @@ export class EvidenceEngine {
 
   getRecentProfile(limit = 100) {
     return this.profiler.getRecent(limit);
+  }
+
+  registerKnowledgeCards(cards: KnowledgeCard[]): void {
+    this.knowledgeConsumer.registerKnowledgeCards(cards);
+  }
+
+  evolveKnowledge(now = Date.now()): KnowledgeEvolutionReport {
+    return this.knowledgeConsumer.evolveKnowledge(now);
+  }
+
+  getKnowledgeCards(limit = 500): KnowledgeCard[] {
+    return this.knowledgeConsumer.getKnowledgeCards(limit);
+  }
+
+  getLastKnowledgeEvolutionReport(): KnowledgeEvolutionReport | null {
+    return this.knowledgeConsumer.getLastEvolutionReport();
   }
 
   benchmark(input: {

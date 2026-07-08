@@ -5,6 +5,8 @@
 
 import {
   AgentType,
+  QuantOptimizationInput,
+  QuantOptimizationResult,
   DecisionLogEntry,
   LifecycleTransitionRecord,
   TradeAlert,
@@ -16,6 +18,7 @@ import {
   EngineMetrics,
   EngineConfig,
   CreateAlertOptions,
+  KnowledgeCard,
   SafetyGateEvaluation,
 } from '../types/index';
 import { AuditEngine } from './auditEngine';
@@ -25,6 +28,7 @@ import { EvidenceEngine } from './evidenceEngine';
 import { IntelligenceDirector } from './intelligenceDirector';
 import { LifecycleManager } from './lifecycleManager';
 import { PriorityEngine } from './priorityEngine';
+import { QuantOptimizationEngine } from './quantOptimizationEngine';
 import { ResearchProposalLoader } from './researchProposalLoader';
 import { SafeModePolicy } from './safeModePolicy';
 
@@ -59,6 +63,7 @@ export class CARVIPIXEngine {
   private readonly safeModePolicy: SafeModePolicy;
   private readonly intelligenceDirector: IntelligenceDirector;
   private readonly evidenceEngine: EvidenceEngine;
+  private readonly quantOptimizationEngine: QuantOptimizationEngine;
 
   constructor(config?: Partial<EngineConfig>) {
     this.config = {
@@ -90,6 +95,7 @@ export class CARVIPIXEngine {
     this.researchProposalLoader = new ResearchProposalLoader();
     this.safeModePolicy = new SafeModePolicy(this.config.safeMode);
     this.evidenceEngine = new EvidenceEngine();
+    this.quantOptimizationEngine = new QuantOptimizationEngine();
     this.lifecycleManager = new LifecycleManager(this.auditEngine);
     this.decisionEngine = new DecisionEngine(this.config);
     this.intelligenceDirector = new IntelligenceDirector(
@@ -295,6 +301,34 @@ export class CARVIPIXEngine {
     });
   }
 
+  registerKnowledgeCards(cards: KnowledgeCard[]): void {
+    this.evidenceEngine.registerKnowledgeCards(cards);
+  }
+
+  evolveKnowledge(now = Date.now()) {
+    return this.evidenceEngine.evolveKnowledge(now);
+  }
+
+  getKnowledgeCards(limit = 500): KnowledgeCard[] {
+    return this.evidenceEngine.getKnowledgeCards(limit);
+  }
+
+  getKnowledgeEvolutionReport() {
+    return this.evidenceEngine.getLastKnowledgeEvolutionReport();
+  }
+
+  runQuantOptimization(input: QuantOptimizationInput): QuantOptimizationResult {
+    return this.quantOptimizationEngine.optimize(input);
+  }
+
+  getQuantOptimizationHistory(limit = 50) {
+    return this.quantOptimizationEngine.getHistory(limit);
+  }
+
+  getQuantOptimizationDashboard() {
+    return this.quantOptimizationEngine.getDashboard();
+  }
+
   isSafeModeEnabled(): boolean {
     return this.safeModePolicy.isEnabled();
   }
@@ -306,6 +340,8 @@ export class CARVIPIXEngine {
     this.alerts.clear();
     this.auditEngine.reset();
     this.evidenceEngine.reset();
+    this.quantOptimizationEngine.clearCache();
+    this.quantOptimizationEngine.clearHistory();
     this.metrics = {
       totalAlertsGenerated: 0,
       activeAlerts: 0,

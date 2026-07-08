@@ -119,6 +119,127 @@ export interface KnowledgeRecord {
   uses: number;
 }
 
+export type KnowledgeCategory =
+  | 'market_structure'
+  | 'risk_management'
+  | 'execution_context'
+  | 'macro_news'
+  | 'session_behavior'
+  | 'research_insight'
+  | 'meta_learning'
+  | 'other';
+
+export type KnowledgeLifecycleState =
+  | 'candidate'
+  | 'active'
+  | 'revalidate'
+  | 'degraded'
+  | 'retired'
+  | 'merged'
+  | 'split';
+
+export type KnowledgePriority = 'low' | 'medium' | 'high' | 'critical';
+
+export interface KnowledgeDependency {
+  cardId: string;
+  required: boolean;
+}
+
+export interface KnowledgeRelationship {
+  cardId: string;
+  relation: 'supports' | 'contradicts' | 'derives' | 'duplicates' | 'clusters_with';
+  weight: number;
+}
+
+export interface KnowledgeCard {
+  cardId: string;
+  title: string;
+  category: KnowledgeCategory;
+  tags: string[];
+  dependencies: KnowledgeDependency[];
+  relationships: KnowledgeRelationship[];
+  summary: string;
+  validationScore: number;
+  performanceScore: number;
+  reliability: number;
+  usageCount: number;
+  reinforcementSignals: number;
+  decayRate: number;
+  lastValidatedAt: number;
+  lastObservedAt: number;
+  createdAt: number;
+  updatedAt: number;
+  lifecycle: KnowledgeLifecycleState;
+  priority: KnowledgePriority;
+  metadata?: Record<string, unknown>;
+}
+
+export interface KnowledgeConflict {
+  leftCardId: string;
+  rightCardId: string;
+  reason: string;
+  severity: PriorityLevel;
+}
+
+export interface KnowledgeSimilarity {
+  leftCardId: string;
+  rightCardId: string;
+  score: number;
+}
+
+export interface KnowledgeCluster {
+  clusterId: string;
+  category: KnowledgeCategory;
+  members: string[];
+  centroidScore: number;
+}
+
+export interface KnowledgeEvolutionDecision {
+  cardId: string;
+  lifecycle: KnowledgeLifecycleState;
+  evolvedScore: number;
+  agingDays: number;
+  shouldStrengthen: boolean;
+  shouldDegrade: boolean;
+  shouldReinvestigate: boolean;
+  shouldRetire: boolean;
+  shouldRemove: boolean;
+  stillWorking: boolean;
+  rationale: string[];
+}
+
+export interface KnowledgeMergePlan {
+  sourceCardIds: string[];
+  targetCardId: string;
+}
+
+export interface KnowledgeSplitPlan {
+  sourceCardId: string;
+  childCardIds: string[];
+}
+
+export interface KnowledgeEvolutionReport {
+  generatedAt: number;
+  decisions: KnowledgeEvolutionDecision[];
+  ranking: Array<{
+    cardId: string;
+    score: number;
+    priority: KnowledgePriority;
+  }>;
+  conflicts: KnowledgeConflict[];
+  similarities: KnowledgeSimilarity[];
+  clusters: KnowledgeCluster[];
+  mergePlans: KnowledgeMergePlan[];
+  splitPlans: KnowledgeSplitPlan[];
+  summary: {
+    totalCards: number;
+    activeCards: number;
+    revalidateCards: number;
+    degradedCards: number;
+    retiredCards: number;
+  };
+}
+
 export interface RuntimeProfileSnapshot {
   section: string;
   elapsedMs: number;
@@ -133,6 +254,143 @@ export interface BenchmarkResult {
   maxMs: number;
   p95Ms: number;
   totalMs: number;
+}
+
+export interface NumericSearchSpace {
+  min: number;
+  max: number;
+  step?: number;
+}
+
+export interface QuantCandidateConfiguration {
+  id: string;
+  parameters: Record<string, number>;
+  weights: Record<string, number>;
+  thresholds: Record<string, number>;
+  features: string[];
+}
+
+export type OptimizationDirection = 'maximize' | 'minimize';
+
+export interface OptimizationObjective {
+  metric: string;
+  direction: OptimizationDirection;
+  weight: number;
+}
+
+export interface OptimizationConstraint {
+  target: 'parameters' | 'weights' | 'thresholds';
+  key: string;
+  min?: number;
+  max?: number;
+}
+
+export interface FeatureConstraint {
+  required?: string[];
+  forbidden?: string[];
+}
+
+export interface OptimizationSearchConfig {
+  gridSamples?: number;
+  randomSamples?: number;
+  bayesianIterations?: number;
+  seed?: number;
+}
+
+export interface QuantOptimizationInput {
+  baseConfiguration: QuantCandidateConfiguration;
+  parameterSpace: Record<string, NumericSearchSpace>;
+  weightSpace: Record<string, NumericSearchSpace>;
+  thresholdSpace: Record<string, NumericSearchSpace>;
+  featureCandidates: string[];
+  objectives: OptimizationObjective[];
+  constraints?: OptimizationConstraint[];
+  featureConstraints?: FeatureConstraint;
+  search?: OptimizationSearchConfig;
+}
+
+export interface QuantOptimizationEvaluation {
+  candidate: QuantCandidateConfiguration;
+  metrics: Record<string, number>;
+  feasible: boolean;
+  discarded: boolean;
+  discardReasons: string[];
+  objectiveScore: number;
+  multiObjectiveScore: number;
+  evidenceScore: number;
+  confidenceScore: number;
+  probabilityScore: number;
+  knowledgeScore: number;
+  featureScore: number;
+}
+
+export interface OptimizerDelta {
+  improved: string[];
+  worsened: string[];
+}
+
+export interface OptimizationSearchDiagnostics {
+  gridEvaluated: number;
+  randomEvaluated: number;
+  bayesianEvaluated: number;
+  cacheHits: number;
+  totalEvaluated: number;
+  discarded: number;
+}
+
+export interface OptimizationDashboardSnapshot {
+  totalRuns: number;
+  bestRunId?: string;
+  bestScore: number;
+  averageScore: number;
+  latestRunId?: string;
+  topCandidates: Array<{
+    runId: string;
+    candidateId: string;
+    score: number;
+    feasible: boolean;
+  }>;
+}
+
+export interface QuantOptimizationResult {
+  runId: string;
+  createdAt: number;
+  bestConfiguration: QuantCandidateConfiguration;
+  bestEvaluation: QuantOptimizationEvaluation;
+  ranking: QuantOptimizationEvaluation[];
+  discarded: QuantOptimizationEvaluation[];
+  diagnostics: OptimizationSearchDiagnostics;
+  weightOptimizer: OptimizerDelta;
+  parameterOptimizer: OptimizerDelta;
+  thresholdOptimizer: OptimizerDelta;
+  featureOptimizer: {
+    selected: string[];
+    dropped: string[];
+  };
+  evidenceOptimizer: {
+    before: number;
+    after: number;
+  };
+  confidenceOptimizer: {
+    before: number;
+    after: number;
+  };
+  probabilityOptimizer: {
+    before: number;
+    after: number;
+  };
+  knowledgeOptimizer: {
+    before: number;
+    after: number;
+  };
+  optimizationRanking: Array<{
+    position: number;
+    candidateId: string;
+    score: number;
+    feasible: boolean;
+  }>;
+  report: string[];
+  dashboard: OptimizationDashboardSnapshot;
 }
 
 export interface CreateAlertOptions {
