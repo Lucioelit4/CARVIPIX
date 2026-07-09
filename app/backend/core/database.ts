@@ -172,6 +172,57 @@ class BackendDatabase {
         renovacion_automatica BOOLEAN NOT NULL DEFAULT false
       );
 
+      CREATE TABLE IF NOT EXISTS plan_entitlements (
+        plan TEXT PRIMARY KEY,
+        alerts_enabled BOOLEAN NOT NULL,
+        bot_enabled BOOLEAN NOT NULL,
+        max_alerts_per_day INT NOT NULL,
+        max_pairs INT NOT NULL,
+        max_bots INT NOT NULL,
+        history_limit INT NOT NULL DEFAULT 0,
+        allowed_pairs JSONB NOT NULL DEFAULT 'null'::jsonb,
+        trading_windows_utc JSONB NOT NULL DEFAULT '[]'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS commercial_audit_events (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        actor_type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        resource TEXT NOT NULL,
+        result TEXT NOT NULL,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS capital_requests (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        target_capital NUMERIC(14, 2) NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected', 'contract_sent', 'contract_signed', 'active', 'closed')),
+        risk_profile TEXT NOT NULL,
+        notes TEXT,
+        contract_signed BOOLEAN NOT NULL DEFAULT false,
+        admin_notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        accepted_at TIMESTAMPTZ,
+        rejected_at TIMESTAMPTZ
+      );
+
+      CREATE TABLE IF NOT EXISTS support_tickets (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        category TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+        priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
+        message TEXT NOT NULL,
+        admin_reply TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -485,6 +536,9 @@ class BackendDatabase {
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS source TEXT;
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS payment_subscription_id TEXT;
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS grace_period_ends_at TIMESTAMPTZ;
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT;
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS ip_address TEXT;
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS device_label TEXT;
 
       CREATE TABLE IF NOT EXISTS capital_accounts (
         account_id TEXT PRIMARY KEY,
@@ -567,6 +621,36 @@ class BackendDatabase {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
+              CREATE TABLE IF NOT EXISTS bot_connection_profiles (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                bot_instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+                broker_type TEXT NOT NULL CHECK (broker_type IN ('MT4', 'MT5')),
+                server TEXT NOT NULL,
+                login TEXT NOT NULL,
+                mode TEXT NOT NULL CHECK (mode IN ('demo', 'real')),
+                connection_status TEXT NOT NULL CHECK (connection_status IN ('disconnected', 'connected', 'degraded', 'error')),
+                credentials_hash TEXT NOT NULL,
+                last_synced_at TIMESTAMPTZ,
+                heartbeat_at TIMESTAMPTZ,
+                reconnect_attempts INT NOT NULL DEFAULT 0,
+                diagnostic_summary TEXT,
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+              );
+
+              CREATE TABLE IF NOT EXISTS bot_event_logs (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                bot_instance_id TEXT REFERENCES bot_instances(id) ON DELETE CASCADE,
+                level TEXT NOT NULL CHECK (level IN ('info', 'warning', 'error')),
+                event_type TEXT NOT NULL,
+                message TEXT NOT NULL,
+                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+              );
+
         strategy TEXT NOT NULL,
         status TEXT NOT NULL,
         symbol TEXT NOT NULL,
@@ -932,11 +1016,22 @@ class BackendDatabase {
     );
 
     await this.pool.query(`
+      INSERT INTO plan_entitlements (plan, alerts_enabled, bot_enabled, max_alerts_per_day, max_pairs, max_bots, history_limit, allowed_pairs, trading_windows_utc)
+      VALUES
+        ('free', false, false, 0, 1, 0, 3, '["EURUSD"]'::jsonb, '[]'::jsonb),
+        ('basic', true, true, 5, 4, 1, 25, '["EURUSD","GBPUSD","XAUUSD","USDJPY"]'::jsonb, '[{"startHourUtc":7,"endHourUtc":16},{"startHourUtc":18,"endHourUtc":21}]'::jsonb),
+        ('advanced', true, true, 25, 12, 3, 180, 'null'::jsonb, '[{"startHourUtc":0,"endHourUtc":23}]'::jsonb)
+      ON CONFLICT (plan) DO NOTHING
+    `);
+
+    await this.pool.query(`
       INSERT INTO products (id, name, description, price, currency, type, one_time, features)
       VALUES
         ('bot-carvipix-license', 'Bot CARVIPIX', 'Licencia de por vida para Bot CARVIPIX', 999, 'USD', 'bot', true, '["Ejecucion automatica de reglas","Control de riesgo","MT4/MT5 compatible","Actualizaciones futuras"]'::jsonb),
         ('capital-gestionado', 'Gestion de Capital', 'Gestion institucional de capital', 10000, 'USD', 'capital', false, '["Capital objetivo 10K-1M USD","Reportes mensuales","Soporte dedicado"]'::jsonb),
         ('cuenta-fondeada', 'Cuenta Fondeada', 'Servicio de gestion de fondeo', 5000, 'USD', 'fondeo', true, '["Capital objetivo 200K USD","30-45 dias","Credenciales al completar"]'::jsonb),
+        ('plan-basic', 'Plan BASIC', 'Plan mensual comercial con alertas manuales y bot limitado', 49, 'USD', 'plan_pro', false, '["Alertas manuales","4 pares habilitados","Historial limitado","1 bot"]'::jsonb),
+        ('plan-advanced', 'Plan ADVANCED', 'Plan mensual comercial con mas cobertura y bot completo', 149, 'USD', 'plan_premium', false, '["Mas alertas","12 pares habilitados","Historial extendido","3 bots"]'::jsonb),
         ('plan-pro', 'Plan Pro', 'Plan mensual con acceso operativo', 49, 'USD', 'plan_pro', false, '["50 alertas","1 bot","Reportes"]'::jsonb),
         ('plan-premium', 'Plan Premium', 'Plan mensual con acceso completo', 199, 'USD', 'plan_premium', false, '["Alertas ilimitadas","3 bots","Capital gestionado","IA Briefing"]'::jsonb)
       ON CONFLICT (id) DO NOTHING

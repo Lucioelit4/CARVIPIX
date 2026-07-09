@@ -4,11 +4,10 @@ import { backendDatabase } from "@/app/backend/core/database";
 import { listPayments, listUsers } from "@/app/backend/core/local-auth-store";
 import { buildOrdersWhereClause, filterLocalPayments, parseOrdersFilters } from "./query-helpers";
 import { getClientIp, isSameOriginRequest } from "@/app/api/admin/_shared/security";
-
-const ADMIN_COOKIE_NAME = "carvipix_admin_session";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
 function isAdminRequest(request: NextRequest): boolean {
-  return request.cookies.get(ADMIN_COOKIE_NAME)?.value === "1";
+  return isValidAdminSession(request);
 }
 
 export async function GET(request: NextRequest) {

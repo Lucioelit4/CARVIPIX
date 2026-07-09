@@ -23,6 +23,15 @@ export default function AppShell({ children }: AppShellProps) {
     pathname === "/registro" ||
     pathname === "/recuperar-password" ||
     pathname === "/verificar-correo" ||
+    pathname === "/soporte" ||
+    pathname === "/legal" ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/risk-disclosure" ||
+    pathname === "/cookies" ||
+    pathname === "/cancelacion" ||
+    pathname === "/reembolsos" ||
+    pathname === "/pagos-recurrentes" ||
     isAdminRoute;
 
   if (isStandaloneRoute) {

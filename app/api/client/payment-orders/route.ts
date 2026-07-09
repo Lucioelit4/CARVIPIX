@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { PaymentOrchestrator } from "@/app/backend/payments/core/orchestrator";
 import type { PaymentOrderStatus } from "@/app/backend/payments/core/types";
+import { backendDatabase } from "@/app/backend/core/database";
 
 const orchestrator = new PaymentOrchestrator();
 
@@ -9,6 +10,13 @@ export async function GET(request: NextRequest) {
   const auth = await requireClientSession(request);
   if (!auth.ok) {
     return auth.response;
+  }
+
+  if (!backendDatabase.enabled) {
+    return NextResponse.json(
+      { error: "La base de datos comercial de pagos no está configurada. No se pueden listar órdenes reales." },
+      { status: 409 }
+    );
   }
 
   try {
@@ -27,6 +35,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireClientSession(request);
   if (!auth.ok) {
     return auth.response;
+  }
+
+  if (!backendDatabase.enabled) {
+    return NextResponse.json(
+      { error: "La base de datos comercial de pagos no está configurada. No se pueden crear órdenes reales todavía." },
+      { status: 409 }
+    );
   }
 
   const body = (await request.json().catch(() => ({}))) as {

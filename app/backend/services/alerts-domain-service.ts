@@ -5,6 +5,8 @@ import type {
   ServiceAlertRule,
   ServiceAlertStats,
 } from "../contracts";
+import { AlertLimitGuard, PairAccessGuard } from "../commercial/access-control";
+import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
 
@@ -37,6 +39,10 @@ function mapConfidenceToPriority(confidence: number): ServiceAlertRecord["priori
 }
 
 export class AlertsDomainService implements IAlertsDomainService {
+  private readonly alertLimitGuard = new AlertLimitGuard();
+
+  private readonly pairAccessGuard = new PairAccessGuard();
+
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getAlerts(query?: { userId?: string; limit?: number }): Promise<ServiceAlertRecord[]> {
@@ -193,6 +199,37 @@ export class AlertsDomainService implements IAlertsDomainService {
     userId: string,
     rule: Omit<ServiceAlertRule, "id" | "userId" | "createdAt">
   ): Promise<ServiceAlertRule> {
+    const commercialAccess = await resolveUserCommercialAccess(userId);
+    const guardContext = {
+      membershipActive: commercialAccess.membershipActive,
+      entitlements: commercialAccess.entitlements,
+    };
+    const normalizedSymbols = Array.from(
+      new Set(rule.symbols.map((item) => String(item ?? "").trim().toUpperCase()).filter(Boolean))
+    );
+    const [{ rows: countRows }, existingRules] = await Promise.all([
+      backendDatabase.query<{ total: number }>(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM alert_rules
+        WHERE user_id = $1 AND created_at >= DATE_TRUNC('day', NOW())
+        `,
+        [userId]
+      ),
+      this.getAlertRules(userId),
+    ]);
+    this.alertLimitGuard.assertCanCreateAlert(guardContext, Number(countRows[0]?.total ?? 0));
+
+    const existingPairs = existingRules.flatMap((item) => item.symbols);
+    for (const symbol of normalizedSymbols) {
+      this.pairAccessGuard.assertPairAccess(guardContext, {
+        feature: "alertas",
+        pair: symbol,
+        existingPairs,
+      });
+      existingPairs.push(symbol);
+    }
+
     const id = `rule-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const now = new Date();
 
@@ -201,7 +238,7 @@ export class AlertsDomainService implements IAlertsDomainService {
       INSERT INTO alert_rules (id, user_id, name, enabled, condition, symbols, alert_types, created_at)
       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8)
       `,
-      [id, userId, rule.name, rule.enabled, rule.condition, JSON.stringify(rule.symbols), JSON.stringify(rule.alertTypes), now]
+      [id, userId, rule.name, rule.enabled, rule.condition, JSON.stringify(normalizedSymbols), JSON.stringify(rule.alertTypes), now]
     );
 
     this.eventBus.publish("alerts.rule.created", {
@@ -216,7 +253,7 @@ export class AlertsDomainService implements IAlertsDomainService {
       name: rule.name,
       enabled: rule.enabled,
       condition: rule.condition,
-      symbols: [...rule.symbols],
+      symbols: [...normalizedSymbols],
       alertTypes: [...rule.alertTypes],
       createdAt: now,
     };

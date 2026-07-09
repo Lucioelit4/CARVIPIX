@@ -32,7 +32,7 @@ export default function BotPage() {
 
               {/* Badges */}
               <div className="mt-8 flex flex-wrap gap-3">
-                {["MT4 / MT5", "Pago único", "Gestión de riesgo", "Actualizaciones Elite"].map((badge) => (
+                {["Compatibilidad MT4/MT5 en activación controlada", "Pago único", "Gestión de riesgo", "Actualizaciones Elite"].map((badge) => (
                   <span
                     key={badge}
                     className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-2 text-xs font-semibold text-[#D4AF37]"
@@ -55,7 +55,7 @@ export default function BotPage() {
 
                 <div className="mt-8 space-y-3">
                   <Link
-                    href="/checkout?product=bot"
+                    href="/checkout?product=bot-carvipix-license"
                     className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 text-base shadow-lg shadow-[#D4AF37]/30 text-center"
                   >
                     Comprar Bot CARVIPIX
@@ -167,7 +167,7 @@ export default function BotPage() {
             { title: "Gestiona riesgo", icon: Shield },
             { title: "Busca oportunidades", icon: TrendingUp },
             { title: "Registra actividad", icon: BarChart3 },
-            { title: "MT4 / MT5", icon: BotIcon },
+            { title: "Compatibilidad en activación", icon: BotIcon },
             { title: "Actualizaciones futuras", icon: Clock },
           ].map((item, i) => {
             const Icon = item.icon;
@@ -442,7 +442,7 @@ export default function BotPage() {
 
             {accepted ? (
               <Link
-                href="/checkout?product=bot"
+                href="/checkout?product=bot-carvipix-license"
                 className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] text-lg mb-3 text-center"
               >
                 Continuar compra

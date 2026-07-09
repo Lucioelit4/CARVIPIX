@@ -475,10 +475,10 @@ export default function PerfilPage() {
               </div>
             </div>
             <div className="flex gap-3">
-              <Link href="/checkout?product=membership" className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all text-center">
+              <Link href="/checkout?product=plan-basic" className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all text-center">
                 Ver planes
               </Link>
-              <Link href="/checkout?product=membership" className="flex-1 bg-[#D4AF37] text-[#030303] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all text-center">
+              <Link href="/checkout?product=plan-basic" className="flex-1 bg-[#D4AF37] text-[#030303] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all text-center">
                 Actualizar membresía
               </Link>
             </div>

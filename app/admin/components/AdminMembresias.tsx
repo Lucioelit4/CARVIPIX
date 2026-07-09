@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Search, ShieldCheck, CheckCircle2, XCircle, RotateCcw, PauseCircle, Crown } from 'lucide-react';
+import { RefreshCw, Search, ShieldCheck, CheckCircle2, XCircle, RotateCcw, PauseCircle, Crown, Save } from 'lucide-react';
 import DetailModal from './DetailModal';
 import { useToast } from './Toast';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 type AdminPlan = 'demo' | 'pro' | 'premium' | 'enterprise';
 type AdminMembershipState = 'activo' | 'cancelado' | 'vencido' | 'inactivo';
+type SubscriptionPlan = 'basic' | 'advanced' | 'pro' | 'elite';
 
 type AdminUser = {
   userId: string;
@@ -41,10 +42,52 @@ type AdminPayment = {
 type AdminMembershipSnapshot = {
   users: AdminUser[];
   payments: AdminPayment[];
+  entitlements: PlanEntitlement[];
+};
+
+type PlanEntitlement = {
+  plan: SubscriptionPlan;
+  alertsEnabled: boolean;
+  botEnabled: boolean;
+  maxAlertsPerDay: number;
+  maxPairs: number;
+  maxBots: number;
+  allowedPairs: string[] | null;
+};
+
+type PlanEntitlementDraft = {
+  plan: SubscriptionPlan;
+  alertsEnabled: boolean;
+  botEnabled: boolean;
+  maxAlertsPerDay: number;
+  maxPairs: number;
+  maxBots: number;
+  allowedPairsText: string;
 };
 
 const PLAN_OPTIONS: AdminPlan[] = ['demo', 'pro', 'premium', 'enterprise'];
 const DURATION_OPTIONS = [30, 90, 180, 365];
+
+function buildEmptyDrafts(): Record<SubscriptionPlan, PlanEntitlementDraft> {
+  return {
+    basic: { plan: 'basic', alertsEnabled: true, botEnabled: false, maxAlertsPerDay: 3, maxPairs: 3, maxBots: 0, allowedPairsText: 'EURUSD, GBPUSD, XAUUSD' },
+    advanced: { plan: 'advanced', alertsEnabled: true, botEnabled: false, maxAlertsPerDay: 10, maxPairs: 8, maxBots: 0, allowedPairsText: 'EURUSD, GBPUSD, USDJPY, XAUUSD, BTCUSD, ETHUSD' },
+    pro: { plan: 'pro', alertsEnabled: true, botEnabled: true, maxAlertsPerDay: 30, maxPairs: 20, maxBots: 2, allowedPairsText: 'ALL' },
+    elite: { plan: 'elite', alertsEnabled: true, botEnabled: true, maxAlertsPerDay: 200, maxPairs: 100, maxBots: 10, allowedPairsText: 'ALL' },
+  };
+}
+
+function toEntitlementDraft(entitlement: PlanEntitlement): PlanEntitlementDraft {
+  return {
+    plan: entitlement.plan,
+    alertsEnabled: entitlement.alertsEnabled,
+    botEnabled: entitlement.botEnabled,
+    maxAlertsPerDay: entitlement.maxAlertsPerDay,
+    maxPairs: entitlement.maxPairs,
+    maxBots: entitlement.maxBots,
+    allowedPairsText: entitlement.allowedPairs ? entitlement.allowedPairs.join(', ') : 'ALL',
+  };
+}
 
 function planLabel(plan: AdminPlan) {
   return plan.toUpperCase();
@@ -58,12 +101,23 @@ export default function AdminMembresias() {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingEntitlementPlan, setSavingEntitlementPlan] = useState<SubscriptionPlan | null>(null);
   const [search, setSearch] = useState('');
-  const [snapshot, setSnapshot] = useState<AdminMembershipSnapshot>({ users: [], payments: [] });
+  const [snapshot, setSnapshot] = useState<AdminMembershipSnapshot>({ users: [], payments: [], entitlements: [] });
+  const [entitlementDrafts, setEntitlementDrafts] = useState<Record<SubscriptionPlan, PlanEntitlementDraft>>(buildEmptyDrafts());
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<AdminPlan>('pro');
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
+
+  const applySnapshot = (data: AdminMembershipSnapshot) => {
+    setSnapshot(data);
+    const nextDrafts = buildEmptyDrafts();
+    for (const entitlement of data.entitlements) {
+      nextDrafts[entitlement.plan] = toEntitlementDraft(entitlement);
+    }
+    setEntitlementDrafts(nextDrafts);
+  };
 
   const loadSnapshot = async () => {
     setLoading(true);
@@ -75,9 +129,9 @@ export default function AdminMembresias() {
         throw new Error(payload.error || 'No se pudo cargar');
       }
 
-      setSnapshot(payload.data);
+      applySnapshot(payload.data);
     } catch {
-      setSnapshot({ users: [], payments: [] });
+      applySnapshot({ users: [], payments: [], entitlements: [] });
       showToast('No se pudo cargar la gestión de membresías.', 'error');
     } finally {
       setLoading(false);
@@ -140,7 +194,7 @@ export default function AdminMembresias() {
         throw new Error(payload.error || 'No se pudo actualizar');
       }
 
-      setSnapshot(payload.data);
+      applySnapshot(payload.data);
       const updatedUser = payload.data.users.find((user) => user.userId === selectedUser.userId) ?? null;
       setSelectedUser(updatedUser);
       if (updatedUser) {
@@ -151,6 +205,60 @@ export default function AdminMembresias() {
       showToast('No se pudo actualizar la membresía.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateEntitlementDraft = <K extends keyof PlanEntitlementDraft>(plan: SubscriptionPlan, field: K, value: PlanEntitlementDraft[K]) => {
+    setEntitlementDrafts((current) => ({
+      ...current,
+      [plan]: {
+        ...current[plan],
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveEntitlements = async (plan: SubscriptionPlan) => {
+    const draft = entitlementDrafts[plan];
+    if (!draft) {
+      return;
+    }
+
+    setSavingEntitlementPlan(plan);
+    try {
+      const allowedPairsRaw = draft.allowedPairsText.trim();
+      const allowedPairs = allowedPairsRaw === '' || allowedPairsRaw.toUpperCase() === 'ALL'
+        ? null
+        : allowedPairsRaw.split(',').map((item) => item.trim().toUpperCase()).filter(Boolean);
+
+      const response = await fetch('/api/admin/memberships', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update-entitlements',
+          subscriptionPlan: plan,
+          entitlements: {
+            alertsEnabled: draft.alertsEnabled,
+            botEnabled: draft.botEnabled,
+            maxAlertsPerDay: draft.maxAlertsPerDay,
+            maxPairs: draft.maxPairs,
+            maxBots: draft.maxBots,
+            allowedPairs,
+          },
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; data?: AdminMembershipSnapshot; error?: string };
+      if (!response.ok || !payload.ok || !payload.data) {
+        throw new Error(payload.error || 'No se pudo actualizar límites');
+      }
+
+      applySnapshot(payload.data);
+      showToast('Entitlements del plan actualizados.', 'success');
+    } catch {
+      showToast('No se pudieron actualizar los límites del plan.', 'error');
+    } finally {
+      setSavingEntitlementPlan(null);
     }
   };
 
@@ -197,6 +305,109 @@ export default function AdminMembresias() {
       </motion.div>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
+          <div className="mb-4 flex items-center gap-2 text-[#D4AF37]">
+            <ShieldCheck className="h-5 w-5" />
+            <h3 className="text-lg font-semibold">Entitlements por plan</h3>
+          </div>
+          <div className="space-y-4">
+            {(['basic', 'advanced', 'pro', 'elite'] as SubscriptionPlan[]).map((plan) => {
+              const draft = entitlementDrafts[plan];
+              return (
+                <div key={plan} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-white/60">Plan comercial</p>
+                      <p className="text-lg font-semibold text-white uppercase">{plan}</p>
+                    </div>
+                    <CARVIPIXButton
+                      variant="premium"
+                      size="sm"
+                      leftIcon={<Save className="w-4 h-4" />}
+                      onClick={() => void saveEntitlements(plan)}
+                      disabled={savingEntitlementPlan === plan}
+                    >
+                      Guardar límites
+                    </CARVIPIXButton>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-6">
+                    <label className="space-y-2 text-sm text-white/70">
+                      <span>Alertas</span>
+                      <select
+                        value={draft.alertsEnabled ? '1' : '0'}
+                        onChange={(e) => updateEntitlementDraft(plan, 'alertsEnabled', e.target.value === '1')}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      >
+                        <option value="1" className="bg-[#030303] text-white">Permitido</option>
+                        <option value="0" className="bg-[#030303] text-white">Bloqueado</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-2 text-sm text-white/70">
+                      <span>Bot</span>
+                      <select
+                        value={draft.botEnabled ? '1' : '0'}
+                        onChange={(e) => updateEntitlementDraft(plan, 'botEnabled', e.target.value === '1')}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      >
+                        <option value="1" className="bg-[#030303] text-white">Permitido</option>
+                        <option value="0" className="bg-[#030303] text-white">Bloqueado</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-2 text-sm text-white/70">
+                      <span>Alertas/día</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={draft.maxAlertsPerDay}
+                        onChange={(e) => updateEntitlementDraft(plan, 'maxAlertsPerDay', Number(e.target.value) || 0)}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      />
+                    </label>
+
+                    <label className="space-y-2 text-sm text-white/70">
+                      <span>Pares</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={draft.maxPairs}
+                        onChange={(e) => updateEntitlementDraft(plan, 'maxPairs', Number(e.target.value) || 0)}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      />
+                    </label>
+
+                    <label className="space-y-2 text-sm text-white/70">
+                      <span>Bots</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={draft.maxBots}
+                        onChange={(e) => updateEntitlementDraft(plan, 'maxBots', Number(e.target.value) || 0)}
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      />
+                    </label>
+
+                    <label className="space-y-2 text-sm text-white/70 lg:col-span-2">
+                      <span>Pares permitidos</span>
+                      <input
+                        type="text"
+                        value={draft.allowedPairsText}
+                        onChange={(e) => updateEntitlementDraft(plan, 'allowedPairsText', e.target.value)}
+                        placeholder="ALL o EURUSD, BTCUSD"
+                        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white outline-none focus:border-[#D4AF37]"
+                      />
+                    </label>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CARVIPIXCard>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
         <CARVIPIXCard variant="admin" padding="16" hover={false}>
           <div className="mb-4 flex items-center gap-2 text-[#D4AF37]">
             <ShieldCheck className="h-5 w-5" />

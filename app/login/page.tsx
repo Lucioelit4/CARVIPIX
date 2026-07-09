@@ -65,13 +65,15 @@ export default function LoginPage() {
         membership?: { active?: boolean };
       };
 
-      if (!sessionPayload.authenticated || !sessionPayload.membership?.active) {
+      if (!sessionPayload.authenticated) {
         window.location.replace('/servicios');
         return;
       }
 
       shouldStopLoading = false;
-      window.location.replace(redirectPath);
+      const protectedMembershipPath = /^\/(alertas|resultados|analisis|comunidad|bot|capital|fondeo|herramientas)(\/|$)/.test(redirectPath);
+      const nextPath = !sessionPayload.membership?.active && protectedMembershipPath ? '/dashboard' : redirectPath;
+      window.location.replace(nextPath);
     } catch {
       setError('No se pudo iniciar sesión.');
     } finally {

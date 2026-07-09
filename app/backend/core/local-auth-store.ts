@@ -88,6 +88,10 @@ type LocalSession = {
   userId: string;
   expiresAt: string;
   createdAt: string;
+  lastSeenAt?: string;
+  userAgent?: string | null;
+  ipAddress?: string | null;
+  deviceLabel?: string | null;
 };
 
 type LocalVerificationToken = {
@@ -153,7 +157,7 @@ async function readStore(): Promise<LocalStore> {
 
 async function writeStore(store: LocalStore): Promise<void> {
   await ensureStoreDir();
-  const tempPath = `${STORE_PATH}.tmp`;
+  const tempPath = `${STORE_PATH}.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
   await fs.writeFile(tempPath, JSON.stringify(store, null, 2), "utf8");
   await fs.rename(tempPath, STORE_PATH);
 }
@@ -289,6 +293,7 @@ export async function createSession(userId: string, sessionHours = 12): Promise<
       userId,
       expiresAt: expiresAt.toISOString(),
       createdAt: nowIso(),
+      lastSeenAt: nowIso(),
     },
     ...store.sessions.filter((session) => session.tokenHash !== tokenHash),
   ];
@@ -313,6 +318,23 @@ export async function revokeSession(token: string): Promise<void> {
   const tokenHash = hashToken(token);
   store.sessions = store.sessions.filter((session) => session.tokenHash !== tokenHash);
   await writeStore(store);
+}
+
+export async function listSessions(userId: string) {
+  const store = await readStore();
+  return store.sessions.filter((session) => session.userId === userId);
+}
+
+export async function revokeSessionByHash(userId: string, tokenHash: string): Promise<boolean> {
+  const store = await readStore();
+  const before = store.sessions.length;
+  store.sessions = store.sessions.filter((session) => !(session.userId === userId && session.tokenHash === tokenHash));
+  if (before === store.sessions.length) {
+    return false;
+  }
+
+  await writeStore(store);
+  return true;
 }
 
 export async function createVerificationToken(userId: string): Promise<string> {

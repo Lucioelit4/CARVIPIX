@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ecosystemServices } from "@/app/backend";
+import { CommercialAccessError, FeatureAccessGuard } from "@/app/backend/commercial/access-control";
+import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
 import { findMembershipByUserId } from "@/app/lib/auth/server";
 import { aiSupportService } from "@/app/lib/modules";
 import { requireClientSession } from "@/app/api/client/_auth";
@@ -34,6 +36,18 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const featureAccessGuard = new FeatureAccessGuard();
+    const assertFeatureAccess = async (feature: "alertas" | "bot") => {
+      const commercialAccess = await resolveUserCommercialAccess(auth.user.id);
+      featureAccessGuard.assertAccess(
+        {
+          membershipActive: commercialAccess.membershipActive,
+          entitlements: commercialAccess.entitlements,
+        },
+        feature
+      );
+    };
+
     const body = (await request.json()) as {
       action?: DataAction;
       payload?: Record<string, unknown>;
@@ -74,12 +88,16 @@ export async function POST(request: NextRequest) {
         });
       }
       case "getAlerts":
+        await assertFeatureAccess("alertas");
         return NextResponse.json({ data: await ecosystemServices.alerts.getAlerts({ userId: auth.user.id, limit: Number(payload.limit ?? 0) || undefined }) });
       case "getAlertStats":
+        await assertFeatureAccess("alertas");
         return NextResponse.json({ data: await ecosystemServices.alerts.getAlertStats(auth.user.id) });
       case "getBotLicense":
+        await assertFeatureAccess("bot");
         return NextResponse.json({ data: await ecosystemServices.bot.getLicense(auth.user.id) });
       case "getBotInstances":
+        await assertFeatureAccess("bot");
         return NextResponse.json({ data: await ecosystemServices.bot.getBotInstances(auth.user.id) });
       case "getCapitalAccount":
         return NextResponse.json({ data: await ecosystemServices.capital.getCapitalAccount(auth.user.id) });
@@ -153,7 +171,11 @@ export async function POST(request: NextRequest) {
       default:
         return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
     }
-  } catch {
+  } catch (error) {
+    if (error instanceof CommercialAccessError) {
+      return NextResponse.json({ error: error.message, code: error.code }, { status: error.status });
+    }
+
     return NextResponse.json({ error: "Failed to resolve data action" }, { status: 500 });
   }
 }

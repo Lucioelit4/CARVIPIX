@@ -58,7 +58,7 @@ export default function FondeoPage() {
 
               {/* Badges */}
               <div className="mt-8 flex flex-wrap gap-3">
-                {["Pago único 5,000 USD", "Capital objetivo 200K", "FTMO / TopTier", "30 a 45 días", "Gestión del proceso"].map((badge) => (
+                {["Evaluación privada", "Capital sujeto a aprobación externa", "FTMO / TopTier", "30 a 45 días", "Gestión del proceso"].map((badge) => (
                   <span
                     key={badge}
                     className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-2 text-xs font-semibold text-[#D4AF37]"
@@ -70,7 +70,7 @@ export default function FondeoPage() {
 
               <div className="mt-8 space-y-3">
                 <Link
-                  href="/checkout?product=fondeo"
+                  href="/soporte"
                   className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-center"
                 >
                   Solicitar revisión
@@ -92,8 +92,8 @@ export default function FondeoPage() {
               className="rounded-2xl border-2 border-[#D4AF37]/40 bg-gradient-to-br from-[#11161E] via-[#0B0B0B] to-[#030303] p-8 shadow-2xl shadow-[#D4AF37]/20"
             >
               <h3 className="text-sm font-semibold text-[#D4AF37] uppercase tracking-wider">Capital objetivo</h3>
-              <p className="mt-4 text-5xl font-black text-white">200,000 USD</p>
-              <p className="mt-3 text-sm text-white/60">Servicio de gestión: <span className="font-bold text-[#D4AF37]">5,000 USD</span></p>
+              <p className="mt-4 text-5xl font-black text-white">Hasta 200,000 USD</p>
+              <p className="mt-3 text-sm text-white/60">Servicio sujeto a revisión individual y condiciones de la empresa seleccionada.</p>
               <div className="mt-8 space-y-3 border-t border-white/10 pt-8">
                 <div className="flex items-center gap-3">
                   <Check className="w-5 h-5 text-green-400" />
@@ -288,7 +288,7 @@ export default function FondeoPage() {
             Solicita revisión y CARVIPIX evaluará tu perfil para compatibilidad con empresas de fondeo.
           </p>
           <Link
-            href="/checkout?product=fondeo"
+            href="/soporte"
             className="inline-block rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
           >
             Solicitar revisión

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/app/backend';
 import { getClientIp, isSameOriginRequest } from '@/app/api/admin/_shared/security';
+import { clearAdminSessionCookie, isValidAdminSession, setAdminSessionCookie } from '@/app/lib/auth/admin-server';
 
-const ADMIN_COOKIE_NAME = 'carvipix_admin_session';
 const ADMIN_DASHBOARD_ACCESS_COOKIE = 'carvipix_admin_dashboard_access';
 
 function isValidAdminCode(code: unknown): boolean {
@@ -19,8 +19,7 @@ function isValidAdminCode(code: unknown): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const session = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  if (session === '1') {
+  if (isValidAdminSession(request)) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
@@ -59,30 +58,14 @@ export async function POST(request: NextRequest) {
   rateLimiter.reset('auth.admin.login', getClientIp(request));
 
   const response = NextResponse.json({ ok: true }, { status: 200 });
-  response.cookies.set({
-    name: ADMIN_COOKIE_NAME,
-    value: '1',
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 12,
-  });
+  setAdminSessionCookie(response, request);
 
   return response;
 }
 
 export async function DELETE() {
   const response = NextResponse.json({ ok: true }, { status: 200 });
-  response.cookies.set({
-    name: ADMIN_COOKIE_NAME,
-    value: '',
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 0,
-  });
+  clearAdminSessionCookie(response);
   response.cookies.set({
     name: ADMIN_DASHBOARD_ACCESS_COOKIE,
     value: '',

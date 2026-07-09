@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeSubscriptionPlan, type SubscriptionPlan } from "@/app/backend/commercial/access-control";
+import { listPlanEntitlements, updatePlanEntitlements } from "@/app/backend/commercial/plan-entitlements-store";
 import { backendDatabase } from "@/app/backend/core/database";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 import {
   findMembershipByUserId as findLocalMembershipByUserId,
   listPayments,
@@ -8,8 +11,6 @@ import {
   updateUser as updateLocalUser,
   upsertMembership as upsertLocalMembership,
 } from "@/app/backend/core/local-auth-store";
-
-const ADMIN_COOKIE_NAME = "carvipix_admin_session";
 
 type AdminPlan = "demo" | "pro" | "premium" | "enterprise";
 type AdminMembershipState = "activo" | "cancelado" | "vencido" | "inactivo";
@@ -41,8 +42,17 @@ type AdminPaymentRow = {
   fecha: Date;
 };
 
+type AdminEntitlementsPatch = {
+  alertsEnabled?: boolean;
+  botEnabled?: boolean;
+  maxAlertsPerDay?: number;
+  maxPairs?: number;
+  maxBots?: number;
+  allowedPairs?: string[] | null;
+};
+
 function isAdminRequest(request: NextRequest): boolean {
-  return request.cookies.get(ADMIN_COOKIE_NAME)?.value === "1";
+  return isValidAdminSession(request);
 }
 
 function resolveMembershipState(state: string | null | undefined, expiryDate: Date | null | undefined): AdminMembershipState {
@@ -105,6 +115,7 @@ async function loadAdminSnapshot() {
         method: payment.method,
         fecha: payment.fecha,
       })),
+      entitlements: await listPlanEntitlements(),
     };
   }
 
@@ -173,6 +184,7 @@ async function loadAdminSnapshot() {
       method: row.method,
       fecha: row.fecha.toISOString(),
     })),
+    entitlements: await listPlanEntitlements(),
   };
 }
 
@@ -197,9 +209,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json().catch(() => ({}))) as {
       userId?: string;
-      action?: "activate" | "renew" | "cancel" | "change-plan" | "deactivate";
+      action?: "activate" | "renew" | "cancel" | "change-plan" | "deactivate" | "update-entitlements";
       plan?: AdminPlan;
       durationDays?: number;
+      subscriptionPlan?: SubscriptionPlan | string;
+      entitlements?: AdminEntitlementsPatch;
     };
 
     const userId = String(body.userId ?? "").trim();
@@ -207,7 +221,30 @@ export async function POST(request: NextRequest) {
     const plan = normalizePlan(body.plan);
     const durationDays = Number.isFinite(body.durationDays) && Number(body.durationDays) > 0 ? Math.min(Number(body.durationDays), 3650) : 30;
 
-    if (!userId || !action) {
+    if (!action) {
+      return NextResponse.json({ ok: false, error: "Datos inválidos" }, { status: 400 });
+    }
+
+    if (action === "update-entitlements") {
+      const patch = body.entitlements ?? {};
+      await updatePlanEntitlements(normalizeSubscriptionPlan(body.subscriptionPlan), {
+        alertsEnabled: typeof patch.alertsEnabled === "boolean" ? patch.alertsEnabled : undefined,
+        botEnabled: typeof patch.botEnabled === "boolean" ? patch.botEnabled : undefined,
+        maxAlertsPerDay: Number.isFinite(patch.maxAlertsPerDay) ? Number(patch.maxAlertsPerDay) : undefined,
+        maxPairs: Number.isFinite(patch.maxPairs) ? Number(patch.maxPairs) : undefined,
+        maxBots: Number.isFinite(patch.maxBots) ? Number(patch.maxBots) : undefined,
+        allowedPairs: Array.isArray(patch.allowedPairs)
+          ? patch.allowedPairs.map((item) => String(item ?? "").trim().toUpperCase()).filter(Boolean)
+          : patch.allowedPairs === null
+            ? null
+            : undefined,
+      });
+
+      const data = await loadAdminSnapshot();
+      return NextResponse.json({ ok: true, data }, { status: 200 });
+    }
+
+    if (!userId) {
       return NextResponse.json({ ok: false, error: "Datos inválidos" }, { status: 400 });
     }
 

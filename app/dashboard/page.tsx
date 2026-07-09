@@ -1,196 +1,112 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import {
-  ArrowRight,
-  BarChart3,
-  Bell,
-  Bot,
-  CircleDollarSign,
-  Gauge,
-  ShieldCheck,
-  Timer,
-  Trophy,
-  UserCircle2,
-} from 'lucide-react';
-import { writeAuthSession } from '@/app/lib/auth/session';
-import { getAlertStats, getBotInstances, getPlatformResults, getResultsHistory } from '@/app/lib/client-data-helpers';
-import { CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Bell, Bot, CreditCard, LifeBuoy, Monitor, RefreshCw, ShieldCheck } from "lucide-react";
 
-const moduleCards = [
-  {
-    title: 'Alertas en Vivo',
-    desc: 'Senales y seguimiento operativo en tiempo real.',
-    href: '/alertas',
-    cta: 'Ir a alertas',
-    badge: 'EN VIVO',
-    icon: BarChart3,
-  },
-  {
-    title: 'Resultados',
-    desc: 'Resumen de desempeno y trazabilidad de operaciones.',
-    href: '/resultados',
-    cta: 'Ver resultados',
-    badge: 'VERIFICADOS',
-    icon: Trophy,
-  },
-  {
-    title: 'Bot CARVIPIX',
-    desc: 'Gestion de automatizacion y vista del estado del bot.',
-    href: '/bot',
-    cta: 'Abrir bot',
-    badge: 'AUTOMATIZADO',
-    icon: Bot,
-  },
-  {
-    title: 'Perfil',
-    desc: 'Configuracion de cuenta, seguridad y membresia.',
-    href: '/perfil',
-    cta: 'Ir a perfil',
-    badge: 'MI CUENTA',
-    icon: UserCircle2,
-  },
-];
+import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
+import { writeAuthSession } from "@/app/lib/auth/session";
 
-type DashboardKPI = {
-  label: string;
-  value: string;
-  note: string;
-  icon: typeof Bell;
-  tone: string;
+type PortalSnapshot = {
+  plan: {
+    officialPlan: "FREE" | "BASIC" | "ADVANCED";
+    membershipActive: boolean;
+    renewalDate?: string;
+    entitlements: {
+      maxAlertsPerDay: number;
+      maxPairs: number;
+      maxBots: number;
+      historyLimit: number;
+      allowedPairs: string[] | null;
+      tradingWindowsUtc: Array<{ startHourUtc: number; endHourUtc: number }>;
+    };
+  };
+  alerts: {
+    remainingToday: number;
+    createdToday: number;
+    stats: { total: number; active: number; triggered: number; resolved: number };
+    rules: Array<{ id: string; name: string; symbols: string[]; condition: string; enabled: boolean }>;
+  };
+  bot: {
+    license: { active: boolean; licenseKey?: string; brokerConnected?: "MT4" | "MT5" } | null;
+    instances: Array<{ id: string; name: string; symbol: string; status: string; strategy: string; riskLevel: string }>;
+  };
+  capital: {
+    account: null | { status: string; initialCapital: number; currentBalance: number; utilidad: number };
+    requests: Array<{ id: string; status: string; targetCapital: number; riskProfile: string; contractSigned: boolean }>;
+  };
+  payments: {
+    orders: Array<{ id: string; productId: string; total: number; currency: string; status: string; fechaCreacion: string }>;
+  };
+  operations: Array<{ id: string; symbol: string; status: string; pnl: number; executedAt: string }>;
+  devices: Array<{ id: string; deviceLabel: string; lastSeenAt: string; userAgent: string }>;
+  support: Array<{ id: string; subject: string; status: string; priority: string }>;
+  audit: Array<{ id: string; action: string; resource: string; result: string }>;
 };
 
-const EMPTY_KPIS: DashboardKPI[] = [
-  { label: 'Alertas hoy', value: '0', note: 'Activa alertas para comenzar', icon: Bell, tone: 'text-white' },
-  { label: 'Operaciones', value: '0', note: 'Se mostrarán al cerrar actividad', icon: Gauge, tone: 'text-white' },
-  { label: 'Ganancia neta', value: '0%', note: 'Disponible con historial operativo', icon: CircleDollarSign, tone: 'text-white' },
-  { label: 'Win Rate', value: '0%', note: 'Disponible con historial operativo', icon: Trophy, tone: 'text-white' },
-  { label: 'Drawdown', value: '0%', note: 'Disponible con historial operativo', icon: ShieldCheck, tone: 'text-white' },
-  { label: 'Estado del bot', value: 'INACTIVO', note: 'Disponible al activar el servicio', icon: Timer, tone: 'text-white' },
-];
+const emptyAlertForm = { name: "", symbol: "EURUSD", condition: "Confirmacion manual del cliente" };
+const emptyBotForm = { name: "Bot CARVIPIX", symbol: "EURUSD", strategy: "momentum", riskLevel: "medium" };
+const emptyBrokerForm = { botId: "", brokerType: "MT5", server: "", login: "", password: "", mode: "demo" };
+const emptyCapitalForm = { targetCapital: "10000", riskProfile: "moderado", notes: "" };
+const emptySupportForm = { subject: "", category: "general", priority: "medium", message: "" };
+
+async function parseJsonSafe<T>(response: Response): Promise<T> {
+  return (await response.json().catch(() => ({}))) as T;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [kpis, setKpis] = useState<DashboardKPI[]>(EMPTY_KPIS);
-  const [news, setNews] = useState<Array<{ time: string; title: string; desc: string }>>([]);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [portal, setPortal] = useState<PortalSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [alertForm, setAlertForm] = useState(emptyAlertForm);
+  const [botForm, setBotForm] = useState(emptyBotForm);
+  const [brokerForm, setBrokerForm] = useState(emptyBrokerForm);
+  const [capitalForm, setCapitalForm] = useState(emptyCapitalForm);
+  const [supportForm, setSupportForm] = useState(emptySupportForm);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const refreshPortal = async () => {
+    const response = await fetch("/api/client/portal", { cache: "no-store" });
+    if (!response.ok) {
+      const payload = await parseJsonSafe<{ error?: string }>(response);
+      throw new Error(payload.error || "No se pudo cargar el portal");
+    }
+
+    const payload = await parseJsonSafe<{ data: PortalSnapshot }>(response);
+    setPortal(payload.data);
+  };
 
   useEffect(() => {
-    const loadDashboardData = async () => {
+    const bootstrap = async () => {
       try {
-        const [sessionResponse, adminSessionResponse] = await Promise.all([
-          fetch('/api/auth/session', { cache: 'no-store' }),
-          fetch('/api/auth/admin/session', { cache: 'no-store' }),
-        ]);
+        const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
+        if (sessionResponse.ok) {
+          writeAuthSession("cliente");
+          await refreshPortal();
+          setIsAdminView(false);
+          return;
+        }
 
+        const adminSessionResponse = await fetch("/api/auth/admin/session", { cache: "no-store" });
         const isAdmin = adminSessionResponse.ok;
         setIsAdminView(isAdmin);
 
-        if (!sessionResponse.ok && !isAdmin) {
-          router.replace('/servicios');
+        if (!isAdmin) {
+          router.replace("/servicios");
           return;
         }
 
-        const payload = sessionResponse.ok
-          ? ((await sessionResponse.json().catch(() => ({}))) as {
-              authenticated?: boolean;
-              membership?: { active?: boolean };
-            })
-          : { authenticated: false, membership: { active: false } };
-
-        if (!isAdmin && (!payload.authenticated || !payload.membership?.active)) {
-          router.replace('/servicios');
-          return;
-        }
-
-        writeAuthSession(isAdmin ? 'admin' : 'cliente');
-      } catch {
-        router.replace('/servicios');
-        return;
-      }
-
-      try {
-        const [alertStats, platformResults, botInstances, history] = await Promise.all([
-          getAlertStats(),
-          getPlatformResults('monthly'),
-          getBotInstances(),
-          getResultsHistory(3),
-        ]);
-
-        setIsAuthorized(true);
-
-        const runningBots = botInstances.filter((item) => item.status === 'running').length;
-        const hasTrades = platformResults.combinedStats.totalTrades > 0;
-        const totalProfit = Number(platformResults.combinedStats.totalProfit ?? 0);
-
-        setKpis([
-          {
-            label: 'Alertas hoy',
-            value: String(alertStats.active ?? 0),
-            note: (alertStats.active ?? 0) > 0 ? 'Alertas activas' : 'Activa alertas para comenzar',
-            icon: Bell,
-            tone: (alertStats.active ?? 0) > 0 ? 'text-[#2ECC71]' : 'text-white',
-          },
-          {
-            label: 'Operaciones',
-            value: String(platformResults.combinedStats.totalTrades ?? 0),
-            note: hasTrades ? 'Operaciones cerradas' : 'Se mostrarán al cerrar actividad',
-            icon: Gauge,
-            tone: hasTrades ? 'text-[#2ECC71]' : 'text-white',
-          },
-          {
-            label: 'Ganancia neta',
-            value: hasTrades ? `${totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}%` : '0%',
-            note: hasTrades ? 'Performance' : 'Disponible con historial operativo',
-            icon: CircleDollarSign,
-            tone: hasTrades ? 'text-[#F4C542]' : 'text-white',
-          },
-          {
-            label: 'Win Rate',
-            value: hasTrades ? `${Number(platformResults.combinedStats.avgWinRate ?? 0).toFixed(1)}%` : '0%',
-            note: hasTrades ? 'Ultimos 30 dias' : 'Disponible con historial operativo',
-            icon: Trophy,
-            tone: 'text-white',
-          },
-          {
-            label: 'Drawdown',
-            value: hasTrades ? `${Math.max(0, Number(platformResults.bySource.alertas.profitLoss < 0 ? Math.abs(platformResults.bySource.alertas.profitLoss) : 0)).toFixed(2)}%` : '0%',
-            note: hasTrades ? 'Riesgo monitorizado' : 'Disponible con historial operativo',
-            icon: ShieldCheck,
-            tone: 'text-white',
-          },
-          {
-            label: 'Estado del bot',
-            value: runningBots > 0 ? 'ACTIVO' : 'INACTIVO',
-            note: runningBots > 0 ? 'Operando' : 'Disponible al activar el servicio',
-            icon: Timer,
-            tone: runningBots > 0 ? 'text-[#2ECC71]' : 'text-white',
-          },
-        ]);
-
-        setNews(
-          (history ?? []).map((entry) => ({
-            time: entry.month || 'N/A',
-            title: `Reporte ${entry.month || 'sin periodo'}`,
-            desc:
-              Number(entry.metrics.alertas.totalTrades ?? 0) > 0
-                ? `${entry.metrics.alertas.totalTrades} operaciones en alertas`
-                : 'Pendiente de actividad operativa',
-          }))
-        );
-      } catch {
-        setKpis(EMPTY_KPIS);
-        setNews([]);
-        setIsAuthorized(true);
+        writeAuthSession("admin");
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "No se pudo cargar el panel del cliente");
+      } finally {
+        setLoading(false);
       }
     };
 
-    void loadDashboardData();
-
+    void bootstrap();
   }, [router]);
 
   useEffect(() => {
@@ -199,159 +115,322 @@ export default function DashboardPage() {
     }
 
     return () => {
-      void fetch('/api/admin/client-panel', {
-        method: 'DELETE',
+      void fetch("/api/admin/client-panel", {
+        method: "DELETE",
         keepalive: true,
-      }).catch(() => {
-        // No-op: seguridad best-effort para limpieza al salir.
-      });
+      }).catch(() => undefined);
     };
   }, [isAdminView]);
 
-  if (!isAuthorized) {
-    return null;
+  const paymentSummary = useMemo(() => portal?.payments.orders.reduce((total, order) => total + Number(order.total ?? 0), 0) ?? 0, [portal]);
+  const planStatusLabel = portal?.plan.membershipActive
+    ? `Membresia ${portal?.plan.officialPlan}`
+    : `Sin membresía activa (${portal?.plan.officialPlan})`;
+
+  const submitJson = async (key: string, url: string, body: Record<string, unknown>) => {
+    setBusy(key);
+    setError(null);
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await parseJsonSafe<{ error?: string }>(response);
+      if (!response.ok) {
+        throw new Error(payload.error || "No se pudo completar la accion");
+      }
+      await refreshPortal();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo completar la accion");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">Cargando panel cliente...</div>;
   }
 
+  if (isAdminView && !portal) {
+    return (
+      <main className="min-h-screen bg-[#030303] text-white p-8">
+        <CARVIPIXCard variant="admin" padding="24" hover={false}>
+          <h1 className="text-2xl font-bold mb-2">Vista de administrador</h1>
+          <p className="text-white/60">El acceso temporal desde admin sigue disponible, pero el portal operativo completo requiere una sesión de cliente real.</p>
+        </CARVIPIXCard>
+      </main>
+    );
+  }
+
+  if (!portal) {
+    return <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">{error ?? "No se pudo cargar el panel"}</div>;
+  }
+
+  const activeBots = portal.bot.instances.filter((item) => item.status === "running").length;
+  const paidOrders = portal.payments.orders.filter((order) => order.status === "completed").length;
+  const openTickets = portal.support.filter((ticket) => ticket.status === "open" || ticket.status === "in_progress").length;
+
   return (
-    <main className="space-y-5 pb-6">
-      <section className="relative overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#121212] p-5 sm:p-6 lg:p-8">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_45%,rgba(212,175,55,0.22),transparent_42%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(3,3,3,0.96)_40%,rgba(3,3,3,0.58)_100%)]" />
-
-        <div className="relative grid gap-6 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <div>
-            <p className="inline-flex rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#F4C542]">
-              Plataforma premium
-            </p>
-            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-              Todo tu trading.
-              <span className="block text-[#F4C542]">En un solo lugar.</span>
-            </h2>
-            <p className="mt-4 max-w-xl text-sm text-[#B5B5B5] sm:text-base">
-              Alertas en tiempo real, resultados verificados, automatizacion inteligente y herramientas
-              profesionales para traders que exigen mas.
-            </p>
-
-            <div className="mt-6">
-              <Link href="/alertas" className="inline-flex">
-                <CARVIPIXButton variant="premium" rightIcon={<ArrowRight size={16} />}>
-                  Explorar plataforma
-                </CARVIPIXButton>
-              </Link>
+    <main className="min-h-screen bg-[#030303] text-white px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <section className="rounded-3xl border border-[#D4AF37]/30 bg-[linear-gradient(180deg,#121212_0%,#0B0B0B_100%)] p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Portal del cliente</p>
+              <h1 className="mt-2 text-3xl font-bold">CARVIPIX {portal.plan.officialPlan}</h1>
+              <p className="mt-2 text-sm text-white/65">Centro operativo con validación backend para alertas, bot, pagos, dispositivos, soporte y capital según el estado real de tu membresía.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <CARVIPIXBadge variant={portal.plan.membershipActive ? "success" : "warning"}>
+                {planStatusLabel}
+              </CARVIPIXBadge>
+              <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshPortal()}>
+                Actualizar
+              </CARVIPIXButton>
             </div>
           </div>
 
-          <div className="relative min-h-[220px] overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#0B0B0B] p-4 sm:min-h-[280px]">
-            <div className="absolute -left-10 top-10 h-44 w-44 rounded-full bg-[#D4AF37]/20 blur-3xl" />
-            <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-[#D4AF37]/15 blur-2xl" />
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+            {[
+              { label: "Alertas restantes", value: String(portal.alerts.remainingToday), icon: Bell },
+              { label: "Pares habilitados", value: portal.plan.entitlements.allowedPairs ? String(portal.plan.entitlements.allowedPairs.length) : "Todos", icon: ShieldCheck },
+              { label: "Bots activos", value: String(activeBots), icon: Bot },
+              { label: "Pagos completados", value: String(paidOrders), icon: CreditCard },
+              { label: "Soporte abierto", value: String(openTickets), icon: LifeBuoy },
+              { label: "Dispositivos", value: String(portal.devices.length), icon: Monitor },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+                  <div className="flex items-center justify-between text-[#D4AF37]">
+                    <p className="text-xs text-white/60">{item.label}</p>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
+                </CARVIPIXCard>
+              );
+            })}
+          </div>
+        </section>
 
-            <div className="absolute inset-0 opacity-30" style={{
-              backgroundImage:
-                'linear-gradient(rgba(212,175,55,0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(212,175,55,0.16) 1px, transparent 1px)',
-              backgroundSize: '36px 36px',
-            }} />
+        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
-            <div className="relative flex h-full items-center justify-center">
-              <div className="absolute left-3 top-4 rounded-xl border border-[#2A2A2A] bg-[#121212]/90 px-3 py-2 text-xs text-[#B5B5B5]">
-                BTCUSD
-                <p className="mt-1 text-sm font-semibold text-[#2ECC71]">+2.45%</p>
-              </div>
-              <div className="absolute right-3 top-6 rounded-xl border border-[#2A2A2A] bg-[#121212]/90 px-3 py-2 text-xs text-[#B5B5B5]">
-                XAUUSD
-                <p className="mt-1 text-sm font-semibold text-[#2ECC71]">+2.85%</p>
-              </div>
-              <div className="absolute bottom-4 right-4 rounded-xl border border-[#2A2A2A] bg-[#121212]/90 px-3 py-2 text-xs text-[#B5B5B5]">
-                EURUSD
-                <p className="mt-1 text-sm font-semibold text-[#E74C3C]">-0.35%</p>
-              </div>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <h2 className="text-xl font-semibold mb-4">Alertas manuales</h2>
+            <div className="mb-4 grid gap-3 md:grid-cols-3 text-sm text-white/70">
+              <p>Plan: <span className="text-white">{portal.plan.officialPlan}</span></p>
+              <p>Limite/dia: <span className="text-white">{portal.plan.entitlements.maxAlertsPerDay}</span></p>
+              <p>Historial: <span className="text-white">{portal.plan.entitlements.historyLimit}</span></p>
+            </div>
+            <div className="mb-4 text-sm text-white/60">Pares: {portal.plan.entitlements.allowedPairs ? portal.plan.entitlements.allowedPairs.join(", ") : "Todos los permitidos por ADVANCED"}</div>
+            <div className="grid gap-3 md:grid-cols-3">
+              <input value={alertForm.name} onChange={(e) => setAlertForm((current) => ({ ...current, name: e.target.value }))} placeholder="Nombre" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={alertForm.symbol} onChange={(e) => setAlertForm((current) => ({ ...current, symbol: e.target.value.toUpperCase() }))} placeholder="Par" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={alertForm.condition} onChange={(e) => setAlertForm((current) => ({ ...current, condition: e.target.value }))} placeholder="Condicion manual" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <CARVIPIXButton variant="premium" disabled={busy === "alert"} onClick={() => void submitJson("alert", "/api/client/alerts", { action: "createRule", rule: { name: alertForm.name, symbols: [alertForm.symbol], condition: alertForm.condition, enabled: true, alertTypes: ["signal"] } })}>
+                Crear alerta manual
+              </CARVIPIXButton>
+            </div>
+            <div className="mt-6 space-y-3">
+              {portal.alerts.rules.slice(0, 5).map((rule) => (
+                <div key={rule.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-white">{rule.name}</p>
+                    <CARVIPIXBadge variant={rule.enabled ? "success" : "warning"}>{rule.enabled ? "Activa" : "Pausada"}</CARVIPIXBadge>
+                  </div>
+                  <p className="mt-1 text-white/60">{rule.symbols.join(", ")} · {rule.condition}</p>
+                </div>
+              ))}
+            </div>
+          </CARVIPIXCard>
 
-              <div className="relative flex h-28 w-28 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-[#121212] shadow-[0_0_60px_rgba(212,175,55,0.35)] sm:h-36 sm:w-36">
-                <Image
-                  src="/logo/logo carvipix.png"
-                  alt="CARVIPIX"
-                  width={120}
-                  height={32}
-                  className="h-auto w-20 sm:w-24"
-                />
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <h2 className="text-xl font-semibold mb-4">Bot CARVIPIX</h2>
+            <div className="mb-4 text-sm text-white/70">
+              Licencia: <span className="text-white">{portal.bot.license?.active ? "Activa" : "Pendiente de compra"}</span>
+              {portal.bot.license?.licenseKey ? ` · ${portal.bot.license.licenseKey}` : ""}
+            </div>
+            <div className="grid gap-3 md:grid-cols-4">
+              <input value={botForm.name} onChange={(e) => setBotForm((current) => ({ ...current, name: e.target.value }))} placeholder="Nombre instancia" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={botForm.symbol} onChange={(e) => setBotForm((current) => ({ ...current, symbol: e.target.value.toUpperCase() }))} placeholder="Par" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <select value={botForm.strategy} onChange={(e) => setBotForm((current) => ({ ...current, strategy: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="momentum">Momentum</option>
+                <option value="grid">Grid</option>
+                <option value="breakout">Breakout</option>
+                <option value="scalping">Scalping</option>
+              </select>
+              <select value={botForm.riskLevel} onChange={(e) => setBotForm((current) => ({ ...current, riskLevel: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div className="mt-4 flex gap-3">
+              <CARVIPIXButton variant="premium" disabled={busy === "bot-create"} onClick={() => void submitJson("bot-create", "/api/client/bot", { action: "createInstance", ...botForm })}>
+                Provisionar bot
+              </CARVIPIXButton>
+            </div>
+            <div className="mt-6 space-y-3">
+              {portal.bot.instances.map((instance) => (
+                <div key={instance.id} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-white">{instance.name} · {instance.symbol}</p>
+                      <p className="text-sm text-white/60">{instance.strategy} · riesgo {instance.riskLevel}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <CARVIPIXBadge variant={instance.status === "running" ? "success" : instance.status === "paused" ? "warning" : "default"}>{instance.status}</CARVIPIXBadge>
+                      <CARVIPIXButton size="sm" variant="ghost" disabled={busy === `run-${instance.id}`} onClick={() => void submitJson(`run-${instance.id}`, "/api/client/bot", { action: "changeStatus", botId: instance.id, status: "running" })}>Activar</CARVIPIXButton>
+                      <CARVIPIXButton size="sm" variant="ghost" disabled={busy === `pause-${instance.id}`} onClick={() => void submitJson(`pause-${instance.id}`, "/api/client/bot", { action: "changeStatus", botId: instance.id, status: "paused" })}>Pausar</CARVIPIXButton>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 grid gap-3 md:grid-cols-5">
+              <select value={brokerForm.botId} onChange={(e) => setBrokerForm((current) => ({ ...current, botId: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="">Selecciona bot</option>
+                {portal.bot.instances.map((instance) => <option key={instance.id} value={instance.id}>{instance.name}</option>)}
+              </select>
+              <select value={brokerForm.brokerType} onChange={(e) => setBrokerForm((current) => ({ ...current, brokerType: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="MT5">MT5</option>
+                <option value="MT4">MT4</option>
+              </select>
+              <input value={brokerForm.server} onChange={(e) => setBrokerForm((current) => ({ ...current, server: e.target.value }))} placeholder="Servidor" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={brokerForm.login} onChange={(e) => setBrokerForm((current) => ({ ...current, login: e.target.value }))} placeholder="Login" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <input value={brokerForm.password} onChange={(e) => setBrokerForm((current) => ({ ...current, password: e.target.value }))} placeholder="Password" type="password" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+            </div>
+            <div className="mt-3 flex gap-3">
+              <CARVIPIXButton variant="secondary" disabled={busy === "broker"} onClick={() => void submitJson("broker", "/api/client/bot", { action: "connectBroker", ...brokerForm })}>
+                Preparar conexion broker
+              </CARVIPIXButton>
+              <CARVIPIXButton variant="ghost" disabled={busy === "diagnostics"} onClick={() => brokerForm.botId && void submitJson("diagnostics", "/api/client/bot", { action: "runDiagnostics", botId: brokerForm.botId })}>
+                Diagnostico
+              </CARVIPIXButton>
+            </div>
+          </CARVIPIXCard>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <h2 className="text-xl font-semibold mb-4">Gestion de capital</h2>
+            <div className="grid gap-3 md:grid-cols-3">
+              <input value={capitalForm.targetCapital} onChange={(e) => setCapitalForm((current) => ({ ...current, targetCapital: e.target.value }))} placeholder="Capital objetivo" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <select value={capitalForm.riskProfile} onChange={(e) => setCapitalForm((current) => ({ ...current, riskProfile: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="conservador">Conservador</option>
+                <option value="moderado">Moderado</option>
+                <option value="agresivo">Agresivo</option>
+              </select>
+              <input value={capitalForm.notes} onChange={(e) => setCapitalForm((current) => ({ ...current, notes: e.target.value }))} placeholder="Notas" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <CARVIPIXButton variant="premium" disabled={busy === "capital"} onClick={() => void submitJson("capital", "/api/client/capital", { action: "submitRequest", targetCapital: Number(capitalForm.targetCapital), riskProfile: capitalForm.riskProfile, notes: capitalForm.notes })}>
+                Solicitar gestion
+              </CARVIPIXButton>
+            </div>
+            <div className="mt-6 space-y-3">
+              {portal.capital.account ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+                  <p>Estado: <span className="text-white">{portal.capital.account.status}</span></p>
+                  <p>Capital inicial: <span className="text-white">${portal.capital.account.initialCapital.toLocaleString()}</span></p>
+                  <p>Balance actual: <span className="text-white">${portal.capital.account.currentBalance.toLocaleString()}</span></p>
+                </div>
+              ) : (
+                <p className="text-sm text-white/60">Todavia no tienes una cuenta de capital activa. Puedes enviar una solicitud desde este panel.</p>
+              )}
+              {portal.capital.requests.map((request) => (
+                <div key={request.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-white">Solicitud {request.id}</p>
+                    <CARVIPIXBadge variant={request.status === "accepted" || request.status === "active" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{request.status}</CARVIPIXBadge>
+                  </div>
+                  <p className="mt-1 text-white/60">Objetivo ${request.targetCapital.toLocaleString()} · Riesgo {request.riskProfile}</p>
+                </div>
+              ))}
+            </div>
+          </CARVIPIXCard>
+
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <h2 className="text-xl font-semibold mb-4">Soporte, pagos y seguridad</h2>
+            <div className="grid gap-3 md:grid-cols-2">
+              <input value={supportForm.subject} onChange={(e) => setSupportForm((current) => ({ ...current, subject: e.target.value }))} placeholder="Asunto" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+              <select value={supportForm.priority} onChange={(e) => setSupportForm((current) => ({ ...current, priority: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <textarea value={supportForm.message} onChange={(e) => setSupportForm((current) => ({ ...current, message: e.target.value }))} placeholder="Describe tu incidencia" className="mt-3 min-h-28 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+            <div className="mt-4 flex gap-3">
+              <CARVIPIXButton variant="secondary" disabled={busy === "support"} onClick={() => void submitJson("support", "/api/client/support", supportForm)}>
+                Crear ticket de soporte
+              </CARVIPIXButton>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+                <p className="text-white/60">Facturacion acumulada</p>
+                <p className="mt-2 text-2xl font-bold text-white">${paymentSummary.toLocaleString()}</p>
+                <p className="mt-2 text-white/60">Renovacion: {portal.plan.renewalDate ? new Date(portal.plan.renewalDate).toLocaleDateString("es-ES") : "No aplica"}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+                <p className="text-white/60">Dispositivos activos</p>
+                <p className="mt-2 text-2xl font-bold text-white">{portal.devices.length}</p>
+                <p className="mt-2 text-white/60">Auditoria reciente: {portal.audit.length} eventos</p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </CARVIPIXCard>
+        </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {moduleCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <CARVIPIXCard key={card.title} variant="default" padding="24" hover className="bg-[#121212]">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="inline-flex rounded-lg border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-2 text-[#D4AF37]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="rounded-full border border-[#2A2A2A] bg-[#181818] px-2 py-1 text-[10px] font-semibold text-[#F4C542]">
-                  {card.badge}
-                </span>
-              </div>
-              <h3 className="text-[1.95rem] font-semibold leading-tight text-white">{card.title}</h3>
-              <p className="mt-2 min-h-[52px] text-sm text-[#B5B5B5]">{card.desc}</p>
-              <Link href={card.href} className="mt-5 block">
-                <CARVIPIXButton variant={card.title === 'Alertas en Vivo' ? 'premium' : 'secondary'} fullWidth>
-                  {card.cta}
-                </CARVIPIXButton>
-              </Link>
-            </CARVIPIXCard>
-          );
-        })}
-      </section>
+        <section className="grid gap-6 xl:grid-cols-3">
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="xl:col-span-2">
+            <h2 className="text-xl font-semibold mb-4">Pagos y operaciones</h2>
+            <div className="space-y-3">
+              {portal.payments.orders.slice(0, 6).map((order) => (
+                <div key={order.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-white">{order.productId}</p>
+                    <CARVIPIXBadge variant={order.status === "completed" ? "success" : order.status === "cancelled" ? "danger" : "warning"}>{order.status}</CARVIPIXBadge>
+                  </div>
+                  <p className="mt-1 text-white/60">{order.currency} {Number(order.total).toLocaleString()} · {new Date(order.fechaCreacion).toLocaleString("es-ES")}</p>
+                </div>
+              ))}
+              {portal.operations.slice(0, 8).map((operation) => (
+                <div key={operation.id} className="rounded-xl border border-white/10 bg-[#0C0C0C] p-3 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-white">{operation.symbol}</p>
+                    <span className={operation.pnl >= 0 ? "text-green-400" : "text-red-400"}>{operation.pnl >= 0 ? "+" : ""}{operation.pnl.toFixed(2)}</span>
+                  </div>
+                  <p className="mt-1 text-white/60">{operation.status} · {new Date(operation.executedAt).toLocaleString("es-ES")}</p>
+                </div>
+              ))}
+            </div>
+          </CARVIPIXCard>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        {kpis.map((kpi) => {
-          const Icon = kpi.icon;
-          return (
-            <article
-              key={kpi.label}
-              className="rounded-xl border border-[#2A2A2A] bg-[#121212] px-4 py-4 transition hover:border-[#D4AF37]/45"
-            >
-              <div className="mb-2 flex items-center gap-2 text-[#F4C542]">
-                <Icon size={15} />
-                <p className="text-xs text-[#B5B5B5]">{kpi.label}</p>
-              </div>
-              <p className={`text-3xl font-semibold tracking-tight ${kpi.tone}`}>{kpi.value}</p>
-              <p className="mt-1 text-xs text-[#B5B5B5]">{kpi.note}</p>
-            </article>
-          );
-        })}
-      </section>
-
-      <section className="rounded-2xl border border-[#2A2A2A] bg-[#121212] p-5 sm:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-semibold text-white">Noticias importantes</h3>
-            <p className="text-sm text-[#B5B5B5]">Mantente informado con lo ultimo del mercado y actualizaciones de CARVIPIX.</p>
-          </div>
-          <Link href="/soporte">
-            <CARVIPIXButton size="sm" variant="ghost">Ver todas</CARVIPIXButton>
-          </Link>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-3">
-          {news.length === 0 ? (
-            <article className="rounded-xl border border-[#2A2A2A] bg-[#181818] p-4">
-              <p className="text-xs text-[#B5B5B5]">N/A</p>
-              <h4 className="mt-2 text-sm font-semibold text-white">Reportes en preparación</h4>
-              <p className="mt-1 text-xs text-[#B5B5B5]">Se publicarán cuando exista actividad validada.</p>
-            </article>
-          ) : (
-            news.map((item) => (
-              <article key={item.title} className="rounded-xl border border-[#2A2A2A] bg-[#181818] p-4">
-                <p className="text-xs text-[#B5B5B5]">{item.time}</p>
-                <h4 className="mt-2 text-sm font-semibold text-white">{item.title}</h4>
-                <p className="mt-1 text-xs text-[#B5B5B5]">{item.desc}</p>
-              </article>
-            ))
-          )}
-        </div>
-      </section>
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <h2 className="text-xl font-semibold mb-4">Dispositivos y trazabilidad</h2>
+            <div className="space-y-3">
+              {portal.devices.map((device) => (
+                <div key={device.id} className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
+                  <p className="font-medium text-white">{device.deviceLabel}</p>
+                  <p className="mt-1 text-white/60">{device.userAgent}</p>
+                  <p className="mt-1 text-white/50">Ultima actividad: {new Date(device.lastSeenAt).toLocaleString("es-ES")}</p>
+                </div>
+              ))}
+              {portal.audit.slice(0, 8).map((event) => (
+                <div key={event.id} className="rounded-xl border border-white/10 bg-[#0C0C0C] p-3 text-sm">
+                  <p className="font-medium text-white">{event.action}</p>
+                  <p className="mt-1 text-white/60">{event.resource} · {event.result}</p>
+                </div>
+              ))}
+            </div>
+          </CARVIPIXCard>
+        </section>
+      </div>
     </main>
   );
 }

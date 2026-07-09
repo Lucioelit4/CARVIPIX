@@ -87,7 +87,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Funciona en cualquier broker?",
-    a: "Trabaja con entornos compatibles con MT4 o MT5, respetando requisitos de conexion.",
+    a: "La integración broker se habilita solo en entornos compatibles y después de completar la activación operativa correspondiente.",
   },
   {
     q: "Garantiza rentabilidad?",
@@ -114,7 +114,7 @@ const GUARANTEE_ITEMS = [
   {
     icon: Cpu,
     title: "Compatibilidad",
-    description: "Preparado para ecosistemas MT4 y MT5 con requerimientos claros de instalacion.",
+    description: "Preparado para una futura activación controlada en ecosistemas MT4 y MT5 con requisitos claros de instalación.",
   },
 ];
 
@@ -219,11 +219,11 @@ export default function BotPage() {
               <CARVIPIXBadge variant="premium">AUTOMATIZACION CUANTITATIVA PREMIUM</CARVIPIXBadge>
               <h1 className="hero-title">Deja que la precision opere por ti cada minuto del mercado.</h1>
               <p className="hero-subtitle">
-                BOT CARVIPIX PRO convierte analisis, gestion de riesgo y ejecucion en resultados medibles con disciplina automatizada.
+                BOT CARVIPIX PRO muestra la estructura de analisis, gestion de riesgo y automatizacion disponible cuando la activacion operativa y la conexion broker han sido completadas.
               </p>
 
               <div className="hero-cta-row">
-                <Link href="/checkout?product=bot" className="unstyled-link">
+                <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
                   <CARVIPIXButton variant="premium" size="lg">
                     QUIERO EL BOT
                   </CARVIPIXButton>
@@ -236,19 +236,19 @@ export default function BotPage() {
 
               <div className="hero-metric-strip">
                 <div className="hero-mini-stat">
-                  <p>Rendimiento</p>
+                  <p>Rendimiento referencial</p>
                   <strong>{metrics.rendimiento30d}</strong>
                 </div>
                 <div className="hero-mini-stat">
-                  <p>Win Rate</p>
+                  <p>Win Rate referencial</p>
                   <strong>{metrics.winRate}</strong>
                 </div>
                 <div className="hero-mini-stat">
-                  <p>Operaciones</p>
+                  <p>Operaciones registradas</p>
                   <strong>{metrics.operaciones}</strong>
                 </div>
                 <div className="hero-mini-stat">
-                  <p>Estado</p>
+                  <p>Estado actual</p>
                   <strong>{metrics.estado}</strong>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function BotPage() {
               <CARVIPIXCard variant="premium" padding="16">
                 <div className="side-metrics-header">
                   <span>Rendimiento</span>
-                  <CARVIPIXBadge variant="success">Verificado</CARVIPIXBadge>
+                  <CARVIPIXBadge variant="warning">Demo controlada</CARVIPIXBadge>
                 </div>
                 <div className="side-metrics-grid">
                   <div>
@@ -370,7 +370,7 @@ export default function BotPage() {
                   <strong>{metrics.balance}</strong>
                 </div>
                 <div className="metric-tile">
-                  <span>Win Rate</span>
+                  <span>Win Rate referencial</span>
                   <strong>{metrics.winRate}</strong>
                 </div>
                 <div className="metric-tile">
@@ -382,7 +382,7 @@ export default function BotPage() {
                   <strong>{metrics.drawdown}</strong>
                 </div>
                 <div className="metric-tile">
-                  <span>Operaciones</span>
+                  <span>Operaciones registradas</span>
                   <strong>{metrics.operaciones}</strong>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function BotPage() {
               <div className="equity-panel">
                 <div className="equity-panel-header">
                   <h3>Equity Curve (30 dias)</h3>
-                  <span>Real</span>
+                  <span>Referencia visual</span>
                 </div>
                 <div className="equity-chart" role="img" aria-label="Grafico equity">
                   {equityCurve.map((point, idx) => (
@@ -404,7 +404,7 @@ export default function BotPage() {
                     />
                   ))}
                 </div>
-                <p className="equity-note">Rendimientos pasados no garantizan resultados futuros.</p>
+                <p className="equity-note">Visualización ilustrativa. La activación real depende de infraestructura, validación y conexión broker.</p>
               </div>
             </div>
           </CARVIPIXCard>
@@ -413,7 +413,7 @@ export default function BotPage() {
         <section className="section-block">
           <div className="section-heading">
             <p>BOT EN ACCION</p>
-            <h2>Visualiza senales, entradas y ejecucion automatica en tiempo real.</h2>
+            <h2>Visualiza el formato de senales, entradas y ejecución prevista dentro del flujo del bot.</h2>
           </div>
 
           <div className="action-grid">
@@ -460,7 +460,7 @@ export default function BotPage() {
                 </div>
                 <div className="execution-item execution-item-highlight">
                   <span>Estado</span>
-                  <strong>Orden enviada automaticamente</strong>
+                  <strong>Activacion controlada requerida</strong>
                 </div>
               </div>
             </CARVIPIXCard>
@@ -482,7 +482,7 @@ export default function BotPage() {
                 <CARVIPIXBadge variant="premium">MT4</CARVIPIXBadge>
                 <CARVIPIXBadge variant="premium">MT5</CARVIPIXBadge>
               </div>
-              <p>Compatible con brokers que soportan MetaTrader 4 y MetaTrader 5.</p>
+              <p>Compatibilidad prevista para entornos MetaTrader soportados una vez completada la activación operativa.</p>
             </CARVIPIXCard>
 
             <CARVIPIXCard variant="info" padding="16">
@@ -516,7 +516,7 @@ export default function BotPage() {
                 <p className="price-note">Pago unico. Acceso de por vida a esta version del bot.</p>
               </div>
               <div className="price-cta-wrap">
-                <Link href="/checkout?product=bot" className="unstyled-link">
+                <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
                   <CARVIPIXButton variant="premium" size="lg">
                     COMENZAR AHORA
                   </CARVIPIXButton>
@@ -573,7 +573,7 @@ export default function BotPage() {
                 <p>ULTIMO PASO</p>
                 <h2>Activa un sistema que opera con disciplina cuando tu no puedes.</h2>
               </div>
-              <Link href="/checkout?product=bot" className="unstyled-link">
+              <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
                 <CARVIPIXButton variant="premium" size="lg">
                   ACTIVAR BOT AHORA
                 </CARVIPIXButton>

@@ -62,6 +62,30 @@ export default function Footer() {
                   Política de Cookies
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/cancelacion"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
+                >
+                  Política de Cancelación
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/reembolsos"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
+                >
+                  Política de Reembolso
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/pagos-recurrentes"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
+                >
+                  Pagos Recurrentes
+                </Link>
+              </li>
             </ul>
           </div>
 

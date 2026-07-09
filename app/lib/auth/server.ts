@@ -11,7 +11,9 @@ import {
   findMembershipByUserId as findLocalMembershipByUserId,
   findUserByEmail as findLocalUserByEmail,
   hashPassword as hashLocalPassword,
+  listSessions as listLocalSessions,
   readSessionUser as readLocalSessionUser,
+  revokeSessionByHash as revokeLocalSessionByHash,
   revokeSession as revokeLocalSession,
   seedDemoStore,
   updateUser as updateLocalUser,
@@ -286,6 +288,76 @@ export async function revokeSession(token: string): Promise<void> {
 
   const tokenHash = hashToken(token);
   await backendDatabase.query(`DELETE FROM auth_sessions WHERE token_hash = $1`, [tokenHash]);
+}
+
+export async function listActiveSessions(userId: string): Promise<Array<{
+  id: string;
+  tokenHash: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastSeenAt: Date;
+  userAgent?: string | null;
+  ipAddress?: string | null;
+  deviceLabel?: string | null;
+}>> {
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    const sessions = await listLocalSessions(userId);
+    return sessions.map((session) => ({
+      id: session.tokenHash,
+      tokenHash: session.tokenHash,
+      expiresAt: new Date(session.expiresAt),
+      createdAt: new Date(session.createdAt),
+      lastSeenAt: new Date(session.lastSeenAt ?? session.createdAt),
+      userAgent: session.userAgent ?? null,
+      ipAddress: session.ipAddress ?? null,
+      deviceLabel: session.deviceLabel ?? null,
+    }));
+  }
+
+  const { rows } = await backendDatabase.query<{
+    id: string;
+    token_hash: string;
+    expires_at: Date;
+    created_at: Date;
+    last_seen_at: Date;
+    user_agent: string | null;
+    ip_address: string | null;
+    device_label: string | null;
+  }>(
+    `
+    SELECT id, token_hash, expires_at, created_at, last_seen_at, user_agent, ip_address, device_label
+    FROM auth_sessions
+    WHERE user_id = $1 AND expires_at > NOW()
+    ORDER BY last_seen_at DESC
+    `,
+    [userId]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    tokenHash: row.token_hash,
+    expiresAt: new Date(row.expires_at),
+    createdAt: new Date(row.created_at),
+    lastSeenAt: new Date(row.last_seen_at),
+    userAgent: row.user_agent,
+    ipAddress: row.ip_address,
+    deviceLabel: row.device_label,
+  }));
+}
+
+export async function revokeSessionById(userId: string, sessionId: string): Promise<boolean> {
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    return revokeLocalSessionByHash(userId, sessionId);
+  }
+
+  const result = await backendDatabase.query<{ id: string }>(
+    `DELETE FROM auth_sessions WHERE user_id = $1 AND id = $2 RETURNING id`,
+    [userId, sessionId]
+  );
+
+  return result.rows.length > 0;
 }
 
 export async function createVerificationToken(userId: string): Promise<string> {

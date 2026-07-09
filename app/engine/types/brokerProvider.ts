@@ -6,6 +6,7 @@ import { RealProviderConfig } from './realDataProvider';
  * Nuevos brokers deben agregarse aqui y registrarse en el factory.
  */
 export type BrokerProviderId =
+  | 'institutional_warehouse'
   | 'demo'
   | 'twelve_data'
   | 'oanda'

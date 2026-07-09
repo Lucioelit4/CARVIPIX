@@ -5,6 +5,8 @@ import type {
   ServiceBotSnapshot,
   ServiceBotUpdate,
 } from "../contracts";
+import { BotLimitGuard, PairAccessGuard } from "../commercial/access-control";
+import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
 
@@ -73,6 +75,10 @@ function toInstance(row: BotInstanceRow): ServiceBotInstance {
 }
 
 export class BotDomainService implements IBotDomainService {
+  private readonly botLimitGuard = new BotLimitGuard();
+
+  private readonly pairAccessGuard = new PairAccessGuard();
+
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getLicense(userId: string): Promise<ServiceBotLicense | null> {
@@ -126,10 +132,26 @@ export class BotDomainService implements IBotDomainService {
     userId: string,
     instance: Omit<ServiceBotInstance, "id" | "userId" | "createdAt" | "stats">
   ): Promise<ServiceBotInstance> {
+    const commercialAccess = await resolveUserCommercialAccess(userId);
+    const guardContext = {
+      membershipActive: commercialAccess.membershipActive,
+      entitlements: commercialAccess.entitlements,
+    };
+    const existingInstances = await this.getBotInstances(userId);
+    this.botLimitGuard.assertCanCreateBot(guardContext, existingInstances.length);
+
+    const normalizedSymbol = String(instance.symbol ?? "").trim().toUpperCase();
+    this.pairAccessGuard.assertPairAccess(guardContext, {
+      feature: "bot",
+      pair: normalizedSymbol,
+      existingPairs: existingInstances.map((item) => item.symbol),
+    });
+
     const created: ServiceBotInstance = {
       ...instance,
       id: createId("bot"),
       userId,
+      symbol: normalizedSymbol,
       createdAt: new Date(),
       stats: {
         totalTrades: 0,

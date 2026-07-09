@@ -115,13 +115,17 @@ export function buildProviderSelectionFromEnv(
     defaults?.fallbackPolicy ||
     'fallback-demo';
 
+  const resolvedRealProvider = preferred === 'demo' || preferred === 'institutional_warehouse'
+    ? 'custom'
+    : preferred;
+
   return {
     preferred,
     fallbackPolicy,
     assets: defaults?.assets || ['XAUUSD', 'EURUSD', 'GBPUSD', 'BTCUSD'],
     timeframes: defaults?.timeframes || ['1H', '45M', '5M'],
     realConfig: {
-      provider: preferred === 'demo' ? 'custom' : preferred,
+      provider: resolvedRealProvider,
       apiKey: process.env.TWELVE_DATA_API_KEY,
       ...defaults?.realConfig,
     },

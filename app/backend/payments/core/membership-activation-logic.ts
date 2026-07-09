@@ -11,11 +11,11 @@ export function resolveMembershipPlanForProduct(input: {
   const productId = normalize(input.productId);
   const productType = normalize(input.productType);
 
-  if (productId === "plan-pro" || productType === "plan_pro") {
+  if (productId === "plan-basic" || productId === "plan-pro" || productType === "plan_pro") {
     return "pro";
   }
 
-  if (productId === "plan-premium" || productType === "plan_premium") {
+  if (productId === "plan-advanced" || productId === "plan-premium" || productType === "plan_premium") {
     return "premium";
   }
 

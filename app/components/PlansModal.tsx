@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { X } from "lucide-react";
+
 import { CARVIPIXButton } from "@/app/design-system";
 
 type Props = {
@@ -9,131 +10,69 @@ type Props = {
   onClose: () => void;
 };
 
+const OFFICIAL_PLANS = [
+  {
+    title: "FREE",
+    price: "0 USD",
+    description: "Informacion general, noticias y comunidad.",
+    features: ["Noticias", "Comunidad", "Sin alertas completas", "Sin Bot"],
+    href: "/dashboard",
+    cta: "Entrar con FREE",
+  },
+  {
+    title: "BASIC",
+    price: "49 USD",
+    description: "Alertas manuales, pares limitados, historial limitado y bot limitado.",
+    features: ["Alertas manuales", "4 pares", "5 alertas/día", "1 bot"],
+    href: "/checkout?product=plan-basic",
+    cta: "Comprar BASIC",
+  },
+  {
+    title: "ADVANCED",
+    price: "149 USD",
+    description: "Mas pares, mas alertas, mas historial y bot completo.",
+    features: ["12 pares", "25 alertas/día", "3 bots", "Historial ampliado"],
+    href: "/checkout?product=plan-advanced",
+    cta: "Comprar ADVANCED",
+  },
+];
+
 export default function PlansModal({ open, onClose }: Props) {
-  const [accepted, setAccepted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
-
   if (!open) return null;
-
-  const handleSubscribe = (plan: string) => {
-    if (!accepted) return;
-    setSubmitting(true);
-    setMessage("");
-    // Simulate async submission
-    setTimeout(() => {
-      setSubmitting(false);
-      setMessage("Solicitud de plan registrada correctamente");
-    }, 900);
-  };
 
   return (
     <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0B1220]/95 p-6 shadow-2xl">
+      <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-[#0B1220]/95 p-6 shadow-2xl">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-bold text-white">Planes CARVIPIX</h3>
-            <p className="mt-1 text-sm text-slate-400">Selecciona el plan que prefieras.</p>
+            <h3 className="text-lg font-bold text-white">Planes oficiales CARVIPIX</h3>
+            <p className="mt-1 text-sm text-slate-400">Una sola implementación comercial: FREE, BASIC y ADVANCED.</p>
           </div>
-          <button
-            aria-label="Cerrar"
-            onClick={() => { setMessage(""); setAccepted(false); onClose(); }}
-            className="cv-icon-btn"
-          >
+          <button aria-label="Cerrar" onClick={onClose} className="cv-icon-btn">
             <X />
           </button>
         </div>
 
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-[#121212]/90 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#D4AF37]">Plan Starter</p>
-                <p className="mt-2 text-3xl font-bold">14.99 USD</p>
-                <p className="mt-1 text-xs text-zinc-400">IVA incluido. Total aprox: 17.99 USD</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-300">Disponible</p>
-              </div>
-            </div>
-
-            <ul className="mt-4 space-y-2 text-sm text-zinc-300">
-              <li>Alertas limitadas</li>
-              <li>Acceso a pares principales</li>
-              <li>Calendario económico</li>
-              <li>Historial básico</li>
-              <li>Soporte estándar</li>
-            </ul>
-
-            <div className="mt-4">
-              <CARVIPIXButton
-                onClick={() => handleSubscribe("starter")}
-                disabled={!accepted || submitting}
-                variant={accepted ? "premium" : "disabled"}
-                size="md"
-                fullWidth
-              >
-                {submitting ? "Enviando..." : "Contratar Starter"}
-              </CARVIPIXButton>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-white/10 bg-[#121212]/90 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#D4AF37]">Plan Elite</p>
-                <p className="mt-2 text-3xl font-bold">150 USD</p>
-                <p className="mt-1 text-xs text-zinc-400">Membresía avanzada para traders con mayor cobertura operativa.</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-300">Disponible</p>
+        <div className="mt-6 grid gap-4 lg:grid-cols-3">
+          {OFFICIAL_PLANS.map((plan) => (
+            <div key={plan.title} className="rounded-xl border border-white/10 bg-[#121212]/90 p-5">
+              <p className="text-sm font-semibold text-[#D4AF37]">{plan.title}</p>
+              <p className="mt-2 text-3xl font-bold text-white">{plan.price}</p>
+              <p className="mt-2 text-sm text-zinc-400">{plan.description}</p>
+              <ul className="mt-4 space-y-2 text-sm text-zinc-300">
+                {plan.features.map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+              <div className="mt-5">
+                <Link href={plan.href} onClick={onClose}>
+                  <CARVIPIXButton variant={plan.title === "ADVANCED" ? "premium" : "secondary"} size="md" fullWidth>
+                    {plan.cta}
+                  </CARVIPIXButton>
+                </Link>
               </div>
             </div>
-
-            <ul className="mt-4 space-y-2 text-sm text-zinc-300">
-              <li>Más alertas</li>
-              <li>Alertas prioritarias</li>
-              <li>Acceso a señales premium</li>
-              <li>Más pares y mercados</li>
-              <li>Análisis extendido y seguimiento avanzado</li>
-              <li>Soporte preferente</li>
-            </ul>
-
-            <div className="mt-4">
-              <CARVIPIXButton
-                onClick={() => handleSubscribe("elite")}
-                disabled={!accepted || submitting}
-                variant={accepted ? "premium" : "disabled"}
-                size="md"
-                fullWidth
-              >
-                {submitting ? "Enviando..." : "Contratar Elite"}
-              </CARVIPIXButton>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-xl border border-white/10 bg-[#0B1220]/80 p-4 text-sm text-slate-300">
-          <p className="mb-3">Términos y condiciones</p>
-          <p className="text-xs text-zinc-400">
-            Las señales compartidas por CARVIPIX tienen fines educativos e informativos. El usuario reconoce que operar mercados financieros implica riesgo y que los resultados pasados no garantizan resultados futuros.
-          </p>
-
-          <label className="mt-4 flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={accepted}
-              onChange={(e) => setAccepted(e.target.checked)}
-              className="h-4 w-4 rounded border-white/10 bg-black/20"
-            />
-            <span className="text-sm text-slate-300">Acepto términos y condiciones</span>
-          </label>
-
-          {message && (
-            <div className="mt-4 rounded-md bg-green-800/30 p-3 text-sm text-green-200">
-              {message}
-            </div>
-          )}
+          ))}
         </div>
       </div>
     </div>

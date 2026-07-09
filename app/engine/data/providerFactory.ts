@@ -6,6 +6,7 @@ import {
   ProviderSelectionConfig,
   ProviderResolution,
 } from '../types/brokerProvider';
+import { WarehouseDataProvider } from '../warehouse';
 
 type ProviderFactoryFn = (config: ProviderSelectionConfig) => DataProvider;
 
@@ -18,6 +19,7 @@ const providerFactories: Partial<Record<BrokerProviderId, ProviderFactoryFn>> = 
     });
     return provider;
   },
+  institutional_warehouse: (config) => new WarehouseDataProvider(config.assets, config.timeframes),
 };
 
 /**

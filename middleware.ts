@@ -54,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
   const context = {
     role: getRoleFromCookie(request),
-    isAdminSession: request.cookies.get("carvipix_admin_session")?.value === "1",
+    isAdminSession: Boolean(request.cookies.get("carvipix_admin_session")?.value),
     membershipStatus: isMembershipActive ? "activo" : getMembershipFromCookie(request),
   };
 
@@ -71,13 +71,17 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    if (!hasClientSession || !isMembershipActive) {
+    if (!hasClientSession) {
       return NextResponse.redirect(new URL("/servicios", request.url));
     }
   }
 
   if (pathname !== "/admin" && pathname.startsWith("/admin") === false && pathname !== "/") {
-    if ((pathname.startsWith("/alertas") || pathname.startsWith("/resultados") || pathname.startsWith("/analisis") || pathname.startsWith("/comunidad") || pathname.startsWith("/bot") || pathname.startsWith("/capital") || pathname.startsWith("/fondeo") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/herramientas") || pathname.startsWith("/perfil") || pathname.startsWith("/soporte")) && !isMembershipActive) {
+    if ((pathname.startsWith("/alertas") || pathname.startsWith("/resultados") || pathname.startsWith("/analisis") || pathname.startsWith("/bot") || pathname.startsWith("/fondeo") || pathname.startsWith("/herramientas")) && !isMembershipActive) {
+      return NextResponse.redirect(new URL("/servicios", request.url));
+    }
+
+    if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad")) && !hasClientSession) {
       return NextResponse.redirect(new URL("/servicios", request.url));
     }
   }
@@ -102,7 +106,6 @@ export const config = {
     "/gestion-capital/:path*",
     "/herramientas/:path*",
     "/perfil/:path*",
-    "/soporte/:path*",
     "/admin/:path*",
   ],
 };

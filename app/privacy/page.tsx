@@ -13,7 +13,7 @@ export default function PrivacyPage() {
           className="inline-flex items-center gap-2 mb-8 text-[#D4AF37] hover:text-[#F5DEB3] transition"
         >
           <ArrowLeft size={18} />
-          Volver al Dashboard
+          Volver al inicio
         </Link>
 
         <motion.div

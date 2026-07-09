@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enterpriseAudit, logger } from "@/app/backend";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
-const ADMIN_SESSION_COOKIE = "carvipix_admin_session";
 const ADMIN_DASHBOARD_ACCESS_COOKIE = "carvipix_admin_dashboard_access";
 const ADMIN_DASHBOARD_ACCESS_TTL_SECONDS = 10 * 60;
 
@@ -32,8 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "Origen no permitido" }, { status: 403 });
   }
 
-  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  if (adminSession !== "1") {
+  if (!isValidAdminSession(request)) {
     logger.warn("admin.client-panel", "Intento no autorizado para acceder al panel de clientes desde admin.", {
       path: request.nextUrl.pathname,
     });

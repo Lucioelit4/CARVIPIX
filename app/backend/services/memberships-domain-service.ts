@@ -5,55 +5,9 @@ import type {
   ServicePlanType,
   ServiceUserProfile,
 } from "../contracts";
+import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
-
-const PLAN_PERMISSIONS: Record<ServicePlanType, ServicePlanPermissions> = {
-  demo: {
-    alertas: true,
-    bot: false,
-    capital: false,
-    fondeo: false,
-    reportes: false,
-    soporte: false,
-    aiBriefing: false,
-    maxAlerts: 5,
-    maxBots: 0,
-  },
-  pro: {
-    alertas: true,
-    bot: true,
-    capital: false,
-    fondeo: false,
-    reportes: true,
-    soporte: true,
-    aiBriefing: false,
-    maxAlerts: 50,
-    maxBots: 1,
-  },
-  premium: {
-    alertas: true,
-    bot: true,
-    capital: true,
-    fondeo: false,
-    reportes: true,
-    soporte: true,
-    aiBriefing: true,
-    maxAlerts: 100,
-    maxBots: 3,
-  },
-  enterprise: {
-    alertas: true,
-    bot: true,
-    capital: true,
-    fondeo: true,
-    reportes: true,
-    soporte: true,
-    aiBriefing: true,
-    maxAlerts: 1000,
-    maxBots: 10,
-  },
-};
 
 type MembershipRow = {
   id: string;
@@ -107,6 +61,33 @@ function buildEmptyProfile(userId: string): ServiceUserProfile {
   };
 }
 
+function mapServicePlanPermissions(input: {
+  subscriptionPlan: "free" | "basic" | "advanced";
+  membershipActive: boolean;
+  entitlements: {
+    alertsEnabled: boolean;
+    botEnabled: boolean;
+    maxAlertsPerDay: number;
+    maxBots: number;
+  };
+}): ServicePlanPermissions {
+  const hasReports = input.subscriptionPlan === "basic" || input.subscriptionPlan === "advanced";
+  const hasSupport = input.subscriptionPlan === "basic" || input.subscriptionPlan === "advanced";
+  const hasAiBriefing = input.subscriptionPlan === "advanced";
+
+  return {
+    alertas: input.membershipActive && input.entitlements.alertsEnabled,
+    bot: input.membershipActive && input.entitlements.botEnabled,
+    capital: false,
+    fondeo: false,
+    reportes: input.membershipActive && hasReports,
+    soporte: input.membershipActive && hasSupport,
+    aiBriefing: input.membershipActive && hasAiBriefing,
+    maxAlerts: input.membershipActive ? input.entitlements.maxAlertsPerDay : 0,
+    maxBots: input.membershipActive ? input.entitlements.maxBots : 0,
+  };
+}
+
 export class MembershipsDomainService implements IMembershipsDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
@@ -143,7 +124,7 @@ export class MembershipsDomainService implements IMembershipsDomainService {
 
     const row = rows[0];
     const plan = normalizePlan(row.plan);
-    const membershipActive = row.membership_estado === "activo" && (!row.fecha_fin || row.fecha_fin > new Date());
+    const commercialAccess = await resolveUserCommercialAccess(row.id);
     const user: ServiceUserProfile = {
       id: row.id,
       email: row.email,
@@ -153,7 +134,7 @@ export class MembershipsDomainService implements IMembershipsDomainService {
       estado: row.estado,
       fechaActivacion: new Date(row.fecha_activacion),
       fechaVencimiento: row.fecha_vencimiento ? new Date(row.fecha_vencimiento) : undefined,
-      permisos: membershipActive ? PLAN_PERMISSIONS[plan] : PLAN_PERMISSIONS.demo,
+      permisos: mapServicePlanPermissions(commercialAccess),
       verificado: row.verificado,
     };
 

@@ -50,7 +50,7 @@ export default function FondeoPage() {
               {[
                 { label: 'Pago único', variant: 'premium' as const },
                 { label: 'FTMO / TopTier', variant: 'default' as const },
-                { label: 'Capital objetivo 200K', variant: 'default' as const },
+                { label: 'Capital sujeto a aprobación externa', variant: 'default' as const },
                 { label: 'Gestión del proceso', variant: 'success' as const },
               ].map((badge, i) => (
                 <motion.div
@@ -228,7 +228,7 @@ export default function FondeoPage() {
         >
           <h2 className="text-2xl font-bold mb-4">Resultado esperado</h2>
           <p className="text-white/70 leading-relaxed">
-            Al completar exitosamente la evaluación, el cliente recibe las credenciales de una cuenta fondeada para operar capital objetivo de hasta 200,000 USD, sujeto a reglas de la empresa seleccionada.
+            Al completar exitosamente la evaluación, el cliente recibe credenciales para utilizar la cuenta aprobada por la empresa seleccionada, siempre sujeto a sus reglas, criterios y disponibilidad real.
           </p>
         </motion.div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send, Database, Microscope, ShieldCheck, LayoutDashboard } from 'lucide-react';
+import { Activity, BarChart3, Users, FileText, DollarSign, AlertCircle, TrendingUp, HelpCircle, Settings, LogOut, PieChart, GitBranch, Zap, Send, Database, Microscope, ShieldCheck, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import AdminResumen from './components/AdminResumen';
@@ -19,10 +19,11 @@ import AdminMotor from './components/AdminMotor';
 import AdminBot from './components/AdminBot';
 import AdminBacktesting from './components/AdminBacktesting';
 import AdminDataHealth from './components/AdminDataHealth';
+import AdminSistema from './components/AdminSistema';
 import { ToastProvider } from './components/Toast';
 import { CARVIPIXButton } from '../design-system';
 
-type TabType = 'resumen' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
+type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
 interface TabConfig {
   id: TabType;
@@ -44,7 +45,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['resumen', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
+    if (tabParam && ['resumen', 'sistema', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'configuracion', 'utilidades'].includes(tabParam)) {
       queueMicrotask(() => {
         setActiveTab(tabParam);
       });
@@ -83,6 +84,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const tabs: TabConfig[] = [
     { id: 'resumen', label: 'Resumen', icon: <BarChart3 className="w-5 h-5" />, component: <AdminResumen /> },
+    { id: 'sistema', label: 'Sistema', icon: <Activity className="w-5 h-5" />, component: <AdminSistema /> },
     { id: 'proyecto', label: 'Proyecto', icon: <GitBranch className="w-5 h-5" />, component: <AdminProyecto /> },
     { id: 'motor', label: 'Motor', icon: <Zap className="w-5 h-5" />, component: <AdminMotor /> },
     { id: 'bot', label: 'Bot', icon: <Send className="w-5 h-5" />, component: <AdminBot /> },
@@ -180,7 +182,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </div>
             <div>
               <p className="font-semibold text-white mb-2">Datos</p>
-              <p className="text-white/60">Todos los datos mostrados provienen de APIs activas</p>
+              <p className="text-white/60">Los paneles muestran datos reales o el estado de integración disponible en cada módulo</p>
             </div>
             <div>
               <p className="font-semibold text-white mb-2">Seguridad</p>

@@ -1,103 +1,178 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, CheckCircle, Clock, RefreshCw, Save } from 'lucide-react';
+import DetailModal from './DetailModal';
+import { useToast } from './Toast';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
-interface Ticket {
+type SupportTicket = {
   id: string;
-  usuario: string;
-  categoria: string;
-  prioridad: string;
-  estado: 'abierto' | 'cerrado' | 'en-progreso';
-  creado: string;
-  respuestas: number;
+  userId: string;
+  subject: string;
+  category: string;
+  status: string;
+  priority: string;
+  message: string;
+  adminReply: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CommercialPayload = {
+  supportTickets: SupportTicket[];
+};
+
+function formatDateTime(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Sin datos';
+  }
+
+  return parsed.toLocaleString('es-ES');
+}
+
+function badgeVariant(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized === 'resolved' || normalized === 'closed') {
+    return 'success' as const;
+  }
+  if (normalized === 'in_progress' || normalized === 'pending_customer') {
+    return 'warning' as const;
+  }
+  return 'danger' as const;
+}
+
+function statusIcon(status: string) {
+  const normalized = status.toLowerCase();
+  if (normalized === 'resolved' || normalized === 'closed') {
+    return <CheckCircle className="w-5 h-5 text-green-400" />;
+  }
+  if (normalized === 'in_progress' || normalized === 'pending_customer') {
+    return <Clock className="w-5 h-5 text-yellow-400" />;
+  }
+  return <AlertCircle className="w-5 h-5 text-red-400" />;
 }
 
 export default function AdminSoporte() {
+  const { showToast } = useToast();
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [filter, setFilter] = useState('todos');
+  const [loading, setLoading] = useState(true);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [replyDraft, setReplyDraft] = useState('');
+  const [statusDraft, setStatusDraft] = useState('open');
+  const [saving, setSaving] = useState(false);
 
-  const demoTickets: Ticket[] = [
-    { id: 'TK-26070112345', usuario: 'Juan Pérez', categoria: 'Acceso', prioridad: 'crítico', estado: 'en-progreso', creado: '2026-07-02 14:32', respuestas: 2 },
-    { id: 'TK-26070112344', usuario: 'María García', categoria: 'Pago', prioridad: 'alto', estado: 'abierto', creado: '2026-07-02 13:15', respuestas: 0 },
-    { id: 'TK-26070112343', usuario: 'Carlos López', categoria: 'Técnico', prioridad: 'normal', estado: 'cerrado', creado: '2026-07-01 11:22', respuestas: 5 },
-    { id: 'TK-26070112342', usuario: 'Ana Martínez', categoria: 'Solicitud', prioridad: 'normal', estado: 'cerrado', creado: '2026-07-01 09:45', respuestas: 3 },
-    { id: 'TK-26070112341', usuario: 'Roberto Silva', categoria: 'Alerta', prioridad: 'alto', estado: 'en-progreso', creado: '2026-06-30 16:20', respuestas: 1 },
-    { id: 'TK-26070112340', usuario: 'Laura Gómez', categoria: 'General', prioridad: 'bajo', estado: 'cerrado', creado: '2026-06-30 14:10', respuestas: 2 },
-  ];
+  const load = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; data?: CommercialPayload; error?: string };
 
-  const filteredTickets = demoTickets.filter((ticket) => {
-    if (filter === 'todos') return true;
-    return ticket.estado === filter;
-  });
+      if (!response.ok || !payload.ok || !payload.data) {
+        throw new Error(payload.error || 'No se pudo cargar soporte.');
+      }
 
-  const getEstadoIcon = (estado: string) => {
-    if (estado === 'cerrado') return <CheckCircle className="w-5 h-5 text-green-400" />;
-    if (estado === 'en-progreso') return <Clock className="w-5 h-5 text-yellow-400" />;
-    return <AlertCircle className="w-5 h-5 text-red-400" />;
+      setTickets(payload.data.supportTickets);
+    } catch (caught) {
+      setTickets([]);
+      showToast(caught instanceof Error ? caught.message : 'No se pudo cargar soporte.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    void load();
+  }, []);
 
-  const stats = [
-    { label: 'Abiertos', value: demoTickets.filter((t) => t.estado === 'abierto').length, color: 'text-red-400' },
-    { label: 'En progreso', value: demoTickets.filter((t) => t.estado === 'en-progreso').length, color: 'text-yellow-400' },
-    { label: 'Cerrados', value: demoTickets.filter((t) => t.estado === 'cerrado').length, color: 'text-green-400' },
-  ];
+  const filteredTickets = useMemo(() => {
+    if (filter === 'todos') {
+      return tickets;
+    }
+
+    return tickets.filter((ticket) => ticket.status === filter);
+  }, [filter, tickets]);
+
+  const stats = useMemo(() => ({
+    open: tickets.filter((ticket) => ticket.status === 'open').length,
+    inProgress: tickets.filter((ticket) => ticket.status === 'in_progress').length,
+    resolved: tickets.filter((ticket) => ticket.status === 'resolved' || ticket.status === 'closed').length,
+  }), [tickets]);
+
+  const openDetail = (ticket: SupportTicket) => {
+    setSelectedTicket(ticket);
+    setReplyDraft(ticket.adminReply ?? '');
+    setStatusDraft(ticket.status);
+  };
+
+  const saveTicket = async () => {
+    if (!selectedTicket) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/admin/commercial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'updateSupportTicket',
+          ticketId: selectedTicket.id,
+          status: statusDraft,
+          adminReply: replyDraft,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || 'No se pudo guardar el ticket.');
+      }
+
+      showToast('Ticket actualizado.', 'success');
+      setSelectedTicket(null);
+      await load();
+    } catch (caught) {
+      showToast(caught instanceof Error ? caught.message : 'No se pudo guardar el ticket.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <h2 className="text-2xl font-bold mb-2">Gestión de Soporte</h2>
-        <p className="text-white/60">Tickets y solicitudes de soporte técnico</p>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Gestión de soporte</h2>
+          <p className="text-white/60">Tickets reales del backend comercial con respuesta y cambio de estado.</p>
+        </div>
+        <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void load()} disabled={loading}>
+          Actualizar
+        </CARVIPIXButton>
       </motion.div>
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="flex gap-3 flex-wrap"
-      >
-        {['todos', 'abierto', 'en-progreso', 'cerrado'].map((f) => (
-          <CARVIPIXButton
-            key={f}
-            onClick={() => setFilter(f)}
-            variant={filter === f ? 'premium' : 'ghost'}
-            size="sm"
-          >
-            {f === 'en-progreso' ? 'En progreso' : f.charAt(0).toUpperCase() + f.slice(1)}
+      <div className="flex gap-3 flex-wrap">
+        {[
+          ['todos', 'Todos'],
+          ['open', 'Abiertos'],
+          ['in_progress', 'En progreso'],
+          ['resolved', 'Resueltos'],
+        ].map(([value, label]) => (
+          <CARVIPIXButton key={value} onClick={() => setFilter(value)} variant={filter === value ? 'premium' : 'ghost'} size="sm">
+            {label}
           </CARVIPIXButton>
         ))}
-      </motion.div>
+      </div>
 
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="grid grid-cols-3 gap-4"
-      >
-        {stats.map((stat, i) => (
-          <CARVIPIXCard key={i} variant="statistics" padding="16" hover={false}>
-            <p className="text-xs text-white/60 mb-2">{stat.label}</p>
-            <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-          </CARVIPIXCard>
-        ))}
-      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60 mb-2">Abiertos</p><p className="text-2xl font-bold text-red-400">{stats.open}</p></CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60 mb-2">En progreso</p><p className="text-2xl font-bold text-yellow-400">{stats.inProgress}</p></CARVIPIXCard>
+        <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60 mb-2">Resueltos</p><p className="text-2xl font-bold text-green-400">{stats.resolved}</p></CARVIPIXCard>
+      </div>
 
-      {/* Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className=""
-      >
-        <CARVIPIXCard variant="admin" padding="16" hover={false}>
+      <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-white/10 bg-white/5">
@@ -107,53 +182,49 @@ export default function AdminSoporte() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Categoría</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Prioridad</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Respuestas</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Creado</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.map((ticket, i) => (
-                <tr key={i} className="border-b border-white/5 hover:bg-white/5 transition">
-                  <td className="px-6 py-4 text-sm font-mono text-[#D4AF37]">{ticket.id}</td>
-                  <td className="px-6 py-4 text-sm text-white">{ticket.usuario}</td>
-                  <td className="px-6 py-4 text-sm text-white/70">{ticket.categoria}</td>
-                  <td className="px-6 py-4">
-                    <CARVIPIXBadge variant={ticket.prioridad === 'crítico' ? 'danger' : ticket.prioridad === 'alto' ? 'warning' : ticket.prioridad === 'normal' ? 'info' : 'success'}>{ticket.prioridad}</CARVIPIXBadge>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="capitalize flex items-center gap-1 w-fit">
-                      {getEstadoIcon(ticket.estado)}
-                      <CARVIPIXBadge variant={ticket.estado === 'cerrado' ? 'success' : ticket.estado === 'en-progreso' ? 'warning' : 'danger'}>{ticket.estado}</CARVIPIXBadge>
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-white">{ticket.respuestas}</td>
-                  <td className="px-6 py-4 text-sm text-white/60">{ticket.creado}</td>
-                </tr>
-              ))}
+              {loading ? (
+                <tr><td className="px-6 py-8 text-white/60" colSpan={7}>Cargando...</td></tr>
+              ) : filteredTickets.length === 0 ? (
+                <tr><td className="px-6 py-8 text-white/60" colSpan={7}>No hay tickets para el filtro actual.</td></tr>
+              ) : (
+                filteredTickets.map((ticket) => (
+                  <tr key={ticket.id} className="border-b border-white/5 hover:bg-white/5 transition">
+                    <td className="px-6 py-4 text-sm font-mono text-[#D4AF37]">{ticket.id}</td>
+                    <td className="px-6 py-4 text-sm text-white">{ticket.userId}</td>
+                    <td className="px-6 py-4 text-sm text-white/70">{ticket.category}</td>
+                    <td className="px-6 py-4 text-sm text-white/70">{ticket.priority}</td>
+                    <td className="px-6 py-4"><span className="flex items-center gap-2 w-fit">{statusIcon(ticket.status)}<CARVIPIXBadge variant={badgeVariant(ticket.status)}>{ticket.status}</CARVIPIXBadge></span></td>
+                    <td className="px-6 py-4 text-sm text-white/60">{formatDateTime(ticket.createdAt)}</td>
+                    <td className="px-6 py-4"><CARVIPIXButton variant="ghost" size="sm" onClick={() => openDetail(ticket)}>Ver / responder</CARVIPIXButton></td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        {filteredTickets.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-white/50">No hay tickets en este estado</p>
+      </CARVIPIXCard>
+
+      <DetailModal isOpen={Boolean(selectedTicket)} onClose={() => setSelectedTicket(null)} title="Gestión de ticket de soporte">
+        {!selectedTicket ? null : (
+          <div className="space-y-4 text-sm text-white/80">
+            <div>
+              <p className="text-white font-semibold">{selectedTicket.subject}</p>
+              <p className="text-white/60 mt-1">{selectedTicket.message}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="space-y-2"><span className="text-white/60">Estado</span><select value={statusDraft} onChange={(event) => setStatusDraft(event.target.value)} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white"><option value="open">open</option><option value="in_progress">in_progress</option><option value="pending_customer">pending_customer</option><option value="resolved">resolved</option><option value="closed">closed</option></select></label>
+              <div className="space-y-2"><span className="text-white/60">Actualizado</span><p className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">{formatDateTime(selectedTicket.updatedAt)}</p></div>
+            </div>
+            <label className="space-y-2 block"><span className="text-white/60">Respuesta administrativa</span><textarea value={replyDraft} onChange={(event) => setReplyDraft(event.target.value)} className="min-h-32 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white" /></label>
+            <CARVIPIXButton variant="premium" fullWidth leftIcon={<Save className="w-4 h-4" />} onClick={() => void saveTicket()} disabled={saving}>{saving ? 'Guardando...' : 'Guardar cambios'}</CARVIPIXButton>
           </div>
         )}
-        </CARVIPIXCard>
-      </motion.div>
-
-      {/* Tips */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className=""
-      >
-        <CARVIPIXCard variant="info" padding="16" hover={false}>
-          <p className="text-sm text-white/70">
-            Gestiona tickets desde aquí. Asigna prioridades, cambia estados y coordina respuestas con el equipo de soporte.
-          </p>
-        </CARVIPIXCard>
-      </motion.div>
+      </DetailModal>
     </div>
   );
 }

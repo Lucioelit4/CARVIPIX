@@ -20,7 +20,6 @@ const PROTECTED_PREFIXES = [
   '/fondeo',
   '/herramientas',
   '/perfil',
-  '/soporte',
   '/gestion-capital',
   '/gestion-de-capital',
 ];

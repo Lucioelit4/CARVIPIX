@@ -72,7 +72,7 @@ export default function CapitalPage() {
 
               <div className="mt-8 space-y-3">
                 <Link
-                  href="/checkout?product=capital"
+                  href="/checkout?product=capital-gestionado"
                   className="block w-full rounded-lg bg-[#D4AF37] px-6 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-center"
                 >
                   Solicitar inversión
@@ -373,7 +373,7 @@ export default function CapitalPage() {
             Envía una solicitud y revisaremos monto, método y disponibilidad.
           </p>
           <Link
-            href="/checkout?product=capital"
+            href="/checkout?product=capital-gestionado"
             className="inline-block rounded-lg bg-[#D4AF37] px-8 py-4 font-bold text-black transition hover:bg-[#f5d76e] hover:shadow-lg hover:shadow-[#D4AF37]/50 shadow-lg shadow-[#D4AF37]/30 text-lg"
           >
             Solicitar inversión

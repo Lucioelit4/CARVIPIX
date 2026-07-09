@@ -33,7 +33,7 @@ export default function Home() {
         <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <p className="text-xs uppercase tracking-[0.22em] text-[#d4af37]">Servicios</p>
           <h2 className="mt-3 text-2xl font-semibold">Alertas, capital y soporte</h2>
-          <p className="mt-3 text-sm text-[#c7c0b4]">Todo conectado a APIs reales con estados vacíos controlados cuando no hay data.</p>
+          <p className="mt-3 text-sm text-[#c7c0b4]">Servicios integrados con validación backend y estados controlados mientras cada módulo completa su activación operativa.</p>
         </article>
         <article className="rounded-2xl border border-white/10 bg-white/5 p-6">
           <p className="text-xs uppercase tracking-[0.22em] text-[#d4af37]">Planes</p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Send,
@@ -24,7 +25,14 @@ interface ChatMessage {
   content: string;
 }
 
+type SessionPayload = {
+  authenticated?: boolean;
+  user?: { id?: string; email?: string; nombre?: string };
+};
+
 export default function SoportePage() {
+  const [session, setSession] = useState<SessionPayload | null>(null);
+  const [creatingTicket, setCreatingTicket] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -47,6 +55,14 @@ export default function SoportePage() {
   useEffect(() => {
     const loadAIData = async () => {
       try {
+        const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store' }).catch(() => null);
+        if (sessionResponse?.ok) {
+          const sessionPayload = (await sessionResponse.json().catch(() => ({}))) as SessionPayload;
+          setSession(sessionPayload);
+        } else {
+          setSession({ authenticated: false });
+        }
+
         const briefing = await getDailyBriefing();
         await getTradingSuggestions();
         
@@ -113,7 +129,7 @@ export default function SoportePage() {
   };
 
   // Crear ticket
-  const handleCreateTicket = () => {
+  const handleCreateTicket = async () => {
     const validationErrors = validateTicketForm(ticketForm);
     
     if (validationErrors.length > 0) {
@@ -125,10 +141,46 @@ export default function SoportePage() {
       return;
     }
 
+    if (!session?.authenticated) {
+      setTicketMessage('Debes iniciar sesión para crear un ticket privado.');
+      return;
+    }
+
     setTicketErrors({});
-    setTicketMessage('✓ Ticket creado correctamente. ID: TK-26070112345');
-    setTicketForm({ categoria: 'Alertas', prioridad: 'Normal', mensaje: '' });
-    setTimeout(() => setTicketMessage(''), 4000);
+    setCreatingTicket(true);
+
+    try {
+      const priorityMap: Record<string, string> = {
+        Baja: 'low',
+        Normal: 'medium',
+        Alta: 'high',
+        Urgente: 'high',
+      };
+
+      const response = await fetch('/api/client/support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: `Soporte ${ticketForm.categoria}`,
+          category: ticketForm.categoria.toLowerCase(),
+          priority: priorityMap[ticketForm.prioridad] ?? 'medium',
+          message: ticketForm.mensaje,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; id?: string; error?: string };
+      if (!response.ok || !payload.ok || !payload.id) {
+        throw new Error(payload.error || 'No se pudo crear el ticket.');
+      }
+
+      setTicketMessage(`✓ Ticket creado correctamente. ID: ${payload.id}`);
+      setTicketForm({ categoria: 'Alertas', prioridad: 'Normal', mensaje: '' });
+      setTimeout(() => setTicketMessage(''), 4000);
+    } catch (error) {
+      setTicketMessage(error instanceof Error ? error.message : 'No se pudo crear el ticket.');
+    } finally {
+      setCreatingTicket(false);
+    }
   };
 
   // Manejo de Enter en input
@@ -202,6 +254,9 @@ export default function SoportePage() {
           <div>
             <h3 className="text-2xl font-bold mb-2">Asistente CARVIPIX</h3>
             <p className="text-[#D4AF37] font-semibold mb-1">Disponible 24/7</p>
+            <p className="text-sm text-white/60 mb-2">
+              {session?.authenticated ? 'Puedes abrir tickets privados con tu sesión activa.' : 'Puedes consultar información pública aquí. Para abrir tickets privados necesitas iniciar sesión.'}
+            </p>
             <div className="mt-2">
               <DisclaimerNote variant="support" />
             </div>
@@ -321,11 +376,17 @@ export default function SoportePage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 mb-6 text-sm text-green-400 flex items-center gap-2"
+              className={`rounded-lg p-3 mb-6 text-sm flex items-center gap-2 ${ticketMessage.startsWith('✓') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-300'}`}
             >
               <CheckCircle2 size={16} />
               {ticketMessage}
             </motion.div>
+          )}
+
+          {!session?.authenticated && (
+            <div className="rounded-lg bg-white/5 border border-white/10 p-4 mb-6 text-sm text-white/70">
+              Para crear un ticket privado debes iniciar sesión con tu cuenta CARVIPIX. Si aún no tienes acceso, puedes escribir a <span className="text-[#D4AF37]">soporte@carvipix.com</span> o <Link href="/login" className="text-[#D4AF37] underline">ir a login</Link>.
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -447,9 +508,9 @@ export default function SoportePage() {
           <button
             onClick={handleCreateTicket}
             className="bg-[#D4AF37] text-[#030303] font-bold py-3 px-6 rounded-lg hover:bg-[#E5C158] transition-all disabled:opacity-50"
-            disabled={Object.keys(ticketErrors).length > 0}
+            disabled={Object.keys(ticketErrors).length > 0 || creatingTicket}
           >
-            Crear ticket
+            {creatingTicket ? 'Creando ticket...' : 'Crear ticket'}
           </button>
         </motion.div>
 
