@@ -68,3 +68,32 @@ test("execution runtime supports queued cancellation", async () => {
   assert.equal(dashboard.orderQueue.length, 0);
   assert.ok(dashboard.orderHistory.some((order) => order.id === queued.id && order.status === "cancelled"));
 });
+
+test("execution runtime blocks orders rejected by integrated risk engine", async () => {
+  await fs.rm(STORE_PATH, { force: true });
+
+  await configureSandboxConnector({
+    provider: "SIMULATED_BROKER",
+    server: "simulator.carvipix.local",
+    login: "risk_test_runtime",
+    password: "test_secret",
+  });
+
+  const queued = await enqueueExecutionOrder({
+    userId: "u-risk",
+    symbol: "EURUSD",
+    type: "BUY",
+    lots: 0.2,
+    requestedPrice: 1.1,
+    stopLoss: 1.1,
+    takeProfit: 1.1,
+  });
+
+  await processExecutionQueue();
+  const dashboard = await snapshotExecutionDashboard();
+  const rejected = dashboard.orderHistory.find((order) => order.id === queued.id);
+
+  assert.ok(rejected);
+  assert.equal(rejected?.status, "rejected");
+  assert.ok((rejected?.notes ?? "").includes("Risk engine rejected order"));
+});

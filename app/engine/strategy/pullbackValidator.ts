@@ -1,319 +1,367 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/**
- * PULLBACK VALIDATOR v1.0
- * 
- * Status: 🔄 STRUCTURE ONLY - PENDING CONFIGURATION
- * Mode: Professional Construction (no rules invented)
- * 
- * Purpose:
- *   Detect pullback zones on 45M timeframe
- *   Filter entry signals from 1H trends
- *   Validate price action within confirmed trend
- * 
- * Architecture:
- *   Input: 1H trend direction + 45M candle history
- *   Process: PENDING CONFIGURATION
- *   Output: { isPullback: boolean, confirmationLevel: "HIGH"|"MEDIUM"|"LOW"|"NONE", details }
- */
+import { getPullbackValidatorConfig } from './pullbackValidatorConfig';
 
-import { getTrendValidatorConfig } from './trendValidatorConfig';
+export type PullbackDirection = 'BUY' | 'SELL' | 'NEUTRAL';
+export type PullbackClassification = 'A+' | 'A' | 'B' | 'C' | 'Rechazada';
+export type PullbackStatus = 'OK' | 'DATA_NOT_READY';
 
-/**
- * PENDING: Configuration structure for Pullback parameters
- * 
- * Questions requiring answers:
- * 1. How deep is a valid pullback? (% from swing high/low)
- * 2. What is minimum retrace required? (% of last move)
- * 3. How many candles minimum for pullback pattern?
- * 4. What EMA structure on 45M is valid?
- * 5. Should we use Fibonacci levels? (0.236, 0.382, 0.618)
- * 6. Volume confirmation required?
- * 7. Time minimum/maximum for pullback?
- * 
- * Status: AWAITING REQUIREMENTS
- */
-interface PullbackValidatorConfig {
-  // PENDING: All parameters below need definition
-  maxPullbackDepth?: number; // PENDING: e.g., 0.382 = 38.2% Fibonacci
-  minRetracementPercent?: number; // PENDING: e.g., 0.50 = 50% of move
-  minPullbackCandles?: number; // PENDING: e.g., 3 candles minimum
-  maxPullbackCandles?: number; // PENDING: e.g., 15 candles maximum
-  useEMAFilters?: boolean; // PENDING: Should 45M EMAs confirm?
-  useVolumeConfirmation?: boolean; // PENDING: Require volume spike on pullback?
-  useFibonacciLevels?: boolean; // PENDING: Use Fib support levels?
-  status: 'PENDING_CONFIGURATION';
+export type PullbackValidationCondition = {
+  name: string;
+  critical: boolean;
+  passed: boolean;
+  observedValue: number | string | boolean;
+  requiredValue: string;
+  reason: string;
+};
+
+export type PullbackCandle = {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  complete: boolean;
+};
+
+export interface PullbackValidationInput {
+  trendDirection1H: PullbackDirection;
+  trendConfidence1H: 'A+' | 'A' | 'B' | 'C';
+  trendCandle1H: PullbackCandle;
+  trendEMA1H: { ema20: number; ema50: number; ema200: number };
+
+  candles45M: PullbackCandle[];
+  ema45M: { ema20: number; ema50: number; ema200: number };
+
+  candle5M: PullbackCandle;
+  expectedLast45MCloseTimestamp: number;
+  timezone: 'UTC';
+
+  atr45M: number;
+  movementStrength: number;
+  rejectionCandleDetected: boolean;
+  continuationDetected: boolean;
+  validBreakout: boolean;
+  falseBreakout: boolean;
+  exhaustionDetected: boolean;
 }
 
-/**
- * PENDING: Define what constitutes each confirmation level
- * 
- * Questions:
- * - A+: All filters aligned? (what = "all"?)
- * - A: Most filters? (3/4? 2/3?)
- * - B: Some confirmation? (what threshold?)
- * - LOW: Weak confirmation? (1 filter?)
- * - NONE: No pullback detected
- * 
- * Status: AWAITING REQUIREMENTS
- */
-export type ConfirmationLevel = 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
-
-/**
- * Output type: Pullback validation result
- * 
- * PENDING: Determine which diagnostics needed for admin panel
- */
-export interface PullbackValidation {
-  isPullback: boolean;
-  confirmationLevel: ConfirmationLevel;
-  
-  // PENDING: Diagnostic fields
-  details?: {
-    pullbackDepthPercent?: number; // How deep pullback from swing
-    retracementPercent?: number; // How much of trend retraced
-    pullbackCandles?: number; // How many candles in pullback
-    emaFilterPassed?: boolean; // PENDING: What is EMA filter on 45M?
-    volumeConfirmed?: boolean; // PENDING: How detect volume confirmation?
-    fibonacciLevel?: string; // PENDING: 0.236, 0.382, 0.618, etc
-    closestLevel?: number; // PENDING: Price proximity to support
-  };
+export interface PullbackValidationResult {
+  status: PullbackStatus;
+  valid: boolean;
+  direction: PullbackDirection;
+  classification: PullbackClassification;
+  score: number;
+  confidence: number;
+  conditionsPassed: PullbackValidationCondition[];
+  conditionsFailed: PullbackValidationCondition[];
+  invalidationReason: string | null;
+  entryReady: boolean;
+  waitingForConfirmation: boolean;
+  timestamp: number;
+  engineVersion: string;
 }
 
-/**
- * PENDING: Input data structure
- * 
- * Questions:
- * - Need swing high/low from 1H? (calculated or provided?)
- * - How many 45M candles needed? (minimum history)
- * - Need 45M EMAs? (20, 50, 200?)
- * - Need volume data? (open interest on forex?)
- * 
- * Status: AWAITING REQUIREMENTS
- */
-interface PullbackValidatorParams {
-  // 1H Trend (confirmed by TrendValidator)
-  trendDirection: 'BUY' | 'SELL';
-  trendConfidence: string; // A+, A, B, C
-  
-  // 45M Candle data
-  currentCandle45M: {
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    timestamp: number;
-  };
-  
-  // PENDING: History requirements not finalized
-  candle45MHistory?: any[]; // PENDING: How many? Structure?
-  ema45M?: {
-    ema20?: number; // PENDING: Include or not?
-    ema50?: number; // PENDING: Include or not?
-    ema200?: number; // PENDING: Include or not?
-  };
-  
-  // PENDING: Swing information
-  swingHigh?: number; // PENDING: Provided or calculated?
-  swingLow?: number; // PENDING: Provided or calculated?
-  
-  // PENDING: Volume data
-  volume?: number; // PENDING: Include on forex?
+const ENGINE_VERSION = 'CARVIPIX_ENGINE_v1.0';
+
+function isFinitePositive(value: number): boolean {
+  return Number.isFinite(value) && value > 0;
 }
 
-/**
- * PULLBACK VALIDATOR CLASS
- * 
- * Status: 🔄 STRUCTURE ONLY
- * 
- * Not implemented:
- * - Configuration application
- * - Pullback detection logic
- * - Confirmation level assignment
- * - Diagnostic calculations
- */
-export class PullbackValidator {
-  private static config: PullbackValidatorConfig = {
-    status: 'PENDING_CONFIGURATION' as const,
-  };
-
-  /**
-   * PENDING: Implement configuration loading
-   * 
-   * Awaiting:
-   * 1. getPullbackValidatorConfig() from config file
-   * 2. Default values definition
-   * 3. Validation of parameter ranges
-   */
-  static configure(config: Partial<PullbackValidatorConfig>) {
-    console.warn(
-      '⚠️  PullbackValidator.configure() - PENDING IMPLEMENTATION',
-      'Configuration not applied yet. Awaiting parameter definition.'
-    );
-    // PENDING: Actual implementation
+function chronological(candles: PullbackCandle[]): boolean {
+  for (let i = 1; i < candles.length; i++) {
+    if (candles[i].timestamp <= candles[i - 1].timestamp) {
+      return false;
+    }
   }
+  return true;
+}
 
-  /**
-   * PENDING: Implement pull back detection logic
-   * 
-   * Awaiting definition:
-   * 1. What makes a valid pullback on 45M?
-   * 2. How to detect pullback depth?
-   * 3. How to measure retrace percentage?
-   * 4. When is pullback "complete"?
-   * 5. What triggers HIGH vs MEDIUM vs LOW confirmation?
-   * 
-   * Expected workflow (PENDING):
-   * - Detect swing high/low from 1H trend
-   * - Measure price pullback from swing
-   * - Validate against configuration parameters
-   * - Check confirmation filters (EMA, volume, etc)
-   * - Return confirmation level
-   */
-  static validatePullback(params: PullbackValidatorParams): PullbackValidation {
-    const { trendDirection, currentCandle45M } = params;
+function classify(score: number): PullbackClassification {
+  if (score >= 90) return 'A+';
+  if (score >= 80) return 'A';
+  if (score >= 70) return 'B';
+  if (score >= 60) return 'C';
+  return 'Rechazada';
+}
 
-    // PENDING: Actual logic not implemented
-    console.warn(
-      '⚠️  PullbackValidator.validatePullback() - PENDING IMPLEMENTATION',
-      {
-        trendDirection,
-        closePrice: currentCandle45M.close,
-        note: 'Pullback detection logic awaiting configuration requirements',
-      }
+function condition(
+  name: string,
+  critical: boolean,
+  passed: boolean,
+  observedValue: number | string | boolean,
+  requiredValue: string,
+  reason: string
+): PullbackValidationCondition {
+  return { name, critical, passed, observedValue, requiredValue, reason };
+}
+
+export class PullbackValidator {
+  static validatePullback(input: PullbackValidationInput): PullbackValidationResult {
+    const cfg = getPullbackValidatorConfig();
+    const ts = Date.now();
+
+    const failed: PullbackValidationCondition[] = [];
+    const passed: PullbackValidationCondition[] = [];
+
+    const push = (c: PullbackValidationCondition) => (c.passed ? passed.push(c) : failed.push(c));
+
+    const hasData =
+      input.candles45M.length >= 3 &&
+      isFinitePositive(input.atr45M) &&
+      input.trendCandle1H.complete &&
+      input.candle5M.complete;
+
+    push(
+      condition(
+        'DATA_SUFFICIENCY',
+        true,
+        hasData,
+        input.candles45M.length,
+        '>=3 candles45M + atr45M>0 + candles completos',
+        hasData ? 'Bloque de datos suficiente' : 'Bloque de datos insuficiente'
+      )
     );
 
-    // Temporary placeholder while awaiting implementation
+    const alignedClose45M =
+      input.candles45M[input.candles45M.length - 1]?.timestamp === input.expectedLast45MCloseTimestamp;
+
+    const strictChronology = chronological(input.candles45M);
+    const noFutureLeak = input.candle5M.timestamp <= input.expectedLast45MCloseTimestamp;
+
+    push(
+      condition(
+        'TIMEFRAME_SYNC',
+        true,
+        alignedClose45M && strictChronology && noFutureLeak,
+        `aligned=${alignedClose45M},chronology=${strictChronology},noFutureLeak=${noFutureLeak}`,
+        '45M cerrado exacto, secuencia cronologica, sin vela 5M futura',
+        alignedClose45M && strictChronology && noFutureLeak
+          ? 'Temporalidades sincronizadas'
+          : 'Temporalidades desincronizadas'
+      )
+    );
+
+    const criticalDataReady = failed.filter((c) => c.critical).length === 0;
+    if (!criticalDataReady) {
+      return {
+        status: 'DATA_NOT_READY',
+        valid: false,
+        direction: 'NEUTRAL',
+        classification: 'Rechazada',
+        score: 0,
+        confidence: 0,
+        conditionsPassed: passed,
+        conditionsFailed: failed,
+        invalidationReason: 'DATA_NOT_READY',
+        entryReady: false,
+        waitingForConfirmation: false,
+        timestamp: ts,
+        engineVersion: ENGINE_VERSION,
+      };
+    }
+
+    const direction = input.trendDirection1H;
+    const directionValid = direction === 'BUY' || direction === 'SELL';
+    push(
+      condition(
+        'TREND_DIRECTION_1H',
+        true,
+        directionValid,
+        direction,
+        'BUY o SELL',
+        directionValid ? 'Direccion principal valida' : 'Direccion neutral sin contexto operativo'
+      )
+    );
+
+    const emaAligned45M =
+      direction === 'BUY'
+        ? input.ema45M.ema20 > input.ema45M.ema50 && input.ema45M.ema50 > input.ema45M.ema200
+        : input.ema45M.ema20 < input.ema45M.ema50 && input.ema45M.ema50 < input.ema45M.ema200;
+
+    push(
+      condition(
+        'EMA_ALIGNMENT_45M',
+        true,
+        emaAligned45M,
+        `${input.ema45M.ema20.toFixed(5)}/${input.ema45M.ema50.toFixed(5)}/${input.ema45M.ema200.toFixed(5)}`,
+        direction === 'BUY' ? 'EMA20>EMA50>EMA200' : 'EMA20<EMA50<EMA200',
+        emaAligned45M ? 'Alineacion EMA consistente con tendencia' : 'Alineacion EMA inconsistente'
+      )
+    );
+
+    const latest = input.candles45M[input.candles45M.length - 1];
+    const prev = input.candles45M[input.candles45M.length - 2];
+
+    const structurePreserved =
+      direction === 'BUY'
+        ? latest.low >= prev.low * 0.999
+        : latest.high <= prev.high * 1.001;
+
+    push(
+      condition(
+        'STRUCTURE_PRESERVED_45M',
+        true,
+        structurePreserved,
+        direction === 'BUY' ? latest.low.toFixed(5) : latest.high.toFixed(5),
+        direction === 'BUY' ? `>=${(prev.low * 0.999).toFixed(5)}` : `<=${(prev.high * 1.001).toFixed(5)}`,
+        structurePreserved ? 'Estructura conservada' : 'Perdida de estructura'
+      )
+    );
+
+    const pullbackDistance =
+      direction === 'BUY'
+        ? Math.max(0, input.ema45M.ema20 - latest.close)
+        : Math.max(0, latest.close - input.ema45M.ema20);
+    const pullbackNormalized = input.atr45M > 0 ? pullbackDistance / input.atr45M : Number.POSITIVE_INFINITY;
+
+    const depthMin = cfg.pullbackDepth?.minAtrMultiple ?? 0.2;
+    const depthMax = cfg.pullbackDepth?.maxAtrMultiple ?? 1.25;
+    const depthValid = pullbackNormalized >= depthMin && pullbackNormalized <= depthMax;
+    push(
+      condition(
+        'PULLBACK_DEPTH',
+        true,
+        depthValid,
+        Number(pullbackNormalized.toFixed(4)),
+        `${depthMin}..${depthMax} ATR`,
+        depthValid ? 'Profundidad de retroceso valida' : 'Profundidad fuera de rango'
+      )
+    );
+
+    const criticalFailed = failed.filter((c) => c.critical);
+    if (criticalFailed.length > 0) {
+      return {
+        status: 'OK',
+        valid: false,
+        direction,
+        classification: 'Rechazada',
+        score: 0,
+        confidence: 0,
+        conditionsPassed: passed,
+        conditionsFailed: failed,
+        invalidationReason: criticalFailed[0].name,
+        entryReady: false,
+        waitingForConfirmation: false,
+        timestamp: ts,
+        engineVersion: ENGINE_VERSION,
+      };
+    }
+
+    const closeToEMAs =
+      direction === 'BUY'
+        ? latest.close >= input.ema45M.ema50
+        : latest.close <= input.ema45M.ema50;
+    push(
+      condition(
+        'DISTANCE_TO_EMA50',
+        false,
+        closeToEMAs,
+        latest.close.toFixed(5),
+        direction === 'BUY' ? `>=${input.ema45M.ema50.toFixed(5)}` : `<=${input.ema45M.ema50.toFixed(5)}`,
+        closeToEMAs ? 'Precio mantiene zona de medias' : 'Precio lejos de media de control'
+      )
+    );
+
+    push(
+      condition(
+        'REJECTION_CANDLE',
+        false,
+        input.rejectionCandleDetected,
+        input.rejectionCandleDetected,
+        'true',
+        input.rejectionCandleDetected ? 'Vela de rechazo detectada' : 'Sin vela de rechazo'
+      )
+    );
+
+    push(
+      condition(
+        'CONTINUATION_SIGNAL',
+        false,
+        input.continuationDetected,
+        input.continuationDetected,
+        'true',
+        input.continuationDetected ? 'Continuacion detectada' : 'Sin continuacion aun'
+      )
+    );
+
+    push(
+      condition(
+        'BREAKOUT_VALIDITY',
+        false,
+        input.validBreakout && !input.falseBreakout,
+        `valid=${input.validBreakout},false=${input.falseBreakout}`,
+        'valid=true,false=false',
+        input.validBreakout && !input.falseBreakout ? 'Ruptura valida' : 'Ruptura invalida o falsa'
+      )
+    );
+
+    const volatilityOk = input.atr45M <= cfg.volatility.maxAtr;
+    push(
+      condition(
+        'VOLATILITY_CHECK',
+        false,
+        volatilityOk,
+        Number(input.atr45M.toFixed(5)),
+        `<=${cfg.volatility.maxAtr}`,
+        volatilityOk ? 'Volatilidad dentro de limite' : 'Volatilidad excesiva'
+      )
+    );
+
+    const strengthOk = input.movementStrength >= cfg.movement.minStrength;
+    push(
+      condition(
+        'MOVEMENT_STRENGTH',
+        false,
+        strengthOk,
+        Number(input.movementStrength.toFixed(2)),
+        `>=${cfg.movement.minStrength}`,
+        strengthOk ? 'Fuerza de movimiento suficiente' : 'Fuerza de movimiento insuficiente'
+      )
+    );
+
+    const noExhaustion = !input.exhaustionDetected;
+    push(
+      condition(
+        'NO_EXHAUSTION',
+        false,
+        noExhaustion,
+        input.exhaustionDetected,
+        'false',
+        noExhaustion ? 'Sin agotamiento' : 'Agotamiento detectado'
+      )
+    );
+
+    const secondaryPassCount = passed.filter((c) => !c.critical).length;
+    const secondaryTotal = passed.filter((c) => !c.critical).length + failed.filter((c) => !c.critical).length;
+
+    const score = Math.round((secondaryPassCount / Math.max(1, secondaryTotal)) * 100);
+    const confidenceBase = input.trendConfidence1H === 'A+' ? 95 : input.trendConfidence1H === 'A' ? 88 : input.trendConfidence1H === 'B' ? 78 : 65;
+    const confidence = Math.max(0, Math.min(100, Math.round((confidenceBase * 0.6) + (score * 0.4))));
+
+    const classification = classify(score);
+    const valid = classification !== 'Rechazada' && classification !== 'C';
+    const entryReady = valid && input.rejectionCandleDetected && input.continuationDetected;
+    const waitingForConfirmation = valid && !entryReady;
+
     return {
-      isPullback: false,
-      confirmationLevel: 'NONE',
+      status: 'OK',
+      valid,
+      direction,
+      classification,
+      score,
+      confidence,
+      conditionsPassed: passed,
+      conditionsFailed: failed,
+      invalidationReason: valid ? null : failed[0]?.name ?? 'INSUFFICIENT_QUALITY',
+      entryReady,
+      waitingForConfirmation,
+      timestamp: ts,
+      engineVersion: ENGINE_VERSION,
     };
   }
-
-  /**
-   * PENDING: Implement pullback depth calculation
-   * 
-   * Awaiting:
-   * 1. Definition of "swing high/low" on 1H
-   * 2. Formula for depth calculation
-   * 3. Fibonacci level definition
-   */
-  private static calculatePullbackDepth(
-    trendDirection: 'BUY' | 'SELL',
-    currentPrice: number,
-    swingHigh: number,
-    swingLow: number
-  ): number {
-    // PENDING: Implementation
-    console.warn('PENDING: calculatePullbackDepth() not implemented');
-    return 0;
-  }
-
-  /**
-   * PENDING: Implement confirmation level logic
-   * 
-   * Awaiting:
-   * 1. Define what "HIGH" means (number of filters? which ones?)
-   * 2. Define what "MEDIUM" means
-   * 3. Define what "LOW" means
-   * 4. Define threshold values
-   */
-  private static determineConfirmationLevel(diagnostics: any): ConfirmationLevel {
-    // PENDING: Implementation
-    console.warn('PENDING: determineConfirmationLevel() not implemented');
-    return 'NONE';
-  }
-
-  /**
-   * PENDING: Implement EMA filter for 45M
-   * 
-   * Awaiting:
-   * 1. What is valid EMA structure on 45M?
-   * 2. Does it need to match 1H structure?
-   * 3. Should it confirm trend direction?
-   * 4. What is threshold for "confirmation"?
-   */
-  private static checkEMAFilter(
-    trendDirection: 'BUY' | 'SELL',
-    ema20?: number,
-    ema50?: number,
-    ema200?: number
-  ): boolean {
-    // PENDING: Implementation
-    console.warn('PENDING: checkEMAFilter() not implemented');
-    return false;
-  }
-
-  /**
-   * PENDING: Implement volume confirmation
-   * 
-   * Awaiting:
-   * 1. Is volume meaningful on forex pairs?
-   * 2. What constitutes "confirmation"?
-   * 3. How to normalize volume across brokers?
-   * 4. Minimum/maximum thresholds?
-   */
-  private static checkVolumeConfirmation(volume?: number): boolean {
-    // PENDING: Implementation
-    console.warn('PENDING: checkVolumeConfirmation() not implemented');
-    return false;
-  }
 }
 
-/**
- * INTEGRATION PLACEHOLDER
- * 
- * Expected usage (PENDING FULL IMPLEMENTATION):
- * 
- * 1. Get 1H TrendValidation from TrendValidator
- * 2. Get 45M candle + history
- * 3. Call PullbackValidator.validatePullback()
- * 4. Use result to filter entry signals
- * 
- * Status: AWAITING PULLBACK VALIDATOR COMPLETION
- */
-export async function integratePullbackValidation(
-  trendDirection: 'BUY' | 'SELL',
-  trendConfidence: string,
-  candle45M: PullbackValidatorParams['currentCandle45M'],
-  // PENDING: Other parameters
-): Promise<PullbackValidation> {
-  // PENDING: Actual integration logic
-  console.warn(
-    '⚠️  integratePullbackValidation() - PENDING IMPLEMENTATION',
-    'Awaiting PullbackValidator completion'
-  );
-
-  return {
-    isPullback: false,
-    confirmationLevel: 'NONE',
-  };
-}
-
-/**
- * DIAGNOSTIC: Admin panel only
- * 
- * Returns validation state for debugging
- * Should only be visible in admin dashboard, not production signals
- */
-export function getPullbackValidatorDiagnostic() {
-  return {
-    status: 'PENDING_CONFIGURATION',
-    configStatus: PullbackValidator['config'],
-    warnings: [
-      'Pullback detection logic not implemented',
-      'Configuration parameters awaiting definition',
-      'Not suitable for production until complete',
-    ],
-    pendingItems: [
-      'Define pullback depth formula',
-      'Define retrace percentage requirements',
-      'Define EMA structure validation',
-      'Define volume confirmation method',
-      'Define confirmation level thresholds',
-      'Implement all validation methods',
-    ],
-  };
+export function integratePullbackValidation(input: PullbackValidationInput): PullbackValidationResult {
+  return PullbackValidator.validatePullback(input);
 }
 
 export default PullbackValidator;
-

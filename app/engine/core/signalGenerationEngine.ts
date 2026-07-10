@@ -8,6 +8,7 @@ import {
   type TradingKnowledgeBase,
   type TradingSession,
 } from "./tradingKnowledgeBase";
+import { integratePullbackValidation, type PullbackValidationInput } from "../strategy/pullbackValidator";
 
 export type SignalDecision = "BUY" | "SELL" | "WAIT" | "NO_TRADE";
 
@@ -125,6 +126,19 @@ export class SignalGenerationEngine {
 
     if (entryDirection !== trendDirection) {
       return this.buildWaitingSignal(input, "WAIT", "Entrada 5M aun no confirma direccion del contexto.");
+    }
+
+    const pullbackValidation = integratePullbackValidation(this.buildPullbackValidationInput(input, trendDirection));
+    if (pullbackValidation.status === "DATA_NOT_READY") {
+      return this.buildWaitingSignal(input, "WAIT", "Pullback validator: DATA_NOT_READY");
+    }
+
+    if (!pullbackValidation.valid) {
+      return this.buildWaitingSignal(
+        input,
+        "WAIT",
+        `Pullback validator rejected setup: ${pullbackValidation.invalidationReason ?? "UNKNOWN"}`,
+      );
     }
 
     const card = this.pickCard(input);
@@ -358,6 +372,93 @@ export class SignalGenerationEngine {
       invalidation: "Mantener espera hasta alinear contexto, estructura y entrada.",
       classification: "C",
       blockedBy: [],
+    };
+  }
+
+  private buildPullbackValidationInput(
+    input: SignalGenerationInput,
+    trendDirection: "bullish" | "bearish",
+  ): PullbackValidationInput {
+    const now = Date.now();
+    const tf45m = 45 * 60 * 1000;
+    const expectedLast45MCloseTimestamp = Math.floor(now / tf45m) * tf45m;
+    const pipSize = this.resolvePipSize(input.symbol);
+    const atrPrice = Math.max(0.000001, input.atrPips * pipSize);
+
+    const midClose = input.entry5M.price;
+    const pullbackClose = trendDirection === "bullish"
+      ? Math.min(midClose, input.structure45M.ema20 - atrPrice * 0.6)
+      : Math.max(midClose, input.structure45M.ema20 + atrPrice * 0.6);
+
+    const prevLow = trendDirection === "bullish" ? pullbackClose - atrPrice * 0.4 : pullbackClose - atrPrice * 0.2;
+    const latestLow = trendDirection === "bullish" ? prevLow * 1.0002 : pullbackClose - atrPrice * 0.2;
+    const prevHigh = trendDirection === "bearish" ? pullbackClose + atrPrice * 0.4 : pullbackClose + atrPrice * 0.2;
+    const latestHigh = trendDirection === "bearish" ? prevHigh * 0.9998 : pullbackClose + atrPrice * 0.2;
+
+    return {
+      trendDirection1H: trendDirection === "bullish" ? "BUY" : "SELL",
+      trendConfidence1H: "A",
+      trendCandle1H: {
+        timestamp: expectedLast45MCloseTimestamp,
+        open: input.context1H.price,
+        high: input.context1H.price + atrPrice,
+        low: Math.max(0.000001, input.context1H.price - atrPrice),
+        close: input.context1H.price,
+        complete: true,
+      },
+      trendEMA1H: {
+        ema20: input.context1H.ema20,
+        ema50: input.context1H.ema50,
+        ema200: input.context1H.ema200,
+      },
+      candles45M: [
+        {
+          timestamp: expectedLast45MCloseTimestamp - tf45m * 2,
+          open: pullbackClose,
+          high: prevHigh,
+          low: prevLow,
+          close: pullbackClose,
+          complete: true,
+        },
+        {
+          timestamp: expectedLast45MCloseTimestamp - tf45m,
+          open: pullbackClose,
+          high: prevHigh,
+          low: prevLow,
+          close: pullbackClose,
+          complete: true,
+        },
+        {
+          timestamp: expectedLast45MCloseTimestamp,
+          open: pullbackClose,
+          high: latestHigh,
+          low: latestLow,
+          close: pullbackClose,
+          complete: true,
+        },
+      ],
+      ema45M: {
+        ema20: input.structure45M.ema20,
+        ema50: input.structure45M.ema50,
+        ema200: input.structure45M.ema200,
+      },
+      candle5M: {
+        timestamp: expectedLast45MCloseTimestamp,
+        open: input.entry5M.price,
+        high: input.entry5M.price + atrPrice * 0.1,
+        low: Math.max(0.000001, input.entry5M.price - atrPrice * 0.1),
+        close: input.entry5M.price,
+        complete: true,
+      },
+      expectedLast45MCloseTimestamp,
+      timezone: "UTC",
+      atr45M: atrPrice,
+      movementStrength: 75,
+      rejectionCandleDetected: input.entry5M.pullbackValid,
+      continuationDetected: input.entry5M.breakoutValid,
+      validBreakout: input.entry5M.breakoutValid,
+      falseBreakout: input.structure45M.falseBreakoutDetected,
+      exhaustionDetected: false,
     };
   }
 }

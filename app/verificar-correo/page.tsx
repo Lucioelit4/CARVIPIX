@@ -8,13 +8,16 @@ import { CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 function VerificarCorreoContent() {
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams?.get('token') || '';
-  const [status, setStatus] = useState<'idle' | 'ok' | 'error'>('idle');
-  const [message, setMessage] = useState('Validando tu enlace de verificación...');
+  const hasToken = tokenFromUrl.length > 0;
+  const [status, setStatus] = useState<'idle' | 'ok' | 'error'>(hasToken ? 'idle' : 'error');
+  const [message, setMessage] = useState(
+    hasToken
+      ? 'Validando tu enlace de verificación...'
+      : 'No encontramos un enlace válido de verificación. Solicita uno nuevo desde tu cuenta.'
+  );
 
   useEffect(() => {
     if (!tokenFromUrl) {
-      setStatus('error');
-      setMessage('No encontramos un enlace válido de verificación. Solicita uno nuevo desde tu cuenta.');
       return;
     }
 

@@ -26,6 +26,9 @@ import {
   ProviderOperationLog,
   ProviderHealthCheck,
 } from '../types/realDataProvider';
+import { MarketDataPipeline } from './marketDataPipeline';
+import { CandleBuilder } from './candleBuilder';
+import { IndicatorFramework } from './indicatorFramework';
 
 /**
  * Adaptador para proveedor de datos real
@@ -44,6 +47,9 @@ export class RealDataProvider extends DataProvider {
   private operationTimings: number[] = [];
   private readonly MAX_OPERATION_LOGS = 1000;
   private readonly MAX_CONNECTION_HISTORY = 100;
+  private readonly pipeline = new MarketDataPipeline();
+  private readonly candleBuilder = new CandleBuilder();
+  private readonly indicatorFramework = new IndicatorFramework();
 
   constructor(
     assets: Asset[],
@@ -186,15 +192,25 @@ export class RealDataProvider extends DataProvider {
         throw new Error(`Proveedor en estado: ${this.state.connectionState}`);
       }
 
-      // Placeholder - en producción llamaría a la API real
-      const duration = Math.random() * 50 + 10;
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      const tick = await this.getTick(asset);
+      if (tick) {
+        const emitted = this.candleBuilder.ingestTick(tick, [timeframe]);
+        for (const built of emitted) {
+          this.pipeline.appendBuiltCandle(built);
+          this.indicatorFramework.update(asset, timeframe, built, tick.spread ?? 0);
+        }
+      }
 
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getCandle', asset, timeframe, elapsedTime, true);
       this.recordLatency(elapsedTime);
 
-      return null; // Placeholder - retorna null hasta que se implemente
+      const latestClosed = this.pipeline.getLatestCandle(asset, timeframe);
+      if (latestClosed) {
+        return latestClosed;
+      }
+
+      return this.candleBuilder.getOpen(asset, timeframe);
     } catch (error) {
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getCandle', asset, timeframe, elapsedTime, false, error as Error);
@@ -218,15 +234,29 @@ export class RealDataProvider extends DataProvider {
         throw new Error(`Proveedor en estado: ${this.state.connectionState}`);
       }
 
-      // Placeholder
       const duration = Math.random() * 30 + 5;
       await new Promise((resolve) => setTimeout(resolve, duration));
+
+      const basePrice = this.syntheticPrice(asset);
+      const drift = (Math.random() - 0.5) * (basePrice * 0.0002);
+      const bid = Number((basePrice + drift).toFixed(5));
+      const ask = Number((bid + Math.max(0.00001, basePrice * 0.00002)).toFixed(5));
+      const rawTick = {
+        asset,
+        timestamp: Date.now(),
+        bid,
+        ask,
+        volume: Math.floor(100 + Math.random() * 300),
+        timezone: 'UTC',
+      };
+
+      const tick = this.pipeline.ingestTick(rawTick);
 
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getTick', asset, undefined, elapsedTime, true);
       this.recordLatency(elapsedTime);
 
-      return null;
+      return tick;
     } catch (error) {
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getTick', asset, undefined, elapsedTime, false, error as Error);
@@ -253,15 +283,19 @@ export class RealDataProvider extends DataProvider {
         throw new Error(`Proveedor en estado: ${this.state.connectionState}`);
       }
 
-      // Placeholder
-      const duration = Math.random() * 100 + 20;
-      await new Promise((resolve) => setTimeout(resolve, duration));
+      const candle = await this.getCandle(asset, timeframe);
+      const tick = await this.getTick(asset);
+      if (!candle) {
+        return null;
+      }
+
+      const indicators = this.indicatorFramework.update(asset, timeframe, candle, tick?.spread ?? 0);
 
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('calculateIndicators', asset, timeframe, elapsedTime, true);
       this.recordLatency(elapsedTime);
 
-      return null;
+      return indicators;
     } catch (error) {
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('calculateIndicators', asset, timeframe, elapsedTime, false, error as Error);
@@ -285,15 +319,30 @@ export class RealDataProvider extends DataProvider {
         throw new Error(`Proveedor en estado: ${this.state.connectionState}`);
       }
 
-      // Placeholder
-      const duration = Math.random() * 150 + 30;
+      const duration = Math.random() * 40 + 10;
       await new Promise((resolve) => setTimeout(resolve, duration));
+
+      const tick = await this.getTick(asset);
+      const candle = await this.getCandle(asset, timeframe);
+      const indicators = await this.calculateIndicators(asset, timeframe);
+
+      if (!tick || !candle || !indicators) {
+        return null;
+      }
 
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getMarketData', asset, timeframe, elapsedTime, true);
       this.recordLatency(elapsedTime);
 
-      return null;
+      return {
+        asset,
+        timeframe,
+        candle,
+        tick,
+        indicators,
+        lastUpdate: Date.now(),
+        quality: this.pipeline.buildQuality(asset, timeframe),
+      };
     } catch (error) {
       const elapsedTime = Date.now() - startTime;
       this.recordOperation('getMarketData', asset, timeframe, elapsedTime, false, error as Error);
@@ -533,22 +582,35 @@ export class RealDataProvider extends DataProvider {
       }
     }
 
+    const pipelineStats = this.pipeline.getStats();
+    const recentErrors = this.pipeline.getRecentErrors(30);
+
     return {
       timestamp: now,
       overallHealth: this.state.isHealthy ? 85 : 25,
       connectedAssets: this.state.connectionState === 'connected' ? this.assets : [],
       disconnectedAssets: this.state.connectionState === 'connected' ? [] : this.assets,
-      totalErrors: this.state.failureCount,
+      totalErrors: this.state.failureCount + recentErrors.length,
       activeAssets: this.state.connectionState === 'connected' ? this.assets.length : 0,
       dataProvider: 'real',
       avgLatency: this.state.latency.avg,
       uptime: this.state.totalRequests > 0 
         ? (this.state.successCount / this.state.totalRequests) * 100 
         : 0,
-      lastUpdate: this.state.latency.lastMeasurement || 0,
+      lastUpdate: pipelineStats.lastIngestAt || this.state.latency.lastMeasurement || 0,
       connectionStates,
-      recentErrors: [],
+      recentErrors,
     };
+  }
+
+  private syntheticPrice(asset: Asset): number {
+    const map: Record<Asset, number> = {
+      XAUUSD: 2500,
+      EURUSD: 1.1,
+      GBPUSD: 1.28,
+      BTCUSD: 65000,
+    };
+    return map[asset];
   }
 }
 

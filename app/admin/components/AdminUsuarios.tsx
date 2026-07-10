@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DetailModal from './DetailModal';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
@@ -21,18 +21,22 @@ export default function AdminUsuarios() {
   const [search, setSearch] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
-      if (!response.ok) {
-        return;
-      }
-      const payload = (await response.json().catch(() => ({}))) as { data?: { users?: UserRow[] } };
-      setUsers(payload.data?.users ?? []);
-    };
-
-    void load();
+  const load = useCallback(async () => {
+    const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
+    if (!response.ok) {
+      return;
+    }
+    const payload = (await response.json().catch(() => ({}))) as { data?: { users?: UserRow[] } };
+    setUsers(payload.data?.users ?? []);
   }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   const filtered = useMemo(() => users.filter((user) => `${user.name} ${user.email} ${user.officialPlan}`.toLowerCase().includes(search.toLowerCase())), [search, users]);
 

@@ -15,6 +15,16 @@ export interface GateCheckResult {
   recommendation?: string;
 }
 
+export interface AuditableSafetyGateResult {
+  name: string;
+  state: 'PASS' | 'BLOCK' | 'WARN';
+  reason: string;
+  severity: 'info' | 'warning' | 'critical';
+  blocking: boolean;
+  observedValue: string;
+  limit: string;
+}
+
 /**
  * GATE 1: LIQUIDEZ
  * Verifica que haya liquidez suficiente en el mercado actual
@@ -420,5 +430,22 @@ export function runAllSafetyGates(
     warnings,
     recommendation,
     modeProvisional,
+  };
+}
+
+export function toAuditableSafetyGateResult(
+  gate: GateCheckResult,
+  observedValue: string,
+  limit: string
+): AuditableSafetyGateResult {
+  const blocking = !gate.passed && gate.severity === 'critical';
+  return {
+    name: gate.gate,
+    state: blocking ? 'BLOCK' : gate.severity === 'warning' ? 'WARN' : 'PASS',
+    reason: gate.reason,
+    severity: gate.severity,
+    blocking,
+    observedValue,
+    limit,
   };
 }

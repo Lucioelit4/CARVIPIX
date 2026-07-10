@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
@@ -20,18 +20,22 @@ export default function AdminSolicitudes() {
   const [requests, setRequests] = useState<CapitalRequest[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
     if (!response.ok) {
       return;
     }
     const payload = (await response.json().catch(() => ({}))) as { data?: { capitalRequests?: CapitalRequest[] } };
     setRequests(payload.data?.capitalRequests ?? []);
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   const updateStatus = async (requestId: string, status: string) => {
     setBusyId(requestId);

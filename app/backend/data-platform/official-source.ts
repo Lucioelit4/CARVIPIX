@@ -160,6 +160,7 @@ interface SchedulerJobInternal {
   intervalMs?: number;
   dailyHourUtc?: number;
   weeklyDayUtc?: number;
+  isRunning: boolean;
 }
 
 function computeQuality(records: DataRecord[]): number {
@@ -255,6 +256,8 @@ export class OfficialDataPlatformSource {
   private readonly datasetCatalog = new Map<string, DatasetStats>();
   private readonly cursors = new Map<string, IngestionCursor>();
   private readonly jobs = new Map<string, SchedulerJobInternal>();
+  private readonly activeJobExecutions = new Set<Promise<void>>();
+  private schedulerStopping = false;
   private readonly consumerModules = new Map<string, ConsumerModuleStatus>();
   private readonly directDownloadViolations: DirectDownloadViolation[] = [];
   private readonly streamEvents: OfficialSourceStreamEvent[] = [];
@@ -462,6 +465,8 @@ export class OfficialDataPlatformSource {
     weeklyDayUtc?: number;
     weeklyHourUtc?: number;
   }): void {
+    this.schedulerStopping = false;
+
     const syncKinds = options?.syncKinds ?? ["tick", "ohlc", "news", "economic-calendar", "spread", "session", "metadata"];
     const syncIntervalMs = options?.syncIntervalMs ?? 15 * 60 * 1000;
     const dailyHourUtc = options?.dailyHourUtc ?? 2;
@@ -495,18 +500,31 @@ export class OfficialDataPlatformSource {
     });
   }
 
-  stopScheduler(): void {
+  async stopScheduler(): Promise<void> {
+    this.schedulerStopping = true;
+
     for (const job of this.jobs.values()) {
+      job.status.enabled = false;
+      this.clearJobHandles(job);
+    }
+
+    if (this.activeJobExecutions.size > 0) {
+      await Promise.allSettled(Array.from(this.activeJobExecutions));
+    }
+
+    this.schedulerStopping = false;
+  }
+
+  private clearJobHandles(job: SchedulerJobInternal): void {
       if (job.timerId) {
         clearInterval(job.timerId);
+        job.timerId = undefined;
       }
 
       if (job.timeoutId) {
         clearTimeout(job.timeoutId);
+        job.timeoutId = undefined;
       }
-
-      job.status.enabled = false;
-    }
   }
 
   getProviderStatus(): ProviderStatus[] {
@@ -951,6 +969,11 @@ export class OfficialDataPlatformSource {
   }
 
   private registerIntervalJob(id: string, intervalMs: number, handler: () => Promise<void>): void {
+    const existing = this.jobs.get(id);
+    if (existing) {
+      this.clearJobHandles(existing);
+    }
+
     const status: SchedulerJobStatus = {
       id,
       frequency: "interval",
@@ -959,9 +982,9 @@ export class OfficialDataPlatformSource {
       runCount: 0,
     };
 
-    const job: SchedulerJobInternal = { status, handler, intervalMs };
-    job.timerId = setInterval(async () => {
-      await this.executeJob(job);
+    const job: SchedulerJobInternal = { status, handler, intervalMs, isRunning: false };
+    job.timerId = setInterval(() => {
+      this.executeJobTracked(job);
       status.nextRunAt = addMs(new Date(), intervalMs).toISOString();
     }, intervalMs);
 
@@ -969,6 +992,11 @@ export class OfficialDataPlatformSource {
   }
 
   private registerDailyJob(id: string, hourUtc: number, handler: () => Promise<void>): void {
+    const existing = this.jobs.get(id);
+    if (existing) {
+      this.clearJobHandles(existing);
+    }
+
     const status: SchedulerJobStatus = {
       id,
       frequency: "daily",
@@ -977,15 +1005,19 @@ export class OfficialDataPlatformSource {
       nextRunAt: nextDailyRun(hourUtc).toISOString(),
     };
 
-    const job: SchedulerJobInternal = { status, handler, dailyHourUtc: hourUtc };
+    const job: SchedulerJobInternal = { status, handler, dailyHourUtc: hourUtc, isRunning: false };
 
     const schedule = () => {
+      if (!job.status.enabled || this.schedulerStopping) {
+        return;
+      }
+
       const nextRun = nextDailyRun(hourUtc);
       status.nextRunAt = nextRun.toISOString();
       const delay = Math.max(1, nextRun.getTime() - Date.now());
 
-      job.timeoutId = setTimeout(async () => {
-        await this.executeJob(job);
+      job.timeoutId = setTimeout(() => {
+        this.executeJobTracked(job);
         schedule();
       }, delay);
     };
@@ -995,6 +1027,11 @@ export class OfficialDataPlatformSource {
   }
 
   private registerWeeklyJob(id: string, dayUtc: number, hourUtc: number, handler: () => Promise<void>): void {
+    const existing = this.jobs.get(id);
+    if (existing) {
+      this.clearJobHandles(existing);
+    }
+
     const status: SchedulerJobStatus = {
       id,
       frequency: "weekly",
@@ -1003,21 +1040,40 @@ export class OfficialDataPlatformSource {
       nextRunAt: nextWeeklyRun(dayUtc, hourUtc).toISOString(),
     };
 
-    const job: SchedulerJobInternal = { status, handler, weeklyDayUtc: dayUtc, dailyHourUtc: hourUtc };
+    const job: SchedulerJobInternal = { status, handler, weeklyDayUtc: dayUtc, dailyHourUtc: hourUtc, isRunning: false };
 
     const schedule = () => {
+      if (!job.status.enabled || this.schedulerStopping) {
+        return;
+      }
+
       const nextRun = nextWeeklyRun(dayUtc, hourUtc);
       status.nextRunAt = nextRun.toISOString();
       const delay = Math.max(1, nextRun.getTime() - Date.now());
 
-      job.timeoutId = setTimeout(async () => {
-        await this.executeJob(job);
+      job.timeoutId = setTimeout(() => {
+        this.executeJobTracked(job);
         schedule();
       }, delay);
     };
 
     schedule();
     this.jobs.set(id, job);
+  }
+
+  private executeJobTracked(job: SchedulerJobInternal): void {
+    if (!job.status.enabled || this.schedulerStopping || job.isRunning) {
+      return;
+    }
+
+    job.isRunning = true;
+    const run = this.executeJob(job)
+      .catch(() => undefined)
+      .finally(() => {
+        job.isRunning = false;
+        this.activeJobExecutions.delete(run);
+      });
+    this.activeJobExecutions.add(run);
   }
 
   private async executeJob(job: SchedulerJobInternal): Promise<void> {

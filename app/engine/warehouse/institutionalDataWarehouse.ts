@@ -350,6 +350,7 @@ export class InstitutionalDataWarehouse {
       ema50,
       ema200,
       atr,
+      adx: 0,
       rsi: 50,
       spread: last.spread ?? 0,
       volatility,

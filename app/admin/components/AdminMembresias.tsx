@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { RefreshCw, Search, ShieldCheck, CheckCircle2, XCircle, RotateCcw, PauseCircle, Crown, Save } from 'lucide-react';
 import DetailModal from './DetailModal';
@@ -119,7 +119,7 @@ export default function AdminMembresias() {
     setEntitlementDrafts(nextDrafts);
   };
 
-  const loadSnapshot = async () => {
+  const loadSnapshot = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/memberships', { cache: 'no-store' });
@@ -136,11 +136,15 @@ export default function AdminMembresias() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    void loadSnapshot();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadSnapshot();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loadSnapshot]);
 
   const filteredUsers = useMemo(() => {
     return snapshot.users.filter((user) => {

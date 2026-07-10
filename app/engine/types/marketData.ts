@@ -44,10 +44,14 @@ export interface TechnicalIndicators {
   ema50: number;
   ema200: number;
   atr: number;
+  adx: number;
   rsi: number;
   spread: number;
   volatility: number;
   timestamp: number;
+  internal?: {
+    close: number;
+  };
 }
 
 /**

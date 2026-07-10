@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Gauge, RefreshCw, ShieldCheck, Timer, Wifi } from 'lucide-react';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
@@ -69,7 +69,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -88,15 +88,19 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) {
       return;
     }
 
-    void load();
-  }, [isAdmin]);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isAdmin, load]);
 
   if (!isAdmin) {
     return <p className="text-red-400">Acceso restringido</p>;

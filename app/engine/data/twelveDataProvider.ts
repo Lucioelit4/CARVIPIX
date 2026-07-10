@@ -184,6 +184,7 @@ export class TwelveDataProvider extends RealDataProvider {
         ema50: close,
         ema200: close,
         atr: Math.abs(candle.high - candle.low),
+        adx: 0,
         rsi: 50,
         spread,
         volatility: close > 0 ? (Math.abs(candle.high - candle.low) / close) * 100 : 0,

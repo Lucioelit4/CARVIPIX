@@ -11,7 +11,6 @@ import type {
 } from "./contracts";
 import type { ProviderName } from "./types";
 import {
-  buildMockCheckoutSession,
   parseMockWebhookEvent,
   resolveEffectiveProvider,
   verifyMockWebhookSignature,
@@ -29,29 +28,9 @@ class PlaceholderAdapter implements ProviderPaymentAdapter {
       envProvider: process.env.PAYMENT_GATEWAY_PROVIDER?.trim().toLowerCase(),
     });
 
-    const session = buildMockCheckoutSession({
-      provider,
-      orderId: input.orderId,
-      returnUrl: input.returnUrl,
-    });
-
-    return {
-      provider,
-      providerCheckoutId: session.providerCheckoutId,
-      checkoutUrl: session.checkoutUrl,
-      expiresAt: session.expiresAt,
-      raw: {
-        ...session.raw,
-        runtime: {
-          providerAccountId: runtimeConfig.providerAccountId ?? null,
-          environment: runtimeConfig.environment,
-          connectionStatus: runtimeConfig.connectionStatus,
-          settlementAccount: runtimeConfig.settlementAccount ?? null,
-          subscriptions: runtimeConfig.subscriptionConfig,
-          retries: runtimeConfig.retryConfig,
-        },
-      },
-    };
+    throw new Error(
+      `Proveedor ${provider} no conectado. Configure la pasarela real antes de crear sesiones de checkout.`
+    );
   }
 
   async verifyWebhookSignature(input: VerifyWebhookInput): Promise<boolean> {

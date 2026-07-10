@@ -169,13 +169,13 @@ export function StudioEditor() {
 
   const selectedAsset = useMemo(() => assets.find((asset) => asset.id === selectedAssetId) ?? assets[0], [selectedAssetId]);
 
-  const selectedClip = useMemo(() => {
+  const selectedClip = (() => {
     for (const track of timelineTracks) {
       const clip = track.clips.find((candidate) => candidate.id === selectedClipId);
       if (clip) return { clip, track };
     }
     return { clip: timelineTracks[0].clips[0], track: timelineTracks[0] };
-  }, [selectedClipId]);
+  })();
 
   return (
     <main className="min-h-screen bg-[#06070a] text-[#f6f6f7]">

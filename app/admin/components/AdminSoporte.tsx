@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle, Clock, RefreshCw, Save } from 'lucide-react';
 import DetailModal from './DetailModal';
@@ -65,7 +65,7 @@ export default function AdminSoporte() {
   const [statusDraft, setStatusDraft] = useState('open');
   const [saving, setSaving] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
@@ -82,11 +82,15 @@ export default function AdminSoporte() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   const filteredTickets = useMemo(() => {
     if (filter === 'todos') {

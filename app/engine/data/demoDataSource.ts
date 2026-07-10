@@ -176,6 +176,7 @@ class DemoDataSource extends DataProvider {
         ema50: this.basePrices[asset] * (1 + (Math.random() - 0.5) * 0.015),
         ema200: this.basePrices[asset] * (1 + (Math.random() - 0.5) * 0.02),
         atr: (this.basePrices[asset] * volatilityPercent) / 100,
+        adx: 25,
         rsi,
         spread: this.spreads[asset] / 10000,
         volatility: volatilityPercent,

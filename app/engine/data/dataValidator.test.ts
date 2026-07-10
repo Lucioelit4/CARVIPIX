@@ -34,6 +34,7 @@ function buildMarketData(): MarketData {
       ema50: 1.102,
       ema200: 1.097,
       atr: 0.003,
+      adx: 24,
       rsi: 56,
       spread: 0.0002,
       volatility: 1.2,

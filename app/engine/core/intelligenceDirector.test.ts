@@ -7,9 +7,29 @@ import { EvidenceEngine } from './evidenceEngine';
 import { IntelligenceDirector } from './intelligenceDirector';
 import { PriorityEngine } from './priorityEngine';
 import { SafeModePolicy } from './safeModePolicy';
-import type { ConsensusResult, EngineMetrics, TradeAlert, TradeSignal } from '../types';
+import type {
+  CertifiedDatasetEnvelope,
+  CertifiedDatasetSource,
+  CertifiedDatasetStatus,
+  ConsensusResult,
+  EngineMetrics,
+  ResearchProposalEnvelope,
+  TradeAlert,
+  TradeSignal,
+} from '../types';
 
-function buildCertifiedDataset(overrides: Record<string, unknown> = {}) {
+type CertifiedDatasetOverrides = Partial<Omit<CertifiedDatasetEnvelope, 'status' | 'source'>> & {
+  status?: CertifiedDatasetStatus;
+  source?: CertifiedDatasetSource;
+};
+
+type ResearchProposalEnvelopeForTests = Omit<ResearchProposalEnvelope, 'status' | 'source' | 'manualReviewRequired'> & {
+  source: ResearchProposalEnvelope['source'] | 'CDP';
+  status: ResearchProposalEnvelope['status'] | 'PARTIAL' | 'INVALID' | 'SIMULATED';
+  manualReviewRequired: true | false;
+};
+
+function buildCertifiedDataset(overrides: CertifiedDatasetOverrides = {}): CertifiedDatasetEnvelope {
   return {
     datasetId: 'lab-001',
     source: 'RESEARCH_LAB',
@@ -20,7 +40,7 @@ function buildCertifiedDataset(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function buildResearchProposalEnvelope(overrides: Record<string, unknown> = {}) {
+function buildResearchProposalEnvelope(overrides: Partial<ResearchProposalEnvelopeForTests> = {}): ResearchProposalEnvelopeForTests {
   return {
     datasetId: 'research-001',
     checksum: 'feed1234',
@@ -227,7 +247,7 @@ test('missing source is blocked as NO_TRADE', () => {
     options: {
       certifiedInput: {
         required: true,
-        datasets: [buildCertifiedDataset({ source: '' })],
+        datasets: [{ ...buildCertifiedDataset(), source: '' } as unknown as CertifiedDatasetEnvelope],
       },
     },
     createAlert,
@@ -286,7 +306,7 @@ test('research proposal envelope missing checksum is blocked as NO_TRADE', () =>
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ checksum: '' }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ checksum: '' }) as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });
@@ -302,7 +322,7 @@ test('research proposal envelope missing schemaVersion is blocked as NO_TRADE', 
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ schemaVersion: '' }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ schemaVersion: '' }) as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });
@@ -318,7 +338,7 @@ test('research proposal envelope missing datasetId is blocked as NO_TRADE', () =
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ datasetId: '' }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ datasetId: '' }) as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });
@@ -334,7 +354,7 @@ test('research proposal envelope wrong source is blocked as NO_TRADE', () => {
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ source: 'CDP' }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ source: 'CDP' }) as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });
@@ -353,7 +373,7 @@ test('research proposal envelope non certified status is blocked as NO_TRADE', (
       consensusResult: baseConsensus,
       metrics: baseMetrics,
       options: {
-        researchProposalEnvelope: buildResearchProposalEnvelope({ status }),
+        researchProposalEnvelope: buildResearchProposalEnvelope({ status }) as unknown as ResearchProposalEnvelope,
       },
       createAlert,
     });
@@ -370,7 +390,7 @@ test('research proposal envelope requires manual review true', () => {
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ manualReviewRequired: false }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ manualReviewRequired: false }) as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });
@@ -386,7 +406,7 @@ test('valid research proposal envelope allows analysis only', () => {
     consensusResult: baseConsensus,
     metrics: baseMetrics,
     options: {
-      researchProposalEnvelope: buildResearchProposalEnvelope(),
+      researchProposalEnvelope: buildResearchProposalEnvelope() as unknown as ResearchProposalEnvelope,
     },
     createAlert,
   });

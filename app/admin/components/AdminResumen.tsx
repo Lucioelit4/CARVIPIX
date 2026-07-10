@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle, Clock, DollarSign, Users } from 'lucide-react';
 
 import { CARVIPIXCard } from '@/app/design-system';
@@ -16,20 +16,24 @@ type Overview = {
 export default function AdminResumen() {
   const [overview, setOverview] = useState<Overview>({ users: 0, activeMemberships: 0, pendingCapitalRequests: 0, openTickets: 0, blockedAttempts: 0 });
 
-  useEffect(() => {
-    const load = async () => {
-      const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
-      if (!response.ok) {
-        return;
-      }
-      const payload = (await response.json().catch(() => ({}))) as { data?: { overview?: Overview } };
-      if (payload.data?.overview) {
-        setOverview(payload.data.overview);
-      }
-    };
-
-    void load();
+  const load = useCallback(async () => {
+    const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
+    if (!response.ok) {
+      return;
+    }
+    const payload = (await response.json().catch(() => ({}))) as { data?: { overview?: Overview } };
+    if (payload.data?.overview) {
+      setOverview(payload.data.overview);
+    }
   }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   const cards = [
     { icon: Users, label: 'Usuarios', value: overview.users, color: 'text-blue-400' },

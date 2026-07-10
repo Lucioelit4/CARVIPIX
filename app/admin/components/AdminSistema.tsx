@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, PlayCircle, RefreshCw, ShieldAlert, Zap } from 'lucide-react';
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
@@ -70,7 +70,7 @@ export default function AdminSistema() {
   const [error, setError] = useState<string | null>(null);
   const [connector, setConnector] = useState({ provider: 'MT5_SANDBOX', server: 'demo.carvipix.local', login: 'demo_user', password: '' });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -85,11 +85,15 @@ export default function AdminSistema() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
   const runValidation = async () => {
     setRunningValidation(true);

@@ -100,6 +100,27 @@ test("pullback valido mantiene señal de continuidad", () => {
   assert.ok(signal.reason.includes("clasificacion"));
 });
 
+test("pullback validator integrado bloquea setup inconsistente", () => {
+  const signal = engine.generate({
+    ...baseInput(),
+    structure45M: {
+      ...baseInput().structure45M,
+      bias: "bullish",
+      ema20: 1.101,
+      ema50: 1.104,
+      ema200: 1.105,
+    },
+    entry5M: {
+      ...baseInput().entry5M,
+      pullbackValid: true,
+      breakoutValid: true,
+    },
+  });
+
+  assert.equal(signal.decision, "WAIT");
+  assert.ok(signal.reason.includes("Pullback validator"));
+});
+
 test("ruptura falsa se rechaza", () => {
   const signal = engine.generate({
     ...baseInput(),

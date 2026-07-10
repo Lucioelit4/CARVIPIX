@@ -14,6 +14,23 @@ function wait(ms: number): Promise<void> {
   });
 }
 
+async function cleanupTempDir(path: string): Promise<void> {
+  const transientCodes = new Set(["EBUSY", "EPERM", "ENOTEMPTY"]);
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    try {
+      await rm(path, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException | undefined)?.code;
+      if (!code || !transientCodes.has(code) || attempt === 4) {
+        throw error;
+      }
+      await wait(20 * (attempt + 1));
+    }
+  }
+}
+
 async function collectFiles(root: string): Promise<string[]> {
   const entries = await readdir(root, { withFileTypes: true });
   const files: string[] = [];
@@ -117,6 +134,17 @@ class MockProvider implements DataProviderAdapter {
   }
 }
 
+class SlowProvider extends MockProvider {
+  constructor() {
+    super({ id: "provider-slow", priority: 1, supports: ["tick"] });
+  }
+
+  async pullIncremental(request: ProviderPullRequest): Promise<ProviderPullResponse> {
+    await wait(80);
+    return super.pullIncremental(request);
+  }
+}
+
 test("manual download builds catalog and dashboard stats", async () => {
   const lakeRoot = await mkdtemp(join(tmpdir(), "carvipix-official-lake-"));
   const controlRoot = await mkdtemp(join(tmpdir(), "carvipix-official-control-"));
@@ -145,8 +173,8 @@ test("manual download builds catalog and dashboard stats", async () => {
     const health = await source.healthCheck(["tick"]);
     assert.equal(health.ok, true);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -178,8 +206,8 @@ test("provider failure triggers recovery/rotation status", async () => {
     assert.ok((bad?.rotationCount ?? 0) >= 1);
     assert.ok((good?.successes ?? 0) >= 1);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -207,7 +235,7 @@ test("scheduler registers jobs and executes interval sync", async () => {
     });
 
     await wait(140);
-    source.stopScheduler();
+    await source.stopScheduler();
 
     const jobs = source.getSchedulerStatus();
     assert.ok(jobs.some((job) => job.id === "sync-interval"));
@@ -218,8 +246,85 @@ test("scheduler registers jobs and executes interval sync", async () => {
     const catalog = source.getDatasetCatalog();
     assert.ok(catalog.length >= 1);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
+  }
+});
+
+test("scheduler stop waits in-flight jobs and prevents post-stop executions", async () => {
+  const lakeRoot = await mkdtemp(join(tmpdir(), `carvipix-official-lake-stop-${process.pid}-`));
+  const controlRoot = await mkdtemp(join(tmpdir(), `carvipix-official-control-stop-${process.pid}-`));
+
+  try {
+    const platform = new InstitutionalDataPlatform({
+      lakeRootDir: lakeRoot,
+      compressionCodec: "none",
+      compressionThreshold: 100000,
+    });
+
+    const source = new OfficialDataPlatformSource(platform, { rootDir: controlRoot });
+    source.registerProvider(new SlowProvider());
+
+    await source.bootstrap();
+    source.startScheduler({
+      syncKinds: ["tick"],
+      syncIntervalMs: 10,
+      dailyHourUtc: 23,
+      weeklyDayUtc: 0,
+      weeklyHourUtc: 23,
+    });
+
+    await wait(25);
+    await source.stopScheduler();
+    const runCountAfterStop = source.getSchedulerStatus().find((job) => job.id === "sync-interval")?.runCount ?? 0;
+
+    await wait(120);
+    const runCountLater = source.getSchedulerStatus().find((job) => job.id === "sync-interval")?.runCount ?? 0;
+    assert.equal(runCountLater, runCountAfterStop);
+  } finally {
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
+  }
+});
+
+test("scheduler supports multiple start-stop cycles without leaking scheduled executions", async () => {
+  const lakeRoot = await mkdtemp(join(tmpdir(), `carvipix-official-lake-cycles-${process.pid}-`));
+  const controlRoot = await mkdtemp(join(tmpdir(), `carvipix-official-control-cycles-${process.pid}-`));
+
+  try {
+    const platform = new InstitutionalDataPlatform({
+      lakeRootDir: lakeRoot,
+      compressionCodec: "none",
+      compressionThreshold: 100000,
+    });
+
+    const source = new OfficialDataPlatformSource(platform, { rootDir: controlRoot });
+    source.registerProvider(new MockProvider({ id: "provider-cycle", priority: 1, supports: ["tick"] }));
+
+    await source.bootstrap();
+
+    for (let i = 0; i < 3; i += 1) {
+      source.startScheduler({
+        syncKinds: ["tick"],
+        syncIntervalMs: 20,
+        dailyHourUtc: 23,
+        weeklyDayUtc: 0,
+        weeklyHourUtc: 23,
+      });
+      await wait(70);
+
+      const beforeStop = source.getSchedulerStatus().find((job) => job.id === "sync-interval")?.runCount ?? 0;
+      assert.ok(beforeStop >= 1);
+
+      await source.stopScheduler();
+      const atStop = source.getSchedulerStatus().find((job) => job.id === "sync-interval")?.runCount ?? 0;
+      await wait(40);
+      const afterStop = source.getSchedulerStatus().find((job) => job.id === "sync-interval")?.runCount ?? 0;
+      assert.equal(afterStop, atStop);
+    }
+  } finally {
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -254,8 +359,8 @@ test("historical bootstrap downloads official ecosystem assets and certifies dat
     const expectedAssets = new Set<string>(OFFICIAL_ECOSYSTEM_ASSETS);
     assert.ok(catalog.some((entry) => expectedAssets.has(entry.asset)));
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -285,8 +390,8 @@ test("integrity maintenance detects corruption and auto-repairs", async () => {
     assert.ok(maintenance.issuesDetected >= 1);
     assert.ok(maintenance.repairsApplied >= 1);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -324,8 +429,8 @@ test("module gateway enforces authorized official-source access", async () => {
       /missing required scope/i,
     );
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -359,8 +464,8 @@ test("direct download attempts are tracked as violations", async () => {
     const target = modules.find((module) => module.moduleId === "research-lab");
     assert.equal(target?.blockedAttempts, 1);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -388,8 +493,8 @@ test("lineage and realtime stream can be consumed by authorized modules", async 
     const events = source.pollStreamEventsForModule("dashboard-app", { limit: 100 });
     assert.ok(events.some((event) => event.type === "provider-sync-ok"));
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });
 
@@ -414,7 +519,7 @@ test("stress readiness check executes with bounded synthetic volume", async () =
     assert.ok(summary.queryMs >= 0);
     assert.ok(summary.replayMs >= 0);
   } finally {
-    await rm(lakeRoot, { recursive: true, force: true });
-    await rm(controlRoot, { recursive: true, force: true });
+    await cleanupTempDir(lakeRoot);
+    await cleanupTempDir(controlRoot);
   }
 });

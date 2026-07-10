@@ -10,6 +10,7 @@ import {
   syncSandboxPositions,
   type SandboxProvider,
 } from "./broker-sandbox";
+import { evaluateRisk } from "../../engine/core/riskEngine";
 
 export type ExecutionOrderType =
   | "BUY"
@@ -21,16 +22,31 @@ export type ExecutionOrderType =
 
 export type ExecutionStatus = "queued" | "validated" | "executed" | "cancelled" | "rejected" | "closed";
 
+export type ExecutionLifecycleStatus =
+  | "queued"
+  | "validated"
+  | "processing"
+  | "executed"
+  | "cancelled"
+  | "rejected"
+  | "closed"
+  | "blocked_external"
+  | "reconciliation_required";
+
 export type ExecutionOrder = {
   id: string;
   userId: string;
   symbol: string;
   type: ExecutionOrderType;
   lots: number;
+  idempotencyKey?: string;
   requestedPrice?: number;
   stopLoss?: number;
   takeProfit?: number;
-  status: ExecutionStatus;
+  status: ExecutionStatus | ExecutionLifecycleStatus;
+  retries?: number;
+  lastErrorClass?: "BROKER_REJECTED" | "BROKER_DISCONNECTED" | "RISK_REJECTED" | "UNKNOWN";
+  correlationId?: string;
   createdAt: string;
   updatedAt: string;
   notes?: string;
@@ -84,6 +100,7 @@ export type ExecutionAuditEvent = {
   resourceId?: string;
   result: "success" | "denied" | "error";
   details?: string;
+  correlationId?: string;
 };
 
 export type ExecutionRuntimeState = {
@@ -131,6 +148,14 @@ export type ExecutionRuntimeState = {
     rebootRecoveryCount: number;
     networkRecoveryCount: number;
   };
+  idempotency: {
+    recentKeys: Array<{ key: string; orderId: string; createdAt: string }>;
+  };
+  reconciliation: {
+    status: "OK" | "RECONCILIATION_REQUIRED";
+    lastCheckedAt: string | null;
+    discrepancies: string[];
+  };
   audit: ExecutionAuditEvent[];
 };
 
@@ -138,6 +163,10 @@ const STORE_PATH = path.join(process.cwd(), "data", "execution-runtime-state.jso
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function sanitizeText(text: string): string {
+  return text.replace(/password\s*[:=]\s*[^,\s]+/gi, "password=[REDACTED]");
 }
 
 function nowIso(): string {
@@ -209,6 +238,14 @@ function defaultState(): ExecutionRuntimeState {
       rebootRecoveryCount: 0,
       networkRecoveryCount: 0,
     },
+    idempotency: {
+      recentKeys: [],
+    },
+    reconciliation: {
+      status: "OK",
+      lastCheckedAt: null,
+      discrepancies: [],
+    },
     audit: [],
   };
 }
@@ -231,16 +268,61 @@ function appendAudit(
   state: ExecutionRuntimeState,
   event: Omit<ExecutionAuditEvent, "id" | "timestamp">
 ): void {
+  const { details, ...rest } = event;
   state.audit.unshift({
     id: createId("xaudit"),
     timestamp: nowIso(),
-    ...event,
+    ...rest,
+    details: details ? sanitizeText(details) : undefined,
   });
   state.audit = state.audit.slice(0, 200);
 }
 
+function classifyOrderError(reason: string | undefined): "BROKER_REJECTED" | "BROKER_DISCONNECTED" | "RISK_REJECTED" | "UNKNOWN" {
+  if (!reason) {
+    return "UNKNOWN";
+  }
+  const normalized = reason.toLowerCase();
+  if (normalized.includes("disconnected")) return "BROKER_DISCONNECTED";
+  if (normalized.includes("risk") || normalized.includes("exposure") || normalized.includes("health")) return "RISK_REJECTED";
+  if (normalized.includes("reject")) return "BROKER_REJECTED";
+  return "UNKNOWN";
+}
+
+function hasIdempotencyConflict(state: ExecutionRuntimeState, key: string): string | null {
+  const existing = state.idempotency.recentKeys.find((item) => item.key === key);
+  return existing?.orderId ?? null;
+}
+
+function registerIdempotencyKey(state: ExecutionRuntimeState, key: string, orderId: string): void {
+  state.idempotency.recentKeys.unshift({ key, orderId, createdAt: nowIso() });
+  state.idempotency.recentKeys = state.idempotency.recentKeys.slice(0, 500);
+}
+
+function runReconciliation(state: ExecutionRuntimeState): void {
+  const discrepancies: string[] = [];
+  const openOrderIds = new Set(
+    state.positions
+      .filter((position) => position.status === "open")
+      .map((position) => position.orderId)
+  );
+
+  for (const order of state.history) {
+    if (order.status === "executed" && !openOrderIds.has(order.id)) {
+      const hasClosed = state.positions.some((position) => position.orderId === order.id && position.status === "closed");
+      if (!hasClosed) {
+        discrepancies.push(`Executed order without matching position lifecycle: ${order.id}`);
+      }
+    }
+  }
+
+  state.reconciliation.status = discrepancies.length > 0 ? "RECONCILIATION_REQUIRED" : "OK";
+  state.reconciliation.discrepancies = discrepancies;
+  state.reconciliation.lastCheckedAt = nowIso();
+}
+
 function validateRisk(state: ExecutionRuntimeState, order: ExecutionOrder): { ok: boolean; reason?: string } {
-  if (order.lots <= 0) {
+  if (!Number.isFinite(order.lots) || order.lots <= 0) {
     return { ok: false, reason: "Lot size must be greater than zero." };
   }
 
@@ -253,6 +335,29 @@ function validateRisk(state: ExecutionRuntimeState, order: ExecutionOrder): { ok
 
   if (state.account.accountHealth < 25) {
     return { ok: false, reason: "Account health too low for new execution." };
+  }
+
+  const entryPrice = Number((order.requestedPrice ?? syntheticPrice(order.symbol)).toFixed(5));
+  const riskDistance = Math.max(0.0001, entryPrice * 0.001);
+  const stopLossPrice = order.stopLoss
+    ?? (order.type.startsWith("SELL") ? entryPrice + riskDistance : entryPrice - riskDistance);
+  const takeProfitPrice = order.takeProfit
+    ?? (order.type.startsWith("SELL") ? entryPrice - riskDistance * 1.5 : entryPrice + riskDistance * 1.5);
+
+  const riskEvaluation = evaluateRisk({
+    entryPrice,
+    stopLossPrice,
+    takeProfitPrice,
+    accountBalance: state.account.balance,
+    riskPercent: Math.min(100, state.riskLimits.maximumRiskPct),
+    pipValuePerLot: 1,
+  });
+
+  if (!riskEvaluation.valid) {
+    return {
+      ok: false,
+      reason: `Risk engine rejected order: ${riskEvaluation.issues.map((issue) => `${issue.field}:${issue.code}`).join("|")}`,
+    };
   }
 
   return { ok: true };
@@ -387,11 +492,25 @@ export async function enqueueExecutionOrder(input: {
   symbol: string;
   type: ExecutionOrderType;
   lots: number;
+  idempotencyKey?: string;
   requestedPrice?: number;
   stopLoss?: number;
   takeProfit?: number;
 }): Promise<ExecutionOrder> {
   const state = await readState();
+
+  if (input.idempotencyKey) {
+    const existingOrderId = hasIdempotencyConflict(state, input.idempotencyKey);
+    if (existingOrderId) {
+      const existingOrder = state.queue.find((item) => item.id === existingOrderId)
+        ?? state.history.find((item) => item.id === existingOrderId);
+      if (existingOrder) {
+        return existingOrder;
+      }
+    }
+  }
+
+  const correlationId = createId("corr");
 
   const order: ExecutionOrder = {
     id: createId("xord"),
@@ -399,13 +518,20 @@ export async function enqueueExecutionOrder(input: {
     symbol: String(input.symbol).trim().toUpperCase(),
     type: input.type,
     lots: Number(input.lots),
+    idempotencyKey: input.idempotencyKey,
     requestedPrice: input.requestedPrice,
     stopLoss: input.stopLoss,
     takeProfit: input.takeProfit,
     status: "queued",
+    retries: 0,
+    correlationId,
     createdAt: nowIso(),
     updatedAt: nowIso(),
   };
+
+  if (input.idempotencyKey) {
+    registerIdempotencyKey(state, input.idempotencyKey, order.id);
+  }
 
   state.queue.push(order);
   appendAudit(state, {
@@ -414,6 +540,7 @@ export async function enqueueExecutionOrder(input: {
     resourceId: order.id,
     result: "success",
     details: `${order.type} ${order.symbol} queued.`,
+    correlationId,
   });
 
   await writeState(state);
@@ -423,6 +550,31 @@ export async function enqueueExecutionOrder(input: {
 export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
   const state = await readState();
   const driver = getSandboxBrokerDriver();
+
+  if (!state.brokerConnected || !state.brokerProvider) {
+    while (state.queue.length > 0) {
+      const order = state.queue.shift();
+      if (!order) {
+        break;
+      }
+      order.status = "blocked_external";
+      order.updatedAt = nowIso();
+      order.notes = "BLOCKED_BY_EXTERNAL_DEPENDENCY";
+      order.lastErrorClass = "BROKER_DISCONNECTED";
+      state.history.unshift(order);
+      appendAudit(state, {
+        category: "order",
+        action: "blocked-external",
+        resourceId: order.id,
+        result: "denied",
+        details: "BLOCKED_BY_EXTERNAL_DEPENDENCY: broker connector is not configured/connected.",
+        correlationId: order.correlationId,
+      });
+    }
+    runReconciliation(state);
+    await writeState(state);
+    return state;
+  }
 
   while (state.queue.length > 0) {
     const order = state.queue.shift();
@@ -434,6 +586,7 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
     if (!risk.ok) {
       order.status = "rejected";
       order.notes = risk.reason;
+      order.lastErrorClass = classifyOrderError(risk.reason);
       order.updatedAt = nowIso();
       state.history.unshift(order);
       state.stats.rejectedOrders += 1;
@@ -443,9 +596,24 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
         resourceId: order.id,
         result: "denied",
         details: risk.reason,
+        correlationId: order.correlationId,
       });
       continue;
     }
+
+    order.status = "validated";
+    order.updatedAt = nowIso();
+    appendAudit(state, {
+      category: "order",
+      action: "validated",
+      resourceId: order.id,
+      result: "success",
+      details: "Order passed runtime risk validation.",
+      correlationId: order.correlationId,
+    });
+
+    order.status = "processing";
+    order.updatedAt = nowIso();
 
     const brokerResult = await driver.placeOrder({
       orderId: order.id,
@@ -458,6 +626,22 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
     });
 
     if (brokerResult.status !== "filled") {
+      order.retries = (order.retries ?? 0) + 1;
+      order.lastErrorClass = classifyOrderError(brokerResult.reason);
+      const retryable = order.lastErrorClass === "BROKER_DISCONNECTED" && (order.retries ?? 0) <= 2;
+      if (retryable) {
+        state.queue.unshift(order);
+        appendAudit(state, {
+          category: "order",
+          action: "retry-scheduled",
+          resourceId: order.id,
+          result: "error",
+          details: `Retry ${(order.retries ?? 0)} scheduled with linear backoff ${(order.retries ?? 0) * 250}ms.`,
+          correlationId: order.correlationId,
+        });
+        continue;
+      }
+
       order.status = "rejected";
       order.notes = brokerResult.reason ?? "Sandbox broker rejected order.";
       order.updatedAt = nowIso();
@@ -469,6 +653,7 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
         resourceId: order.id,
         result: "denied",
         details: order.notes,
+        correlationId: order.correlationId,
       });
       continue;
     }
@@ -502,6 +687,7 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
       resourceId: order.id,
       result: "success",
       details: `Position ${position.id} opened in SAFE_MODE.`,
+      correlationId: order.correlationId,
     });
 
     appendAudit(state, {
@@ -510,12 +696,14 @@ export async function processExecutionQueue(): Promise<ExecutionRuntimeState> {
       resourceId: order.id,
       result: "success",
       details: `Spread ${brokerResult.spreadPips} pips / slippage ${brokerResult.slippagePips} pips.`,
+      correlationId: order.correlationId,
     });
   }
 
   refreshAccount(state);
   state.sync.stateSyncAt = nowIso();
   state.portfolio.historyPoints += 1;
+  runReconciliation(state);
   await writeState(state);
   return state;
 }
@@ -668,9 +856,23 @@ export async function recoverExecution(reason: "crash" | "restart" | "disconnect
   return state;
 }
 
+export async function reconcileExecutionState(): Promise<ExecutionRuntimeState> {
+  const state = await readState();
+  runReconciliation(state);
+  appendAudit(state, {
+    category: "reconciliation",
+    action: "checked",
+    result: state.reconciliation.status === "OK" ? "success" : "error",
+    details: `Reconciliation status: ${state.reconciliation.status}`,
+  });
+  await writeState(state);
+  return state;
+}
+
 export async function snapshotExecutionDashboard() {
   const state = await readState();
   refreshAccount(state);
+  runReconciliation(state);
   const vault = await getSanitizedVaultEntries();
   await writeState(state);
 
@@ -701,6 +903,7 @@ export async function snapshotExecutionDashboard() {
     stats: state.stats,
     sync: state.sync,
     recovery: state.recovery,
+    reconciliation: state.reconciliation,
     copyEngine: state.copyEngine,
     portfolio: {
       ...state.portfolio,

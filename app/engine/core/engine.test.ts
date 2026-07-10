@@ -2,9 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { CARVIPIXEngine } from './engine';
-import type { AgentScore, ConflictDescriptor, TradeSignal } from '../types';
+import type {
+  AgentScore,
+  CertifiedDatasetEnvelope,
+  CertifiedDatasetSource,
+  CertifiedDatasetStatus,
+  ConflictDescriptor,
+  ResearchProposalEnvelope,
+  TradeSignal,
+} from '../types';
 
-function buildCertifiedDataset(overrides: Record<string, unknown> = {}) {
+type CertifiedDatasetOverrides = Partial<Omit<CertifiedDatasetEnvelope, 'status' | 'source'>> & {
+  status?: CertifiedDatasetStatus;
+  source?: CertifiedDatasetSource;
+};
+
+type ResearchProposalEnvelopeForTests = Omit<ResearchProposalEnvelope, 'status' | 'source' | 'manualReviewRequired'> & {
+  source: ResearchProposalEnvelope['source'] | 'CDP';
+  status: ResearchProposalEnvelope['status'] | 'PARTIAL' | 'INVALID' | 'SIMULATED';
+  manualReviewRequired: true | false;
+};
+
+function buildCertifiedDataset(overrides: CertifiedDatasetOverrides = {}): CertifiedDatasetEnvelope {
   return {
     datasetId: 'cdp-001',
     source: 'CDP',
@@ -15,7 +34,7 @@ function buildCertifiedDataset(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function buildResearchProposalEnvelope(overrides: Record<string, unknown> = {}) {
+function buildResearchProposalEnvelope(overrides: Partial<ResearchProposalEnvelopeForTests> = {}): ResearchProposalEnvelopeForTests {
   return {
     datasetId: 'research-001',
     checksum: 'feed1234',
@@ -89,7 +108,7 @@ test('returns NO_TRADE when research proposal envelope misses checksum', () => {
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope({ checksum: '' }),
+    researchProposalEnvelope: buildResearchProposalEnvelope({ checksum: '' }) as unknown as ResearchProposalEnvelope,
   });
 
   assert.equal(alert, null);
@@ -101,7 +120,7 @@ test('returns NO_TRADE when research proposal envelope misses schemaVersion', ()
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope({ schemaVersion: '' }),
+    researchProposalEnvelope: buildResearchProposalEnvelope({ schemaVersion: '' }) as unknown as ResearchProposalEnvelope,
   });
 
   assert.equal(alert, null);
@@ -113,7 +132,7 @@ test('returns NO_TRADE when research proposal envelope misses datasetId', () => 
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope({ datasetId: '' }),
+    researchProposalEnvelope: buildResearchProposalEnvelope({ datasetId: '' }) as unknown as ResearchProposalEnvelope,
   });
 
   assert.equal(alert, null);
@@ -125,7 +144,7 @@ test('returns NO_TRADE when research proposal envelope source is not RESEARCH_LA
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope({ source: 'CDP' }),
+    researchProposalEnvelope: buildResearchProposalEnvelope({ source: 'CDP' }) as unknown as ResearchProposalEnvelope,
   });
 
   assert.equal(alert, null);
@@ -140,7 +159,7 @@ test('returns NO_TRADE when research proposal envelope status is not CERTIFIED',
     const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
     const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-      researchProposalEnvelope: buildResearchProposalEnvelope({ status }),
+      researchProposalEnvelope: buildResearchProposalEnvelope({ status }) as unknown as ResearchProposalEnvelope,
     });
 
     assert.equal(alert, null);
@@ -153,7 +172,7 @@ test('returns NO_TRADE when research proposal envelope manual review is false', 
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope({ manualReviewRequired: false }),
+    researchProposalEnvelope: buildResearchProposalEnvelope({ manualReviewRequired: false }) as unknown as ResearchProposalEnvelope,
   });
 
   assert.equal(alert, null);
@@ -165,12 +184,12 @@ test('allows analysis with valid research proposal envelope but SAFE_MODE still 
   const consensus = engine.evaluateConsensus(buildApprovedConsensus());
 
   const alert = engine.createAlert(buildSignal(), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope(),
+    researchProposalEnvelope: buildResearchProposalEnvelope() as unknown as ResearchProposalEnvelope,
   });
 
   assert.ok(alert);
   const blockedExecution = engine.createAlert(buildSignal({ id: 'signal-research-exec' }), consensus, undefined, {
-    researchProposalEnvelope: buildResearchProposalEnvelope(),
+    researchProposalEnvelope: buildResearchProposalEnvelope() as unknown as ResearchProposalEnvelope,
     executionRequested: true,
   });
 
