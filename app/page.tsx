@@ -1,7 +1,11 @@
 import { CheckCircle2, LockKeyhole, ShieldCheck, Sparkles } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
+import { listActiveVideos } from "@/app/backend/compliance/compliance-service";
 
-export default function Home() {
+export default async function Home() {
+  const activeVideos = await listActiveVideos();
+  const publicVideo = activeVideos.find((item) => item.scope === "public-home");
+
   return (
     <main className="min-h-screen bg-[#05070b] text-[#f5f1e8]">
       <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-14">
@@ -23,6 +27,27 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {publicVideo && (
+        <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:px-14">
+          <div className="rounded-2xl border border-white/10 bg-[#0d1119] p-7">
+            <p className="text-xs uppercase tracking-[0.22em] text-[#d4af37]">Video institucional</p>
+            <h2 className="mt-3 text-3xl font-semibold">{publicVideo.title}</h2>
+            <p className="mt-3 text-sm text-[#c7c0b4]">{publicVideo.description}</p>
+            <div className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+              <video
+                className="h-full w-full"
+                controls
+                preload="metadata"
+                poster={publicVideo.posterUrl}
+                src={publicVideo.videoUrl}
+              >
+                Tu navegador no soporta video HTML5.
+              </video>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto grid max-w-7xl gap-6 px-5 py-10 sm:px-8 lg:grid-cols-3 lg:px-14">
         <article className="rounded-2xl border border-white/10 bg-white/5 p-6">

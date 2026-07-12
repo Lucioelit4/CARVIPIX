@@ -10,13 +10,15 @@ import {
   createVerificationToken as createLocalVerificationToken,
   findMembershipByUserId as findLocalMembershipByUserId,
   findUserByEmail as findLocalUserByEmail,
-  hashPassword as hashLocalPassword,
   listSessions as listLocalSessions,
+  listPasswordResetTokenMetadata as listLocalPasswordResetTokenMetadata,
+  listVerificationTokenMetadata as listLocalVerificationTokenMetadata,
+  resolvePasswordResetTokenRecipient as resolveLocalPasswordResetTokenRecipient,
+  resolveVerificationTokenRecipient as resolveLocalVerificationTokenRecipient,
   readSessionUser as readLocalSessionUser,
   revokeSessionByHash as revokeLocalSessionByHash,
   revokeSession as revokeLocalSession,
   seedDemoStore,
-  updateUser as updateLocalUser,
   upsertMembership as upsertLocalMembership,
 } from "@/app/backend/core/local-auth-store";
 
@@ -25,6 +27,25 @@ export const AUTH_ROLE_COOKIE = "carvipix_auth_role";
 
 const SESSION_HOURS = 12;
 const TOKEN_HOURS = 2;
+
+export type TokenIssueGuardInput = {
+  userId: string;
+  kind: "verification" | "password-reset";
+  maxInWindow?: number;
+  windowMinutes?: number;
+  minIntervalSeconds?: number;
+};
+
+export type TokenIssueGuardResult = {
+  allowed: boolean;
+  retryAfterSeconds?: number;
+};
+
+export type TokenRecipient = {
+  userId: string;
+  email: string;
+  nombre: string;
+};
 
 export type AuthUserRow = {
   id: string;
@@ -424,6 +445,115 @@ export async function consumeVerificationToken(token: string): Promise<boolean> 
   });
 }
 
+export async function checkTokenIssueGuard(input: TokenIssueGuardInput): Promise<TokenIssueGuardResult> {
+  const windowMinutes = input.windowMinutes ?? 60;
+  const maxInWindow = input.maxInWindow ?? 5;
+  const minIntervalSeconds = input.minIntervalSeconds ?? 30;
+  const cutoffMillis = Date.now() - windowMinutes * 60 * 1000;
+
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    const metadata = input.kind === "verification"
+      ? await listLocalVerificationTokenMetadata(input.userId)
+      : await listLocalPasswordResetTokenMetadata(input.userId);
+
+    const withinWindow = metadata
+      .map((item) => new Date(item.createdAt).getTime())
+      .filter((time) => Number.isFinite(time) && time >= cutoffMillis)
+      .sort((a, b) => b - a);
+
+    if (withinWindow.length >= maxInWindow) {
+      const oldestRelevant = withinWindow[maxInWindow - 1];
+      const retryAfterSeconds = Math.max(1, Math.ceil((oldestRelevant + windowMinutes * 60 * 1000 - Date.now()) / 1000));
+      return { allowed: false, retryAfterSeconds };
+    }
+
+    if (withinWindow.length > 0) {
+      const secondsSinceLast = (Date.now() - withinWindow[0]) / 1000;
+      if (secondsSinceLast < minIntervalSeconds) {
+        return { allowed: false, retryAfterSeconds: Math.ceil(minIntervalSeconds - secondsSinceLast) };
+      }
+    }
+
+    return { allowed: true };
+  }
+
+  const table = input.kind === "verification" ? "auth_verification_tokens" : "auth_password_reset_tokens";
+  const countResult = await backendDatabase.query<{ total: string }>(
+    `
+    SELECT COUNT(*)::text AS total
+    FROM ${table}
+    WHERE user_id = $1
+      AND created_at >= NOW() - ($2::text || ' minutes')::interval
+    `,
+    [input.userId, windowMinutes]
+  );
+
+  const total = Number(countResult.rows[0]?.total ?? "0");
+  if (total >= maxInWindow) {
+    return { allowed: false, retryAfterSeconds: windowMinutes * 60 };
+  }
+
+  const lastResult = await backendDatabase.query<{ created_at: Date }>(
+    `
+    SELECT created_at
+    FROM ${table}
+    WHERE user_id = $1
+    ORDER BY created_at DESC
+    LIMIT 1
+    `,
+    [input.userId]
+  );
+
+  const lastCreatedAt = lastResult.rows[0]?.created_at ? new Date(lastResult.rows[0].created_at).getTime() : null;
+  if (lastCreatedAt) {
+    const secondsSinceLast = (Date.now() - lastCreatedAt) / 1000;
+    if (secondsSinceLast < minIntervalSeconds) {
+      return { allowed: false, retryAfterSeconds: Math.ceil(minIntervalSeconds - secondsSinceLast) };
+    }
+  }
+
+  return { allowed: true };
+}
+
+export async function resolveVerificationTokenRecipient(token: string): Promise<TokenRecipient | null> {
+  const tokenHash = hashToken(token);
+
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    const local = await resolveLocalVerificationTokenRecipient(token);
+    return local ? { userId: local.userId, email: local.email, nombre: local.nombre } : null;
+  }
+
+  const result = await backendDatabase.query<{
+    user_id: string;
+    email: string;
+    nombre: string;
+  }>(
+    `
+    SELECT u.id AS user_id, u.email, u.nombre
+    FROM auth_verification_tokens t
+    INNER JOIN users u ON u.id = t.user_id
+    WHERE t.token_hash = $1
+      AND t.used_at IS NULL
+      AND t.expires_at > NOW()
+    LIMIT 1
+    `,
+    [tokenHash]
+  );
+
+  const row = result.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return {
+    userId: row.user_id,
+    email: row.email,
+    nombre: row.nombre,
+  };
+}
+
 export async function createPasswordResetToken(userId: string): Promise<string> {
   if (!backendDatabase.enabled) {
     return createLocalPasswordResetToken(userId);
@@ -471,4 +601,42 @@ export async function consumePasswordResetToken(token: string, newPasswordHash: 
     await client.query(`UPDATE auth_password_reset_tokens SET used_at = NOW() WHERE token_hash = $1`, [tokenHash]);
     return true;
   });
+}
+
+export async function resolvePasswordResetTokenRecipient(token: string): Promise<TokenRecipient | null> {
+  const tokenHash = hashToken(token);
+
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    const local = await resolveLocalPasswordResetTokenRecipient(token);
+    return local ? { userId: local.userId, email: local.email, nombre: local.nombre } : null;
+  }
+
+  const result = await backendDatabase.query<{
+    user_id: string;
+    email: string;
+    nombre: string;
+  }>(
+    `
+    SELECT u.id AS user_id, u.email, u.nombre
+    FROM auth_password_reset_tokens t
+    INNER JOIN users u ON u.id = t.user_id
+    WHERE t.token_hash = $1
+      AND t.used_at IS NULL
+      AND t.expires_at > NOW()
+    LIMIT 1
+    `,
+    [tokenHash]
+  );
+
+  const row = result.rows[0];
+  if (!row) {
+    return null;
+  }
+
+  return {
+    userId: row.user_id,
+    email: row.email,
+    nombre: row.nombre,
+  };
 }

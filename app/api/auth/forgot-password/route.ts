@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPasswordResetToken, findUserByEmail } from "@/app/lib/auth/server";
+import { emailNotificationService } from "@/app/backend/notifications";
+import { checkTokenIssueGuard, createPasswordResetToken, findUserByEmail } from "@/app/lib/auth/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,13 +16,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true, message: "Si el correo existe, enviaremos instrucciones." }, { status: 200 });
     }
 
+    const guard = await checkTokenIssueGuard({
+      userId: user.id,
+      kind: "password-reset",
+      maxInWindow: 5,
+      windowMinutes: 60,
+      minIntervalSeconds: 45,
+    });
+
+    if (!guard.allowed) {
+      return NextResponse.json({ ok: true, message: "Si el correo existe, enviaremos instrucciones." }, { status: 200 });
+    }
+
     const resetToken = await createPasswordResetToken(user.id);
+
+    try {
+      const result = await emailNotificationService.sendPasswordReset({
+        recipientEmail: user.email,
+        recipientName: user.nombre || user.email,
+        resetToken,
+      });
+
+      console.info("[CARVIPIX][AUTH][FORGOT_PASSWORD][EMAIL]", {
+        email: user.email,
+        provider: result.provider,
+        accepted: result.accepted,
+        messageId: result.messageId,
+      });
+    } catch (error) {
+      console.error("[CARVIPIX][AUTH][FORGOT_PASSWORD][EMAIL_FAILED]", {
+        email: user.email,
+        reason: error instanceof Error ? error.message : "unknown",
+      });
+    }
 
     return NextResponse.json(
       {
         ok: true,
         message: "Si el correo existe, enviaremos instrucciones.",
-        resetToken: process.env.NODE_ENV === "production" ? undefined : resetToken,
       },
       { status: 200 }
     );

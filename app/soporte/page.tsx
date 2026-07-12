@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import {
   Send,
   MessageCircle,
-  Zap,
   Clock,
   Lock,
   CheckCircle2,
@@ -25,6 +24,30 @@ interface ChatMessage {
   content: string;
 }
 
+type FaqItem = {
+  id: string;
+  question: string;
+  answer: string;
+  category:
+    | 'empresa'
+    | 'alertas'
+    | 'bot'
+    | 'membresias'
+    | 'pagos'
+    | 'facturacion'
+    | 'gestion-capital'
+    | 'fondeo'
+    | 'resultados'
+    | 'comunidad'
+    | 'soporte'
+    | 'problemas-tecnicos'
+    | 'cuenta'
+    | 'seguridad'
+    | 'legal'
+    | 'administracion';
+  popularity?: number;
+};
+
 type SessionPayload = {
   authenticated?: boolean;
   user?: { id?: string; email?: string; nombre?: string };
@@ -33,6 +56,13 @@ type SessionPayload = {
 export default function SoportePage() {
   const [session, setSession] = useState<SessionPayload | null>(null);
   const [creatingTicket, setCreatingTicket] = useState(false);
+  const [sendingAi, setSendingAi] = useState(false);
+  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
+  const [faqTopItems, setFaqTopItems] = useState<FaqItem[]>([]);
+  const [faqRelatedItems, setFaqRelatedItems] = useState<FaqItem[]>([]);
+  const [faqSearch, setFaqSearch] = useState('');
+  const [faqCategory, setFaqCategory] = useState<'all' | FaqItem['category']>('all');
+  const [conversationId, setConversationId] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
@@ -49,18 +79,57 @@ export default function SoportePage() {
   });
   const [ticketErrors, setTicketErrors] = useState<{ [key: string]: string }>({});
   const [ticketMessage, setTicketMessage] = useState('');
+  const [agentNotice, setAgentNotice] = useState('');
+  const [lastFaqFocusId, setLastFaqFocusId] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const FAQ_CATEGORY_LABELS: Record<'all' | FaqItem['category'], string> = {
+    all: 'Todas',
+    empresa: 'Empresa',
+    alertas: 'Alertas',
+    bot: 'Bot',
+    membresias: 'Membresias',
+    pagos: 'Pagos',
+    facturacion: 'Facturacion',
+    'gestion-capital': 'Gestion de Capital',
+    fondeo: 'Fondeo',
+    resultados: 'Resultados',
+    comunidad: 'Comunidad',
+    soporte: 'Soporte',
+    'problemas-tecnicos': 'Problemas Tecnicos',
+    cuenta: 'Cuenta',
+    seguridad: 'Seguridad',
+    legal: 'Legal',
+    administracion: 'Administracion',
+  };
 
   // Load AI support data from modules on mount
   useEffect(() => {
     const loadAIData = async () => {
       try {
+        const storedConversationId = window.localStorage.getItem('carvipix-support-conversation-id') || '';
+        if (storedConversationId) {
+          setConversationId(storedConversationId);
+        }
+
         const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store' }).catch(() => null);
         if (sessionResponse?.ok) {
           const sessionPayload = (await sessionResponse.json().catch(() => ({}))) as SessionPayload;
           setSession(sessionPayload);
         } else {
           setSession({ authenticated: false });
+        }
+
+        const faqResponse = await fetch('/api/client/support/intelligence', { cache: 'no-store' }).catch(() => null);
+        if (faqResponse?.ok) {
+          const faqPayload = (await faqResponse.json().catch(() => ({}))) as {
+            data?: {
+              faq?: FaqItem[];
+              top?: FaqItem[];
+            };
+          };
+          setFaqItems(Array.isArray(faqPayload.data?.faq) ? faqPayload.data?.faq : []);
+          setFaqTopItems(Array.isArray(faqPayload.data?.top) ? faqPayload.data?.top : []);
         }
 
         const briefing = await getDailyBriefing();
@@ -76,7 +145,7 @@ export default function SoportePage() {
             },
           ]);
         }
-      } catch (error) {
+      } catch {
         console.log("No se pudo cargar el contexto inicial de soporte");
       }
     };
@@ -84,32 +153,110 @@ export default function SoportePage() {
     loadAIData();
   }, []);
 
+  useEffect(() => {
+    const fetchFaq = async () => {
+      const params = new URLSearchParams();
+      if (faqSearch.trim()) params.set('q', faqSearch.trim());
+      if (faqCategory !== 'all') params.set('category', faqCategory);
+      if (lastFaqFocusId) params.set('relatedTo', lastFaqFocusId);
+
+      const response = await fetch(`/api/client/support/faq?${params.toString()}`, { cache: 'no-store' }).catch(() => null);
+      if (!response?.ok) return;
+
+      const payload = (await response.json().catch(() => ({}))) as { data?: FaqItem[]; related?: FaqItem[] };
+      setFaqItems(Array.isArray(payload.data) ? payload.data : []);
+      setFaqRelatedItems(Array.isArray(payload.related) ? payload.related : []);
+    };
+
+    void fetchFaq();
+  }, [faqSearch, faqCategory, lastFaqFocusId]);
+
   // Auto-scroll al final del chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Generar respuesta base mientras se amplía la integración contextual.
-  const generateSupportResponse = (_query: string): string => {
-    return 'Gracias por tu consulta. Hemos registrado tu mensaje y te responderemos con la guía correspondiente según tu servicio activo. ¿Deseas que también abramos un ticket de seguimiento?';
-  };
-
   // Enviar mensaje en el chat
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
+    const rawInput = inputValue;
     const userMessage: ChatMessage = { role: 'user', content: inputValue };
     setMessages((prev) => [...prev, userMessage]);
+    setInputValue('');
 
-    const assistantResponse = generateSupportResponse(inputValue);
-    setTimeout(() => {
+    setSendingAi(true);
+    setAgentNotice('');
+
+    try {
+      const response = await fetch('/api/client/support/intelligence', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: rawInput, conversationId: conversationId || undefined }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        data?: {
+          conversationId?: string;
+          answer?: string;
+          escalated?: boolean;
+          escalationTicketId?: string | null;
+          category?: string;
+        };
+      };
+
+      if (payload.data?.conversationId) {
+        setConversationId(payload.data.conversationId);
+        window.localStorage.setItem('carvipix-support-conversation-id', payload.data.conversationId);
+      }
+
+      if (response.status === 401) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            content: `${String(payload.data?.answer ?? 'Puedo responder con informacion oficial, pero para escalar el caso automaticamente debes iniciar sesion.')}\n\n${String(payload.error ?? 'Inicia sesion para permitir escalamiento por ticket.')}`,
+          },
+        ]);
+        return;
+      }
+
+      const answer = String(payload.data?.answer ?? '').trim() || 'No pude procesar la consulta en este momento.';
+      const escalated = Boolean(payload.data?.escalated);
+      const escalationTicketId = payload.data?.escalationTicketId ?? null;
+
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: assistantResponse },
+        {
+          role: 'assistant',
+          content: escalated && escalationTicketId
+            ? `${answer}\n\nHe escalado el caso automaticamente. Ticket: ${escalationTicketId}`
+            : answer,
+        },
       ]);
-    }, 500);
 
-    setInputValue('');
+      if (escalated && escalationTicketId) {
+        setAgentNotice(`Caso escalado a administracion con ticket ${escalationTicketId}.`);
+      }
+
+      if (payload.data?.category) {
+        const matchingFaq = faqItems.find((item) => item.category === payload.data?.category);
+        if (matchingFaq) {
+          setLastFaqFocusId(matchingFaq.id);
+        }
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'No pude conectar con el agente inteligente en este momento. Si tu caso es urgente, crea un ticket.',
+        },
+      ]);
+    } finally {
+      setSendingAi(false);
+    }
   };
 
   // Cargar tema rápido
@@ -125,7 +272,9 @@ export default function SoportePage() {
 
     const question = questionMap[topic] || topic;
     setInputValue(question);
-    setTimeout(() => handleSendMessage(), 100);
+    setTimeout(() => {
+      void handleSendMessage();
+    }, 100);
   };
 
   // Crear ticket
@@ -165,6 +314,7 @@ export default function SoportePage() {
           category: ticketForm.categoria.toLowerCase(),
           priority: priorityMap[ticketForm.prioridad] ?? 'medium',
           message: ticketForm.mensaje,
+          conversation: messages.slice(-10).map((item) => ({ role: item.role, content: item.content })),
         }),
       });
 
@@ -187,7 +337,7 @@ export default function SoportePage() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
 
@@ -316,12 +466,16 @@ export default function SoportePage() {
                 className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none transition-colors"
               />
               <button
-                onClick={handleSendMessage}
-                className="bg-[#D4AF37] text-[#030303] p-3 rounded-lg hover:bg-[#E5C158] transition-all font-bold"
+                onClick={() => void handleSendMessage()}
+                disabled={sendingAi}
+                className="bg-[#D4AF37] text-[#030303] p-3 rounded-lg hover:bg-[#E5C158] transition-all font-bold disabled:opacity-60"
               >
                 <Send size={20} />
               </button>
             </div>
+            {sendingAi ? <p className="mt-2 text-xs text-white/60">Analizando consulta con base oficial CARVIPIX...</p> : null}
+            {agentNotice ? <p className="mt-2 text-xs text-[#D4AF37]">{agentNotice}</p> : null}
+            {conversationId ? <p className="mt-1 text-[11px] text-white/50">Sesion de soporte: {conversationId}</p> : null}
           </motion.div>
 
           {/* Sidebar - Temas Rápidos */}
@@ -358,6 +512,88 @@ export default function SoportePage() {
             </div>
           </motion.div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-8 mb-12"
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Radio className="w-5 h-5 text-[#D4AF37]" />
+            <h2 className="text-2xl font-bold">Preguntas Frecuentes</h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <input
+              type="text"
+              value={faqSearch}
+              onChange={(event) => setFaqSearch(event.target.value)}
+              placeholder="Buscar pregunta..."
+              className="lg:col-span-2 bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-white/40 focus:border-[#D4AF37] outline-none"
+            />
+            <select
+              value={faqCategory}
+              onChange={(event) => setFaqCategory(event.target.value as 'all' | FaqItem['category'])}
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-[#D4AF37] outline-none"
+            >
+              {Object.entries(FAQ_CATEGORY_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {faqTopItems.length > 0 ? (
+            <div className="mb-6">
+              <p className="text-sm text-white/70 mb-3">Mas consultadas</p>
+              <div className="flex flex-wrap gap-2">
+                {faqTopItems.slice(0, 8).map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setLastFaqFocusId(item.id)}
+                    className="px-3 py-1.5 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37] text-xs"
+                  >
+                    {item.question}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {faqItems.map((faq) => (
+              <button
+                key={faq.id}
+                onClick={() => setLastFaqFocusId(faq.id)}
+                className="text-left rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-[#D4AF37]/30 transition-colors"
+              >
+                <p className="text-xs uppercase tracking-wide text-[#D4AF37] mb-2">{FAQ_CATEGORY_LABELS[faq.category]}</p>
+                <h3 className="text-sm font-semibold mb-2">{faq.question}</h3>
+                <p className="text-sm text-white/70 leading-relaxed">{faq.answer}</p>
+              </button>
+            ))}
+          </div>
+
+          {faqRelatedItems.length > 0 ? (
+            <div className="mt-6 border-t border-white/10 pt-6">
+              <p className="text-sm text-white/70 mb-3">Preguntas relacionadas</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {faqRelatedItems.slice(0, 6).map((item) => (
+                  <button
+                    key={`related-${item.id}`}
+                    onClick={() => setLastFaqFocusId(item.id)}
+                    className="text-left rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 hover:border-[#D4AF37]/30 transition-colors"
+                  >
+                    <p className="text-xs text-[#D4AF37] uppercase mb-1">{FAQ_CATEGORY_LABELS[item.category]}</p>
+                    <p className="text-sm text-white">{item.question}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </motion.div>
 
         {/* Crear Ticket Section */}
         <motion.div

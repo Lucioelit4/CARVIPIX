@@ -33,7 +33,7 @@ export default function RecuperarPasswordPage() {
         body: JSON.stringify(isResetMode ? { token, password } : { email }),
       });
 
-      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string; resetToken?: string };
+      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
 
       if (!response.ok) {
         setError(data.error || 'No se pudo procesar la solicitud.');
@@ -44,8 +44,7 @@ export default function RecuperarPasswordPage() {
         setMessage('Contraseña actualizada. Ya puedes iniciar sesión.');
         setPassword('');
       } else {
-        const tokenHint = data.resetToken ? ` Token de prueba: ${data.resetToken}` : '';
-        setMessage(`${data.message || 'Solicitud procesada.'}${tokenHint}`);
+        setMessage(data.message || 'Solicitud procesada.');
       }
     } catch {
       setError('No se pudo procesar la solicitud.');

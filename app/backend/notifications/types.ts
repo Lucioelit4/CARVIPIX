@@ -42,6 +42,33 @@ export type WelcomeRegistrationEmailInput = {
   verificationToken: string;
 };
 
+export type PasswordResetEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+  resetToken: string;
+};
+
+export type WelcomeActivatedEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+};
+
+export type PasswordChangedEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+};
+
+export type PromotionCampaignEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+  campaignName: string;
+  headline: string;
+  body: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  unsubscribeUrl?: string;
+};
+
 export type PaymentTransactionalEmailInput = {
   templateId:
     | "membership-payment-confirmed"

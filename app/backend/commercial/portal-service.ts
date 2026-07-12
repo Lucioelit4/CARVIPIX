@@ -7,6 +7,7 @@ import { listActiveSessions } from "@/app/lib/auth/server";
 import { OFFICIAL_PLAN_LABELS } from "./catalog";
 import { listCommercialAuditEvents } from "./audit-store";
 import { resolveUserCommercialAccess } from "./plan-entitlements-store";
+import { listLocalBotConnections, listLocalBotLogs } from "../core/local-bot-store";
 
 export type ClientPortalSnapshot = {
   plan: {
@@ -124,6 +125,10 @@ export async function listSupportTickets(userId: string) {
 }
 
 export async function listBotConnections(userId: string) {
+  if (!backendDatabase.enabled) {
+    return listLocalBotConnections(userId);
+  }
+
   const { rows } = await backendDatabase.query<{
     id: string;
     bot_instance_id: string;
@@ -166,6 +171,10 @@ export async function listBotConnections(userId: string) {
 }
 
 export async function listBotLogs(userId: string, limit = 25) {
+  if (!backendDatabase.enabled) {
+    return listLocalBotLogs(userId, limit);
+  }
+
   const { rows } = await backendDatabase.query<{
     id: string;
     bot_instance_id: string | null;

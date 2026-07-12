@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { consumePasswordResetToken, hashPassword } from "@/app/lib/auth/server";
+import { emailNotificationService } from "@/app/backend/notifications";
+import { consumePasswordResetToken, hashPassword, resolvePasswordResetTokenRecipient } from "@/app/lib/auth/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,9 +12,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
     }
 
+    const recipient = await resolvePasswordResetTokenRecipient(token);
+
     const ok = await consumePasswordResetToken(token, hashPassword(password));
     if (!ok) {
       return NextResponse.json({ error: "Token inválido o expirado" }, { status: 400 });
+    }
+
+    if (recipient) {
+      try {
+        await emailNotificationService.sendPasswordChangedConfirmation({
+          recipientEmail: recipient.email,
+          recipientName: recipient.nombre || recipient.email,
+        });
+      } catch (error) {
+        console.error("[CARVIPIX][AUTH][RESET_PASSWORD][PASSWORD_CHANGED_EMAIL_FAILED]", {
+          userId: recipient.userId,
+          reason: error instanceof Error ? error.message : "unknown",
+        });
+      }
     }
 
     return NextResponse.json({ ok: true, message: "Contraseña actualizada" }, { status: 200 });

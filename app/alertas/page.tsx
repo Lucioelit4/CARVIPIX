@@ -2,203 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Clock3, Gauge, ShieldCheck, Signal } from "lucide-react";
-import AlertFilters, { type StatusFilterValue } from "./components/AlertFilters";
+import AlertFilters from "./components/AlertFilters";
 import AlertsTable from "./components/AlertsTable";
 import AlertDetails from "./components/AlertDetails";
 import { getAlerts } from "@/app/lib/client-data-helpers";
 import { CARVIPIXButton, CARVIPIXCard } from "../design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
-
-type SignalStateKey = "can-enter" | "wait" | "no-enter" | "closed";
-
-type AlertSignal = {
-  id: string;
-  symbol: string;
-  market: string;
-  direction: "Compra" | "Venta";
-  entry?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  riskReward: number;
-  stateKey: SignalStateKey;
-  stateLabel: string;
-  stateNote: string;
-  statusRaw: string;
-  time: string;
-  minutesAgo: number;
-  canEnter: boolean;
-  confidence: number;
-  timeframe: string;
-  strategy: string;
-  analysis: string;
-};
-
-const STATE_PRIORITY: Record<SignalStateKey, number> = {
-  "can-enter": 0,
-  wait: 1,
-  "no-enter": 2,
-  closed: 3,
-};
-
-function parseNumber(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.replace(/,/g, "").trim();
-    if (!normalized || normalized.toUpperCase() === "N/A") {
-      return undefined;
-    }
-
-    const parsed = Number(normalized);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-
-  return undefined;
-}
-
-function resolveSignalState(input: {
-  statusRaw: string;
-  entry?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  minutesAgo: number;
-}): { key: SignalStateKey; label: string; note: string; canEnter: boolean } {
-  const status = input.statusRaw.toLowerCase();
-  const hasFullLevels =
-    typeof input.entry === "number" &&
-    typeof input.stopLoss === "number" &&
-    typeof input.takeProfit === "number";
-
-  if (status.includes("closed") || status.includes("triggered") || status.includes("resolved")) {
-    return {
-      key: "closed",
-      label: "⚫ FINALIZADA",
-      note: "Señal cerrada por objetivo o gestión.",
-      canEnter: false,
-    };
-  }
-
-  if (!hasFullLevels) {
-    return {
-      key: "wait",
-      label: "🟡 ESPERA CONFIRMACIÓN",
-      note: "Faltan niveles completos para ejecutar.",
-      canEnter: false,
-    };
-  }
-
-  if (input.minutesAgo > 35) {
-    return {
-      key: "no-enter",
-      label: "🔴 YA NO ENTRAR",
-      note: "La ventana óptima de entrada ya pasó.",
-      canEnter: false,
-    };
-  }
-
-  return {
-    key: "can-enter",
-    label: "🟢 PUEDES ENTRAR",
-    note: "Entrada aún válida según plan.",
-    canEnter: true,
-  };
-}
-
-function mapExternalAlerts(rawAlerts: unknown[]): AlertSignal[] {
-  const now = Date.now();
-
-  return rawAlerts
-    .map((item, index) => {
-      const source = item as {
-        id?: string;
-        symbol?: string;
-        status?: string;
-        description?: string;
-        priority?: string;
-        timestamp?: Date | string | number;
-        data?: {
-          direction?: string;
-          entryPrice?: number;
-          stopLossPrice?: number;
-          takeProfitPrice?: number;
-          riskRewardRatio?: number;
-          timeframe?: string;
-          confidence?: number;
-          strategy?: string;
-        };
-      };
-
-      const timestamp = source.timestamp ? new Date(source.timestamp) : new Date(now - (index + 1) * 9 * 60000);
-      const minutesAgo = Math.max(1, Math.round((now - timestamp.getTime()) / 60000));
-      const symbol = source.symbol ?? `ALERTA-${index + 1}`;
-      const entry = parseNumber(source.data?.entryPrice);
-      const stopLoss = parseNumber(source.data?.stopLossPrice);
-      const takeProfit = parseNumber(source.data?.takeProfitPrice);
-      const riskReward = parseNumber(source.data?.riskRewardRatio) ?? 0;
-
-      const direction =
-        source.data?.direction?.toLowerCase() === "venta"
-          ? "Venta"
-          : source.data?.direction?.toLowerCase() === "compra"
-            ? "Compra"
-            : "Compra";
-      const state = resolveSignalState({
-        statusRaw: source.status ?? "active",
-        entry,
-        stopLoss,
-        takeProfit,
-        minutesAgo,
-      });
-
-      const market =
-        symbol === "XAUUSD"
-          ? "Oro"
-          : symbol.includes("BTC") || symbol.includes("ETH")
-            ? "Crypto"
-            : "Forex";
-
-      return {
-        id: source.id ?? `${symbol.toLowerCase()}-${index}`,
-        symbol,
-        market,
-        direction,
-        entry,
-        stopLoss,
-        takeProfit,
-        riskReward,
-        stateKey: state.key,
-        stateLabel: state.label,
-        stateNote: state.note,
-        statusRaw: source.status ?? "active",
-        time: timestamp.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
-        minutesAgo,
-        canEnter: state.canEnter,
-        confidence: Number(source.data?.confidence ?? (source.priority === "critical" ? 90 : 78)),
-        timeframe: source.data?.timeframe ?? "Pendiente de confirmación",
-        strategy: source.data?.strategy ?? "Pendiente de confirmación",
-        analysis:
-          source.description ??
-          "Análisis en preparación",
-      } satisfies AlertSignal;
-    })
-    .sort((a, b) => a.minutesAgo - b.minutesAgo);
-}
-
-function formatLevel(value?: number): string {
-  if (typeof value !== "number") {
-    return "Pendiente";
-  }
-
-  if (value >= 100) {
-    return value.toFixed(2);
-  }
-
-  return value.toFixed(5);
-}
+import {
+  formatLevel,
+  mapExternalAlerts,
+  paginateAlerts,
+  type AlertSignal,
+  type StatusFilterValue,
+} from "./alertas-view-model";
 
 export default function AlertasPage() {
   const [alerts, setAlerts] = useState<AlertSignal[]>([]);
@@ -209,6 +25,7 @@ export default function AlertasPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [page, setPage] = useState<number>(1);
 
   const refreshAlerts = useCallback(async () => {
     setIsLoading(true);
@@ -232,6 +49,7 @@ export default function AlertasPage() {
         setAlerts(mapped);
         setSelectedId((current) => (mapped.some((item) => item.id === current) ? current : mapped[0].id));
       }
+      setPage(1);
 
       setLastUpdated(new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch (error) {
@@ -252,7 +70,11 @@ export default function AlertasPage() {
   }, []);
 
   useEffect(() => {
-    void refreshAlerts();
+    const handle = window.setTimeout(() => {
+      void refreshAlerts();
+    }, 0);
+
+    return () => window.clearTimeout(handle);
   }, [refreshAlerts]);
 
   const symbolOptions = useMemo(() => {
@@ -262,12 +84,12 @@ export default function AlertasPage() {
 
   const filteredAlerts = useMemo(() => {
     return alerts.filter((item) => {
-      const matchesState = statusFilter === "all" ? true : item.stateKey === statusFilter;
+      const matchesState = statusFilter === "all" ? true : item.lifecycleState === statusFilter;
       const matchesSymbol = symbolFilter === "all" ? true : item.symbol === symbolFilter;
       const matchesSearch =
         search.trim().length === 0
           ? true
-          : `${item.symbol} ${item.market}`.toLowerCase().includes(search.toLowerCase());
+          : `${item.symbol} ${item.market} ${item.strategyId} ${item.signalId} ${item.analysisId}`.toLowerCase().includes(search.toLowerCase());
 
       return matchesState && matchesSymbol && matchesSearch;
     });
@@ -279,12 +101,14 @@ export default function AlertasPage() {
     }
 
     return [...filteredAlerts].sort((a, b) => {
-      if (STATE_PRIORITY[a.stateKey] !== STATE_PRIORITY[b.stateKey]) {
-        return STATE_PRIORITY[a.stateKey] - STATE_PRIORITY[b.stateKey];
+      if (a.canEnter !== b.canEnter) {
+        return a.canEnter ? -1 : 1;
       }
       return a.minutesAgo - b.minutesAgo;
     })[0];
   }, [filteredAlerts]);
+
+  const paginatedAlerts = useMemo(() => paginateAlerts(filteredAlerts, page, 8), [filteredAlerts, page]);
 
   const selectedAlert = useMemo(() => {
     const picked = filteredAlerts.find((item) => item.id === selectedId);
@@ -292,9 +116,9 @@ export default function AlertasPage() {
   }, [filteredAlerts, protagonist, selectedId]);
 
   const summary = useMemo(() => {
-    const canEnter = filteredAlerts.filter((item) => item.stateKey === "can-enter").length;
-    const waiting = filteredAlerts.filter((item) => item.stateKey === "wait").length;
-    const noEnter = filteredAlerts.filter((item) => item.stateKey === "no-enter").length;
+    const canEnter = filteredAlerts.filter((item) => item.actionability === "can-enter").length;
+    const waiting = filteredAlerts.filter((item) => item.lifecycleState === "CONDITIONAL").length;
+    const noEnter = filteredAlerts.filter((item) => item.actionability === "closed").length;
     const avgConfidence =
       filteredAlerts.length === 0
         ? 0
@@ -314,7 +138,7 @@ export default function AlertasPage() {
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Alertas en Vivo</h1>
           <p className="mt-2 max-w-3xl text-sm text-white/70 sm:text-base">
-            En menos de 2 segundos identifica la señal activa, si aún puedes entrar y los niveles exactos de ejecución.
+            Señales comerciales con `signal_id`, `analysis_id`, estado real del lifecycle y niveles exactos de ejecución sin reconstrucciones ambiguas.
           </p>
           <p className="mt-2 text-xs text-white/55">
             {isLoading
@@ -365,8 +189,9 @@ export default function AlertasPage() {
                   {protagonist.symbol} · {protagonist.direction}
                 </h2>
                 <p className="mt-1 text-sm text-white/65">
-                  {protagonist.time} · hace {protagonist.minutesAgo} min · {protagonist.stateLabel}
+                  {protagonist.timestampLabel} · {protagonist.lifecycleLabel} · {protagonist.actionabilityLabel}
                 </p>
+                <p className="mt-2 text-xs text-white/55">signal_id: {protagonist.signalId} · analysis_id: {protagonist.analysisId}</p>
               </div>
             </div>
 
@@ -382,6 +207,10 @@ export default function AlertasPage() {
               <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                 <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">SL</p>
                 <p className="mt-1 text-lg font-semibold text-rose-300">{formatLevel(protagonist.stopLoss)}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">strategy_id</p>
+                <p className="mt-1 text-sm font-semibold text-white break-all">{protagonist.strategyId}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/5 p-3">
                 <p className="text-[10px] uppercase tracking-[0.16em] text-white/60">Riesgo/Beneficio</p>
@@ -418,6 +247,7 @@ export default function AlertasPage() {
                 setSearch("");
                 setSymbolFilter("all");
                 setStatusFilter("all");
+                setPage(1);
               }}
             />
 
@@ -440,7 +270,25 @@ export default function AlertasPage() {
               </CARVIPIXCard>
             ) : null}
 
-            <AlertsTable alerts={filteredAlerts} selectedId={selectedId} onSelect={setSelectedId} />
+            <AlertsTable alerts={paginatedAlerts.items} selectedId={selectedId} onSelect={setSelectedId} />
+
+            {filteredAlerts.length > 0 ? (
+              <CARVIPIXCard variant="elevated" padding="16" hover={false}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-white/70">
+                    Página {paginatedAlerts.page} de {paginatedAlerts.totalPages} · {filteredAlerts.length} alertas filtradas
+                  </p>
+                  <div className="flex gap-2">
+                    <CARVIPIXButton type="button" variant="ghost" size="sm" disabled={paginatedAlerts.page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+                      Anterior
+                    </CARVIPIXButton>
+                    <CARVIPIXButton type="button" variant="secondary" size="sm" disabled={paginatedAlerts.page >= paginatedAlerts.totalPages} onClick={() => setPage((current) => Math.min(paginatedAlerts.totalPages, current + 1))}>
+                      Siguiente
+                    </CARVIPIXButton>
+                  </div>
+                </div>
+              </CARVIPIXCard>
+            ) : null}
           </section>
 
           <AlertDetails alert={selectedAlert} />

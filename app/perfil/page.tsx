@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getAlertStats, getCurrentMembership, getCurrentUser, getPlatformResults } from '@/app/lib/client-data-helpers';
 import { validateProfileForm } from '@/app/lib/form-validators';
 import DataSourceBanner from '@/app/components/DataSourceBanner';
+import BillingCenter from '@/app/perfil/components/BillingCenter';
 
 const DEFAULT_USER_DATA = {
   nombre: '',
@@ -256,6 +257,15 @@ export default function PerfilPage() {
             </motion.div>
           );
           })}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="mb-10"
+        >
+          <BillingCenter />
         </motion.div>
 
         {/* Datos Personales */}

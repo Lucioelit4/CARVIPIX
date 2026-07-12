@@ -10,7 +10,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   const submitLogin = async () => {
     if (loading) {
@@ -18,6 +20,7 @@ export default function LoginPage() {
     }
 
     setError('');
+    setInfo('');
     setLoading(true);
     let shouldStopLoading = true;
 
@@ -40,7 +43,7 @@ export default function LoginPage() {
 
       if (!response.ok) {
         if (result.requiresVerification) {
-          setError('Debes verificar tu correo antes de iniciar sesión.');
+          setError('Debes verificar tu correo antes de iniciar sesion. Puedes reenviar el correo de verificacion.');
         } else {
           setError(result.error || 'No se pudo iniciar sesión.');
         }
@@ -93,6 +96,36 @@ export default function LoginPage() {
     await submitLogin();
   };
 
+  const resendVerification = async () => {
+    if (!email || resendingVerification) {
+      return;
+    }
+
+    setResendingVerification(true);
+    setInfo('');
+
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+
+      if (!response.ok) {
+        setError(result.error || 'No se pudo reenviar el correo.');
+        return;
+      }
+
+      setInfo(result.message || 'Si la cuenta existe y no esta verificada, enviaremos instrucciones.');
+    } catch {
+      setError('No se pudo reenviar el correo.');
+    } finally {
+      setResendingVerification(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#030303] text-white flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-3xl">
@@ -126,6 +159,17 @@ export default function LoginPage() {
                 required
               />
               {error ? <p className="text-xs text-red-400">{error}</p> : null}
+              {info ? <p className="text-xs text-emerald-400">{info}</p> : null}
+              {error.includes('verificar') ? (
+                <button
+                  type="button"
+                  onClick={() => void resendVerification()}
+                  disabled={resendingVerification || !email}
+                  className="w-full rounded-lg border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-3 py-2 text-xs font-semibold text-[#D4AF37] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {resendingVerification ? 'Reenviando...' : 'Reenviar correo de verificacion'}
+                </button>
+              ) : null}
               <CARVIPIXButton type="submit" variant="premium" fullWidth disabled={loading}>
                 {loading ? 'Ingresando...' : 'Ingresar'}
               </CARVIPIXButton>

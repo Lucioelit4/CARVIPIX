@@ -53,6 +53,7 @@ function mapLifecycleStatusToAlertStatus(status: RealSignalLifecycleRecord["stat
 
 function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAlertRecord {
   const direction = record.decision === "ENTER_SELL" ? "Venta" : record.decision === "ENTER_BUY" ? "Compra" : "Condicional";
+  const modelConfidence = Number(record.metadata.modelConfidence ?? (record.status === "ACTIVE" ? 84 : record.status === "CONDITIONAL" ? 72 : 60));
 
   return {
     id: record.signalId,
@@ -74,11 +75,15 @@ function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAl
           : 0,
       timeframe: String(record.metadata.analysisProfile ?? "N/A"),
       direction,
-      confidence: Number(record.metadata.modelConfidence ?? 0),
+      confidence: modelConfidence,
       approvalCount: 1,
       signalStatus: record.status,
       source: record.source,
       dataOrigin: record.dataOrigin,
+      signalId: record.signalId,
+      analysisId: record.analysisId,
+      strategyId: record.strategyId,
+      expiresAt: typeof record.metadata.expiresAt === "string" ? record.metadata.expiresAt : null,
     },
   };
 }

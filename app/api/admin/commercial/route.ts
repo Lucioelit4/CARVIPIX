@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listCommercialAuditEvents, recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { listPlanEntitlements, updatePlanEntitlements } from "@/app/backend/commercial/plan-entitlements-store";
 import { backendDatabase } from "@/app/backend/core/database";
+import { emailNotificationService } from "@/app/backend/notifications";
 import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
 function isAdminRequest(request: NextRequest): boolean {
@@ -167,6 +168,94 @@ export async function POST(request: NextRequest) {
     await updatePlanEntitlements(body.plan as never, body.patch as never);
     await recordCommercialAuditEvent({ actorType: "admin", action: "entitlements.update", resource: String(body.plan ?? "unknown"), result: "success" });
     return NextResponse.json({ ok: true }, { status: 200 });
+  }
+
+  if (action === "sendPromotionCampaign") {
+    const campaignName = String(body.campaignName ?? "Campana comercial").trim();
+    const headline = String(body.headline ?? "").trim();
+    const campaignBody = String(body.body ?? "").trim();
+    const ctaLabel = String(body.ctaLabel ?? "").trim();
+    const ctaUrl = String(body.ctaUrl ?? "").trim();
+    const recipientIds = Array.isArray(body.recipientIds)
+      ? body.recipientIds.map((item) => String(item).trim()).filter(Boolean)
+      : [];
+
+    if (!headline || !campaignBody) {
+      return NextResponse.json({ ok: false, error: "Headline y body son requeridos" }, { status: 400 });
+    }
+
+    const recipientsResult = recipientIds.length > 0
+      ? await backendDatabase.query<{
+          id: string;
+          email: string;
+          nombre: string;
+        }>(
+          `
+          SELECT u.id, u.email, u.nombre
+          FROM users u
+          WHERE u.id = ANY($1::text[])
+            AND u.verificado = true
+            AND COALESCE(u.exclude_from_commercial_metrics, false) = false
+          `,
+          [recipientIds]
+        )
+      : await backendDatabase.query<{
+          id: string;
+          email: string;
+          nombre: string;
+        }>(
+          `
+          SELECT u.id, u.email, u.nombre
+          FROM users u
+          LEFT JOIN memberships m ON m.user_id = u.id
+          WHERE u.verificado = true
+            AND COALESCE(u.exclude_from_commercial_metrics, false) = false
+            AND COALESCE(m.estado, 'inactivo') = 'activo'
+          ORDER BY u.created_at DESC NULLS LAST
+          LIMIT 5000
+          `
+        );
+
+    const appPublicUrl = process.env.APP_PUBLIC_URL?.trim() || "http://localhost:3000";
+
+    const sendResults = await Promise.allSettled(
+      recipientsResult.rows.map((recipient) =>
+        emailNotificationService.sendPromotionCampaign({
+          recipientEmail: recipient.email,
+          recipientName: recipient.nombre || recipient.email,
+          campaignName,
+          headline,
+          body: campaignBody,
+          ctaLabel: ctaLabel || undefined,
+          ctaUrl: ctaUrl || undefined,
+          unsubscribeUrl: `${appPublicUrl.replace(/\/$/, "")}/perfil/notificaciones`,
+        })
+      )
+    );
+
+    const sent = sendResults.filter(
+      (result) => result.status === "fulfilled" && result.value.accepted && result.value.provider === "smtp"
+    ).length;
+    const failed = sendResults.length - sent;
+
+    await recordCommercialAuditEvent({
+      actorType: "admin",
+      action: "campaign.promotion.send",
+      resource: campaignName,
+      result: failed > 0 ? "partial" : "success",
+      metadata: { recipients: sendResults.length, sent, failed },
+    });
+
+    return NextResponse.json(
+      {
+        ok: true,
+        campaignName,
+        recipients: sendResults.length,
+        sent,
+        failed,
+      },
+      { status: 200 }
+    );
   }
 
   return NextResponse.json({ ok: false, error: "Unsupported action" }, { status: 400 });

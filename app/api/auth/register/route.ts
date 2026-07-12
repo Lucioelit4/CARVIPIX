@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import { emailNotificationService } from "@/app/backend/notifications";
-import { createVerificationToken, findUserByEmail, hashPassword } from "@/app/lib/auth/server";
+import { checkTokenIssueGuard, createVerificationToken, findUserByEmail, hashPassword } from "@/app/lib/auth/server";
 import { createUser as createLocalUser, seedDemoStore } from "@/app/backend/core/local-auth-store";
 
 type RegisterPayload = {
@@ -82,15 +82,37 @@ function createUserId(): string {
   return `usr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-async function sendWelcomeEmail(correo: string, nombre: string, verificationToken: string): Promise<void> {
+async function sendWelcomeEmail(correo: string, nombre: string, verificationToken: string): Promise<{ delivered: boolean; provider?: string; messageId?: string }> {
   try {
-    await emailNotificationService.sendWelcomeRegistration({
+    const result = await emailNotificationService.sendWelcomeRegistration({
       recipientEmail: correo,
       recipientName: nombre,
       verificationToken,
     });
-  } catch {
-    // Best-effort: el registro no debe fallar si el proveedor de correo no responde.
+
+    const delivered = result.accepted && result.provider === "smtp";
+
+    console.info("[CARVIPIX][AUTH][REGISTER][WELCOME_EMAIL]", {
+      email: correo,
+      provider: result.provider,
+      accepted: result.accepted,
+      messageId: result.messageId,
+    });
+
+    return {
+      delivered,
+      provider: result.provider,
+      messageId: result.messageId,
+    };
+  } catch (error) {
+    console.error("[CARVIPIX][AUTH][REGISTER][WELCOME_EMAIL_FAILED]", {
+      email: correo,
+      reason: error instanceof Error ? error.message : "unknown",
+    });
+
+    return {
+      delivered: false,
+    };
   }
 }
 
@@ -112,6 +134,40 @@ export async function POST(request: NextRequest) {
 
     const existing = await findUserByEmail(correo);
     if (existing) {
+      if (!existing.verificado) {
+        const guard = await checkTokenIssueGuard({
+          userId: existing.id,
+          kind: "verification",
+          maxInWindow: 5,
+          windowMinutes: 60,
+          minIntervalSeconds: 45,
+        });
+
+        if (!guard.allowed) {
+          return NextResponse.json(
+            {
+              ok: true,
+              message: "La cuenta ya existe y sigue pendiente de verificacion. Ya enviamos un correo recientemente.",
+              emailDelivery: "rate-limited",
+            },
+            { status: 200 }
+          );
+        }
+
+        const verificationToken = await createVerificationToken(existing.id);
+        const welcomeEmail = await sendWelcomeEmail(correo, existing.nombre || nombre || "Usuario", verificationToken);
+
+        return NextResponse.json(
+          {
+            ok: true,
+            message: "Este correo ya tiene una cuenta pendiente de verificacion. Reenviamos el correo.",
+            emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+            warning: welcomeEmail.delivered ? undefined : "No pudimos reenviar el correo de verificacion. Solicita reenvio desde login.",
+          },
+          { status: 200 }
+        );
+      }
+
       return NextResponse.json(
         { ok: false, errors: { correo: "Este correo ya está registrado." } },
         { status: 409 }
@@ -134,13 +190,14 @@ export async function POST(request: NextRequest) {
       });
 
       const verificationToken = await createVerificationToken(userId);
-      await sendWelcomeEmail(correo, nombre, verificationToken);
+      const welcomeEmail = await sendWelcomeEmail(correo, nombre, verificationToken);
 
       return NextResponse.json(
         {
           ok: true,
           message: "Cuenta creada. Verifica tu correo.",
-          verificationToken: process.env.NODE_ENV === "production" ? undefined : verificationToken,
+          emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+          warning: welcomeEmail.delivered ? undefined : "La cuenta fue creada, pero no pudimos enviar el correo de verificacion. Solicita reenvio.",
         },
         { status: 201 }
       );
@@ -166,13 +223,14 @@ export async function POST(request: NextRequest) {
     });
 
     const verificationToken = await createVerificationToken(userId);
-    await sendWelcomeEmail(correo, nombre, verificationToken);
+    const welcomeEmail = await sendWelcomeEmail(correo, nombre, verificationToken);
 
     return NextResponse.json(
       {
         ok: true,
         message: "Cuenta creada. Verifica tu correo.",
-        verificationToken: process.env.NODE_ENV === "production" ? undefined : verificationToken,
+        emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+        warning: welcomeEmail.delivered ? undefined : "La cuenta fue creada, pero no pudimos enviar el correo de verificacion. Solicita reenvio.",
       },
       { status: 201 }
     );

@@ -7,6 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { AlertCircle, CreditCard, ShieldCheck } from "lucide-react";
 
 import { CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
+import { renderPayPalOneTimeCheckout } from "@/app/checkout/components/PayPalOneTimeCheckout";
+import { renderPayPalSubscriptionCheckout } from "@/app/checkout/components/PayPalSubscriptionCheckout";
 import { COMMERCIAL_PRODUCTS, resolveCheckoutProductId } from "@/app/lib/commercial/business-model";
 
 type Product = {
@@ -39,16 +41,12 @@ type CreateSubscriptionResponse = {
   status: string;
 };
 
-declare global {
-  interface Window {
-    paypal?: {
-      Buttons: (options: Record<string, unknown>) => {
-        render: (selector: string) => Promise<void>;
-        close: () => void;
-      };
-    };
-  }
-}
+type LegalDocumentSummary = {
+  slug: string;
+  title: string;
+  route: string;
+  version: string;
+};
 
 const FALLBACK_PRODUCTS: Record<string, Product> = COMMERCIAL_PRODUCTS.filter(
   (item) => item.checkoutEnabled && item.status === "active" && item.priceUsd !== null
@@ -73,10 +71,9 @@ function scriptIdForType(type: Product["type"]): string {
   return `paypal-sdk-${type}`;
 }
 
-async function loadPayPalSdk(product: Product): Promise<void> {
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+async function loadPayPalSdk(product: Product, clientId: string): Promise<void> {
   if (!clientId) {
-    throw new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID para cargar PayPal SDK");
+    throw new Error("Falta PAYPAL_CLIENT_ID para cargar PayPal SDK");
   }
 
   if (typeof window === "undefined") {
@@ -85,7 +82,7 @@ async function loadPayPalSdk(product: Product): Promise<void> {
 
   const id = scriptIdForType(product.type);
   const existing = document.getElementById(id) as HTMLScriptElement | null;
-  if (existing && window.paypal) {
+  if (existing) {
     return;
   }
 
@@ -125,13 +122,20 @@ export default function CheckoutContent() {
   const [sdkReady, setSdkReady] = useState(false);
   const [creatingButton, setCreatingButton] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [paypalClientId, setPaypalClientId] = useState("");
+  const [requiredDocuments, setRequiredDocuments] = useState<LegalDocumentSummary[]>([]);
+  const [missingDocuments, setMissingDocuments] = useState<LegalDocumentSummary[]>([]);
+  const [legalChecked, setLegalChecked] = useState(false);
+  const [legalSubmitting, setLegalSubmitting] = useState(false);
+  const [legalError, setLegalError] = useState<string | null>(null);
   const buttonContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const [offeringsResponse, sessionResponse] = await Promise.all([
+      const [offeringsResponse, sessionResponse, statusResponse] = await Promise.all([
         fetch("/api/paypal/offerings", { cache: "no-store" }).catch(() => null),
         fetch("/api/auth/session", { cache: "no-store" }).catch(() => null),
+        fetch("/api/payments/paypal/status", { cache: "no-store" }).catch(() => null),
       ]);
 
       if (offeringsResponse?.ok) {
@@ -145,117 +149,202 @@ export default function CheckoutContent() {
       if (sessionResponse?.ok) {
         setSession(await parseJsonSafe<SessionPayload>(sessionResponse));
       }
+
+      if (statusResponse?.ok) {
+        const statusPayload = await parseJsonSafe<{ data?: { configured?: boolean; clientId?: string } }>(statusResponse);
+        if (statusPayload.data?.clientId) {
+          setPaypalClientId(statusPayload.data.clientId);
+        }
+
+        if (!statusPayload.data?.configured) {
+          setMessage("PayPal Sandbox no esta configurado todavia en el servidor.");
+        }
+      } else {
+        setMessage("No se pudo obtener estado de PayPal Sandbox.");
+      }
     };
 
     void load();
   }, [productId]);
 
+  useEffect(() => {
+    const loadLegalStatus = async () => {
+      if (!session?.authenticated) {
+        setRequiredDocuments([]);
+        setMissingDocuments([]);
+        setLegalChecked(false);
+        return;
+      }
+
+      const response = await fetch("/api/client/compliance/acceptances", { cache: "no-store" });
+      const payload = await parseJsonSafe<{
+        data?: {
+          requiredBeforePayment?: LegalDocumentSummary[];
+          missingRequiredBeforePayment?: LegalDocumentSummary[];
+          canProceedToPayment?: boolean;
+        };
+        error?: string;
+      }>(response);
+
+      if (!response.ok || !payload.data) {
+        setLegalError(payload.error || "No se pudo obtener el estado legal");
+        setRequiredDocuments([]);
+        setMissingDocuments([]);
+        setLegalChecked(false);
+        return;
+      }
+
+      const required = payload.data.requiredBeforePayment ?? [];
+      const missing = payload.data.missingRequiredBeforePayment ?? [];
+      setRequiredDocuments(required);
+      setMissingDocuments(missing);
+      setLegalChecked(Boolean(payload.data.canProceedToPayment));
+    };
+
+    void loadLegalStatus();
+  }, [session?.authenticated]);
+
+  const acceptRequiredLegalDocuments = async () => {
+    setLegalSubmitting(true);
+    setLegalError(null);
+
+    try {
+      const response = await fetch("/api/client/compliance/acceptances", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ documentSlugs: requiredDocuments.map((doc) => doc.slug) }),
+      });
+
+      const payload = await parseJsonSafe<{
+        data?: {
+          missingRequiredBeforePayment?: LegalDocumentSummary[];
+          canProceedToPayment?: boolean;
+        };
+        error?: string;
+      }>(response);
+
+      if (!response.ok || !payload.data) {
+        throw new Error(payload.error || "No se pudo registrar la aceptacion legal");
+      }
+
+      const missing = payload.data.missingRequiredBeforePayment ?? [];
+      setMissingDocuments(missing);
+      setLegalChecked(Boolean(payload.data.canProceedToPayment));
+    } catch (error) {
+      setLegalError(error instanceof Error ? error.message : "No se pudo registrar la aceptacion legal");
+    } finally {
+      setLegalSubmitting(false);
+    }
+  };
+
   const summaryItems = useMemo(() => product?.features ?? [], [product]);
 
   useEffect(() => {
     const container = buttonContainerRef.current;
-    if (!product || !session?.authenticated || !container) {
+    if (!product || !session?.authenticated || !container || !paypalClientId || !legalChecked || missingDocuments.length > 0) {
+      if (container) {
+        container.innerHTML = "";
+      }
+      setSdkReady(false);
       return;
     }
 
     let mounted = true;
-    let instance: { render: (selector: string) => Promise<void>; close: () => void } | null = null;
 
     const renderButtons = async () => {
       setCreatingButton(true);
       setMessage(null);
 
       try {
-        await loadPayPalSdk(product);
-        if (!mounted || !window.paypal) {
+        await loadPayPalSdk(product, paypalClientId);
+        if (!mounted) {
           return;
         }
 
         container.innerHTML = "";
 
-        instance = window.paypal.Buttons({
-          style: {
-            layout: "vertical",
-            shape: "rect",
-            label: product.type === "subscription" ? "subscribe" : "paypal",
-          },
-          createOrder: product.type === "one_time"
-            ? async () => {
-                const response = await fetch("/api/paypal/orders", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ productId: product.id }),
-                });
+        const createOrder = async () => {
+          const response = await fetch("/api/payments/paypal/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: product.id }),
+          });
 
-                const payload = await parseJsonSafe<{ data?: CreateOrderResponse; error?: string }>(response);
-                if (!response.ok || !payload.data?.orderId) {
-                  throw new Error(payload.error || "No se pudo crear orden PayPal");
-                }
+          const payload = await parseJsonSafe<{ data?: CreateOrderResponse; error?: string }>(response);
+          if (!response.ok || !payload.data?.orderId) {
+            throw new Error(payload.error || "No se pudo crear orden PayPal");
+          }
 
-                return payload.data.orderId;
-              }
-            : undefined,
-          createSubscription: product.type === "subscription"
-            ? async () => {
-                const ensurePlan = await fetch("/api/paypal/plans", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ productId: product.id }),
-                });
+          return payload.data.orderId;
+        };
 
-                if (!ensurePlan.ok) {
-                  const ensurePayload = await parseJsonSafe<{ error?: string }>(ensurePlan);
-                  throw new Error(ensurePayload.error || "No se pudo preparar el plan PayPal");
-                }
+        const createSubscription = async () => {
+          const response = await fetch("/api/payments/paypal/subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ productId: product.id }),
+          });
 
-                const response = await fetch("/api/paypal/subscriptions", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ productId: product.id }),
-                });
+          const payload = await parseJsonSafe<{ data?: CreateSubscriptionResponse; error?: string }>(response);
+          if (!response.ok || !payload.data?.subscriptionId) {
+            throw new Error(payload.error || "No se pudo crear suscripcion PayPal");
+          }
 
-                const payload = await parseJsonSafe<{ data?: CreateSubscriptionResponse; error?: string }>(response);
-                if (!response.ok || !payload.data?.subscriptionId) {
-                  throw new Error(payload.error || "No se pudo crear suscripcion PayPal");
-                }
+          return payload.data.subscriptionId;
+        };
 
-                return payload.data.subscriptionId;
-              }
-            : undefined,
-          onApprove: async (data: Record<string, unknown>) => {
-            try {
-              if (product.type === "one_time") {
-                const orderID = String(data.orderID || "");
-                const response = await fetch(`/api/paypal/orders/${encodeURIComponent(orderID)}/capture`, {
-                  method: "POST",
-                });
+        const onApprove = async (data: Record<string, unknown>) => {
+          try {
+            if (product.type === "one_time") {
+              const orderID = String(data.orderID || "");
+              const response = await fetch(`/api/payments/paypal/orders/${encodeURIComponent(orderID)}/capture`, {
+                method: "POST",
+              });
 
-                const payload = await parseJsonSafe<{ data?: CaptureOrderResponse; error?: string }>(response);
-                if (!response.ok || !payload.data) {
-                  throw new Error(payload.error || "No se pudo capturar la orden");
-                }
-
-                router.push(`/checkout/success?kind=order&id=${encodeURIComponent(payload.data.orderId)}`);
-                return;
+              const payload = await parseJsonSafe<{ data?: CaptureOrderResponse; error?: string }>(response);
+              if (!response.ok || !payload.data) {
+                throw new Error(payload.error || "No se pudo capturar la orden");
               }
 
-              const subscriptionID = String(data.subscriptionID || "");
-              router.push(`/checkout/success?kind=subscription&id=${encodeURIComponent(subscriptionID)}`);
-            } catch (error) {
-              const message = error instanceof Error ? error.message : "No se pudo confirmar PayPal";
-              router.push(`/checkout/error?message=${encodeURIComponent(message)}`);
+              router.push(`/checkout/success?kind=order&id=${encodeURIComponent(payload.data.orderId)}`);
+              return;
             }
-          },
-          onCancel: () => {
-            router.push(`/checkout/cancel?product=${encodeURIComponent(product.id)}`);
-          },
-          onError: (error: unknown) => {
-            const errorMessage = error instanceof Error ? error.message : "Error en PayPal SDK";
-            router.push(`/checkout/error?message=${encodeURIComponent(errorMessage)}`);
-          },
-        });
 
-        await instance.render("#paypal-button-container");
+            const subscriptionID = String(data.subscriptionID || "");
+            router.push(`/checkout/success?kind=subscription&id=${encodeURIComponent(subscriptionID)}`);
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "No se pudo confirmar PayPal";
+            router.push(`/checkout/error?message=${encodeURIComponent(errorMessage)}`);
+          }
+        };
+
+        const onCancel = () => {
+          router.push(`/checkout/cancel?product=${encodeURIComponent(product.id)}`);
+        };
+
+        const onError = (error: unknown) => {
+          const errorMessage = error instanceof Error ? error.message : "Error en PayPal SDK";
+          router.push(`/checkout/error?message=${encodeURIComponent(errorMessage)}`);
+        };
+
+        if (product.type === "one_time") {
+          await renderPayPalOneTimeCheckout({
+            containerSelector: "#paypal-button-container",
+            createOrder,
+            onApprove,
+            onCancel,
+            onError,
+          });
+        } else {
+          await renderPayPalSubscriptionCheckout({
+            containerSelector: "#paypal-button-container",
+            createSubscription,
+            onApprove,
+            onCancel,
+            onError,
+          });
+        }
+
         if (mounted) {
           setSdkReady(true);
         }
@@ -275,12 +364,9 @@ export default function CheckoutContent() {
 
     return () => {
       mounted = false;
-      if (instance) {
-        instance.close();
-      }
       container.innerHTML = "";
     };
-  }, [product, router, session?.authenticated]);
+  }, [legalChecked, missingDocuments.length, paypalClientId, product, router, session?.authenticated]);
 
   const paymentLabel = product?.type === "subscription" ? "al mes" : "pago unico";
 
@@ -329,9 +415,43 @@ export default function CheckoutContent() {
               El acceso solo se activa despues de captura confirmada o webhook validado con firma oficial PayPal.
             </p>
 
+            <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white/80">
+              <p className="font-semibold text-white">Aceptacion legal obligatoria previa al pago</p>
+              <p className="mt-1 text-white/70">Debes aceptar las versiones activas de documentos legales antes de habilitar el boton de pago.</p>
+              <ul className="mt-3 space-y-1 text-xs text-white/70">
+                {requiredDocuments.map((doc) => (
+                  <li key={doc.slug} className="flex items-center justify-between gap-3">
+                    <Link href={doc.route} className="underline">{doc.title}</Link>
+                    <span>v{doc.version}</span>
+                  </li>
+                ))}
+              </ul>
+              {missingDocuments.length > 0 && (
+                <p className="mt-3 text-xs text-yellow-300">
+                  Faltan {missingDocuments.length} aceptaciones para continuar con el pago.
+                </p>
+              )}
+              {legalChecked && (
+                <p className="mt-3 text-xs text-green-300">Aceptacion legal al dia. Puedes continuar con el pago.</p>
+              )}
+              {!legalChecked && session?.authenticated && requiredDocuments.length > 0 && (
+                <div className="mt-3">
+                  <CARVIPIXButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void acceptRequiredLegalDocuments()}
+                    isLoading={legalSubmitting}
+                  >
+                    Aceptar documentos legales vigentes
+                  </CARVIPIXButton>
+                </div>
+              )}
+              {legalError && <p className="mt-2 text-xs text-red-300">{legalError}</p>}
+            </div>
+
             <div className="mt-6 space-y-3">
               <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
-              {(creatingButton || !sdkReady) && session?.authenticated && (
+              {(creatingButton || !sdkReady) && session?.authenticated && legalChecked && missingDocuments.length === 0 && (
                 <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
               )}
               <Link href="/dashboard">

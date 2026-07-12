@@ -13,6 +13,7 @@ import {
   Heart,
   LayoutGrid,
   Paperclip,
+  Flag,
   Rocket,
   Search,
   Send,
@@ -25,16 +26,24 @@ import { getCurrentUser } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXCard } from "@/app/design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
 
-type CommunityRole = "Equipo CARVIPIX" | "Moderador" | "Miembro PRO" | "Miembro";
+type CommunityRole = "Equipo CARVIPIX" | "Moderador" | "Miembro PRO" | "Miembro BASIC" | "Miembro";
 type ReactionKey = "like" | "love" | "fire" | "check" | "eyes";
 
 type ChatMessage = {
   id: string;
+  userId?: string;
   user: string;
   role: CommunityRole;
   avatar: string;
   time: string;
   content: string;
+  parentMessageId?: string | null;
+  mentions?: string[];
+  readBy?: string[];
+  editedAt?: string | null;
+  deletedAt?: string | null;
+  isPinned?: boolean;
+  pinnedBy?: string | null;
   reactions: Record<ReactionKey, number>;
   reactedByMe: ReactionKey[];
 };
@@ -44,6 +53,21 @@ type ChannelItem = {
   label: string;
   description: string;
   messageCount: number;
+};
+
+type ModerationLog = {
+  id: string;
+  action: string;
+  reason: string;
+  createdAt: string;
+};
+
+type CommunityProfile = {
+  isAdmin: boolean;
+  plan: "free" | "basic" | "advanced";
+  hasBot: boolean;
+  hasCapital: boolean;
+  membershipActive: boolean;
 };
 
 const MAIN_NAV = [
@@ -204,6 +228,7 @@ function roleStyles(role: CommunityRole): string {
   if (role === "Equipo CARVIPIX") return "bg-[#D4AF37]/15 border-[#D4AF37]/50 text-[#f0cb66]";
   if (role === "Moderador") return "bg-cyan-400/15 border-cyan-300/40 text-cyan-200";
   if (role === "Miembro PRO") return "bg-emerald-400/15 border-emerald-300/40 text-emerald-200";
+  if (role === "Miembro BASIC") return "bg-blue-400/15 border-blue-300/40 text-blue-200";
   return "bg-white/10 border-white/20 text-white/80";
 }
 
@@ -214,10 +239,20 @@ function nowTime(): string {
 export default function ComunidadPage() {
   const [activeChannel, setActiveChannel] = useState<string>("chat-principal");
   const [messagesByChannel, setMessagesByChannel] = useState<Record<string, ChatMessage[]>>(CHANNEL_MESSAGES);
+  const [availableChannels, setAvailableChannels] = useState<string[]>(CHANNELS.map((channel) => channel.id));
   const [userName, setUserName] = useState("Miembro CARVIPIX");
   const [inputValue, setInputValue] = useState("");
   const [typingName, setTypingName] = useState("Andrea");
   const [helperNotice, setHelperNotice] = useState("");
+  const [moderationNotice, setModerationNotice] = useState("");
+  const [moderationLogs, setModerationLogs] = useState<ModerationLog[]>([]);
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
+  const [typingUsers, setTypingUsers] = useState<Array<{ userName: string; userId: string }>>([]);
+  const [connectedUsers, setConnectedUsers] = useState<number>(0);
+  const [profile, setProfile] = useState<CommunityProfile | null>(null);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [syncingChannel, setSyncingChannel] = useState(false);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -234,12 +269,133 @@ export default function ComunidadPage() {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    const loadChannel = async () => {
+      setSyncingChannel(true);
+      try {
+        const response = await fetch(`/api/client/community/chat?channel=${encodeURIComponent(activeChannel)}`, { cache: "no-store" });
+        if (!response.ok) {
+          if (response.status === 401) {
+            setModerationNotice("Inicia sesion para sincronizar chat de miembros en linea.");
+          }
+          return;
+        }
+
+        const payload = (await response.json().catch(() => ({}))) as {
+          data?: {
+            messages?: Array<{
+              id: string;
+              userId?: string;
+              userName: string;
+              role: string;
+              content: string;
+              parentMessageId?: string | null;
+              mentions?: string[];
+              readBy?: string[];
+              editedAt?: string | null;
+              deletedAt?: string | null;
+              isPinned?: boolean;
+              pinnedBy?: string | null;
+              createdAt: string;
+            }>;
+            moderationLogs?: ModerationLog[];
+            quickReplies?: string[];
+            typingUsers?: Array<{ userName: string; userId: string }>;
+            connectedUsers?: number;
+            availableChannels?: string[];
+            profile?: CommunityProfile;
+            sanction?: { active: boolean; reason?: string; type?: string };
+          };
+        };
+
+        const messages = (payload.data?.messages ?? []).map((item) => ({
+          id: item.id,
+          userId: item.userId,
+          user: item.userName,
+          role: (["Equipo CARVIPIX", "Moderador", "Miembro PRO", "Miembro BASIC", "Miembro"] as const).includes(item.role as CommunityRole)
+            ? (item.role as CommunityRole)
+            : "Miembro",
+          avatar: item.userName.slice(0, 2).toUpperCase(),
+          time: new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          content: item.content,
+          parentMessageId: item.parentMessageId,
+          mentions: item.mentions ?? [],
+          readBy: item.readBy ?? [],
+          editedAt: item.editedAt ?? null,
+          deletedAt: item.deletedAt ?? null,
+          isPinned: item.isPinned ?? false,
+          pinnedBy: item.pinnedBy ?? null,
+          reactions: { like: 0, love: 0, fire: 0, check: 0, eyes: 0 },
+          reactedByMe: [],
+        }));
+
+        if (messages.length > 0) {
+          setMessagesByChannel((prev) => ({
+            ...prev,
+            [activeChannel]: messages,
+          }));
+        }
+
+        setModerationLogs(payload.data?.moderationLogs ?? []);
+        setQuickReplies(payload.data?.quickReplies ?? []);
+        setTypingUsers(payload.data?.typingUsers ?? []);
+        setConnectedUsers(Number(payload.data?.connectedUsers ?? 0));
+        if (Array.isArray(payload.data?.availableChannels) && payload.data?.availableChannels.length > 0) {
+          setAvailableChannels(payload.data?.availableChannels);
+        }
+        setProfile(payload.data?.profile ?? null);
+
+        if (payload.data?.sanction?.active) {
+          setModerationNotice(`Sancion activa (${payload.data.sanction.type ?? "moderacion"}): ${payload.data.sanction.reason ?? "Sin detalle"}`);
+        }
+      } catch {
+        setModerationNotice("No se pudo sincronizar el chat en este momento.");
+      } finally {
+        setSyncingChannel(false);
+      }
+    };
+
+    void loadChannel();
+
+    const pollId = window.setInterval(() => {
+      void loadChannel();
+    }, 7000);
+
+    return () => {
+      window.clearInterval(pollId);
+    };
+  }, [activeChannel]);
+
+  useEffect(() => {
+    if (!inputValue.trim()) {
+      return;
+    }
+
+    const typingId = window.setTimeout(() => {
+      void fetch("/api/client/community/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "typing", channelId: activeChannel }),
+      });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(typingId);
+    };
+  }, [inputValue, activeChannel]);
+
   const activeChannelInfo = useMemo(
     () => CHANNELS.find((channel) => channel.id === activeChannel) ?? CHANNELS[0],
     [activeChannel]
   );
 
+  const visibleChannels = CHANNELS.filter((channel) => availableChannels.includes(channel.id));
   const activeMessages = messagesByChannel[activeChannel] ?? [];
+  const pinnedMessages = activeMessages.filter((message) => message.isPinned && !message.deletedAt);
+  const orderedMessages = [...activeMessages].sort((a, b) => {
+    if (Boolean(a.isPinned) === Boolean(b.isPinned)) return 0;
+    return a.isPinned ? -1 : 1;
+  });
 
   const onlineMembers = [
     { name: "Equipo CARVIPIX", role: "Equipo" },
@@ -277,27 +433,170 @@ export default function ComunidadPage() {
     });
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const text = inputValue.trim();
     if (!text) return;
 
-    const newMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      user: userName,
-      role: "Miembro PRO",
-      avatar: userName.slice(0, 2).toUpperCase(),
-      time: nowTime(),
-      content: text,
-      reactions: { like: 0, love: 0, fire: 0, check: 0, eyes: 0 },
-      reactedByMe: [],
-    };
+    try {
+      if (editingMessageId) {
+        const editResponse = await fetch("/api/client/community/chat", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "edit", channelId: activeChannel, messageId: editingMessageId, message: text }),
+        });
+
+        if (!editResponse.ok) {
+          const payload = (await editResponse.json().catch(() => ({}))) as { error?: string };
+          setModerationNotice(payload.error || "No se pudo editar el mensaje.");
+          return;
+        }
+
+        setMessagesByChannel((prev) => ({
+          ...prev,
+          [activeChannel]: (prev[activeChannel] ?? []).map((item) =>
+            item.id === editingMessageId ? { ...item, content: text, editedAt: new Date().toISOString() } : item
+          ),
+        }));
+        setEditingMessageId(null);
+        setInputValue("");
+        return;
+      }
+
+      const response = await fetch("/api/client/community/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          channelId: activeChannel,
+          message: text,
+          parentMessageId: replyTo?.id ?? null,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as {
+        data?: {
+          id?: string;
+          userId?: string;
+          userName?: string;
+          role?: string;
+          content?: string;
+          createdAt?: string;
+          parentMessageId?: string | null;
+          mentions?: string[];
+        };
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setModerationNotice(payload.error || "No se pudo enviar el mensaje.");
+        setTimeout(() => setModerationNotice(""), 3000);
+        return;
+      }
+
+      const newMessage: ChatMessage = {
+        id: payload.data?.id ?? `msg-${Date.now()}`,
+        userId: payload.data?.userId,
+        user: payload.data?.userName ?? userName,
+        role: (["Equipo CARVIPIX", "Moderador", "Miembro PRO", "Miembro BASIC", "Miembro"] as const).includes((payload.data?.role ?? "Miembro") as CommunityRole)
+          ? (payload.data?.role as CommunityRole)
+          : "Miembro",
+        avatar: (payload.data?.userName ?? userName).slice(0, 2).toUpperCase(),
+        time: payload.data?.createdAt ? new Date(payload.data.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : nowTime(),
+        content: payload.data?.content ?? text,
+        parentMessageId: payload.data?.parentMessageId ?? null,
+        mentions: payload.data?.mentions ?? [],
+        readBy: payload.data?.userId ? [payload.data?.userId] : [],
+        editedAt: null,
+        deletedAt: null,
+        isPinned: false,
+        pinnedBy: null,
+        reactions: { like: 0, love: 0, fire: 0, check: 0, eyes: 0 },
+        reactedByMe: [],
+      };
+
+      setMessagesByChannel((prev) => ({
+        ...prev,
+        [activeChannel]: [...(prev[activeChannel] ?? []), newMessage],
+      }));
+      setInputValue("");
+      setReplyTo(null);
+      setTypingName("Marco");
+    } catch {
+      setModerationNotice("No se pudo enviar el mensaje en este momento.");
+      setTimeout(() => setModerationNotice(""), 3000);
+    }
+  };
+
+  const reportMessage = async (messageId: string) => {
+    try {
+      const response = await fetch("/api/client/community/chat", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "report",
+          channelId: activeChannel,
+          messageId,
+          reason: "Reporte desde interfaz de comunidad",
+        }),
+      });
+
+      if (!response.ok) {
+        setModerationNotice("No se pudo reportar el mensaje.");
+        return;
+      }
+
+      setModerationNotice("Mensaje reportado a moderacion.");
+      setTimeout(() => setModerationNotice(""), 2500);
+    } catch {
+      setModerationNotice("No se pudo reportar el mensaje.");
+    }
+  };
+
+  const markAsRead = async (messageId: string) => {
+    await fetch("/api/client/community/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "read", channelId: activeChannel, messageId }),
+    }).catch(() => null);
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    const response = await fetch("/api/client/community/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "delete", channelId: activeChannel, messageId }),
+    }).catch(() => null);
+
+    if (!response?.ok) {
+      setModerationNotice("No se pudo eliminar el mensaje.");
+      return;
+    }
 
     setMessagesByChannel((prev) => ({
       ...prev,
-      [activeChannel]: [...(prev[activeChannel] ?? []), newMessage],
+      [activeChannel]: (prev[activeChannel] ?? []).map((item) =>
+        item.id === messageId ? { ...item, content: "[Mensaje eliminado]", deletedAt: new Date().toISOString() } : item
+      ),
     }));
-    setInputValue("");
-    setTypingName("Marco");
+  };
+
+  const togglePin = async (messageId: string, pin: boolean) => {
+    const response = await fetch("/api/client/community/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "pin", channelId: activeChannel, messageId, pin }),
+    }).catch(() => null);
+
+    if (!response?.ok) {
+      setModerationNotice("Solo administradores pueden anclar mensajes.");
+      return;
+    }
+
+    setMessagesByChannel((prev) => ({
+      ...prev,
+      [activeChannel]: (prev[activeChannel] ?? []).map((item) =>
+        item.id === messageId ? { ...item, isPinned: pin, pinnedBy: pin ? "admin" : null } : item
+      ),
+    }));
   };
 
   const addEmoji = () => {
@@ -375,7 +674,7 @@ export default function ComunidadPage() {
                 <span className="text-[10px] tracking-[0.08em] uppercase text-white/55">Privados</span>
               </div>
               <div className="mt-2 space-y-1.5">
-                {CHANNELS.map((channel) => {
+                {visibleChannels.map((channel) => {
                   const isActive = channel.id === activeChannel;
                   return (
                     <button
@@ -417,8 +716,22 @@ export default function ComunidadPage() {
                 </div>
               </div>
 
+              {pinnedMessages.length > 0 ? (
+                <div className="mt-2 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-2">
+                  <p className="text-[10px] uppercase tracking-[0.08em] text-[#D4AF37]">Mensajes anclados</p>
+                  <div className="mt-1.5 space-y-1.5">
+                    {pinnedMessages.slice(0, 2).map((message) => (
+                      <div key={`pinned-${message.id}`} className="rounded-lg border border-white/15 bg-[#0A111B] p-2">
+                        <p className="text-[11px] text-white/70">{message.user}</p>
+                        <p className="mt-1 text-xs text-white/90 line-clamp-2">{message.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="mt-2.5 h-[44vh] min-h-[260px] md:h-[52vh] overflow-auto pr-1 space-y-2">
-                {activeMessages.map((message) => (
+                {orderedMessages.map((message) => (
                   <article key={message.id} className="rounded-xl border border-white/10 bg-[#0A111B] p-2.5 md:p-3 grid grid-cols-[34px_minmax(0,1fr)] gap-2">
                     <div className="h-[34px] w-[34px] rounded-full border border-white/20 bg-gradient-to-br from-[#D4AF37]/70 to-[#2C4A7A] text-[11px] font-bold inline-flex items-center justify-center">
                       {message.avatar}
@@ -428,8 +741,60 @@ export default function ComunidadPage() {
                         <strong className="text-xs md:text-sm font-semibold">{message.user}</strong>
                         <span className={`rounded-full border px-2 py-0.5 text-[10px] ${roleStyles(message.role)}`}>{message.role}</span>
                         <small className="text-[10px] text-white/55">{message.time}</small>
+                        {message.editedAt ? <small className="text-[10px] text-white/45">editado</small> : null}
+                        {message.isPinned ? <small className="text-[10px] text-[#D4AF37]">anclado</small> : null}
+                        <button
+                          type="button"
+                          onClick={() => void reportMessage(message.id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                        >
+                          <Flag size={10} />
+                          Reportar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReplyTo(message);
+                            setInputValue(`@${message.user.split(" ")[0]} `);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                        >
+                          Responder
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingMessageId(message.id);
+                            setInputValue(message.content);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void deleteMessage(message.id)}
+                          className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                        >
+                          Eliminar
+                        </button>
+                        {profile?.isAdmin ? (
+                          <button
+                            type="button"
+                            onClick={() => void togglePin(message.id, !message.isPinned)}
+                            className="inline-flex items-center gap-1 rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-white/60 hover:text-[#D4AF37] hover:border-[#D4AF37]/40"
+                          >
+                            {message.isPinned ? "Desanclar" : "Anclar"}
+                          </button>
+                        ) : null}
                       </div>
+                      {message.parentMessageId ? (
+                        <p className="mt-1 text-[11px] text-white/55">Respuesta en hilo #{message.parentMessageId.slice(0, 6)}</p>
+                      ) : null}
                       <p className="mt-1.5 text-xs md:text-sm leading-relaxed text-white/90">{message.content}</p>
+                      {message.readBy && message.readBy.length > 0 ? (
+                        <p className="mt-1 text-[10px] text-white/50">Leido por {message.readBy.length} miembro(s)</p>
+                      ) : null}
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         {REACTION_META.map((reaction) => {
@@ -450,13 +815,53 @@ export default function ComunidadPage() {
                             </button>
                           );
                         })}
+                        <button
+                          type="button"
+                          onClick={() => void markAsRead(message.id)}
+                          className="rounded-full border border-white/15 px-2 py-1 text-xs inline-flex items-center gap-1 bg-white/[0.03]"
+                        >
+                          <span>👁️</span>
+                          <small className="text-[10px] text-white/75">Marcar leido</small>
+                        </button>
                       </div>
                     </div>
                   </article>
                 ))}
               </div>
 
-              <p className="mt-2 text-[11px] md:text-xs text-white/55">{typingName} esta escribiendo...</p>
+              <p className="mt-2 text-[11px] md:text-xs text-white/55">
+                {typingUsers.length > 0
+                  ? `${typingUsers.map((user) => user.userName).slice(0, 2).join(", ")} esta escribiendo...`
+                  : `${typingName} esta escribiendo...`}
+              </p>
+
+              {quickReplies.length > 0 ? (
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                  {quickReplies.slice(0, 3).map((reply) => (
+                    <button
+                      key={reply}
+                      type="button"
+                      onClick={() => setInputValue(reply)}
+                      className="rounded-full border border-white/15 bg-white/[0.03] px-2 py-1 text-[11px] text-white/80 hover:border-[#D4AF37]/40 hover:text-[#D4AF37]"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              {replyTo ? (
+                <div className="mt-1.5 rounded-lg border border-white/12 bg-white/[0.03] p-2 text-[11px] text-white/70">
+                  Respondiendo a {replyTo.user}: &quot;{replyTo.content.slice(0, 80)}&quot;
+                  <button
+                    type="button"
+                    onClick={() => setReplyTo(null)}
+                    className="ml-2 text-[#D4AF37]"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : null}
 
               <div className="mt-2 rounded-xl border border-white/12 bg-[#070E17] p-1.5 grid grid-cols-[34px_34px_minmax(0,1fr)] md:grid-cols-[34px_34px_minmax(0,1fr)_auto] gap-1.5 items-center">
                 <button type="button" onClick={attachFile} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
@@ -469,21 +874,25 @@ export default function ComunidadPage() {
                   value={inputValue}
                   onChange={(event) => setInputValue(event.target.value)}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter") sendMessage();
+                    if (event.key === "Enter") {
+                      void sendMessage();
+                    }
                   }}
                   placeholder="Escribe tu mensaje..."
                   className="h-[34px] min-w-0 w-full rounded-lg border border-white/15 bg-[#0A111B] px-3 text-xs md:text-sm text-white placeholder:text-white/45 outline-none"
                 />
                 <button
                   type="button"
-                  onClick={sendMessage}
+                  onClick={() => void sendMessage()}
                   className="h-[34px] rounded-lg bg-gradient-to-r from-[#F0CF68] to-[#D4AF37] text-black font-bold px-3 text-xs inline-flex items-center justify-center gap-1 md:col-auto col-span-full"
                 >
                   <Send size={14} />
-                  Enviar
+                  {editingMessageId ? "Guardar" : "Enviar"}
                 </button>
               </div>
               {helperNotice ? <p className="mt-1.5 text-[11px] text-white/60">{helperNotice}</p> : null}
+              {syncingChannel ? <p className="mt-1.5 text-[11px] text-white/60">Sincronizando canal...</p> : null}
+              {moderationNotice ? <p className="mt-1.5 text-[11px] text-[#D4AF37]">{moderationNotice}</p> : null}
             </CARVIPIXCard>
           </section>
 
@@ -504,7 +913,7 @@ export default function ComunidadPage() {
                 <span className="text-[10px] uppercase tracking-[0.08em] text-white/55">Ver todos</span>
               </div>
               <div className="mt-2 space-y-1.5">
-                {CHANNELS.map((channel) => (
+                {visibleChannels.map((channel) => (
                   <div key={`active-${channel.id}`} className="rounded-lg border border-white/10 bg-white/[0.03] p-2 flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <strong className="text-xs md:text-[13px] block truncate">#{channel.label}</strong>
@@ -520,7 +929,7 @@ export default function ComunidadPage() {
               <h3 className="text-sm font-semibold">Estado de sala</h3>
               <div className="mt-2 space-y-1.5 text-xs md:text-[13px]">
                 <p className="flex items-center justify-between gap-2"><span className="text-white/60">Moderadores</span><strong>3</strong></p>
-                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Miembros online</span><strong>128</strong></p>
+                <p className="flex items-center justify-between gap-2"><span className="text-white/60">Miembros online</span><strong>{connectedUsers || 0}</strong></p>
                 <p className="flex items-center justify-between gap-2"><span className="text-white/60">Total de miembros</span><strong>1,248</strong></p>
                 <p className="flex items-center justify-between gap-2"><span className="text-white/60">Ultima actualizacion</span><strong>hace 2 min</strong></p>
               </div>
@@ -542,6 +951,23 @@ export default function ComunidadPage() {
                     <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_2px_rgba(52,211,153,0.25)]" />
                   </div>
                 ))}
+              </div>
+            </CARVIPIXCard>
+
+            <CARVIPIXCard variant="info" padding="16">
+              <h3 className="text-sm font-semibold">Registro de moderacion</h3>
+              <div className="mt-2 space-y-1.5">
+                {moderationLogs.length === 0 ? (
+                  <p className="text-[11px] text-white/55">Sin eventos recientes en este canal.</p>
+                ) : (
+                  moderationLogs.slice(0, 6).map((log) => (
+                    <div key={log.id} className="rounded-lg border border-white/10 bg-white/[0.03] p-2">
+                      <p className="text-[11px] text-[#D4AF37] uppercase">{log.action}</p>
+                      <p className="text-[11px] text-white/75 mt-1">{log.reason}</p>
+                      <p className="text-[10px] text-white/50 mt-1">{new Date(log.createdAt).toLocaleString()}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </CARVIPIXCard>
           </aside>

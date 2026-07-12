@@ -42,6 +42,7 @@ export default function RegistroPage() {
       const data = (await response.json().catch(() => ({}))) as {
         error?: string;
         errors?: Record<string, string>;
+        warning?: string;
       };
 
       if (!response.ok) {
@@ -50,7 +51,7 @@ export default function RegistroPage() {
         return;
       }
 
-      setMessage('Registro completado correctamente. Revisa tu correo para verificar tu cuenta y continuar.');
+      setMessage(data.warning || 'Registro completado correctamente. Revisa tu correo para verificar tu cuenta y continuar.');
       setNombre('');
       setApellido('');
       setCorreo('');

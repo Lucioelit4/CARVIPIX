@@ -6,6 +6,11 @@ import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store
 import { hashCredentialSecret, listBotConnections, listBotLogs } from "@/app/backend/commercial/portal-service";
 import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
 import { backendDatabase } from "@/app/backend/core/database";
+import {
+  recordLocalBotLog,
+  updateLocalBotConnection,
+  upsertLocalBotConnection,
+} from "@/app/backend/core/local-bot-store";
 import { requireClientSession } from "@/app/api/client/_auth";
 
 function createId(prefix: string): string {
@@ -13,6 +18,20 @@ function createId(prefix: string): string {
 }
 
 async function insertBotLog(userId: string, botInstanceId: string | null, level: "info" | "warning" | "error", eventType: string, message: string, metadata: Record<string, unknown> = {}) {
+  if (!backendDatabase.enabled) {
+    await recordLocalBotLog({
+      id: createId("blog"),
+      userId,
+      botInstanceId,
+      level,
+      eventType,
+      message,
+      metadata,
+      createdAt: new Date().toISOString(),
+    });
+    return;
+  }
+
   await backendDatabase.query(
     `
     INSERT INTO bot_event_logs (id, user_id, bot_instance_id, level, event_type, message, metadata, created_at)
@@ -41,7 +60,13 @@ export async function GET(request: NextRequest) {
       ecosystemServices.bot.getAvailableUpdates(),
     ]);
 
-    return NextResponse.json({ data: { license, instances, connections, logs, updates } }, { status: 200 });
+    const [latestSignal, operations, snapshot] = await Promise.all([
+      ecosystemServices.masterSignal.getLatestSignal(),
+      ecosystemServices.operations.getOperations(auth.user.id, 8),
+      ecosystemServices.bot.getSnapshot(auth.user.id),
+    ]);
+
+    return NextResponse.json({ data: { license, instances, connections, logs, updates, latestSignal, operations, snapshot } }, { status: 200 });
   } catch (error) {
     if (error instanceof CommercialAccessError) {
       await recordCommercialAuditEvent({ userId: auth.user.id, actorType: "client", action: "bot.read", resource: "bot", result: "denied", metadata: { code: error.code } });
@@ -141,6 +166,24 @@ export async function POST(request: NextRequest) {
       new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
 
       await ecosystemServices.bot.connectBroker(botId, brokerType, { server, login, password });
+      if (!backendDatabase.enabled) {
+        await upsertLocalBotConnection({
+          id: createId("bcp"),
+          userId: auth.user.id,
+          botInstanceId: botId,
+          brokerType,
+          server,
+          login,
+          mode,
+          connectionStatus: "connected",
+          lastSyncedAt: new Date().toISOString(),
+          heartbeatAt: new Date().toISOString(),
+          reconnectAttempts: 0,
+          diagnosticSummary: `Conexion preparada para ${brokerType} ${mode}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
       await backendDatabase.query(
         `
         INSERT INTO bot_connection_profiles (
@@ -163,6 +206,7 @@ export async function POST(request: NextRequest) {
           JSON.stringify({ mode }),
         ]
       );
+      }
       await insertBotLog(auth.user.id, botId, "info", "broker.connected", "Infraestructura de conexion preparada", { brokerType, server, login, mode });
       await recordCommercialAuditEvent({ userId: auth.user.id, actorType: "client", action: "bot.broker.connect", resource: botId, result: "success", metadata: { brokerType, mode } });
       return NextResponse.json({ ok: true }, { status: 200 });
@@ -171,14 +215,21 @@ export async function POST(request: NextRequest) {
     if (action === "runDiagnostics") {
       const botId = String(body.botId ?? "").trim();
       await insertBotLog(auth.user.id, botId, "info", "diagnostics.completed", "Diagnostico completado: conexion preparada, heartbeat pendiente de broker real.", {});
-      await backendDatabase.query(
-        `
-        UPDATE bot_connection_profiles
-        SET diagnostic_summary = $3, updated_at = NOW()
-        WHERE bot_instance_id = $1 AND user_id = $2
-        `,
-        [botId, auth.user.id, "Diagnostico OK. Broker no implementado aun; infraestructura preparada."]
-      );
+      if (!backendDatabase.enabled) {
+        await updateLocalBotConnection(auth.user.id, botId, {
+          diagnosticSummary: "Diagnostico OK. Broker no implementado aun; infraestructura preparada.",
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
+        await backendDatabase.query(
+          `
+          UPDATE bot_connection_profiles
+          SET diagnostic_summary = $3, updated_at = NOW()
+          WHERE bot_instance_id = $1 AND user_id = $2
+          `,
+          [botId, auth.user.id, "Diagnostico OK. Broker no implementado aun; infraestructura preparada."]
+        );
+      }
       return NextResponse.json({ ok: true }, { status: 200 });
     }
 

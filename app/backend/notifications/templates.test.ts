@@ -1,7 +1,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { buildPaymentTransactionalEmailTemplate } from "./templates";
+import {
+  buildPasswordChangedEmailTemplate,
+  buildPaymentTransactionalEmailTemplate,
+  buildWelcomeActivatedEmailTemplate,
+} from "./templates";
 
 test("buildPaymentTransactionalEmailTemplate renders captured payment template", () => {
   const rendered = buildPaymentTransactionalEmailTemplate({
@@ -49,4 +53,36 @@ test("buildPaymentTransactionalEmailTemplate renders renewal/failure/refund temp
   assert.match(renewal.subject, /renovacion/i);
   assert.match(failure.text, /insufficient_funds/);
   assert.match(refund.subject, /reembolso/i);
+});
+
+test("buildWelcomeActivatedEmailTemplate renders activation copy", () => {
+  const rendered = buildWelcomeActivatedEmailTemplate(
+    {
+      recipientEmail: "cliente@carvipix.local",
+      recipientName: "Cliente Demo",
+    },
+    {
+      appPublicUrl: "http://localhost:3000",
+      supportEmail: "soporte@carvipix.com",
+    }
+  );
+
+  assert.match(rendered.subject, /activa/i);
+  assert.match(rendered.text, /dashboard/i);
+});
+
+test("buildPasswordChangedEmailTemplate renders security confirmation copy", () => {
+  const rendered = buildPasswordChangedEmailTemplate(
+    {
+      recipientEmail: "cliente@carvipix.local",
+      recipientName: "Cliente Demo",
+    },
+    {
+      appPublicUrl: "http://localhost:3000",
+      supportEmail: "soporte@carvipix.com",
+    }
+  );
+
+  assert.match(rendered.subject, /contrasena/i);
+  assert.match(rendered.text, /confirmamos/i);
 });

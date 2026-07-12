@@ -4,52 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import { Copy, ExternalLink } from "lucide-react";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "../../design-system";
-
-type SignalStateKey = "can-enter" | "wait" | "no-enter" | "closed";
-
-type AlertSignal = {
-  id: string;
-  symbol: string;
-  market: string;
-  direction: "Compra" | "Venta";
-  entry?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  riskReward: number;
-  stateKey: SignalStateKey;
-  stateLabel: string;
-  stateNote: string;
-  time: string;
-  minutesAgo: number;
-  canEnter: boolean;
-  confidence: number;
-  timeframe: string;
-  strategy: string;
-  analysis: string;
-};
+import {
+  formatLevel,
+  getActionabilityBadgeVariant,
+  getLifecycleBadgeVariant,
+  type AlertSignal,
+} from "../alertas-view-model";
 
 type AlertDetailsProps = {
   alert?: AlertSignal;
 };
-
-function formatLevel(value?: number): string {
-  if (typeof value !== "number") {
-    return "Pendiente";
-  }
-
-  if (value >= 100) {
-    return value.toFixed(2);
-  }
-
-  return value.toFixed(5);
-}
-
-function getBadgeVariant(stateKey: SignalStateKey) {
-  if (stateKey === "can-enter") return "success";
-  if (stateKey === "wait") return "warning";
-  if (stateKey === "no-enter") return "danger";
-  return "info";
-}
 
 export default function AlertDetails({ alert }: AlertDetailsProps) {
   const [copied, setCopied] = useState(false);
@@ -65,14 +29,17 @@ export default function AlertDetails({ alert }: AlertDetailsProps) {
   const copySignal = async () => {
     const text = [
       `${alert.symbol} · ${alert.direction}`,
-      `Estado: ${alert.stateLabel}`,
+      `Estado lifecycle: ${alert.lifecycleLabel}`,
+      `Acción recomendada: ${alert.actionabilityLabel}`,
       `Entrada: ${formatLevel(alert.entry)}`,
       `TP: ${formatLevel(alert.takeProfit)}`,
       `SL: ${formatLevel(alert.stopLoss)}`,
       `R/B: ${alert.riskReward > 0 ? alert.riskReward.toFixed(2) : "Pendiente"}`,
       `Confianza: ${alert.confidence}%`,
       `Temporalidad: ${alert.timeframe}`,
-      `Estrategia: ${alert.strategy}`,
+      `strategy_id: ${alert.strategyId}`,
+      `signal_id: ${alert.signalId}`,
+      `analysis_id: ${alert.analysisId}`,
     ].join("\n");
 
     if (typeof navigator !== "undefined" && navigator.clipboard) {
@@ -90,21 +57,22 @@ export default function AlertDetails({ alert }: AlertDetailsProps) {
           <h2 className="mt-1 text-2xl font-bold text-white">
             {alert.symbol} · {alert.direction}
           </h2>
-          <p className="text-xs text-white/60">
-            {alert.time} · hace {alert.minutesAgo} min
-          </p>
+          <p className="text-xs text-white/60">{alert.timestampLabel} · hace {alert.minutesAgo} min</p>
         </div>
-        <CARVIPIXBadge variant={getBadgeVariant(alert.stateKey)}>{alert.stateLabel}</CARVIPIXBadge>
+        <div className="flex flex-wrap gap-2">
+          <CARVIPIXBadge variant={getLifecycleBadgeVariant(alert.lifecycleState)}>{alert.lifecycleLabel}</CARVIPIXBadge>
+          <CARVIPIXBadge variant={getActionabilityBadgeVariant(alert.actionability)}>{alert.actionabilityLabel}</CARVIPIXBadge>
+        </div>
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         <div className="rounded-lg border border-white/10 bg-black/20 p-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">¿Puede entrar?</p>
           <p className="mt-1 text-sm font-semibold text-white">{alert.canEnter ? "Sí, ventana válida" : "No, esperar/no entrar"}</p>
         </div>
         <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Estado actual</p>
-          <p className="mt-1 text-sm font-semibold text-white">{alert.stateNote}</p>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Estado operativo</p>
+          <p className="mt-1 text-sm font-semibold text-white">{alert.actionabilityNote}</p>
         </div>
         <div className="rounded-lg border border-white/10 bg-black/20 p-3">
           <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Entrada válida</p>
@@ -132,11 +100,30 @@ export default function AlertDetails({ alert }: AlertDetailsProps) {
           <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Temporalidad</p>
           <p className="mt-1 text-sm font-semibold text-white">{alert.timeframe}</p>
         </div>
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Vigencia</p>
+          <p className="mt-1 text-sm font-semibold text-white">{alert.validUntilLabel}</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Origen</p>
+          <p className="mt-1 text-sm font-semibold text-white">{alert.source} · {alert.dataOrigin}</p>
+        </div>
       </div>
 
       <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-3">
-        <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">Estrategia</p>
-        <p className="mt-1 text-sm font-semibold text-white">{alert.strategy}</p>
+        <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">strategy_id</p>
+        <p className="mt-1 text-sm font-semibold text-white break-all">{alert.strategyId}</p>
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">signal_id</p>
+          <p className="mt-1 text-sm font-semibold text-white break-all">{alert.signalId}</p>
+        </div>
+        <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">analysis_id</p>
+          <p className="mt-1 text-sm font-semibold text-white break-all">{alert.analysisId}</p>
+        </div>
       </div>
 
       <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
@@ -150,7 +137,7 @@ export default function AlertDetails({ alert }: AlertDetailsProps) {
         </CARVIPIXButton>
         <Link href={`/resultados?symbol=${alert.symbol}`} className="block">
           <CARVIPIXButton type="button" variant="secondary" fullWidth leftIcon={<ExternalLink size={14} />}>
-            Ver gráfico y análisis
+            Ver resultados del símbolo
           </CARVIPIXButton>
         </Link>
       </div>

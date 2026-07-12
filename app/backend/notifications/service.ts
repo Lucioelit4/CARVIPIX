@@ -1,14 +1,26 @@
 import "server-only";
 
+import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { getEmailNotificationConfig, hasValidSmtpCredentials } from "./config";
-import { buildPaymentTransactionalEmailTemplate, buildWelcomeRegistrationEmailTemplate } from "./templates";
+import {
+  buildPasswordChangedEmailTemplate,
+  buildPasswordResetEmailTemplate,
+  buildPaymentTransactionalEmailTemplate,
+  buildPromotionCampaignEmailTemplate,
+  buildWelcomeActivatedEmailTemplate,
+  buildWelcomeRegistrationEmailTemplate,
+} from "./templates";
 import { NoopEmailProvider, SmtpEmailProvider, type EmailProvider } from "./provider";
 import type {
   EmailAddress,
   EmailMessage,
   EmailSendResult,
   EmailSenderRole,
+  PasswordChangedEmailInput,
+  PasswordResetEmailInput,
   PaymentTransactionalEmailInput,
+  PromotionCampaignEmailInput,
+  WelcomeActivatedEmailInput,
   WelcomeRegistrationEmailInput,
 } from "./types";
 
@@ -46,10 +58,56 @@ export class EmailNotificationService {
     const senderRole = message.senderRole ?? "noreply";
     const from = resolveSenderAddress(senderRole, this.config.fromName, this.config.addresses);
 
-    return this.provider.send({
-      ...message,
-      from,
-    });
+    try {
+      const result = await this.provider.send({
+        ...message,
+        from,
+      });
+
+      const recipients = Array.isArray(message.to) ? message.to : [message.to];
+      const templateId = message.headers?.["X-CARVIPIX-Template"] ?? "unknown";
+      const providerResult = result.provider;
+
+      try {
+        await recordCommercialAuditEvent({
+          actorType: "system",
+          action: result.accepted && providerResult === "smtp" ? "communications.email.sent" : "communications.email.noop",
+          resource: templateId,
+          result: result.accepted ? "success" : "error",
+          metadata: {
+            provider: providerResult,
+            messageId: result.messageId ?? null,
+            recipients: recipients.map((item) => item.email),
+            senderRole,
+          },
+        });
+      } catch {
+        // Non-blocking: communication audit must not break transactional delivery.
+      }
+
+      return result;
+    } catch (error) {
+      const recipients = Array.isArray(message.to) ? message.to : [message.to];
+      const templateId = message.headers?.["X-CARVIPIX-Template"] ?? "unknown";
+
+      try {
+        await recordCommercialAuditEvent({
+          actorType: "system",
+          action: "communications.email.failed",
+          resource: templateId,
+          result: "error",
+          metadata: {
+            recipients: recipients.map((item) => item.email),
+            senderRole,
+            reason: error instanceof Error ? error.message : "unknown",
+          },
+        });
+      } catch {
+        // Non-blocking: communication audit must not mask original send failure.
+      }
+
+      throw error;
+    }
   }
 
   async sendWelcomeRegistration(input: WelcomeRegistrationEmailInput): Promise<EmailSendResult> {
@@ -67,6 +125,80 @@ export class EmailNotificationService {
       text: rendered.text,
       headers: {
         "X-CARVIPIX-Template": "welcome-registration",
+      },
+    });
+  }
+
+  async sendPasswordReset(input: PasswordResetEmailInput): Promise<EmailSendResult> {
+    const rendered = buildPasswordResetEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "soporte",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: {
+        "X-CARVIPIX-Template": "security-password-reset",
+      },
+    });
+  }
+
+  async sendWelcomeActivated(input: WelcomeActivatedEmailInput): Promise<EmailSendResult> {
+    const rendered = buildWelcomeActivatedEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "noreply",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: {
+        "X-CARVIPIX-Template": "account-activated-welcome",
+      },
+    });
+  }
+
+  async sendPasswordChangedConfirmation(input: PasswordChangedEmailInput): Promise<EmailSendResult> {
+    const rendered = buildPasswordChangedEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "soporte",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: {
+        "X-CARVIPIX-Template": "security-password-changed",
+      },
+    });
+  }
+
+  async sendPromotionCampaign(input: PromotionCampaignEmailInput): Promise<EmailSendResult> {
+    const rendered = buildPromotionCampaignEmailTemplate(input);
+
+    return this.sendEmail({
+      senderRole: "noreply",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: {
+        "X-CARVIPIX-Template": "campaign-promotion",
+        "X-CARVIPIX-Campaign": input.campaignName,
       },
     });
   }

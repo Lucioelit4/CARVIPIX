@@ -22,6 +22,16 @@
 				"-Command",
 				"Write-Output 'TASK_OK'"
 			]
+		},
+		{
+			"label": "dev-server-carvipix",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"run",
+				"dev"
+			],
+			"isBackground": true
 		}
 	]
 }

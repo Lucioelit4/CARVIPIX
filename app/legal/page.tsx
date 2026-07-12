@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
+import { LEGAL_DOCUMENTS_BASE, latestActiveLegalDocuments } from "@/app/lib/legal/compliance-catalog";
 
 export default function LegalPage() {
+  const legalMatrix = latestActiveLegalDocuments(LEGAL_DOCUMENTS_BASE);
+
   return (
     <main className="min-h-screen bg-[#030303] text-white">
       <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
@@ -24,6 +27,20 @@ export default function LegalPage() {
         >
           <h1 className="text-4xl font-bold text-[#D4AF37] mb-2">Aviso Legal</h1>
           <p className="text-zinc-400 mb-8">Última actualización: 2 de julio de 2026</p>
+
+          <section className="mb-8 rounded-xl border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-semibold text-white mb-3">Versionado legal activo</h2>
+            <p className="text-sm text-zinc-400 mb-4">Estas son las versiones activas que rigen actualmente para uso de la plataforma y procesos de pago.</p>
+            <div className="grid gap-3 md:grid-cols-2">
+              {legalMatrix.map((doc) => (
+                <div key={`${doc.slug}-${doc.version}`} className="rounded-lg border border-white/10 bg-black/20 p-3">
+                  <Link href={doc.route} className="font-medium text-white hover:text-[#D4AF37] transition">{doc.title}</Link>
+                  <p className="mt-1 text-xs text-zinc-400">Version {doc.version}</p>
+                  <p className="mt-1 text-xs text-zinc-500">Estado: {doc.status}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
           <div className="prose prose-invert max-w-none space-y-6 text-zinc-300">
             <section>

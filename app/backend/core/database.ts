@@ -251,6 +251,51 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS legal_documents (
+        id TEXT PRIMARY KEY,
+        slug TEXT NOT NULL,
+        title TEXT NOT NULL,
+        route TEXT NOT NULL,
+        version TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL,
+        author TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('Activo', 'Borrador', 'Obsoleto')),
+        related_modules JSONB NOT NULL DEFAULT '[]'::jsonb,
+        required_before_payment BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_legal_documents_slug_updated
+      ON legal_documents(slug, updated_at DESC);
+
+      CREATE TABLE IF NOT EXISTS legal_acceptances (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        document_slug TEXT NOT NULL,
+        document_version TEXT NOT NULL,
+        accepted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        source TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_legal_acceptances_user_slug_accepted_at
+      ON legal_acceptances(user_id, document_slug, accepted_at DESC);
+
+      CREATE TABLE IF NOT EXISTS compliance_videos (
+        id TEXT PRIMARY KEY,
+        scope TEXT NOT NULL CHECK (scope IN ('public-home', 'member-dashboard')),
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        video_url TEXT NOT NULL,
+        poster_url TEXT NOT NULL,
+        active BOOLEAN NOT NULL DEFAULT true,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_compliance_videos_scope_active
+      ON compliance_videos(scope, active, updated_at DESC);
+
       CREATE TABLE IF NOT EXISTS capital_requests (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -275,9 +320,99 @@ class BackendDatabase {
         priority TEXT NOT NULL CHECK (priority IN ('low', 'medium', 'high')),
         message TEXT NOT NULL,
         admin_reply TEXT,
+        responsible TEXT,
+        conversation_snapshot JSONB NOT NULL DEFAULT '[]'::jsonb,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS support_ticket_events (
+        id TEXT PRIMARY KEY,
+        ticket_id TEXT NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+        actor_type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        note TEXT,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_support_ticket_events_ticket_created_at
+      ON support_ticket_events(ticket_id, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS community_messages (
+        id TEXT PRIMARY KEY,
+        channel_id TEXT NOT NULL,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_name TEXT NOT NULL,
+        user_role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        parent_message_id TEXT,
+        mentions JSONB NOT NULL DEFAULT '[]'::jsonb,
+        read_by JSONB NOT NULL DEFAULT '[]'::jsonb,
+        edited_at TIMESTAMPTZ,
+        deleted_at TIMESTAMPTZ,
+        is_pinned BOOLEAN NOT NULL DEFAULT false,
+        pinned_by TEXT,
+        moderated BOOLEAN NOT NULL DEFAULT false,
+        moderation_reason TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_community_messages_channel_created_at
+      ON community_messages(channel_id, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS community_message_reports (
+        id TEXT PRIMARY KEY,
+        message_id TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        reported_by TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        reason TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_community_reports_channel_created_at
+      ON community_message_reports(channel_id, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS community_moderation_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        channel_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_community_moderation_channel_created_at
+      ON community_moderation_logs(channel_id, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS community_typing_presence (
+        id TEXT PRIMARY KEY,
+        channel_id TEXT NOT NULL,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_name TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_community_typing_presence_channel_expires
+      ON community_typing_presence(channel_id, expires_at DESC);
+
+      CREATE TABLE IF NOT EXISTS community_user_sanctions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        channel_id TEXT,
+        sanction_type TEXT NOT NULL,
+        reason TEXT NOT NULL,
+        active BOOLEAN NOT NULL DEFAULT true,
+        expires_at TIMESTAMPTZ,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_community_user_sanctions_user_active
+      ON community_user_sanctions(user_id, active, created_at DESC);
 
       CREATE TABLE IF NOT EXISTS products (
         id TEXT PRIMARY KEY,
@@ -592,9 +727,6 @@ class BackendDatabase {
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS source TEXT;
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS payment_subscription_id TEXT;
       ALTER TABLE memberships ADD COLUMN IF NOT EXISTS grace_period_ends_at TIMESTAMPTZ;
-      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT;
-      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS ip_address TEXT;
-      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS device_label TEXT;
 
       CREATE TABLE IF NOT EXISTS capital_accounts (
         account_id TEXT PRIMARY KEY,
@@ -702,36 +834,6 @@ class BackendDatabase {
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
-              CREATE TABLE IF NOT EXISTS bot_connection_profiles (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                bot_instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
-                broker_type TEXT NOT NULL CHECK (broker_type IN ('MT4', 'MT5')),
-                server TEXT NOT NULL,
-                login TEXT NOT NULL,
-                mode TEXT NOT NULL CHECK (mode IN ('demo', 'real')),
-                connection_status TEXT NOT NULL CHECK (connection_status IN ('disconnected', 'connected', 'degraded', 'error')),
-                credentials_hash TEXT NOT NULL,
-                last_synced_at TIMESTAMPTZ,
-                heartbeat_at TIMESTAMPTZ,
-                reconnect_attempts INT NOT NULL DEFAULT 0,
-                diagnostic_summary TEXT,
-                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-              );
-
-              CREATE TABLE IF NOT EXISTS bot_event_logs (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                bot_instance_id TEXT REFERENCES bot_instances(id) ON DELETE CASCADE,
-                level TEXT NOT NULL CHECK (level IN ('info', 'warning', 'error')),
-                event_type TEXT NOT NULL,
-                message TEXT NOT NULL,
-                metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-              );
-
         strategy TEXT NOT NULL,
         status TEXT NOT NULL,
         symbol TEXT NOT NULL,
@@ -740,6 +842,36 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         started_at TIMESTAMPTZ,
         stats JSONB NOT NULL DEFAULT '{}'::jsonb
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_connection_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        bot_instance_id TEXT NOT NULL REFERENCES bot_instances(id) ON DELETE CASCADE,
+        broker_type TEXT NOT NULL CHECK (broker_type IN ('MT4', 'MT5')),
+        server TEXT NOT NULL,
+        login TEXT NOT NULL,
+        mode TEXT NOT NULL CHECK (mode IN ('demo', 'real')),
+        connection_status TEXT NOT NULL CHECK (connection_status IN ('disconnected', 'connected', 'degraded', 'error')),
+        credentials_hash TEXT NOT NULL,
+        last_synced_at TIMESTAMPTZ,
+        heartbeat_at TIMESTAMPTZ,
+        reconnect_attempts INT NOT NULL DEFAULT 0,
+        diagnostic_summary TEXT,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_event_logs (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        bot_instance_id TEXT REFERENCES bot_instances(id) ON DELETE CASCADE,
+        level TEXT NOT NULL CHECK (level IN ('info', 'warning', 'error')),
+        event_type TEXT NOT NULL,
+        message TEXT NOT NULL,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
       CREATE TABLE IF NOT EXISTS bot_updates (
@@ -764,6 +896,10 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS user_agent TEXT;
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS ip_address TEXT;
+      ALTER TABLE auth_sessions ADD COLUMN IF NOT EXISTS device_label TEXT;
 
       CREATE TABLE IF NOT EXISTS auth_verification_tokens (
         id TEXT PRIMARY KEY,

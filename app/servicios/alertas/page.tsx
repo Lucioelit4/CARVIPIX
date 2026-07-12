@@ -65,10 +65,10 @@ export default function ServiciosAlertasPage() {
               <p className="mt-2 text-lg text-zinc-300">Disponible como parte de la membresía activa.</p>
             </div>
             <Link
-              href="/alertas"
+              href="/login?next=/alertas"
               className="inline-flex items-center justify-center rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-black transition hover:bg-[#f5d76e]"
             >
-              Ir a mis alertas
+              Entrar a alertas
             </Link>
           </div>
         </div>

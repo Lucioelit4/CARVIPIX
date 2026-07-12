@@ -113,6 +113,12 @@ type LocalPasswordResetToken = {
   createdAt: string;
 };
 
+export type LocalTokenMetadata = {
+  createdAt: string;
+  usedAt: string | null;
+  expiresAt: string;
+};
+
 type LocalStore = {
   users: LocalUser[];
   memberships: LocalMembership[];
@@ -245,7 +251,8 @@ function getFounderDefaults() {
   };
 }
 
-function resolveFounderPasswordHash(store: LocalStore): string | null {
+function resolveFounderPasswordHash(_store: LocalStore): string | null {
+  void _store;
   const envHash = String(process.env.FOUNDER_PASSWORD_HASH ?? "").trim();
   if (envHash) {
     return envHash;
@@ -532,6 +539,68 @@ export async function createPasswordResetToken(userId: string): Promise<string> 
   ];
   await writeStore(store);
   return token;
+}
+
+export async function listVerificationTokenMetadata(userId: string): Promise<LocalTokenMetadata[]> {
+  const store = await readStore();
+  return store.verificationTokens
+    .filter((item) => item.userId === userId)
+    .map((item) => ({
+      createdAt: item.createdAt,
+      usedAt: item.usedAt,
+      expiresAt: item.expiresAt,
+    }));
+}
+
+export async function listPasswordResetTokenMetadata(userId: string): Promise<LocalTokenMetadata[]> {
+  const store = await readStore();
+  return store.passwordResetTokens
+    .filter((item) => item.userId === userId)
+    .map((item) => ({
+      createdAt: item.createdAt,
+      usedAt: item.usedAt,
+      expiresAt: item.expiresAt,
+    }));
+}
+
+export async function resolveVerificationTokenRecipient(token: string): Promise<{ userId: string; email: string; nombre: string } | null> {
+  const store = await readStore();
+  const tokenHash = hashToken(token);
+  const entry = store.verificationTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
+  if (!entry) {
+    return null;
+  }
+
+  const user = store.users.find((item) => item.id === entry.userId);
+  if (!user) {
+    return null;
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    nombre: user.nombre,
+  };
+}
+
+export async function resolvePasswordResetTokenRecipient(token: string): Promise<{ userId: string; email: string; nombre: string } | null> {
+  const store = await readStore();
+  const tokenHash = hashToken(token);
+  const entry = store.passwordResetTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
+  if (!entry) {
+    return null;
+  }
+
+  const user = store.users.find((item) => item.id === entry.userId);
+  if (!user) {
+    return null;
+  }
+
+  return {
+    userId: user.id,
+    email: user.email,
+    nombre: user.nombre,
+  };
 }
 
 export async function consumePasswordResetToken(token: string, newPasswordHash: string): Promise<boolean> {

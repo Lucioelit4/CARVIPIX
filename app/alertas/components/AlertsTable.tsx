@@ -1,50 +1,18 @@
 "use client";
 
 import { CARVIPIXBadge, CARVIPIXCard } from "../../design-system";
-
-type SignalStateKey = "can-enter" | "wait" | "no-enter" | "closed";
-
-type AlertSignal = {
-  id: string;
-  symbol: string;
-  market: string;
-  direction: "Compra" | "Venta";
-  entry?: number;
-  stopLoss?: number;
-  takeProfit?: number;
-  riskReward: number;
-  stateKey: SignalStateKey;
-  stateLabel: string;
-  stateNote: string;
-  time: string;
-  minutesAgo: number;
-  canEnter: boolean;
-};
+import {
+  formatLevel,
+  getActionabilityBadgeVariant,
+  getLifecycleBadgeVariant,
+  type AlertSignal,
+} from "../alertas-view-model";
 
 type AlertsTableProps = {
   alerts: AlertSignal[];
   selectedId: string;
   onSelect: (id: string) => void;
 };
-
-function formatLevel(value?: number): string {
-  if (typeof value !== "number") {
-    return "Pendiente";
-  }
-
-  if (value >= 100) {
-    return value.toFixed(2);
-  }
-
-  return value.toFixed(5);
-}
-
-function getBadgeVariant(stateKey: SignalStateKey) {
-  if (stateKey === "can-enter") return "success";
-  if (stateKey === "wait") return "warning";
-  if (stateKey === "no-enter") return "danger";
-  return "info";
-}
 
 export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTableProps) {
   return (
@@ -59,7 +27,7 @@ export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTabl
 
       {alerts.length === 0 ? (
         <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-8 text-center text-sm text-white/65">
-          Aún no hay alertas activas. Configura tus criterios para comenzar.
+          No hay alertas para los filtros actuales. Cuando exista una señal real válida aparecerá aquí con su `signal_id` y `analysis_id`.
         </div>
       ) : (
         <div className="space-y-3">
@@ -81,10 +49,24 @@ export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTabl
                       {alert.symbol} · {alert.direction}
                     </p>
                     <p className="text-xs text-white/60">
-                      {alert.market} · {alert.time} · hace {alert.minutesAgo} min
+                      {alert.market} · {alert.time} · hace {alert.minutesAgo} min · {alert.timeframe}
                     </p>
                   </div>
-                  <CARVIPIXBadge variant={getBadgeVariant(alert.stateKey)}>{alert.stateLabel}</CARVIPIXBadge>
+                  <div className="flex flex-wrap gap-2">
+                    <CARVIPIXBadge variant={getLifecycleBadgeVariant(alert.lifecycleState)}>{alert.lifecycleLabel}</CARVIPIXBadge>
+                    <CARVIPIXBadge variant={getActionabilityBadgeVariant(alert.actionability)}>{alert.actionabilityLabel}</CARVIPIXBadge>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2 lg:grid-cols-2">
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">strategy_id</p>
+                    <p className="truncate text-xs font-semibold text-white">{alert.strategyId}</p>
+                  </div>
+                  <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-white/55">signal_id / analysis_id</p>
+                    <p className="truncate text-xs font-semibold text-white">{alert.signalId} · {alert.analysisId}</p>
+                  </div>
                 </div>
 
                 <div className="mt-3 grid gap-2 sm:grid-cols-4">
@@ -109,7 +91,10 @@ export default function AlertsTable({ alerts, selectedId, onSelect }: AlertsTabl
                 </div>
 
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <p className="text-xs text-white/60">{alert.stateNote}</p>
+                  <div className="space-y-1 text-xs text-white/60">
+                    <p>{alert.actionabilityNote}</p>
+                    <p>Vigencia: {alert.validUntilLabel}</p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => onSelect(alert.id)}

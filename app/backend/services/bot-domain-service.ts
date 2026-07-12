@@ -8,6 +8,15 @@ import type {
 import { BotLimitGuard, PairAccessGuard } from "../commercial/access-control";
 import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
+import {
+  getLocalBotInstanceById,
+  getLocalBotLicense,
+  listLocalBotConnections,
+  listLocalBotInstances,
+  listLocalBotUpdates,
+  upsertLocalBotInstance,
+  upsertLocalBotLicense,
+} from "../core/local-bot-store";
 import { InMemoryServiceEventBus } from "../core/event-bus";
 import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
@@ -83,6 +92,20 @@ export class BotDomainService implements IBotDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getLicense(userId: string): Promise<ServiceBotLicense | null> {
+    if (!backendDatabase.enabled) {
+      const license = await getLocalBotLicense(userId);
+      return license
+        ? {
+            userId: license.userId,
+            licenseKey: license.licenseKey,
+            purchaseDate: new Date(license.purchaseDate),
+            expiryDate: license.expiryDate ? new Date(license.expiryDate) : undefined,
+            active: license.active,
+            brokerConnected: license.brokerConnected ?? undefined,
+          }
+        : null;
+    }
+
     const { rows } = await backendDatabase.query<BotLicenseRow>(
       `
       SELECT user_id, license_key, purchase_date, expiry_date, active, broker_connected
@@ -109,6 +132,15 @@ export class BotDomainService implements IBotDomainService {
   }
 
   async getBotInstances(userId: string): Promise<ServiceBotInstance[]> {
+    if (!backendDatabase.enabled) {
+      const instances = await listLocalBotInstances(userId);
+      return instances.map((item) => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+        startedAt: item.startedAt ? new Date(item.startedAt) : undefined,
+      }));
+    }
+
     const { rows } = await backendDatabase.query<BotInstanceRow>(
       `
       SELECT id, user_id, name, strategy, status, symbol, risk_level, configuration, created_at, started_at, stats
@@ -165,6 +197,22 @@ export class BotDomainService implements IBotDomainService {
       },
     };
 
+    if (!backendDatabase.enabled) {
+      await upsertLocalBotInstance({
+        ...created,
+        createdAt: created.createdAt.toISOString(),
+        startedAt: created.startedAt ? created.startedAt.toISOString() : null,
+      });
+
+      this.eventBus.publish("bot.instance.created", {
+        userId,
+        botId: created.id,
+        queriedAt: new Date(),
+      });
+
+      return created;
+    }
+
     await backendDatabase.query(
       `
       INSERT INTO bot_instances (
@@ -207,6 +255,17 @@ export class BotDomainService implements IBotDomainService {
   }
 
   async getAvailableUpdates(): Promise<ServiceBotUpdate[]> {
+    if (!backendDatabase.enabled) {
+      const updates = await listLocalBotUpdates();
+      return updates.map((item) => ({
+        version: item.version,
+        releaseDate: new Date(item.releaseDate),
+        features: item.features,
+        improvements: item.improvements,
+        bugFixes: item.bugFixes,
+      }));
+    }
+
     const { rows } = await backendDatabase.query<{
       version: string;
       release_date: Date;
@@ -246,11 +305,37 @@ export class BotDomainService implements IBotDomainService {
       password: string;
     }
   ): Promise<boolean> {
+    if (!backendDatabase.enabled) {
+      const localBot = await getLocalBotInstanceById(botId);
+      if (!localBot) {
+        throw new Error("Bot no encontrado");
+      }
+
+      void credentials;
+      await upsertLocalBotLicense({
+        userId: localBot.userId,
+        licenseKey: `CARVIPIX-${localBot.userId.toUpperCase()}-LICENSE`,
+        purchaseDate: new Date().toISOString(),
+        expiryDate: null,
+        active: true,
+        brokerConnected: brokerType,
+      });
+
+      this.eventBus.publish("bot.broker.connected", {
+        botId,
+        brokerType,
+        queriedAt: new Date(),
+      });
+
+      return true;
+    }
+
     const botResult = await backendDatabase.query<{ id: string; user_id: string }>(
       `SELECT id, user_id FROM bot_instances WHERE id = $1 LIMIT 1`,
       [botId]
     );
     const bot = botResult.rows[0];
+
     if (!bot) {
       throw new Error("Bot no encontrado");
     }
@@ -278,6 +363,17 @@ export class BotDomainService implements IBotDomainService {
 
   async getSnapshot(userId?: string): Promise<ServiceBotSnapshot> {
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    if (!backendDatabase.enabled) {
+      const instances = userId ? await listLocalBotInstances(userId) : [];
+      const connections = userId ? await listLocalBotConnections(userId) : [];
+      return {
+        generatedAt: new Date(),
+        runningInstances: instances.filter((item) => item.status === "running").length,
+        connectedAccounts: connections.filter((item) => item.connectionStatus === "connected").length,
+        health: instances.length > 0 ? "healthy" : "degraded",
+      };
+    }
+
     const [{ rows }, lifecycleSignals] = await Promise.all([
       backendDatabase.query<{ running_instances: number; connected_accounts: number }>(
       userId

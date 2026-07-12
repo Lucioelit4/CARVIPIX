@@ -2,16 +2,7 @@
 
 import { Search } from "lucide-react";
 import { CARVIPIXButton, CARVIPIXCard } from "../../design-system";
-
-export type StatusFilterValue = "all" | "can-enter" | "wait" | "no-enter" | "closed";
-
-export const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilterValue; label: string }> = [
-  { value: "all", label: "Todos los estados" },
-  { value: "can-enter", label: "🟢 Puedes entrar" },
-  { value: "wait", label: "🟡 Espera confirmación" },
-  { value: "no-enter", label: "🔴 Ya no entrar" },
-  { value: "closed", label: "⚫ Finalizada" },
-];
+import { STATUS_FILTER_OPTIONS, type StatusFilterValue } from "../alertas-view-model";
 
 type AlertFiltersProps = {
   search: string;
@@ -46,7 +37,7 @@ export default function AlertFilters({
           <input
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Buscar activo"
+            placeholder="Buscar símbolo, strategy_id, signal_id o analysis_id"
             className="h-11 w-full rounded-lg border border-white/15 bg-[#0C1522] pl-9 pr-3 text-sm text-white outline-none transition focus:border-[#D4AF37]"
           />
         </label>

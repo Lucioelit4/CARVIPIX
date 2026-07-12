@@ -56,6 +56,7 @@
     "audit:architecture": "node scripts/audit-prohibited-engine-imports.mjs",
     "heavy:local": "node scripts/heavy-runner.mjs",
     "knowledge:bootstrap": "tsx scripts/bootstrap-official-knowledge.ts",
+    "payments:paypal:seed": "tsx scripts/seed-paypal-catalog.ts",
     "infra:up:local": "docker compose -f docker-compose.local.yml up -d --build",
     "infra:down:local": "docker compose -f docker-compose.local.yml down",
     "infra:heavy": "docker compose -f docker-compose.local.yml --profile heavy up heavy-worker",
