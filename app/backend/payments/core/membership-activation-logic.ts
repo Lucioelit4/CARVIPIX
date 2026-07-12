@@ -1,3 +1,8 @@
+import {
+  resolveCommercialSubscriptionPlanFromCheckoutId,
+  resolveCommercialSubscriptionPlanFromProductType,
+} from "@/app/lib/commercial/business-model";
+
 export type MembershipPlan = "pro" | "premium" | "enterprise";
 
 function normalize(value: string | null | undefined): string {
@@ -11,11 +16,19 @@ export function resolveMembershipPlanForProduct(input: {
   const productId = normalize(input.productId);
   const productType = normalize(input.productType);
 
-  if (productId === "plan-basic" || productId === "plan-pro" || productType === "plan_pro") {
+  const commercialPlan = resolveCommercialSubscriptionPlanFromCheckoutId(productId);
+  if (commercialPlan === "basic") {
     return "pro";
   }
+  if (commercialPlan === "advanced") {
+    return "premium";
+  }
 
-  if (productId === "plan-advanced" || productId === "plan-premium" || productType === "plan_premium") {
+  const commercialByType = resolveCommercialSubscriptionPlanFromProductType(productType);
+  if (commercialByType === "basic") {
+    return "pro";
+  }
+  if (commercialByType === "advanced") {
     return "premium";
   }
 

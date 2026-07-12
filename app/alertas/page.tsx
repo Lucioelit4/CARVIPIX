@@ -1,12 +1,13 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Clock3, Gauge, ShieldCheck, Signal } from "lucide-react";
 import AlertFilters, { type StatusFilterValue } from "./components/AlertFilters";
 import AlertsTable from "./components/AlertsTable";
 import AlertDetails from "./components/AlertDetails";
 import { getAlerts } from "@/app/lib/client-data-helpers";
-import { CARVIPIXCard } from "../design-system";
+import { CARVIPIXButton, CARVIPIXCard } from "../design-system";
+import DataSourceBanner from "@/app/components/DataSourceBanner";
 
 type SignalStateKey = "can-enter" | "wait" | "no-enter" | "closed";
 
@@ -205,38 +206,54 @@ export default function AlertasPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
   const [symbolFilter, setSymbolFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  useEffect(() => {
-    let mounted = true;
+  const refreshAlerts = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
 
-    const loadAlerts = async () => {
-      try {
-        const result = await getAlerts(16);
-        if (!mounted || !Array.isArray(result)) {
-          return;
-        }
+    try {
+      const result = await getAlerts(16);
 
-        const mapped = mapExternalAlerts(result);
-        if (mapped.length === 0) {
-          setAlerts([]);
-          setSelectedId("");
-          return;
-        }
-
-        setAlerts(mapped);
-        setSelectedId(mapped[0].id);
-      } catch {
+      if (!Array.isArray(result)) {
         setAlerts([]);
         setSelectedId("");
+        setLoadError("Formato inesperado al consultar alertas.");
+        return;
       }
-    };
 
-    loadAlerts();
+      const mapped = mapExternalAlerts(result);
+      if (mapped.length === 0) {
+        setAlerts([]);
+        setSelectedId("");
+      } else {
+        setAlerts(mapped);
+        setSelectedId((current) => (mapped.some((item) => item.id === current) ? current : mapped[0].id));
+      }
 
-    return () => {
-      mounted = false;
-    };
+      setLastUpdated(new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudieron cargar las alertas.";
+      const lowered = message.toLowerCase();
+
+      if (lowered.includes("403") || lowered.includes("access") || lowered.includes("forbidden")) {
+        setLoadError("Tu membresia actual no tiene permiso para consultar alertas en este entorno.");
+      } else {
+        setLoadError("No se pudieron cargar las alertas en este momento. Intenta nuevamente.");
+      }
+
+      setAlerts([]);
+      setSelectedId("");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void refreshAlerts();
+  }, [refreshAlerts]);
 
   const symbolOptions = useMemo(() => {
     const symbols = Array.from(new Set(alerts.map((item) => item.symbol)));
@@ -289,6 +306,7 @@ export default function AlertasPage() {
   return (
     <main className="min-h-screen bg-[#030303] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-6">
+        <DataSourceBanner />
         <section className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#0B0B0B] to-[#0E1622] p-5 sm:p-6">
           <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">
             <span className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1">Sala en vivo</span>
@@ -297,6 +315,13 @@ export default function AlertasPage() {
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Alertas en Vivo</h1>
           <p className="mt-2 max-w-3xl text-sm text-white/70 sm:text-base">
             En menos de 2 segundos identifica la señal activa, si aún puedes entrar y los niveles exactos de ejecución.
+          </p>
+          <p className="mt-2 text-xs text-white/55">
+            {isLoading
+              ? "Actualizando alertas..."
+              : lastUpdated
+                ? `Ultima actualizacion: ${lastUpdated}`
+                : "Sin sincronizacion todavia."}
           </p>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -382,15 +407,38 @@ export default function AlertasPage() {
               selectedSymbol={symbolFilter}
               selectedStatus={statusFilter}
               symbolOptions={symbolOptions}
+              isRefreshing={isLoading}
               onSearchChange={setSearch}
               onSymbolChange={setSymbolFilter}
               onStatusChange={setStatusFilter}
+              onRefresh={() => {
+                void refreshAlerts();
+              }}
               onClear={() => {
                 setSearch("");
                 setSymbolFilter("all");
                 setStatusFilter("all");
               }}
             />
+
+            {loadError ? (
+              <CARVIPIXCard variant="risk" padding="16" hover={false}>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-red-100">{loadError}</p>
+                  <CARVIPIXButton
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    isLoading={isLoading}
+                    onClick={() => {
+                      void refreshAlerts();
+                    }}
+                  >
+                    Reintentar
+                  </CARVIPIXButton>
+                </div>
+              </CARVIPIXCard>
+            ) : null}
 
             <AlertsTable alerts={filteredAlerts} selectedId={selectedId} onSelect={setSelectedId} />
           </section>

@@ -34,6 +34,12 @@ type SystemPayload = {
     avgResponseMs?: number;
     timings?: number;
   };
+  dataSource?: {
+    origin?: string;
+    status?: string;
+    capturedAt?: string;
+    validUntil?: string;
+  };
 };
 
 interface AdminDataHealthProps {
@@ -109,6 +115,7 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
   const latest = payload?.validation?.latest ?? null;
   const execution = payload?.execution ?? {};
   const observability = payload?.observability ?? {};
+  const dataSource = payload?.dataSource;
   const modules = latest?.modules ?? [];
 
   return (
@@ -117,6 +124,11 @@ export default function AdminDataHealth({ isAdmin = false }: AdminDataHealthProp
         <div>
           <h2 className="text-2xl font-bold mb-2">Estado operativo del sistema</h2>
           <p className="text-white/60">Lectura real del runtime, validación operativa y ejecución sandbox.</p>
+          {dataSource && (
+            <p className="text-xs text-white/60 mt-2">
+              {`Origen: ${dataSource.origin ?? "UNKNOWN"} · Estado: ${dataSource.status ?? "unknown"} · Capturado: ${formatDate(dataSource.capturedAt ?? null)} · Vigencia: ${formatDate(dataSource.validUntil ?? null)}`}
+            </p>
+          )}
         </div>
         <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void load()} disabled={loading}>
           Actualizar

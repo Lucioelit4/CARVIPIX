@@ -155,8 +155,8 @@ export class IndicatorFramework {
   }
 
   private adx(highs: number[], lows: number[], closes: number[], period: number): number {
-    if (highs.length < period + 1 || lows.length < period + 1 || closes.length < period + 1) {
-      return 0;
+    if (highs.length < 2 * period + 1 || lows.length < 2 * period + 1 || closes.length < 2 * period + 1) {
+      return Number.NaN;
     }
 
     const plusDM: number[] = [];
@@ -173,35 +173,52 @@ export class IndicatorFramework {
       tr.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - prevClose), Math.abs(lows[i] - prevClose)));
     }
 
-    const smoothedTR = this.wilder(tr, period);
-    const smoothedPlus = this.wilder(plusDM, period);
-    const smoothedMinus = this.wilder(minusDM, period);
+    let smoothedTR = tr.slice(0, period).reduce((sum, v) => sum + v, 0);
+    let smoothedPlus = plusDM.slice(0, period).reduce((sum, v) => sum + v, 0);
+    let smoothedMinus = minusDM.slice(0, period).reduce((sum, v) => sum + v, 0);
 
-    const diPlus: number[] = [];
-    const diMinus: number[] = [];
-    for (let i = 0; i < smoothedTR.length; i++) {
-      const trValue = smoothedTR[i];
-      if (trValue <= 0) {
-        diPlus.push(0);
-        diMinus.push(0);
+    const dxValues: number[] = [];
+
+    const seedDiSum = smoothedTR > 0 ? (100 * smoothedPlus) / smoothedTR + (100 * smoothedMinus) / smoothedTR : 0;
+    const seedDx =
+      seedDiSum > 0
+        ? (100 * Math.abs((100 * smoothedPlus) / smoothedTR - (100 * smoothedMinus) / smoothedTR)) / seedDiSum
+        : 0;
+    dxValues.push(seedDx);
+
+    for (let i = period; i < tr.length; i++) {
+      smoothedTR = smoothedTR - smoothedTR / period + tr[i];
+      smoothedPlus = smoothedPlus - smoothedPlus / period + plusDM[i];
+      smoothedMinus = smoothedMinus - smoothedMinus / period + minusDM[i];
+
+      if (smoothedTR <= 0) {
+        dxValues.push(0);
         continue;
       }
-      diPlus.push((smoothedPlus[i] / trValue) * 100);
-      diMinus.push((smoothedMinus[i] / trValue) * 100);
+
+      const diPlus = (100 * smoothedPlus) / smoothedTR;
+      const diMinus = (100 * smoothedMinus) / smoothedTR;
+      const diSum = diPlus + diMinus;
+      const dx = diSum > 0 ? (100 * Math.abs(diPlus - diMinus)) / diSum : 0;
+      dxValues.push(dx);
     }
 
-    const dx: number[] = [];
-    for (let i = 0; i < diPlus.length; i++) {
-      const sum = diPlus[i] + diMinus[i];
-      if (sum === 0) {
-        dx.push(0);
-        continue;
-      }
-      dx.push((Math.abs(diPlus[i] - diMinus[i]) / sum) * 100);
+    if (dxValues.length < period) {
+      return Number.NaN;
     }
 
-    const adxSeries = this.wilder(dx, period);
-    return adxSeries[adxSeries.length - 1] ?? 0;
+    let adx = dxValues.slice(0, period).reduce((sum, v) => sum + v, 0) / period;
+    for (let i = period; i < dxValues.length; i++) {
+      adx = ((adx * (period - 1)) + dxValues[i]) / period;
+    }
+
+    if (!Number.isFinite(adx)) {
+      return Number.NaN;
+    }
+
+    if (adx < 0) return 0;
+    if (adx > 100) return 100;
+    return adx;
   }
 
   private wilder(values: number[], period: number): number[] {

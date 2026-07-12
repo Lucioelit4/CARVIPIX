@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { getCurrentUser } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXCard } from "@/app/design-system";
+import DataSourceBanner from "@/app/components/DataSourceBanner";
 
 type CommunityRole = "Equipo CARVIPIX" | "Moderador" | "Miembro PRO" | "Miembro";
 type ReactionKey = "like" | "love" | "fire" | "check" | "eyes";
@@ -51,7 +52,7 @@ const MAIN_NAV = [
   { id: "resultados", label: "Resultados", icon: TrendingUp },
   { id: "bot", label: "Bot", icon: Bot },
   { id: "gestion-capital", label: "Gestion de Capital", icon: Gauge },
-  { id: "programa-fondeo", label: "Programa de Fondeo", icon: Rocket },
+  { id: "cuentas-fondeadas", label: "Cuentas Fondeadas", icon: Rocket },
   { id: "comunidad", label: "Comunidad", icon: Users },
   { id: "historial", label: "Historial", icon: FolderClock },
   { id: "estadisticas", label: "Estadisticas", icon: ChartColumnBig },
@@ -311,6 +312,7 @@ export default function ComunidadPage() {
   return (
     <main className="min-h-screen bg-[#030303] text-white px-2 py-3 md:px-3 md:py-4">
       <div className="mx-auto w-full max-w-[1480px] space-y-3">
+        <DataSourceBanner />
         <header className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#0B0B0B] to-[#030303] p-3 md:p-4 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
             <h1 className="text-2xl md:text-[1.75rem] font-semibold">Comunidad CARVIPIX</h1>

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { getResultsHistory, getPlatformResults } from "@/app/lib/client-data-helpers";
 import type { PlatformResults, ResultsHistory } from "@/app/lib/modules/results/types";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors } from "@/app/design-system";
+import DataSourceBanner from "@/app/components/DataSourceBanner";
 
 export default function ResultadosPage() {
   const [monthlyData, setMonthlyData] = useState<Array<{ month: string; value: number }>>([]);
@@ -44,6 +45,9 @@ export default function ResultadosPage() {
 
   return (
     <main className="min-h-screen bg-[#030303] text-white">
+      <div className="cv-workspace max-w-7xl pt-6">
+        <DataSourceBanner />
+      </div>
       {/* Header */}
       <div className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] py-10 sm:py-12">
         <div className="cv-workspace max-w-7xl">

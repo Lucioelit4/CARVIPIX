@@ -1,0 +1,3680 @@
+﻿[
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_D1_seed-v1.audit.json",
+        "Name":  "BTCUSD_D1_seed-v1.audit.json",
+        "Length":  748313,
+        "LastWriteTime":  "\/Date(1783536022999)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_H1_seed-v1.audit.json",
+        "Name":  "BTCUSD_H1_seed-v1.audit.json",
+        "Length":  2943360,
+        "LastWriteTime":  "\/Date(1783536022993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_M1_v2026.07.08.audit.json",
+        "Name":  "BTCUSD_M1_v2026.07.08.audit.json",
+        "Length":  3546,
+        "LastWriteTime":  "\/Date(1783536002087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_M5_seed-v1.audit.json",
+        "Name":  "BTCUSD_M5_seed-v1.audit.json",
+        "Length":  17718424,
+        "LastWriteTime":  "\/Date(1783536022974)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_D1_seed-v1.audit.json",
+        "Name":  "EURUSD_D1_seed-v1.audit.json",
+        "Length":  762031,
+        "LastWriteTime":  "\/Date(1783536023128)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_H1_seed-v1.audit.json",
+        "Name":  "EURUSD_H1_seed-v1.audit.json",
+        "Length":  2997670,
+        "LastWriteTime":  "\/Date(1783536023122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_M5_seed-v1.audit.json",
+        "Name":  "EURUSD_M5_seed-v1.audit.json",
+        "Length":  17964774,
+        "LastWriteTime":  "\/Date(1783536023104)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_D1_seed-v1.audit.json",
+        "Name":  "GBPUSD_D1_seed-v1.audit.json",
+        "Length":  763267,
+        "LastWriteTime":  "\/Date(1783536023249)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_H1_seed-v1.audit.json",
+        "Name":  "GBPUSD_H1_seed-v1.audit.json",
+        "Length":  3003098,
+        "LastWriteTime":  "\/Date(1783536023243)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_M5_seed-v1.audit.json",
+        "Name":  "GBPUSD_M5_seed-v1.audit.json",
+        "Length":  17993482,
+        "LastWriteTime":  "\/Date(1783536023225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_D1_seed-v1.audit.json",
+        "Name":  "NAS100_D1_seed-v1.audit.json",
+        "Length":  756733,
+        "LastWriteTime":  "\/Date(1783536023956)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_H1_seed-v1.audit.json",
+        "Name":  "NAS100_H1_seed-v1.audit.json",
+        "Length":  2976512,
+        "LastWriteTime":  "\/Date(1783536023950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_M5_seed-v1.audit.json",
+        "Name":  "NAS100_M5_seed-v1.audit.json",
+        "Length":  17824082,
+        "LastWriteTime":  "\/Date(1783536023933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_D1_seed-v1.audit.json",
+        "Name":  "US30_D1_seed-v1.audit.json",
+        "Length":  753975,
+        "LastWriteTime":  "\/Date(1783536024071)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_H1_seed-v1.audit.json",
+        "Name":  "US30_H1_seed-v1.audit.json",
+        "Length":  2965894,
+        "LastWriteTime":  "\/Date(1783536024065)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_M5_seed-v1.audit.json",
+        "Name":  "US30_M5_seed-v1.audit.json",
+        "Length":  17781974,
+        "LastWriteTime":  "\/Date(1783536024046)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_D1_seed-v1.audit.json",
+        "Name":  "USDJPY_D1_seed-v1.audit.json",
+        "Length":  757301,
+        "LastWriteTime":  "\/Date(1783536023366)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_H1_seed-v1.audit.json",
+        "Name":  "USDJPY_H1_seed-v1.audit.json",
+        "Length":  2978668,
+        "LastWriteTime":  "\/Date(1783536023360)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_M5_seed-v1.audit.json",
+        "Name":  "USDJPY_M5_seed-v1.audit.json",
+        "Length":  17842922,
+        "LastWriteTime":  "\/Date(1783536023343)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543377770)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543411354)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_seed-v1.audit.json",
+        "Name":  "XAUUSD_D1_seed-v1.audit.json",
+        "Length":  756273,
+        "LastWriteTime":  "\/Date(1783536022867)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543377729)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543411312)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_seed-v1.audit.json",
+        "Name":  "XAUUSD_H1_seed-v1.audit.json",
+        "Length":  2974948,
+        "LastWriteTime":  "\/Date(1783536022861)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543376905)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543410087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543377622)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543411165)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_v2026.07.08.audit.json",
+        "Name":  "XAUUSD_M5_v2026.07.08.audit.json",
+        "Length":  5211,
+        "LastWriteTime":  "\/Date(1783536002084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\checkpoints\\manual_certified_XAUUSD_D1.checkpoint.json",
+        "Name":  "manual_certified_XAUUSD_D1.checkpoint.json",
+        "Length":  277,
+        "LastWriteTime":  "\/Date(1783543411356)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\checkpoints\\manual_certified_XAUUSD_H1.checkpoint.json",
+        "Name":  "manual_certified_XAUUSD_H1.checkpoint.json",
+        "Length":  277,
+        "LastWriteTime":  "\/Date(1783543411313)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\checkpoints\\manual_certified_XAUUSD_M1.checkpoint.json",
+        "Name":  "manual_certified_XAUUSD_M1.checkpoint.json",
+        "Length":  277,
+        "LastWriteTime":  "\/Date(1783543410093)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\checkpoints\\manual_certified_XAUUSD_M5.checkpoint.json",
+        "Name":  "manual_certified_XAUUSD_M5.checkpoint.json",
+        "Length":  277,
+        "LastWriteTime":  "\/Date(1783543411167)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_D1.json",
+        "Name":  "XAUUSD_D1.json",
+        "Length":  353956,
+        "LastWriteTime":  "\/Date(1783543411352)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_H1.json",
+        "Name":  "XAUUSD_H1.json",
+        "Length":  6729124,
+        "LastWriteTime":  "\/Date(1783543411304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_M1.json",
+        "Name":  "XAUUSD_M1.json",
+        "Length":  403392736,
+        "LastWriteTime":  "\/Date(1783543409616)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_M5.json",
+        "Name":  "XAUUSD_M5.json",
+        "Length":  80699056,
+        "LastWriteTime":  "\/Date(1783543411061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\manifests\\XAUUSD_D1.manifest.json",
+        "Name":  "XAUUSD_D1.manifest.json",
+        "Length":  952,
+        "LastWriteTime":  "\/Date(1783543411352)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\manifests\\XAUUSD_H1.manifest.json",
+        "Name":  "XAUUSD_H1.manifest.json",
+        "Length":  954,
+        "LastWriteTime":  "\/Date(1783543411305)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\manifests\\XAUUSD_M1.manifest.json",
+        "Name":  "XAUUSD_M1.manifest.json",
+        "Length":  958,
+        "LastWriteTime":  "\/Date(1783543409624)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\manifests\\XAUUSD_M5.manifest.json",
+        "Name":  "XAUUSD_M5.manifest.json",
+        "Length":  956,
+        "LastWriteTime":  "\/Date(1783543411063)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Length":  15531,
+        "LastWriteTime":  "\/Date(1768085552000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Length":  1158,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Length":  1912416,
+        "LastWriteTime":  "\/Date(1779855788000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Length":  1902252,
+        "LastWriteTime":  "\/Date(1781674988000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\sample-data\\XAUUSD_M1_HistData_test.csv",
+        "Name":  "XAUUSD_M1_HistData_test.csv",
+        "Length":  560,
+        "LastWriteTime":  "\/Date(1783044292246)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\sample-data\\XAUUSD_M1_sample.csv",
+        "Name":  "XAUUSD_M1_sample.csv",
+        "Length":  3397,
+        "LastWriteTime":  "\/Date(1783041599577)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix-intelligence-engine\\exports\\cdp\\latest\\xauusd-certified-export-v1.json",
+        "Name":  "xauusd-certified-export-v1.json",
+        "Length":  81688,
+        "LastWriteTime":  "\/Date(1783419100937)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix-intelligence-engine\\exports\\cdp\\xauusd-certified-export-v1.json",
+        "Name":  "xauusd-certified-export-v1.json",
+        "Length":  81688,
+        "LastWriteTime":  "\/Date(1783419103095)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\download_test\\xauusd_m1_test.csv.csv",
+        "Name":  "xauusd_m1_test.csv.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783652587633)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\apr2026\\DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Length":  1912416,
+        "LastWriteTime":  "\/Date(1779855788000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\apr2026\\DAT_ASCII_XAUUSD_M1_202604.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202604.txt",
+        "Length":  1281,
+        "LastWriteTime":  "\/Date(1779855788000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\HISTDATA_COM_ASCII_XAUUSD_M12025.zip",
+        "Name":  "HISTDATA_COM_ASCII_XAUUSD_M12025.zip",
+        "Length":  4561311,
+        "LastWriteTime":  "\/Date(1783041545867)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\HISTDATA_COM_ASCII_XAUUSD_M1202604.zip",
+        "Name":  "HISTDATA_COM_ASCII_XAUUSD_M1202604.zip",
+        "Length":  399055,
+        "LastWriteTime":  "\/Date(1783047419626)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\HISTDATA_COM_ASCII_XAUUSD_M1202605.zip",
+        "Name":  "HISTDATA_COM_ASCII_XAUUSD_M1202605.zip",
+        "Length":  391663,
+        "LastWriteTime":  "\/Date(1783047408963)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\HISTDATA_COM_ASCII_XAUUSD_M1202606.zip",
+        "Name":  "HISTDATA_COM_ASCII_XAUUSD_M1202606.zip",
+        "Length":  370719,
+        "LastWriteTime":  "\/Date(1783044233864)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\may2026\\DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Length":  1902252,
+        "LastWriteTime":  "\/Date(1781674988000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\may2026\\DAT_ASCII_XAUUSD_M1_202605.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202605.txt",
+        "Length":  1278,
+        "LastWriteTime":  "\/Date(1781674988000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\MANIFEST_PRETRAIN.txt",
+        "Name":  "MANIFEST_PRETRAIN.txt",
+        "Length":  1313,
+        "LastWriteTime":  "\/Date(1783725494826)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD_TICK.csv",
+        "Name":  "XAUUSD_TICK.csv",
+        "Length":  21644,
+        "LastWriteTime":  "\/Date(1783553931858)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD1.csv",
+        "Name":  "XAUUSD1.csv",
+        "Length":  5599998,
+        "LastWriteTime":  "\/Date(1783629821202)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD1440.csv",
+        "Name":  "XAUUSD1440.csv",
+        "Length":  306461,
+        "LastWriteTime":  "\/Date(1783629947007)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD15.csv",
+        "Name":  "XAUUSD15.csv",
+        "Length":  5699973,
+        "LastWriteTime":  "\/Date(1783629989488)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD240.csv",
+        "Name":  "XAUUSD240.csv",
+        "Length":  1555202,
+        "LastWriteTime":  "\/Date(1783629984007)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD30.csv",
+        "Name":  "XAUUSD30.csv",
+        "Length":  5699983,
+        "LastWriteTime":  "\/Date(1783629988269)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD5.csv",
+        "Name":  "XAUUSD5.csv",
+        "Length":  5599998,
+        "LastWriteTime":  "\/Date(1783629880950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD_READY\\XAUUSD60.csv",
+        "Name":  "XAUUSD60.csv",
+        "Length":  5699358,
+        "LastWriteTime":  "\/Date(1783629987385)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD1 (1).csv",
+        "Name":  "XAUUSD1 (1).csv",
+        "Length":  5599998,
+        "LastWriteTime":  "\/Date(1783629821202)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD1.csv",
+        "Name":  "XAUUSD1.csv",
+        "Length":  5599998,
+        "LastWriteTime":  "\/Date(1783552840061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD1440.csv",
+        "Name":  "XAUUSD1440.csv",
+        "Length":  306461,
+        "LastWriteTime":  "\/Date(1783629947007)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD15.csv",
+        "Name":  "XAUUSD15.csv",
+        "Length":  5699973,
+        "LastWriteTime":  "\/Date(1783629989488)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD240.csv",
+        "Name":  "XAUUSD240.csv",
+        "Length":  1555202,
+        "LastWriteTime":  "\/Date(1783629984007)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD30.csv",
+        "Name":  "XAUUSD30.csv",
+        "Length":  5699983,
+        "LastWriteTime":  "\/Date(1783629988269)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD5.csv",
+        "Name":  "XAUUSD5.csv",
+        "Length":  5599998,
+        "LastWriteTime":  "\/Date(1783629880950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Downloads\\XAUUSD60.csv",
+        "Name":  "XAUUSD60.csv",
+        "Length":  5699358,
+        "LastWriteTime":  "\/Date(1783629987385)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\BTCUSD_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Name":  "BTCUSD_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Length":  86534139,
+        "LastWriteTime":  "\/Date(1783661314788)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2016_2.csv",
+        "Name":  "part_2016_2.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783658865624)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2017.csv",
+        "Name":  "part_2017.csv",
+        "Length":  8325927,
+        "LastWriteTime":  "\/Date(1783659097579)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2018.csv",
+        "Name":  "part_2018.csv",
+        "Length":  8809751,
+        "LastWriteTime":  "\/Date(1783659133814)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2019.csv",
+        "Name":  "part_2019.csv",
+        "Length":  5919916,
+        "LastWriteTime":  "\/Date(1783659157890)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2020.csv",
+        "Name":  "part_2020.csv",
+        "Length":  4929545,
+        "LastWriteTime":  "\/Date(1783659355593)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2021.csv",
+        "Name":  "part_2021.csv",
+        "Length":  7940628,
+        "LastWriteTime":  "\/Date(1783659767907)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2022.csv",
+        "Name":  "part_2022.csv",
+        "Length":  12689566,
+        "LastWriteTime":  "\/Date(1783660809385)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2023.csv",
+        "Name":  "part_2023.csv",
+        "Length":  13084244,
+        "LastWriteTime":  "\/Date(1783661076227)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2024.csv",
+        "Name":  "part_2024.csv",
+        "Length":  6592168,
+        "LastWriteTime":  "\/Date(1783661100450)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2025.csv",
+        "Name":  "part_2025.csv",
+        "Length":  10917871,
+        "LastWriteTime":  "\/Date(1783661167020)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\_legacy_archive_20260710_133027\\part_2026_1.csv",
+        "Name":  "part_2026_1.csv",
+        "Length":  5413942,
+        "LastWriteTime":  "\/Date(1783661297682)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-02.csv",
+        "Name":  "2017-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783712236651)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-05.csv",
+        "Name":  "2017-05.csv",
+        "Length":  1429628,
+        "LastWriteTime":  "\/Date(1783713091556)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-06.csv",
+        "Name":  "2017-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713315609)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-07.csv",
+        "Name":  "2017-07.csv",
+        "Length":  1688926,
+        "LastWriteTime":  "\/Date(1783713505166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-08.csv",
+        "Name":  "2017-08.csv",
+        "Length":  1778438,
+        "LastWriteTime":  "\/Date(1783713518662)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-09.csv",
+        "Name":  "2017-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713652153)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-10.csv",
+        "Name":  "2017-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713859613)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-11.csv",
+        "Name":  "2017-11.csv",
+        "Length":  1741130,
+        "LastWriteTime":  "\/Date(1783714274419)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2017-12.csv",
+        "Name":  "2017-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783714584880)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-01.csv",
+        "Name":  "2018-01.csv",
+        "Length":  2022979,
+        "LastWriteTime":  "\/Date(1783714753955)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-02.csv",
+        "Name":  "2018-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715028362)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-03.csv",
+        "Name":  "2018-03.csv",
+        "Length":  1207497,
+        "LastWriteTime":  "\/Date(1783715327766)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-04.csv",
+        "Name":  "2018-04.csv",
+        "Length":  1682752,
+        "LastWriteTime":  "\/Date(1783715741562)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-05.csv",
+        "Name":  "2018-05.csv",
+        "Length":  1848726,
+        "LastWriteTime":  "\/Date(1783715773989)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-06.csv",
+        "Name":  "2018-06.csv",
+        "Length":  1790298,
+        "LastWriteTime":  "\/Date(1783715790046)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-07.csv",
+        "Name":  "2018-07.csv",
+        "Length":  1789216,
+        "LastWriteTime":  "\/Date(1783715807214)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-08.csv",
+        "Name":  "2018-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715821677)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-09.csv",
+        "Name":  "2018-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716111405)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-10.csv",
+        "Name":  "2018-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716464301)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-11.csv",
+        "Name":  "2018-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716664912)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2018-12.csv",
+        "Name":  "2018-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716977479)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-01.csv",
+        "Name":  "2019-01.csv",
+        "Length":  1183112,
+        "LastWriteTime":  "\/Date(1783717143730)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-02.csv",
+        "Name":  "2019-02.csv",
+        "Length":  1669136,
+        "LastWriteTime":  "\/Date(1783717229767)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-03.csv",
+        "Name":  "2019-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717248870)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-04.csv",
+        "Name":  "2019-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717330740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-05.csv",
+        "Name":  "2019-05.csv",
+        "Length":  1193448,
+        "LastWriteTime":  "\/Date(1783717628338)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-06.csv",
+        "Name":  "2019-06.csv",
+        "Length":  1693926,
+        "LastWriteTime":  "\/Date(1783718045495)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-07.csv",
+        "Name":  "2019-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718199488)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-08.csv",
+        "Name":  "2019-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718489119)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-09.csv",
+        "Name":  "2019-09.csv",
+        "Length":  1834682,
+        "LastWriteTime":  "\/Date(1783718614893)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-10.csv",
+        "Name":  "2019-10.csv",
+        "Length":  1836406,
+        "LastWriteTime":  "\/Date(1783718829060)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-11.csv",
+        "Name":  "2019-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718999764)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\BTCUSD\\2019-12.csv",
+        "Name":  "2019-12.csv",
+        "Length":  1180822,
+        "LastWriteTime":  "\/Date(1783719391436)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\EURUSD_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Name":  "EURUSD_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Length":  127436793,
+        "LastWriteTime":  "\/Date(1783664127348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2016_2.csv",
+        "Name":  "part_2016_2.csv",
+        "Length":  6241248,
+        "LastWriteTime":  "\/Date(1783661544958)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2017.csv",
+        "Name":  "part_2017.csv",
+        "Length":  10945383,
+        "LastWriteTime":  "\/Date(1783661910716)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2018.csv",
+        "Name":  "part_2018.csv",
+        "Length":  12316748,
+        "LastWriteTime":  "\/Date(1783662326976)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2019.csv",
+        "Name":  "part_2019.csv",
+        "Length":  13184608,
+        "LastWriteTime":  "\/Date(1783662670167)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2020.csv",
+        "Name":  "part_2020.csv",
+        "Length":  13956263,
+        "LastWriteTime":  "\/Date(1783662852285)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2021.csv",
+        "Name":  "part_2021.csv",
+        "Length":  15233488,
+        "LastWriteTime":  "\/Date(1783663179954)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2022.csv",
+        "Name":  "part_2022.csv",
+        "Length":  11869540,
+        "LastWriteTime":  "\/Date(1783663658311)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2023.csv",
+        "Name":  "part_2023.csv",
+        "Length":  12229916,
+        "LastWriteTime":  "\/Date(1783663962936)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2024.csv",
+        "Name":  "part_2024.csv",
+        "Length":  6501892,
+        "LastWriteTime":  "\/Date(1783663984878)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2025.csv",
+        "Name":  "part_2025.csv",
+        "Length":  10886071,
+        "LastWriteTime":  "\/Date(1783664028271)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\_legacy_archive_20260710_133027\\part_2026_1.csv",
+        "Name":  "part_2026_1.csv",
+        "Length":  11334495,
+        "LastWriteTime":  "\/Date(1783664103115)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-07.csv",
+        "Name":  "2016-07.csv",
+        "Length":  1381386,
+        "LastWriteTime":  "\/Date(1783711917968)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-08.csv",
+        "Name":  "2016-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783712210035)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-09.csv",
+        "Name":  "2016-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783712499994)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-10.csv",
+        "Name":  "2016-10.csv",
+        "Length":  1906527,
+        "LastWriteTime":  "\/Date(1783713056597)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-11.csv",
+        "Name":  "2016-11.csv",
+        "Length":  1972476,
+        "LastWriteTime":  "\/Date(1783713055246)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2016-12.csv",
+        "Name":  "2016-12.csv",
+        "Length":  2032103,
+        "LastWriteTime":  "\/Date(1783713261868)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-01.csv",
+        "Name":  "2017-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713426879)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-02.csv",
+        "Name":  "2017-02.csv",
+        "Length":  1841972,
+        "LastWriteTime":  "\/Date(1783713600814)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-03.csv",
+        "Name":  "2017-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713734100)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-04.csv",
+        "Name":  "2017-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783714061452)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-05.csv",
+        "Name":  "2017-05.csv",
+        "Length":  2016075,
+        "LastWriteTime":  "\/Date(1783714233189)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-06.csv",
+        "Name":  "2017-06.csv",
+        "Length":  1973750,
+        "LastWriteTime":  "\/Date(1783714573368)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-07.csv",
+        "Name":  "2017-07.csv",
+        "Length":  1908215,
+        "LastWriteTime":  "\/Date(1783714749122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-08.csv",
+        "Name":  "2017-08.csv",
+        "Length":  2026811,
+        "LastWriteTime":  "\/Date(1783715072208)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-09.csv",
+        "Name":  "2017-09.csv",
+        "Length":  1973512,
+        "LastWriteTime":  "\/Date(1783715249566)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-10.csv",
+        "Name":  "2017-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715481101)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-11.csv",
+        "Name":  "2017-11.csv",
+        "Length":  1961683,
+        "LastWriteTime":  "\/Date(1783715777529)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2017-12.csv",
+        "Name":  "2017-12.csv",
+        "Length":  2029153,
+        "LastWriteTime":  "\/Date(1783715807758)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-01.csv",
+        "Name":  "2018-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715821943)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-02.csv",
+        "Name":  "2018-02.csv",
+        "Length":  1829523,
+        "LastWriteTime":  "\/Date(1783716107730)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-03.csv",
+        "Name":  "2018-03.csv",
+        "Length":  1315436,
+        "LastWriteTime":  "\/Date(1783716443199)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-04.csv",
+        "Name":  "2018-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716621272)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-05.csv",
+        "Name":  "2018-05.csv",
+        "Length":  2025915,
+        "LastWriteTime":  "\/Date(1783716706111)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-06.csv",
+        "Name":  "2018-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716840543)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-07.csv",
+        "Name":  "2018-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717083711)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-08.csv",
+        "Name":  "2018-08.csv",
+        "Length":  2015508,
+        "LastWriteTime":  "\/Date(1783717228100)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-09.csv",
+        "Name":  "2018-09.csv",
+        "Length":  1829784,
+        "LastWriteTime":  "\/Date(1783717256890)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-10.csv",
+        "Name":  "2018-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717331202)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-11.csv",
+        "Name":  "2018-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717586827)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2018-12.csv",
+        "Name":  "2018-12.csv",
+        "Length":  1907502,
+        "LastWriteTime":  "\/Date(1783718355960)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2019-01.csv",
+        "Name":  "2019-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718435304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2019-02.csv",
+        "Name":  "2019-02.csv",
+        "Length":  1842333,
+        "LastWriteTime":  "\/Date(1783718821302)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2019-03.csv",
+        "Name":  "2019-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783719010674)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2019-04.csv",
+        "Name":  "2019-04.csv",
+        "Length":  1973660,
+        "LastWriteTime":  "\/Date(1783719284956)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\EURUSD\\2019-05.csv",
+        "Name":  "2019-05.csv",
+        "Length":  1316712,
+        "LastWriteTime":  "\/Date(1783719307499)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-07.csv",
+        "Name":  "2016-07.csv",
+        "Length":  1502647,
+        "LastWriteTime":  "\/Date(1783666650762)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-08.csv",
+        "Name":  "2016-08.csv",
+        "Length":  2036905,
+        "LastWriteTime":  "\/Date(1783667611907)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-09.csv",
+        "Name":  "2016-09.csv",
+        "Length":  1972562,
+        "LastWriteTime":  "\/Date(1783667640573)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-10.csv",
+        "Name":  "2016-10.csv",
+        "Length":  1893744,
+        "LastWriteTime":  "\/Date(1783700683822)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-11.csv",
+        "Name":  "2016-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783700830535)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2016-12.csv",
+        "Name":  "2016-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783700996284)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-01.csv",
+        "Name":  "2017-01.csv",
+        "Length":  1960826,
+        "LastWriteTime":  "\/Date(1783668090122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-02.csv",
+        "Name":  "2017-02.csv",
+        "Length":  1841712,
+        "LastWriteTime":  "\/Date(1783668113720)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-03.csv",
+        "Name":  "2017-03.csv",
+        "Length":  2026376,
+        "LastWriteTime":  "\/Date(1783668129569)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-04.csv",
+        "Name":  "2017-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783701233145)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-05.csv",
+        "Name":  "2017-05.csv",
+        "Length":  2038086,
+        "LastWriteTime":  "\/Date(1783668768271)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-06.csv",
+        "Name":  "2017-06.csv",
+        "Length":  1973983,
+        "LastWriteTime":  "\/Date(1783668927772)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-07.csv",
+        "Name":  "2017-07.csv",
+        "Length":  1907859,
+        "LastWriteTime":  "\/Date(1783668994990)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-08.csv",
+        "Name":  "2017-08.csv",
+        "Length":  2039710,
+        "LastWriteTime":  "\/Date(1783701751603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-09.csv",
+        "Name":  "2017-09.csv",
+        "Length":  1973496,
+        "LastWriteTime":  "\/Date(1783701766257)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-10.csv",
+        "Name":  "2017-10.csv",
+        "Length":  1971813,
+        "LastWriteTime":  "\/Date(1783669882330)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-11.csv",
+        "Name":  "2017-11.csv",
+        "Length":  1971687,
+        "LastWriteTime":  "\/Date(1783669916694)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2017-12.csv",
+        "Name":  "2017-12.csv",
+        "Length":  2039926,
+        "LastWriteTime":  "\/Date(1783670248937)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-01.csv",
+        "Name":  "2018-01.csv",
+        "Length":  2026443,
+        "LastWriteTime":  "\/Date(1783670431813)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-02.csv",
+        "Name":  "2018-02.csv",
+        "Length":  1840969,
+        "LastWriteTime":  "\/Date(1783670952456)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-03.csv",
+        "Name":  "2018-03.csv",
+        "Length":  2027342,
+        "LastWriteTime":  "\/Date(1783670960295)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-04.csv",
+        "Name":  "2018-04.csv",
+        "Length":  1907308,
+        "LastWriteTime":  "\/Date(1783671082552)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-05.csv",
+        "Name":  "2018-05.csv",
+        "Length":  2038286,
+        "LastWriteTime":  "\/Date(1783671237585)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-06.csv",
+        "Name":  "2018-06.csv",
+        "Length":  1966837,
+        "LastWriteTime":  "\/Date(1783671352715)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-07.csv",
+        "Name":  "2018-07.csv",
+        "Length":  1972780,
+        "LastWriteTime":  "\/Date(1783671392332)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-08.csv",
+        "Name":  "2018-08.csv",
+        "Length":  2037120,
+        "LastWriteTime":  "\/Date(1783671410824)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-09.csv",
+        "Name":  "2018-09.csv",
+        "Length":  1842075,
+        "LastWriteTime":  "\/Date(1783671642994)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-10.csv",
+        "Name":  "2018-10.csv",
+        "Length":  2027248,
+        "LastWriteTime":  "\/Date(1783671906959)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-11.csv",
+        "Name":  "2018-11.csv",
+        "Length":  1973480,
+        "LastWriteTime":  "\/Date(1783672153222)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2018-12.csv",
+        "Name":  "2018-12.csv",
+        "Length":  1907441,
+        "LastWriteTime":  "\/Date(1783672324533)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-01.csv",
+        "Name":  "2019-01.csv",
+        "Length":  2027677,
+        "LastWriteTime":  "\/Date(1783672569356)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-02.csv",
+        "Name":  "2019-02.csv",
+        "Length":  1839923,
+        "LastWriteTime":  "\/Date(1783672771656)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-03.csv",
+        "Name":  "2019-03.csv",
+        "Length":  2040109,
+        "LastWriteTime":  "\/Date(1783672816917)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-04.csv",
+        "Name":  "2019-04.csv",
+        "Length":  1971777,
+        "LastWriteTime":  "\/Date(1783672850008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-05.csv",
+        "Name":  "2019-05.csv",
+        "Length":  1303046,
+        "LastWriteTime":  "\/Date(1783672880727)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-06.csv",
+        "Name":  "2019-06.csv",
+        "Length":  1841641,
+        "LastWriteTime":  "\/Date(1783673129127)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-07.csv",
+        "Name":  "2019-07.csv",
+        "Length":  2039525,
+        "LastWriteTime":  "\/Date(1783673180515)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-08.csv",
+        "Name":  "2019-08.csv",
+        "Length":  1316005,
+        "LastWriteTime":  "\/Date(1783673684740)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-09.csv",
+        "Name":  "2019-09.csv",
+        "Length":  1883819,
+        "LastWriteTime":  "\/Date(1783673781909)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-10.csv",
+        "Name":  "2019-10.csv",
+        "Length":  2038463,
+        "LastWriteTime":  "\/Date(1783701785299)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-11.csv",
+        "Name":  "2019-11.csv",
+        "Length":  1973635,
+        "LastWriteTime":  "\/Date(1783701795946)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2019-12.csv",
+        "Name":  "2019-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702029894)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-01.csv",
+        "Name":  "2020-01.csv",
+        "Length":  2038699,
+        "LastWriteTime":  "\/Date(1783675037692)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-02.csv",
+        "Name":  "2020-02.csv",
+        "Length":  1773785,
+        "LastWriteTime":  "\/Date(1783675096705)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-03.csv",
+        "Name":  "2020-03.csv",
+        "Length":  1314557,
+        "LastWriteTime":  "\/Date(1783675658878)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-04.csv",
+        "Name":  "2020-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702256401)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-05.csv",
+        "Name":  "2020-05.csv",
+        "Length":  2038897,
+        "LastWriteTime":  "\/Date(1783676138857)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-06.csv",
+        "Name":  "2020-06.csv",
+        "Length":  1972874,
+        "LastWriteTime":  "\/Date(1783676155316)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-07.csv",
+        "Name":  "2020-07.csv",
+        "Length":  2038133,
+        "LastWriteTime":  "\/Date(1783676173405)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-08.csv",
+        "Name":  "2020-08.csv",
+        "Length":  1907560,
+        "LastWriteTime":  "\/Date(1783676187025)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-09.csv",
+        "Name":  "2020-09.csv",
+        "Length":  1973555,
+        "LastWriteTime":  "\/Date(1783676327731)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-10.csv",
+        "Name":  "2020-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702553581)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-11.csv",
+        "Name":  "2020-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702634559)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2020-12.csv",
+        "Name":  "2020-12.csv",
+        "Length":  1315772,
+        "LastWriteTime":  "\/Date(1783677293542)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-01.csv",
+        "Name":  "2021-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702988098)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-02.csv",
+        "Name":  "2021-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703185645)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-03.csv",
+        "Name":  "2021-03.csv",
+        "Length":  2037722,
+        "LastWriteTime":  "\/Date(1783678100872)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-04.csv",
+        "Name":  "2021-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703486184)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-05.csv",
+        "Name":  "2021-05.csv",
+        "Length":  1906017,
+        "LastWriteTime":  "\/Date(1783703661447)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-06.csv",
+        "Name":  "2021-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703969015)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-07.csv",
+        "Name":  "2021-07.csv",
+        "Length":  2040722,
+        "LastWriteTime":  "\/Date(1783704159514)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-08.csv",
+        "Name":  "2021-08.csv",
+        "Length":  1972487,
+        "LastWriteTime":  "\/Date(1783679771004)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-09.csv",
+        "Name":  "2021-09.csv",
+        "Length":  1937235,
+        "LastWriteTime":  "\/Date(1783679982038)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-10.csv",
+        "Name":  "2021-10.csv",
+        "Length":  2040702,
+        "LastWriteTime":  "\/Date(1783680000610)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-11.csv",
+        "Name":  "2021-11.csv",
+        "Length":  1962048,
+        "LastWriteTime":  "\/Date(1783680023619)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2021-12.csv",
+        "Name":  "2021-12.csv",
+        "Length":  2025102,
+        "LastWriteTime":  "\/Date(1783680043254)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-01.csv",
+        "Name":  "2022-01.csv",
+        "Length":  1905456,
+        "LastWriteTime":  "\/Date(1783680054543)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-02.csv",
+        "Name":  "2022-02.csv",
+        "Length":  1842549,
+        "LastWriteTime":  "\/Date(1783704174203)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-03.csv",
+        "Name":  "2022-03.csv",
+        "Length":  2038345,
+        "LastWriteTime":  "\/Date(1783680421648)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-04.csv",
+        "Name":  "2022-04.csv",
+        "Length":  1974585,
+        "LastWriteTime":  "\/Date(1783680520051)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-05.csv",
+        "Name":  "2022-05.csv",
+        "Length":  1972627,
+        "LastWriteTime":  "\/Date(1783680533872)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-06.csv",
+        "Name":  "2022-06.csv",
+        "Length":  1971418,
+        "LastWriteTime":  "\/Date(1783680550069)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-07.csv",
+        "Name":  "2022-07.csv",
+        "Length":  2028280,
+        "LastWriteTime":  "\/Date(1783680561247)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-08.csv",
+        "Name":  "2022-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704248343)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-09.csv",
+        "Name":  "2022-09.csv",
+        "Length":  1973385,
+        "LastWriteTime":  "\/Date(1783680964820)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-10.csv",
+        "Name":  "2022-10.csv",
+        "Length":  1896184,
+        "LastWriteTime":  "\/Date(1783680984161)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-11.csv",
+        "Name":  "2022-11.csv",
+        "Length":  1972886,
+        "LastWriteTime":  "\/Date(1783681505618)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2022-12.csv",
+        "Name":  "2022-12.csv",
+        "Length":  2039634,
+        "LastWriteTime":  "\/Date(1783681518706)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-01.csv",
+        "Name":  "2023-01.csv",
+        "Length":  1950539,
+        "LastWriteTime":  "\/Date(1783681527945)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-02.csv",
+        "Name":  "2023-02.csv",
+        "Length":  1841715,
+        "LastWriteTime":  "\/Date(1783681535606)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-03.csv",
+        "Name":  "2023-03.csv",
+        "Length":  2038629,
+        "LastWriteTime":  "\/Date(1783681701480)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-04.csv",
+        "Name":  "2023-04.csv",
+        "Length":  1842039,
+        "LastWriteTime":  "\/Date(1783681873848)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-05.csv",
+        "Name":  "2023-05.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704519700)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-06.csv",
+        "Name":  "2023-06.csv",
+        "Length":  1973552,
+        "LastWriteTime":  "\/Date(1783682400750)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-07.csv",
+        "Name":  "2023-07.csv",
+        "Length":  1906511,
+        "LastWriteTime":  "\/Date(1783682444870)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-08.csv",
+        "Name":  "2023-08.csv",
+        "Length":  2015595,
+        "LastWriteTime":  "\/Date(1783704627821)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-09.csv",
+        "Name":  "2023-09.csv",
+        "Length":  1973668,
+        "LastWriteTime":  "\/Date(1783704647741)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-10.csv",
+        "Name":  "2023-10.csv",
+        "Length":  1973242,
+        "LastWriteTime":  "\/Date(1783704667463)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-11.csv",
+        "Name":  "2023-11.csv",
+        "Length":  1971396,
+        "LastWriteTime":  "\/Date(1783704827481)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2023-12.csv",
+        "Name":  "2023-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704927041)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-01.csv",
+        "Name":  "2024-01.csv",
+        "Length":  2027671,
+        "LastWriteTime":  "\/Date(1783683462710)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-02.csv",
+        "Name":  "2024-02.csv",
+        "Length":  1906987,
+        "LastWriteTime":  "\/Date(1783683484144)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-03.csv",
+        "Name":  "2024-03.csv",
+        "Length":  2027934,
+        "LastWriteTime":  "\/Date(1783683500202)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-04.csv",
+        "Name":  "2024-04.csv",
+        "Length":  1971831,
+        "LastWriteTime":  "\/Date(1783683515708)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-05.csv",
+        "Name":  "2024-05.csv",
+        "Length":  2038999,
+        "LastWriteTime":  "\/Date(1783683525139)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-06.csv",
+        "Name":  "2024-06.csv",
+        "Length":  1842828,
+        "LastWriteTime":  "\/Date(1783683533456)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-07.csv",
+        "Name":  "2024-07.csv",
+        "Length":  2016306,
+        "LastWriteTime":  "\/Date(1783705391813)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-08.csv",
+        "Name":  "2024-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783705507995)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-09.csv",
+        "Name":  "2024-09.csv",
+        "Length":  1895788,
+        "LastWriteTime":  "\/Date(1783684394518)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-10.csv",
+        "Name":  "2024-10.csv",
+        "Length":  2026516,
+        "LastWriteTime":  "\/Date(1783705732733)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-11.csv",
+        "Name":  "2024-11.csv",
+        "Length":  1973353,
+        "LastWriteTime":  "\/Date(1783684929668)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2024-12.csv",
+        "Name":  "2024-12.csv",
+        "Length":  1969546,
+        "LastWriteTime":  "\/Date(1783685028900)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-01.csv",
+        "Name":  "2025-01.csv",
+        "Length":  1316042,
+        "LastWriteTime":  "\/Date(1783685288673)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-02.csv",
+        "Name":  "2025-02.csv",
+        "Length":  1708674,
+        "LastWriteTime":  "\/Date(1783685403517)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-03.csv",
+        "Name":  "2025-03.csv",
+        "Length":  1906698,
+        "LastWriteTime":  "\/Date(1783685433641)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-04.csv",
+        "Name":  "2025-04.csv",
+        "Length":  1960175,
+        "LastWriteTime":  "\/Date(1783685447038)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-05.csv",
+        "Name":  "2025-05.csv",
+        "Length":  2039017,
+        "LastWriteTime":  "\/Date(1783685632179)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-06.csv",
+        "Name":  "2025-06.csv",
+        "Length":  1895586,
+        "LastWriteTime":  "\/Date(1783685716757)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-07.csv",
+        "Name":  "2025-07.csv",
+        "Length":  2039342,
+        "LastWriteTime":  "\/Date(1783686019023)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-08.csv",
+        "Name":  "2025-08.csv",
+        "Length":  2028650,
+        "LastWriteTime":  "\/Date(1783686035014)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-09.csv",
+        "Name":  "2025-09.csv",
+        "Length":  1960467,
+        "LastWriteTime":  "\/Date(1783686047497)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-10.csv",
+        "Name":  "2025-10.csv",
+        "Length":  2039136,
+        "LastWriteTime":  "\/Date(1783705746440)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-11.csv",
+        "Name":  "2025-11.csv",
+        "Length":  1843213,
+        "LastWriteTime":  "\/Date(1783686355135)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2025-12.csv",
+        "Name":  "2025-12.csv",
+        "Length":  2041169,
+        "LastWriteTime":  "\/Date(1783686373494)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-01.csv",
+        "Name":  "2026-01.csv",
+        "Length":  2029291,
+        "LastWriteTime":  "\/Date(1783705765659)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-02.csv",
+        "Name":  "2026-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783705939060)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-03.csv",
+        "Name":  "2026-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783706359913)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-04.csv",
+        "Name":  "2026-04.csv",
+        "Length":  1973846,
+        "LastWriteTime":  "\/Date(1783687670626)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-05.csv",
+        "Name":  "2026-05.csv",
+        "Length":  2039946,
+        "LastWriteTime":  "\/Date(1783706568145)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-06.csv",
+        "Name":  "2026-06.csv",
+        "Length":  1974573,
+        "LastWriteTime":  "\/Date(1783688283767)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\GBPUSD\\2026-07.csv",
+        "Name":  "2026-07.csv",
+        "Length":  514233,
+        "LastWriteTime":  "\/Date(1783688291881)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2016_2.csv",
+        "Name":  "part_2016_2.csv",
+        "Length":  6320731,
+        "LastWriteTime":  "\/Date(1783664538434)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2017.csv",
+        "Name":  "part_2017.csv",
+        "Length":  13158102,
+        "LastWriteTime":  "\/Date(1783664756665)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2018.csv",
+        "Name":  "part_2018.csv",
+        "Length":  18618562,
+        "LastWriteTime":  "\/Date(1783664838270)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2019.csv",
+        "Name":  "part_2019.csv",
+        "Length":  14981292,
+        "LastWriteTime":  "\/Date(1783665252637)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2020.csv",
+        "Name":  "part_2020.csv",
+        "Length":  12462786,
+        "LastWriteTime":  "\/Date(1783665773135)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2021.csv",
+        "Name":  "part_2021.csv",
+        "Length":  10419613,
+        "LastWriteTime":  "\/Date(1783665935475)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\_legacy_archive_20260710_133027\\part_2022.csv",
+        "Name":  "part_2022.csv",
+        "Length":  12907442,
+        "LastWriteTime":  "\/Date(1783666067711)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-07.csv",
+        "Name":  "2016-07.csv",
+        "Length":  1504998,
+        "LastWriteTime":  "\/Date(1783711916016)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-08.csv",
+        "Name":  "2016-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783712216411)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-09.csv",
+        "Name":  "2016-09.csv",
+        "Length":  1401881,
+        "LastWriteTime":  "\/Date(1783712694786)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-10.csv",
+        "Name":  "2016-10.csv",
+        "Length":  2008832,
+        "LastWriteTime":  "\/Date(1783713045011)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-11.csv",
+        "Name":  "2016-11.csv",
+        "Length":  2110356,
+        "LastWriteTime":  "\/Date(1783713063079)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2016-12.csv",
+        "Name":  "2016-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713130057)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-01.csv",
+        "Name":  "2017-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713464489)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-02.csv",
+        "Name":  "2017-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783713705744)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-03.csv",
+        "Name":  "2017-03.csv",
+        "Length":  2204125,
+        "LastWriteTime":  "\/Date(1783714136423)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-04.csv",
+        "Name":  "2017-04.csv",
+        "Length":  1916055,
+        "LastWriteTime":  "\/Date(1783714244866)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-05.csv",
+        "Name":  "2017-05.csv",
+        "Length":  2158072,
+        "LastWriteTime":  "\/Date(1783714488037)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-06.csv",
+        "Name":  "2017-06.csv",
+        "Length":  2099213,
+        "LastWriteTime":  "\/Date(1783714512145)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-07.csv",
+        "Name":  "2017-07.csv",
+        "Length":  2028181,
+        "LastWriteTime":  "\/Date(1783714529003)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-08.csv",
+        "Name":  "2017-08.csv",
+        "Length":  2168392,
+        "LastWriteTime":  "\/Date(1783714675812)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-09.csv",
+        "Name":  "2017-09.csv",
+        "Length":  2109484,
+        "LastWriteTime":  "\/Date(1783714746536)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-10.csv",
+        "Name":  "2017-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783714945821)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-11.csv",
+        "Name":  "2017-11.csv",
+        "Length":  2109973,
+        "LastWriteTime":  "\/Date(1783715183378)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2017-12.csv",
+        "Name":  "2017-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715635976)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-01.csv",
+        "Name":  "2018-01.csv",
+        "Length":  2139970,
+        "LastWriteTime":  "\/Date(1783715759441)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-02.csv",
+        "Name":  "2018-02.csv",
+        "Length":  1926447,
+        "LastWriteTime":  "\/Date(1783715777323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-03.csv",
+        "Name":  "2018-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715797166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-04.csv",
+        "Name":  "2018-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783715824612)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-05.csv",
+        "Name":  "2018-05.csv",
+        "Length":  1356328,
+        "LastWriteTime":  "\/Date(1783716186603)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-06.csv",
+        "Name":  "2018-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716503896)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-07.csv",
+        "Name":  "2018-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716703475)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-08.csv",
+        "Name":  "2018-08.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783716922010)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-09.csv",
+        "Name":  "2018-09.csv",
+        "Length":  1895912,
+        "LastWriteTime":  "\/Date(1783717211031)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-10.csv",
+        "Name":  "2018-10.csv",
+        "Length":  2107634,
+        "LastWriteTime":  "\/Date(1783717242253)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-11.csv",
+        "Name":  "2018-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717259837)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2018-12.csv",
+        "Name":  "2018-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717500632)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-01.csv",
+        "Name":  "2019-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717774965)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-02.csv",
+        "Name":  "2019-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783717994197)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-03.csv",
+        "Name":  "2019-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718195974)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-04.csv",
+        "Name":  "2019-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718475813)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-05.csv",
+        "Name":  "2019-05.csv",
+        "Length":  2109084,
+        "LastWriteTime":  "\/Date(1783718620862)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-06.csv",
+        "Name":  "2019-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783718911012)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-07.csv",
+        "Name":  "2019-07.csv",
+        "Length":  2106831,
+        "LastWriteTime":  "\/Date(1783719287506)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-08.csv",
+        "Name":  "2019-08.csv",
+        "Length":  2086510,
+        "LastWriteTime":  "\/Date(1783719449496)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2019-09.csv",
+        "Name":  "2019-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783719450723)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-01.csv",
+        "Name":  "2023-01.csv",
+        "Length":  2410502,
+        "LastWriteTime":  "\/Date(1783666658921)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-02.csv",
+        "Name":  "2023-02.csv",
+        "Length":  2177286,
+        "LastWriteTime":  "\/Date(1783667587864)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-03.csv",
+        "Name":  "2023-03.csv",
+        "Length":  2410462,
+        "LastWriteTime":  "\/Date(1783667620419)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-04.csv",
+        "Name":  "2023-04.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783666975149)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-05.csv",
+        "Name":  "2023-05.csv",
+        "Length":  2410481,
+        "LastWriteTime":  "\/Date(1783667641105)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-06.csv",
+        "Name":  "2023-06.csv",
+        "Length":  2332806,
+        "LastWriteTime":  "\/Date(1783667670037)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-07.csv",
+        "Name":  "2023-07.csv",
+        "Length":  2255022,
+        "LastWriteTime":  "\/Date(1783700533271)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-08.csv",
+        "Name":  "2023-08.csv",
+        "Length":  2410514,
+        "LastWriteTime":  "\/Date(1783667999847)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-09.csv",
+        "Name":  "2023-09.csv",
+        "Length":  2332738,
+        "LastWriteTime":  "\/Date(1783668067556)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-10.csv",
+        "Name":  "2023-10.csv",
+        "Length":  2332790,
+        "LastWriteTime":  "\/Date(1783668093457)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-11.csv",
+        "Name":  "2023-11.csv",
+        "Length":  2332826,
+        "LastWriteTime":  "\/Date(1783668112324)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2023-12.csv",
+        "Name":  "2023-12.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783668824215)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-01.csv",
+        "Name":  "2024-01.csv",
+        "Length":  1553143,
+        "LastWriteTime":  "\/Date(1783668993467)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-02.csv",
+        "Name":  "2024-02.csv",
+        "Length":  2243974,
+        "LastWriteTime":  "\/Date(1783700626555)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-03.csv",
+        "Name":  "2024-03.csv",
+        "Length":  1548177,
+        "LastWriteTime":  "\/Date(1783669835393)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-04.csv",
+        "Name":  "2024-04.csv",
+        "Length":  2321286,
+        "LastWriteTime":  "\/Date(1783670198852)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-05.csv",
+        "Name":  "2024-05.csv",
+        "Length":  2398811,
+        "LastWriteTime":  "\/Date(1783670714211)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-06.csv",
+        "Name":  "2024-06.csv",
+        "Length":  2155021,
+        "LastWriteTime":  "\/Date(1783700766262)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-07.csv",
+        "Name":  "2024-07.csv",
+        "Length":  2398470,
+        "LastWriteTime":  "\/Date(1783670933224)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-08.csv",
+        "Name":  "2024-08.csv",
+        "Length":  2398383,
+        "LastWriteTime":  "\/Date(1783670953889)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-09.csv",
+        "Name":  "2024-09.csv",
+        "Length":  2232341,
+        "LastWriteTime":  "\/Date(1783670971100)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-10.csv",
+        "Name":  "2024-10.csv",
+        "Length":  2398031,
+        "LastWriteTime":  "\/Date(1783671128818)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-11.csv",
+        "Name":  "2024-11.csv",
+        "Length":  2321161,
+        "LastWriteTime":  "\/Date(1783671162157)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2024-12.csv",
+        "Name":  "2024-12.csv",
+        "Length":  2309749,
+        "LastWriteTime":  "\/Date(1783671320032)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-01.csv",
+        "Name":  "2025-01.csv",
+        "Length":  2398946,
+        "LastWriteTime":  "\/Date(1783671374389)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-02.csv",
+        "Name":  "2025-02.csv",
+        "Length":  1999760,
+        "LastWriteTime":  "\/Date(1783671534474)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-03.csv",
+        "Name":  "2025-03.csv",
+        "Length":  2243694,
+        "LastWriteTime":  "\/Date(1783671548289)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-04.csv",
+        "Name":  "2025-04.csv",
+        "Length":  2304770,
+        "LastWriteTime":  "\/Date(1783671568631)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-05.csv",
+        "Name":  "2025-05.csv",
+        "Length":  2398729,
+        "LastWriteTime":  "\/Date(1783671614838)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-06.csv",
+        "Name":  "2025-06.csv",
+        "Length":  2232203,
+        "LastWriteTime":  "\/Date(1783671635610)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-07.csv",
+        "Name":  "2025-07.csv",
+        "Length":  2397957,
+        "LastWriteTime":  "\/Date(1783671695082)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-08.csv",
+        "Name":  "2025-08.csv",
+        "Length":  2398066,
+        "LastWriteTime":  "\/Date(1783672273809)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-09.csv",
+        "Name":  "2025-09.csv",
+        "Length":  2319566,
+        "LastWriteTime":  "\/Date(1783672276990)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-10.csv",
+        "Name":  "2025-10.csv",
+        "Length":  2381248,
+        "LastWriteTime":  "\/Date(1783672320075)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-11.csv",
+        "Name":  "2025-11.csv",
+        "Length":  2149831,
+        "LastWriteTime":  "\/Date(1783672338425)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2025-12.csv",
+        "Name":  "2025-12.csv",
+        "Length":  1531294,
+        "LastWriteTime":  "\/Date(1783672514927)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-01.csv",
+        "Name":  "2026-01.csv",
+        "Length":  2383848,
+        "LastWriteTime":  "\/Date(1783672819966)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-02.csv",
+        "Name":  "2026-02.csv",
+        "Length":  2072386,
+        "LastWriteTime":  "\/Date(1783672836194)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-03.csv",
+        "Name":  "2026-03.csv",
+        "Length":  2318294,
+        "LastWriteTime":  "\/Date(1783672851948)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-04.csv",
+        "Name":  "2026-04.csv",
+        "Length":  2318306,
+        "LastWriteTime":  "\/Date(1783672875933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-05.csv",
+        "Name":  "2026-05.csv",
+        "Length":  2384455,
+        "LastWriteTime":  "\/Date(1783672893949)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-06.csv",
+        "Name":  "2026-06.csv",
+        "Length":  2320200,
+        "LastWriteTime":  "\/Date(1783672972263)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\NAS100\\2026-07.csv",
+        "Name":  "2026-07.csv",
+        "Length":  618521,
+        "LastWriteTime":  "\/Date(1783672976463)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-07.csv",
+        "Name":  "2016-07.csv",
+        "Length":  1774751,
+        "LastWriteTime":  "\/Date(1783666650767)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-08.csv",
+        "Name":  "2016-08.csv",
+        "Length":  2380490,
+        "LastWriteTime":  "\/Date(1783667597006)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-09.csv",
+        "Name":  "2016-09.csv",
+        "Length":  2255680,
+        "LastWriteTime":  "\/Date(1783667611527)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-10.csv",
+        "Name":  "2016-10.csv",
+        "Length":  2183413,
+        "LastWriteTime":  "\/Date(1783667640258)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-11.csv",
+        "Name":  "2016-11.csv",
+        "Length":  2290745,
+        "LastWriteTime":  "\/Date(1783667655745)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2016-12.csv",
+        "Name":  "2016-12.csv",
+        "Length":  2322488,
+        "LastWriteTime":  "\/Date(1783667683970)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-01.csv",
+        "Name":  "2017-01.csv",
+        "Length":  2271157,
+        "LastWriteTime":  "\/Date(1783668008004)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-02.csv",
+        "Name":  "2017-02.csv",
+        "Length":  2090116,
+        "LastWriteTime":  "\/Date(1783668095602)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-03.csv",
+        "Name":  "2017-03.csv",
+        "Length":  2335159,
+        "LastWriteTime":  "\/Date(1783668867493)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-04.csv",
+        "Name":  "2017-04.csv",
+        "Length":  2049329,
+        "LastWriteTime":  "\/Date(1783668714646)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-05.csv",
+        "Name":  "2017-05.csv",
+        "Length":  2277759,
+        "LastWriteTime":  "\/Date(1783668747132)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-06.csv",
+        "Name":  "2017-06.csv",
+        "Length":  2238238,
+        "LastWriteTime":  "\/Date(1783668840999)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-07.csv",
+        "Name":  "2017-07.csv",
+        "Length":  2185324,
+        "LastWriteTime":  "\/Date(1783668877123)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-08.csv",
+        "Name":  "2017-08.csv",
+        "Length":  2338781,
+        "LastWriteTime":  "\/Date(1783668943888)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-09.csv",
+        "Name":  "2017-09.csv",
+        "Length":  2253987,
+        "LastWriteTime":  "\/Date(1783668987162)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-10.csv",
+        "Name":  "2017-10.csv",
+        "Length":  2239221,
+        "LastWriteTime":  "\/Date(1783700643078)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-11.csv",
+        "Name":  "2017-11.csv",
+        "Length":  2247599,
+        "LastWriteTime":  "\/Date(1783700712648)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2017-12.csv",
+        "Name":  "2017-12.csv",
+        "Length":  2355187,
+        "LastWriteTime":  "\/Date(1783670196449)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-01.csv",
+        "Name":  "2018-01.csv",
+        "Length":  2349031,
+        "LastWriteTime":  "\/Date(1783670372763)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-02.csv",
+        "Name":  "2018-02.csv",
+        "Length":  2117046,
+        "LastWriteTime":  "\/Date(1783670429084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-03.csv",
+        "Name":  "2018-03.csv",
+        "Length":  2313664,
+        "LastWriteTime":  "\/Date(1783670907767)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-04.csv",
+        "Name":  "2018-04.csv",
+        "Length":  2145634,
+        "LastWriteTime":  "\/Date(1783670928695)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-05.csv",
+        "Name":  "2018-05.csv",
+        "Length":  2335272,
+        "LastWriteTime":  "\/Date(1783670947855)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-06.csv",
+        "Name":  "2018-06.csv",
+        "Length":  2218156,
+        "LastWriteTime":  "\/Date(1783670967279)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-07.csv",
+        "Name":  "2018-07.csv",
+        "Length":  2242276,
+        "LastWriteTime":  "\/Date(1783700953132)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-08.csv",
+        "Name":  "2018-08.csv",
+        "Length":  2318674,
+        "LastWriteTime":  "\/Date(1783671228433)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-09.csv",
+        "Name":  "2018-09.csv",
+        "Length":  2085909,
+        "LastWriteTime":  "\/Date(1783671307417)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-10.csv",
+        "Name":  "2018-10.csv",
+        "Length":  2297870,
+        "LastWriteTime":  "\/Date(1783671351590)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-11.csv",
+        "Name":  "2018-11.csv",
+        "Length":  2214670,
+        "LastWriteTime":  "\/Date(1783671380022)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2018-12.csv",
+        "Name":  "2018-12.csv",
+        "Length":  2167221,
+        "LastWriteTime":  "\/Date(1783671526694)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-01.csv",
+        "Name":  "2019-01.csv",
+        "Length":  2319088,
+        "LastWriteTime":  "\/Date(1783671537361)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-02.csv",
+        "Name":  "2019-02.csv",
+        "Length":  2057951,
+        "LastWriteTime":  "\/Date(1783671552605)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-03.csv",
+        "Name":  "2019-03.csv",
+        "Length":  2286216,
+        "LastWriteTime":  "\/Date(1783671572441)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-04.csv",
+        "Name":  "2019-04.csv",
+        "Length":  2207440,
+        "LastWriteTime":  "\/Date(1783671675084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-05.csv",
+        "Name":  "2019-05.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783701140946)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-06.csv",
+        "Name":  "2019-06.csv",
+        "Length":  2058664,
+        "LastWriteTime":  "\/Date(1783672132466)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-07.csv",
+        "Name":  "2019-07.csv",
+        "Length":  2282820,
+        "LastWriteTime":  "\/Date(1783672157291)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-08.csv",
+        "Name":  "2019-08.csv",
+        "Length":  2310348,
+        "LastWriteTime":  "\/Date(1783672235790)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-09.csv",
+        "Name":  "2019-09.csv",
+        "Length":  2177652,
+        "LastWriteTime":  "\/Date(1783672288258)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-10.csv",
+        "Name":  "2019-10.csv",
+        "Length":  2329195,
+        "LastWriteTime":  "\/Date(1783672320935)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-11.csv",
+        "Name":  "2019-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783701463117)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2019-12.csv",
+        "Name":  "2019-12.csv",
+        "Length":  2215853,
+        "LastWriteTime":  "\/Date(1783672844008)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-01.csv",
+        "Name":  "2020-01.csv",
+        "Length":  2166723,
+        "LastWriteTime":  "\/Date(1783672881830)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-02.csv",
+        "Name":  "2020-02.csv",
+        "Length":  1850037,
+        "LastWriteTime":  "\/Date(1783672897675)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-03.csv",
+        "Name":  "2020-03.csv",
+        "Length":  2122094,
+        "LastWriteTime":  "\/Date(1783673065951)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-04.csv",
+        "Name":  "2020-04.csv",
+        "Length":  2086121,
+        "LastWriteTime":  "\/Date(1783673233925)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-05.csv",
+        "Name":  "2020-05.csv",
+        "Length":  2185499,
+        "LastWriteTime":  "\/Date(1783673762323)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-06.csv",
+        "Name":  "2020-06.csv",
+        "Length":  2089038,
+        "LastWriteTime":  "\/Date(1783673777777)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-07.csv",
+        "Name":  "2020-07.csv",
+        "Length":  2171700,
+        "LastWriteTime":  "\/Date(1783673917630)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-08.csv",
+        "Name":  "2020-08.csv",
+        "Length":  2022219,
+        "LastWriteTime":  "\/Date(1783673929253)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-09.csv",
+        "Name":  "2020-09.csv",
+        "Length":  2075660,
+        "LastWriteTime":  "\/Date(1783673944559)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-10.csv",
+        "Name":  "2020-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783701623890)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-11.csv",
+        "Name":  "2020-11.csv",
+        "Length":  2255058,
+        "LastWriteTime":  "\/Date(1783701759829)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2020-12.csv",
+        "Name":  "2020-12.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783701776341)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-01.csv",
+        "Name":  "2021-01.csv",
+        "Length":  2410586,
+        "LastWriteTime":  "\/Date(1783675036472)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-02.csv",
+        "Name":  "2021-02.csv",
+        "Length":  2177310,
+        "LastWriteTime":  "\/Date(1783675178949)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-03.csv",
+        "Name":  "2021-03.csv",
+        "Length":  2410522,
+        "LastWriteTime":  "\/Date(1783701789378)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-04.csv",
+        "Name":  "2021-04.csv",
+        "Length":  2332798,
+        "LastWriteTime":  "\/Date(1783676119241)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-05.csv",
+        "Name":  "2021-05.csv",
+        "Length":  2254930,
+        "LastWriteTime":  "\/Date(1783676140951)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-06.csv",
+        "Name":  "2021-06.csv",
+        "Length":  2332810,
+        "LastWriteTime":  "\/Date(1783676160932)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-07.csv",
+        "Name":  "2021-07.csv",
+        "Length":  2410490,
+        "LastWriteTime":  "\/Date(1783676177793)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-08.csv",
+        "Name":  "2021-08.csv",
+        "Length":  2332726,
+        "LastWriteTime":  "\/Date(1783676194723)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-09.csv",
+        "Name":  "2021-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783701964559)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-10.csv",
+        "Name":  "2021-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702251965)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-11.csv",
+        "Name":  "2021-11.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783677086700)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2021-12.csv",
+        "Name":  "2021-12.csv",
+        "Length":  2410532,
+        "LastWriteTime":  "\/Date(1783677259505)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-01.csv",
+        "Name":  "2022-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702528662)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-02.csv",
+        "Name":  "2022-02.csv",
+        "Length":  2177310,
+        "LastWriteTime":  "\/Date(1783702624909)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-03.csv",
+        "Name":  "2022-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783702679397)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-04.csv",
+        "Name":  "2022-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703031166)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-05.csv",
+        "Name":  "2022-05.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703506817)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-06.csv",
+        "Name":  "2022-06.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783703674688)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-07.csv",
+        "Name":  "2022-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783703910752)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-08.csv",
+        "Name":  "2022-08.csv",
+        "Length":  2410586,
+        "LastWriteTime":  "\/Date(1783704126369)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-09.csv",
+        "Name":  "2022-09.csv",
+        "Length":  2332829,
+        "LastWriteTime":  "\/Date(1783704170904)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-10.csv",
+        "Name":  "2022-10.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704184580)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-11.csv",
+        "Name":  "2022-11.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704459998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2022-12.csv",
+        "Name":  "2022-12.csv",
+        "Length":  2410588,
+        "LastWriteTime":  "\/Date(1783704654865)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-01.csv",
+        "Name":  "2023-01.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783704673324)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-02.csv",
+        "Name":  "2023-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783704914833)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-03.csv",
+        "Name":  "2023-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783705108067)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-04.csv",
+        "Name":  "2023-04.csv",
+        "Length":  2177310,
+        "LastWriteTime":  "\/Date(1783705243499)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-05.csv",
+        "Name":  "2023-05.csv",
+        "Length":  2410589,
+        "LastWriteTime":  "\/Date(1783705252147)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-06.csv",
+        "Name":  "2023-06.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783705260909)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-07.csv",
+        "Name":  "2023-07.csv",
+        "Length":  2255070,
+        "LastWriteTime":  "\/Date(1783705269460)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-08.csv",
+        "Name":  "2023-08.csv",
+        "Length":  2410549,
+        "LastWriteTime":  "\/Date(1783705283265)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-09.csv",
+        "Name":  "2023-09.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783705439558)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-10.csv",
+        "Name":  "2023-10.csv",
+        "Length":  2332761,
+        "LastWriteTime":  "\/Date(1783705810661)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-11.csv",
+        "Name":  "2023-11.csv",
+        "Length":  2332800,
+        "LastWriteTime":  "\/Date(1783705834948)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2023-12.csv",
+        "Name":  "2023-12.csv",
+        "Length":  2410532,
+        "LastWriteTime":  "\/Date(1783705998623)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-01.csv",
+        "Name":  "2024-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783706294218)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-02.csv",
+        "Name":  "2024-02.csv",
+        "Length":  2255058,
+        "LastWriteTime":  "\/Date(1783706552071)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-03.csv",
+        "Name":  "2024-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783706860276)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-04.csv",
+        "Name":  "2024-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783707236154)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-05.csv",
+        "Name":  "2024-05.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783707545164)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-06.csv",
+        "Name":  "2024-06.csv",
+        "Length":  2177308,
+        "LastWriteTime":  "\/Date(1783707677359)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-07.csv",
+        "Name":  "2024-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783707815699)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-08.csv",
+        "Name":  "2024-08.csv",
+        "Length":  2410588,
+        "LastWriteTime":  "\/Date(1783708124921)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-09.csv",
+        "Name":  "2024-09.csv",
+        "Length":  2255069,
+        "LastWriteTime":  "\/Date(1783708134109)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-10.csv",
+        "Name":  "2024-10.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783708144206)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-11.csv",
+        "Name":  "2024-11.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783708155582)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2024-12.csv",
+        "Name":  "2024-12.csv",
+        "Length":  1555229,
+        "LastWriteTime":  "\/Date(1783708321744)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-01.csv",
+        "Name":  "2025-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783708575688)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-02.csv",
+        "Name":  "2025-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783708826061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-03.csv",
+        "Name":  "2025-03.csv",
+        "Length":  2253405,
+        "LastWriteTime":  "\/Date(1783708959007)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-04.csv",
+        "Name":  "2025-04.csv",
+        "Length":  2332824,
+        "LastWriteTime":  "\/Date(1783708977950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-05.csv",
+        "Name":  "2025-05.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783709203654)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-06.csv",
+        "Name":  "2025-06.csv",
+        "Length":  2255062,
+        "LastWriteTime":  "\/Date(1783709472151)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-07.csv",
+        "Name":  "2025-07.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783709568478)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-08.csv",
+        "Name":  "2025-08.csv",
+        "Length":  2410590,
+        "LastWriteTime":  "\/Date(1783709577348)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-09.csv",
+        "Name":  "2025-09.csv",
+        "Length":  2332830,
+        "LastWriteTime":  "\/Date(1783709585986)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-10.csv",
+        "Name":  "2025-10.csv",
+        "Length":  2410586,
+        "LastWriteTime":  "\/Date(1783709595493)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-11.csv",
+        "Name":  "2025-11.csv",
+        "Length":  2177307,
+        "LastWriteTime":  "\/Date(1783709610962)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2025-12.csv",
+        "Name":  "2025-12.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783709747146)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-01.csv",
+        "Name":  "2026-01.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783710163149)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-02.csv",
+        "Name":  "2026-02.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783710364159)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-03.csv",
+        "Name":  "2026-03.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783710525147)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-04.csv",
+        "Name":  "2026-04.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783710836625)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-05.csv",
+        "Name":  "2026-05.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783711226468)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-06.csv",
+        "Name":  "2026-06.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783711385869)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_10Y_M1\\US30\\2026-07.csv",
+        "Name":  "2026-07.csv",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1783711714830)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\dukascopy_control\\status\\BTCUSD.status.json",
+        "Name":  "BTCUSD.status.json",
+        "Length":  429,
+        "LastWriteTime":  "\/Date(1783719067173)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\dukascopy_control\\status\\EURUSD.status.json",
+        "Name":  "EURUSD.status.json",
+        "Length":  429,
+        "LastWriteTime":  "\/Date(1783719285002)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\dukascopy_control\\status\\GBPUSD.status.json",
+        "Name":  "GBPUSD.status.json",
+        "Length":  427,
+        "LastWriteTime":  "\/Date(1783706568209)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\dukascopy_control\\status\\NAS100.status.json",
+        "Name":  "NAS100.status.json",
+        "Length":  437,
+        "LastWriteTime":  "\/Date(1783719449544)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\dukascopy_control\\status\\US30.status.json",
+        "Name":  "US30.status.json",
+        "Length":  429,
+        "LastWriteTime":  "\/Date(1783711781954)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\GBPUSD.failures.json",
+        "Name":  "GBPUSD.failures.json",
+        "Length":  7540,
+        "LastWriteTime":  "\/Date(1783679212107)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\GBPUSD.missing.json",
+        "Name":  "GBPUSD.missing.json",
+        "Length":  2446,
+        "LastWriteTime":  "\/Date(1783679212089)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\NAS100.failures.json",
+        "Name":  "NAS100.failures.json",
+        "Length":  3584,
+        "LastWriteTime":  "\/Date(1783679212104)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\NAS100.missing.json",
+        "Name":  "NAS100.missing.json",
+        "Length":  168,
+        "LastWriteTime":  "\/Date(1783679212082)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\US30.failures.json",
+        "Name":  "US30.failures.json",
+        "Length":  5300,
+        "LastWriteTime":  "\/Date(1783679212105)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\manifests\\US30.missing.json",
+        "Name":  "US30.missing.json",
+        "Length":  2254,
+        "LastWriteTime":  "\/Date(1783679212086)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\BTCUSD.status.json",
+        "Name":  "BTCUSD.status.json",
+        "Length":  411,
+        "LastWriteTime":  "\/Date(1783667272998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\download_status.snapshot.json",
+        "Name":  "download_status.snapshot.json",
+        "Length":  4251,
+        "LastWriteTime":  "\/Date(1783679201497)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\EURUSD.status.json",
+        "Name":  "EURUSD.status.json",
+        "Length":  411,
+        "LastWriteTime":  "\/Date(1783667273002)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\GBPUSD.status.json",
+        "Name":  "GBPUSD.status.json",
+        "Length":  428,
+        "LastWriteTime":  "\/Date(1783679115146)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\NAS100.status.json",
+        "Name":  "NAS100.status.json",
+        "Length":  433,
+        "LastWriteTime":  "\/Date(1783672976516)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_recovery_safe\\snapshots\\US30.status.json",
+        "Name":  "US30.status.json",
+        "Length":  432,
+        "LastWriteTime":  "\/Date(1783677259551)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2016_2.csv.csv",
+        "Name":  "part_2016_2.csv.csv",
+        "Length":  8305021,
+        "LastWriteTime":  "\/Date(1783653878433)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2017.csv.csv",
+        "Name":  "part_2017.csv.csv",
+        "Length":  18915752,
+        "LastWriteTime":  "\/Date(1783654619058)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2018.csv.csv",
+        "Name":  "part_2018.csv.csv",
+        "Length":  5110078,
+        "LastWriteTime":  "\/Date(1783654781598)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2019.csv.csv",
+        "Name":  "part_2019.csv.csv",
+        "Length":  20415395,
+        "LastWriteTime":  "\/Date(1783655366357)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2020.csv.csv",
+        "Name":  "part_2020.csv.csv",
+        "Length":  7771470,
+        "LastWriteTime":  "\/Date(1783655575423)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2021.csv.csv",
+        "Name":  "part_2021.csv.csv",
+        "Length":  5972868,
+        "LastWriteTime":  "\/Date(1783655738426)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2022.csv.csv",
+        "Name":  "part_2022.csv.csv",
+        "Length":  11370980,
+        "LastWriteTime":  "\/Date(1783656263981)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2023.csv.csv",
+        "Name":  "part_2023.csv.csv",
+        "Length":  10511675,
+        "LastWriteTime":  "\/Date(1783656301339)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2024.csv.csv",
+        "Name":  "part_2024.csv.csv",
+        "Length":  8278991,
+        "LastWriteTime":  "\/Date(1783656329878)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2025.csv.csv",
+        "Name":  "part_2025.csv.csv",
+        "Length":  4967448,
+        "LastWriteTime":  "\/Date(1783656543193)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\part_2026_1.csv.csv",
+        "Name":  "part_2026_1.csv.csv",
+        "Length":  6839816,
+        "LastWriteTime":  "\/Date(1783656633630)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\xauusd_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Name":  "xauusd_m1_10y_2016-07-09_to_2026-07-09.csv",
+        "Length":  110630715,
+        "LastWriteTime":  "\/Date(1783657064985)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\Dukascopy_XAUUSD_M1_10Y\\xauusd_m1_2016-07-09_to_now.csv.csv",
+        "Name":  "xauusd_m1_2016-07-09_to_now.csv.csv",
+        "Length":  3431009,
+        "LastWriteTime":  "\/Date(1783653450288)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\bot  XAUUSD NUEVO FALTA PULIR.txt",
+        "Name":  "bot  XAUUSD NUEVO FALTA PULIR.txt",
+        "Length":  3084,
+        "LastWriteTime":  "\/Date(1742948089000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\bot actual XAUUSD.txt",
+        "Name":  "bot actual XAUUSD.txt",
+        "Length":  6683,
+        "LastWriteTime":  "\/Date(1742939524000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\bot sin barreras US30 RENTABLE.txt",
+        "Name":  "bot sin barreras US30 RENTABLE.txt",
+        "Length":  4107,
+        "LastWriteTime":  "\/Date(1744326493000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\BOT US30 OPERAS TODO EL DIA.txt",
+        "Name":  "BOT US30 OPERAS TODO EL DIA.txt",
+        "Length":  3991,
+        "LastWriteTime":  "\/Date(1744324052000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\bot XAUUSD solo venta rentable.txt",
+        "Name":  "bot XAUUSD solo venta rentable.txt",
+        "Length":  6340,
+        "LastWriteTime":  "\/Date(1743018478000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\ETAPA 3 US30.txt",
+        "Name":  "ETAPA 3 US30.txt",
+        "Length":  7331,
+        "LastWriteTime":  "\/Date(1744395800000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\eurusd raro.txt",
+        "Name":  "eurusd raro.txt",
+        "Length":  7152,
+        "LastWriteTime":  "\/Date(1743102081000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\EURUSD.txt",
+        "Name":  "EURUSD.txt",
+        "Length":  5361,
+        "LastWriteTime":  "\/Date(1743101390000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\face 2 us30.txt",
+        "Name":  "face 2 us30.txt",
+        "Length":  8800,
+        "LastWriteTime":  "\/Date(1744369109000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\FUCION DOS RENTABLES xauusd.txt",
+        "Name":  "FUCION DOS RENTABLES xauusd.txt",
+        "Length":  8167,
+        "LastWriteTime":  "\/Date(1743136318000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\mejora 1 de us30.txt",
+        "Name":  "mejora 1 de us30.txt",
+        "Length":  8812,
+        "LastWriteTime":  "\/Date(1744367943000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\mejorado xauusd.txt",
+        "Name":  "mejorado xauusd.txt",
+        "Length":  8615,
+        "LastWriteTime":  "\/Date(1742959481000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\sin copiere us30 minuto 5.txt",
+        "Name":  "sin copiere us30 minuto 5.txt",
+        "Length":  7724,
+        "LastWriteTime":  "\/Date(1744350520000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\us30  CON 100K DE GANANCIA.txt",
+        "Name":  "us30  CON 100K DE GANANCIA.txt",
+        "Length":  4144,
+        "LastWriteTime":  "\/Date(1744320996000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\US30 BOT ENDESTRUCTIBLE.txt",
+        "Name":  "US30 BOT ENDESTRUCTIBLE.txt",
+        "Length":  4057,
+        "LastWriteTime":  "\/Date(1744320141000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\US30 EETAPA 4.txt",
+        "Name":  "US30 EETAPA 4.txt",
+        "Length":  7474,
+        "LastWriteTime":  "\/Date(1744396277000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\us30 para cuenta real 200k.txt",
+        "Name":  "us30 para cuenta real 200k.txt",
+        "Length":  8930,
+        "LastWriteTime":  "\/Date(1744523640000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\us30 SL arreglado 1.txt",
+        "Name":  "us30 SL arreglado 1.txt",
+        "Length":  7058,
+        "LastWriteTime":  "\/Date(1744394497000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\us30 sl face 2.txt",
+        "Name":  "us30 sl face 2.txt",
+        "Length":  7056,
+        "LastWriteTime":  "\/Date(1744395023000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\us30 todo el dia.txt",
+        "Name":  "us30 todo el dia.txt",
+        "Length":  0,
+        "LastWriteTime":  "\/Date(1744371853000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Desktop\\XAUUSD PASIBO SOLO VENTA.txt",
+        "Name":  "XAUUSD PASIBO SOLO VENTA.txt",
+        "Length":  5153,
+        "LastWriteTime":  "\/Date(1743228630000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\OneDrive\\Documentos\\US30MM1.csv",
+        "Name":  "US30MM1.csv",
+        "Length":  14225166,
+        "LastWriteTime":  "\/Date(1740234092000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\INBOX\\XAUUSD\\kaggle\\xauusd_kaggle_dataset.zip",
+        "Name":  "xauusd_kaggle_dataset.zip",
+        "Length":  103449070,
+        "LastWriteTime":  "\/Date(1783634030689)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_15m_data.csv",
+        "Name":  "XAUUSD_15m_data.csv",
+        "Length":  25608537,
+        "LastWriteTime":  "\/Date(1777675920000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_1d_data.csv",
+        "Name":  "XAUUSD_1d_data.csv",
+        "Length":  297131,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_1h_data.csv",
+        "Name":  "XAUUSD_1h_data.csv",
+        "Length":  6556565,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_1m_data.csv",
+        "Name":  "XAUUSD_1m_data.csv",
+        "Length":  348182728,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_1Month_data.csv",
+        "Name":  "XAUUSD_1Month_data.csv",
+        "Length":  14380,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_1w_data.csv",
+        "Name":  "XAUUSD_1w_data.csv",
+        "Length":  61191,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_30m_data.csv",
+        "Name":  "XAUUSD_30m_data.csv",
+        "Length":  12972983,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_4h_data.csv",
+        "Name":  "XAUUSD_4h_data.csv",
+        "Length":  1746277,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_import_ready\\XAUUSD_5m_data.csv",
+        "Name":  "XAUUSD_5m_data.csv",
+        "Length":  74361143,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_15m_data.csv",
+        "Name":  "XAU_15m_data.csv",
+        "Length":  25608537,
+        "LastWriteTime":  "\/Date(1777675920000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_1d_data.csv",
+        "Name":  "XAU_1d_data.csv",
+        "Length":  297131,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_1h_data.csv",
+        "Name":  "XAU_1h_data.csv",
+        "Length":  6556565,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_1m_data.csv",
+        "Name":  "XAU_1m_data.csv",
+        "Length":  348182728,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_1Month_data.csv",
+        "Name":  "XAU_1Month_data.csv",
+        "Length":  14380,
+        "LastWriteTime":  "\/Date(1777675922000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_1w_data.csv",
+        "Name":  "XAU_1w_data.csv",
+        "Length":  61191,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_30m_data.csv",
+        "Name":  "XAU_30m_data.csv",
+        "Length":  12972983,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_4h_data.csv",
+        "Name":  "XAU_4h_data.csv",
+        "Length":  1746277,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\_downloads\\kaggle_zip_extract\\XAU_5m_data.csv",
+        "Name":  "XAU_5m_data.csv",
+        "Length":  74361143,
+        "LastWriteTime":  "\/Date(1777675948000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\D1\\XAUUSD_1d_data.csv",
+        "Name":  "XAUUSD_1d_data.csv",
+        "Length":  297131,
+        "LastWriteTime":  "\/Date(1783634806197)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\H1\\XAUUSD_1h_data.csv",
+        "Name":  "XAUUSD_1h_data.csv",
+        "Length":  6556565,
+        "LastWriteTime":  "\/Date(1783634807079)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\H4\\XAUUSD_4h_data.csv",
+        "Name":  "XAUUSD_4h_data.csv",
+        "Length":  1746277,
+        "LastWriteTime":  "\/Date(1783634855076)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\M1\\XAUUSD_1m_data.csv",
+        "Name":  "XAUUSD_1m_data.csv",
+        "Length":  348182728,
+        "LastWriteTime":  "\/Date(1783634853149)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\M15\\XAUUSD_15m_data.csv",
+        "Name":  "XAUUSD_15m_data.csv",
+        "Length":  25608537,
+        "LastWriteTime":  "\/Date(1783634806152)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\M30\\XAUUSD_30m_data.csv",
+        "Name":  "XAUUSD_30m_data.csv",
+        "Length":  12972983,
+        "LastWriteTime":  "\/Date(1783634854850)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\M5\\XAUUSD_5m_data.csv",
+        "Name":  "XAUUSD_5m_data.csv",
+        "Length":  74361143,
+        "LastWriteTime":  "\/Date(1783634864905)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\MN\\XAUUSD_1Month_data.csv",
+        "Name":  "XAUUSD_1Month_data.csv",
+        "Length":  14380,
+        "LastWriteTime":  "\/Date(1783634807083)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\DATA\\RAW\\XAUUSD\\W1\\XAUUSD_1w_data.csv",
+        "Name":  "XAUUSD_1w_data.csv",
+        "Length":  61191,
+        "LastWriteTime":  "\/Date(1783634853162)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-btcusd-quality.json",
+        "Name":  "instrument-btcusd-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559798)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-eurusd-quality.json",
+        "Name":  "instrument-eurusd-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559798)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-gbpusd-quality.json",
+        "Name":  "instrument-gbpusd-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559799)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-nas100-quality.json",
+        "Name":  "instrument-nas100-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559799)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-us30-quality.json",
+        "Name":  "instrument-us30-quality.json",
+        "Length":  41,
+        "LastWriteTime":  "\/Date(1783632559800)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-usdjpy-quality.json",
+        "Name":  "instrument-usdjpy-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559799)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\instrument-xauusd-quality.json",
+        "Name":  "instrument-xauusd-quality.json",
+        "Length":  43,
+        "LastWriteTime":  "\/Date(1783632559798)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\xauusd-import-final-report-20260709.json",
+        "Name":  "xauusd-import-final-report-20260709.json",
+        "Length":  1077,
+        "LastWriteTime":  "\/Date(1783634877666)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\xauusd-quality-report-20260709-155653.json",
+        "Name":  "xauusd-quality-report-20260709-155653.json",
+        "Length":  3779,
+        "LastWriteTime":  "\/Date(1783634213163)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\xauusd-quality-report-20260709-155750.json",
+        "Name":  "xauusd-quality-report-20260709-155750.json",
+        "Length":  10112,
+        "LastWriteTime":  "\/Date(1783634270197)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\xauusd-quality-report-20260709-155939.json",
+        "Name":  "xauusd-quality-report-20260709-155939.json",
+        "Length":  12561,
+        "LastWriteTime":  "\/Date(1783634379448)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\internal-engine-api\\data-history-store\\reports\\xauusd-quality-report-20260709-155944.json",
+        "Name":  "xauusd-quality-report-20260709-155944.json",
+        "Length":  8612,
+        "LastWriteTime":  "\/Date(1783634384657)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\logs\\rc1_creator_test_1_mercado_xauusd_con_ci_20260707_013357_20260708_220934.json",
+        "Name":  "rc1_creator_test_1_mercado_xauusd_con_ci_20260707_013357_20260708_220934.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548602998)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\logs\\rc1_video_diario_de_mercado_para_xauusd__20260707_013350_20260708_220934.json",
+        "Name":  "rc1_video_diario_de_mercado_para_xauusd__20260707_013350_20260708_220934.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548604235)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\logs\\rc1_video_premium_para_xauusd_con_enfoqu_20260707_012635_20260708_220932.json",
+        "Name":  "rc1_video_premium_para_xauusd_con_enfoqu_20260707_012635_20260708_220932.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548598041)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\outputs\\rc1_creator_test_1_mercado_xauusd_con_ci_20260707_013357_20260708_220934\\run_log.json",
+        "Name":  "run_log.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548602997)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\outputs\\rc1_video_diario_de_mercado_para_xauusd__20260707_013350_20260708_220934\\run_log.json",
+        "Name":  "run_log.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548604234)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\outputs\\rc1_video_premium_para_xauusd_con_enfoqu_20260707_012635_20260708_220932\\run_log.json",
+        "Name":  "run_log.json",
+        "Length":  6571,
+        "LastWriteTime":  "\/Date(1783548598041)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\creator_test_1_mercado_xauusd_con_ci_20260707_013357\\prompt\\prompt_version_20260707_013357.json",
+        "Name":  "prompt_version_20260707_013357.json",
+        "Length":  444,
+        "LastWriteTime":  "\/Date(1783409637028)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\creator_test_1_mercado_xauusd_con_ci_20260707_013357\\timeline\\timeline_snapshot_20260707_013357.json",
+        "Name":  "timeline_snapshot_20260707_013357.json",
+        "Length":  1392,
+        "LastWriteTime":  "\/Date(1783409637028)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\creator_test_2_btcusd_resumen_rapido_20260707_013357\\prompt\\prompt_version_20260707_013357.json",
+        "Name":  "prompt_version_20260707_013357.json",
+        "Length":  442,
+        "LastWriteTime":  "\/Date(1783409637051)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\creator_test_2_btcusd_resumen_rapido_20260707_013357\\timeline\\timeline_snapshot_20260707_013357.json",
+        "Name":  "timeline_snapshot_20260707_013357.json",
+        "Length":  1391,
+        "LastWriteTime":  "\/Date(1783409637050)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\video_diario_de_mercado_para_xauusd__20260707_013350\\prompt\\prompt_version_20260707_013350.json",
+        "Name":  "prompt_version_20260707_013350.json",
+        "Length":  498,
+        "LastWriteTime":  "\/Date(1783409630120)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\video_diario_de_mercado_para_xauusd__20260707_013350\\timeline\\timeline_snapshot_20260707_013350.json",
+        "Name":  "timeline_snapshot_20260707_013350.json",
+        "Length":  1475,
+        "LastWriteTime":  "\/Date(1783409630119)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\video_premium_para_xauusd_con_enfoqu_20260707_012635\\prompt\\prompt_version_20260707_012635.json",
+        "Name":  "prompt_version_20260707_012635.json",
+        "Length":  442,
+        "LastWriteTime":  "\/Date(1783409195755)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\projects\\snapshots\\video_premium_para_xauusd_con_enfoqu_20260707_012635\\timeline\\timeline_snapshot_20260707_012635.json",
+        "Name":  "timeline_snapshot_20260707_012635.json",
+        "Length":  1391,
+        "LastWriteTime":  "\/Date(1783409195755)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\timelines\\production_batch\\creator_test_1_mercado_xauusd_con_ci_20260707_013357.json",
+        "Name":  "creator_test_1_mercado_xauusd_con_ci_20260707_013357.json",
+        "Length":  752,
+        "LastWriteTime":  "\/Date(1783409637027)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\timelines\\production_batch\\creator_test_2_btcusd_resumen_rapido_20260707_013357.json",
+        "Name":  "creator_test_2_btcusd_resumen_rapido_20260707_013357.json",
+        "Length":  751,
+        "LastWriteTime":  "\/Date(1783409637049)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\timelines\\production_batch\\video_diario_de_mercado_para_xauusd__20260707_013350.json",
+        "Name":  "video_diario_de_mercado_para_xauusd__20260707_013350.json",
+        "Length":  835,
+        "LastWriteTime":  "\/Date(1783409630118)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\TOJI\\video_engine\\timelines\\production_batch\\video_premium_para_xauusd_con_enfoqu_20260707_012635.json",
+        "Name":  "video_premium_para_xauusd_con_enfoqu_20260707_012635.json",
+        "Length":  751,
+        "LastWriteTime":  "\/Date(1783409195753)\/"
+    }
+]

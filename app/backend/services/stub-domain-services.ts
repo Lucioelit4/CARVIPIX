@@ -3,6 +3,7 @@ import type {
   IAdminDomainService,
   IBotDomainService,
   ICapitalDomainService,
+  IDeliveryDomainService,
   IDashboardDomainService,
   IFundingDomainService,
   IHistoryDomainService,
@@ -12,6 +13,8 @@ import type {
   ServiceBotSnapshot,
   ServiceCapitalSnapshot,
   ServiceDashboardSnapshot,
+  ServiceDeliveryJob,
+  ServiceDeliveryReference,
   ServiceFundingSnapshot,
   ServiceHistoryEntry,
   ServiceStatsSnapshot,
@@ -153,5 +156,32 @@ export class StatsDomainServiceStub implements IStatsDomainService {
       activeUsers: 0,
       avgLatencyMs: 0,
     };
+  }
+}
+
+export class DeliveryDomainServiceStub implements IDeliveryDomainService {
+  async enqueueFromLatestSignal(): Promise<ServiceDeliveryJob | null> {
+    return null;
+  }
+
+  async enqueueReference(reference: ServiceDeliveryReference): Promise<ServiceDeliveryJob> {
+    return {
+      id: "delivery-stub-1",
+      queue: "alerts",
+      type: "master-signal-delivery",
+      status: "queued",
+      attempts: 0,
+      maxRetries: 0,
+      createdAt: new Date(),
+      reference,
+    };
+  }
+
+  async peek(): Promise<ServiceDeliveryJob[]> {
+    return [];
+  }
+
+  async processNext(): Promise<ServiceDeliveryJob | null> {
+    return null;
   }
 }

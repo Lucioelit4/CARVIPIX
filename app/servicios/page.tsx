@@ -1,50 +1,66 @@
 import { ArrowRight, BarChart3, Bot, ShieldCheck, Wallet, Users, CheckCircle2 } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
+import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
 
 const services = [
   {
     title: "Alertas en Vivo",
-    description: "Señales y seguimiento operativo en tiempo real con foco en gestión de riesgo.",
-    price: "Desde 99 USD",
-    benefits: ["Alertas estratégicas", "Seguimiento operativo", "Acceso rápido al panel"],
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-basic")?.description ?? "",
+    price: `${COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-basic")?.priceUsd?.toFixed(2)} USD / mes`,
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-basic")?.features ?? [],
     href: "/servicios/alertas",
     checkout: "/checkout?product=plan-basic",
+    ctaLabel: "Comprar ahora",
     icon: BarChart3,
   },
   {
     title: "Bot CARVIPIX",
-    description: "Automatización premium para MT4/MT5 con reglas operativas y control estructurado.",
-    price: "999 USD",
-    benefits: ["Pago único", "Conexión broker sujeta a activación", "Soporte prioritario"],
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.description ?? "",
+    price: `${COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.priceUsd?.toFixed(0)} USD`,
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.features ?? [],
     href: "/servicios/bot",
     checkout: "/checkout?product=bot-carvipix-license",
+    ctaLabel: "Comprar ahora",
     icon: Bot,
   },
   {
-    title: "Gestión de Capital",
-    description: "Proceso privado de capital gestionado con reportes y participación alineada.",
-    price: "Desde 10,000 USD",
-    benefits: ["Seguimiento privado", "Reportes claros", "Control de riesgo"],
-    href: "/servicios/capital",
-    checkout: "/checkout?product=capital-gestionado",
-    icon: Wallet,
-  },
-  {
-    title: "Cuenta Fondeada",
-    description: "Acompañamiento en evaluación y seguimiento con empresas externas de fondeo.",
-    price: "Consulta privada",
-    benefits: ["Revisión inicial", "Acompañamiento", "Entrega de credenciales"],
-    href: "/servicios/fondeo",
-    checkout: "/soporte",
+    title: "Plan Pro",
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-advanced")?.description ?? "",
+    price: `${COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-advanced")?.priceUsd?.toFixed(2)} USD / mes`,
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "plan-advanced")?.features ?? [],
+    href: "/servicios/alertas",
+    checkout: "/checkout?product=plan-advanced",
+    ctaLabel: "Comprar ahora",
     icon: ShieldCheck,
   },
   {
-    title: "Comunidad Privada",
-    description: "Espacio interno para seguimiento, soporte y convivencia moderada.",
-    price: "Incluida en planes",
-    benefits: ["Chat privado", "Moderación", "Apoyo continuo"],
-    href: "/servicios/comunidad",
-    checkout: "/checkout?product=plan-basic",
+    title: "Gestión de Capital",
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "capital-gestionado")?.description ?? "",
+    price: "Porcentaje sobre utilidades",
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "capital-gestionado")?.features ?? [],
+    href: "/servicios/capital",
+    checkout: "/servicios/capital",
+    ctaLabel: "Solicitar ingreso",
+    icon: Wallet,
+  },
+  {
+    title: "Cuentas Fondeadas",
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "cuenta-fondeada")?.description ?? "",
+    price: "Próximamente",
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "cuenta-fondeada")?.features ?? [],
+    href: "/servicios/fondeo",
+    checkout: "/servicios/fondeo",
+    ctaLabel: "Ver estado",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Academia",
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "academia")?.description ?? "",
+    price: "Próximamente",
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "academia")?.features ?? [],
+    href: "/servicios/academia",
+    checkout: "/servicios/academia",
+    ctaLabel: "Ver estado",
     icon: Users,
   },
 ];
@@ -61,9 +77,15 @@ export default function ServiciosPage() {
             Elige tu plan y accede a CARVIPIX.
           </h1>
           <p className="mt-4 max-w-3xl text-base text-white/70 sm:text-lg">
-            Esta es la página comercial para usuarios sin membresía activa. Aquí puedes revisar cada servicio, ver beneficios, precios y avanzar al checkout.
+            Catálogo comercial actualizado con Plan Básico, Plan Pro, licencia Bot y servicios complementarios sin romper el flujo actual.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
+            <CARVIPIXButtonLink href="/" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
+              Inicio
+            </CARVIPIXButtonLink>
+            <CARVIPIXButtonLink href="/dashboard" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
+              Workspace
+            </CARVIPIXButtonLink>
             <CARVIPIXButtonLink href="/login" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
               Iniciar sesión
             </CARVIPIXButtonLink>
@@ -103,7 +125,7 @@ export default function ServiciosPage() {
                     Ver detalle
                   </CARVIPIXButtonLink>
                   <CARVIPIXButtonLink href={service.checkout} variant="primary" size="md">
-                    Comprar ahora
+                    {service.ctaLabel}
                   </CARVIPIXButtonLink>
                 </div>
               </article>

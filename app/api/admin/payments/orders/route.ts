@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     FROM payment_orders po
     LEFT JOIN payment_transactions pt ON pt.payment_order_id = po.id
     LEFT JOIN users u ON u.id = po.user_id
-    ${built.whereClause}
+    ${built.whereClause ? `${built.whereClause} AND COALESCE(u.exclude_from_commercial_metrics, false) = false` : "WHERE COALESCE(u.exclude_from_commercial_metrics, false) = false"}
     ORDER BY po.created_at DESC
     LIMIT $${queryParams.length}
     `,

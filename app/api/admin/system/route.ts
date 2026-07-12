@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
-import { observability } from "@/app/backend/runtime";
+import { executionEngine, executionEngineTransitions, observability } from "@/app/backend/runtime";
 import {
   cancelExecutionOrder,
   closeExecutionPosition,
@@ -58,6 +58,12 @@ async function buildPayload() {
     },
     execution: executionDashboard,
     observability: summarizeObservability(),
+    dataSource: {
+      origin: String(process.env.CARVIPIX_DATA_CLASSIFICATION ?? "UNKNOWN").trim() || "UNKNOWN",
+      status: "active",
+      capturedAt: new Date().toISOString(),
+      validUntil: new Date().toISOString(),
+    },
   };
 }
 
@@ -99,7 +105,58 @@ export async function POST(request: NextRequest) {
     };
     patch?: Record<string, unknown>;
     riskLimits?: Record<string, unknown>;
+    executionEngine?: {
+      analysisId?: string;
+      signalId?: string;
+      symbol?: "XAUUSD" | "EURUSD" | "GBPUSD" | "BTCUSD";
+      brokerSymbol?: string;
+      signalVersion?: string;
+      runId?: string;
+    };
   };
+
+  if (body.action === "execution-engine-run") {
+    const payload = body.executionEngine ?? {};
+    const analysisId = String(payload.analysisId ?? "").trim();
+    const signalId = String(payload.signalId ?? "").trim();
+    const symbol = payload.symbol;
+    const brokerSymbol = String(payload.brokerSymbol ?? "").trim();
+    const signalVersion = String(payload.signalVersion ?? "").trim();
+
+    if (!analysisId || !signalId || !symbol || !brokerSymbol || !signalVersion) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "executionEngine requires analysisId, signalId, symbol, brokerSymbol and signalVersion",
+        },
+        { status: 400 }
+      );
+    }
+
+    const result = await executionEngine.run({
+      analysisId,
+      signalId,
+      symbol,
+      brokerSymbol,
+      signalVersion,
+      runId: payload.runId,
+    });
+
+    const transitions = await executionEngineTransitions.listByRun(result.runId);
+    const data = await buildPayload();
+
+    return NextResponse.json(
+      {
+        ok: true,
+        executionEngine: {
+          result,
+          transitions,
+        },
+        data,
+      },
+      { status: 200 }
+    );
+  }
 
   if (body.action === "run-validation") {
     const report = await runSystemValidationRuntime();

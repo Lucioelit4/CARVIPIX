@@ -15,6 +15,9 @@ import type {
   ServiceDashboardSnapshot,
   ServiceFundingSnapshot,
   ServiceHistoryEntry,
+  ServiceDeliveryJob,
+  ServiceDeliveryReference,
+  ServiceMasterSignal,
   ServiceInvestorStats,
   ServiceMembership,
   ServiceMonthlyReport,
@@ -128,6 +131,17 @@ export interface IHistoryDomainService {
   getHistory(userId?: string, limit?: number): Promise<ServiceHistoryEntry[]>;
 }
 
+export interface IMasterSignalDomainService {
+  getLatestSignal(): Promise<ServiceMasterSignal | null>;
+}
+
+export interface IDeliveryDomainService {
+  enqueueFromLatestSignal(signalVersion: string): Promise<ServiceDeliveryJob | null>;
+  enqueueReference(reference: ServiceDeliveryReference): Promise<ServiceDeliveryJob>;
+  peek(limit?: number): Promise<ServiceDeliveryJob[]>;
+  processNext(): Promise<ServiceDeliveryJob | null>;
+}
+
 export interface IStatsDomainService {
   getSnapshot(): Promise<ServiceStatsSnapshot>;
 }
@@ -145,5 +159,7 @@ export interface EcosystemServiceLayer {
   admin: IAdminDomainService;
   ai: IAIDomainService;
   history: IHistoryDomainService;
+  masterSignal: IMasterSignalDomainService;
+  delivery: IDeliveryDomainService;
   stats: IStatsDomainService;
 }

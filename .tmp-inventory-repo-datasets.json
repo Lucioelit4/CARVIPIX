@@ -1,0 +1,518 @@
+﻿[
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\BTCUSD_D1_seed-v1.audit.json",
+        "Name":  "BTCUSD_D1_seed-v1.audit.json",
+        "Length":  748313,
+        "LastWriteTime":  "\/Date(1783536022999)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\BTCUSD_H1_seed-v1.audit.json",
+        "Name":  "BTCUSD_H1_seed-v1.audit.json",
+        "Length":  2943360,
+        "LastWriteTime":  "\/Date(1783536022993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\BTCUSD_M1_v2026.07.08.audit.json",
+        "Name":  "BTCUSD_M1_v2026.07.08.audit.json",
+        "Length":  3546,
+        "LastWriteTime":  "\/Date(1783536002087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\BTCUSD_M5_seed-v1.audit.json",
+        "Name":  "BTCUSD_M5_seed-v1.audit.json",
+        "Length":  17718424,
+        "LastWriteTime":  "\/Date(1783536022974)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\EURUSD_D1_seed-v1.audit.json",
+        "Name":  "EURUSD_D1_seed-v1.audit.json",
+        "Length":  762031,
+        "LastWriteTime":  "\/Date(1783536023128)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\EURUSD_H1_seed-v1.audit.json",
+        "Name":  "EURUSD_H1_seed-v1.audit.json",
+        "Length":  2997670,
+        "LastWriteTime":  "\/Date(1783536023122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\EURUSD_M5_seed-v1.audit.json",
+        "Name":  "EURUSD_M5_seed-v1.audit.json",
+        "Length":  17964774,
+        "LastWriteTime":  "\/Date(1783536023104)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\GBPUSD_D1_seed-v1.audit.json",
+        "Name":  "GBPUSD_D1_seed-v1.audit.json",
+        "Length":  763267,
+        "LastWriteTime":  "\/Date(1783536023249)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\GBPUSD_H1_seed-v1.audit.json",
+        "Name":  "GBPUSD_H1_seed-v1.audit.json",
+        "Length":  3003098,
+        "LastWriteTime":  "\/Date(1783536023243)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\GBPUSD_M5_seed-v1.audit.json",
+        "Name":  "GBPUSD_M5_seed-v1.audit.json",
+        "Length":  17993482,
+        "LastWriteTime":  "\/Date(1783536023225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\NAS100_D1_seed-v1.audit.json",
+        "Name":  "NAS100_D1_seed-v1.audit.json",
+        "Length":  756733,
+        "LastWriteTime":  "\/Date(1783536023956)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\NAS100_H1_seed-v1.audit.json",
+        "Name":  "NAS100_H1_seed-v1.audit.json",
+        "Length":  2976512,
+        "LastWriteTime":  "\/Date(1783536023950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\NAS100_M5_seed-v1.audit.json",
+        "Name":  "NAS100_M5_seed-v1.audit.json",
+        "Length":  17824082,
+        "LastWriteTime":  "\/Date(1783536023933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\US30_D1_seed-v1.audit.json",
+        "Name":  "US30_D1_seed-v1.audit.json",
+        "Length":  753975,
+        "LastWriteTime":  "\/Date(1783536024071)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\US30_H1_seed-v1.audit.json",
+        "Name":  "US30_H1_seed-v1.audit.json",
+        "Length":  2965894,
+        "LastWriteTime":  "\/Date(1783536024065)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\US30_M5_seed-v1.audit.json",
+        "Name":  "US30_M5_seed-v1.audit.json",
+        "Length":  17781974,
+        "LastWriteTime":  "\/Date(1783536024046)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\USDJPY_D1_seed-v1.audit.json",
+        "Name":  "USDJPY_D1_seed-v1.audit.json",
+        "Length":  757301,
+        "LastWriteTime":  "\/Date(1783536023366)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\USDJPY_H1_seed-v1.audit.json",
+        "Name":  "USDJPY_H1_seed-v1.audit.json",
+        "Length":  2978668,
+        "LastWriteTime":  "\/Date(1783536023360)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\USDJPY_M5_seed-v1.audit.json",
+        "Name":  "USDJPY_M5_seed-v1.audit.json",
+        "Length":  17842922,
+        "LastWriteTime":  "\/Date(1783536023343)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543377770)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543411354)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_D1_seed-v1.audit.json",
+        "Name":  "XAUUSD_D1_seed-v1.audit.json",
+        "Length":  756273,
+        "LastWriteTime":  "\/Date(1783536022867)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543377729)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543411312)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_H1_seed-v1.audit.json",
+        "Name":  "XAUUSD_H1_seed-v1.audit.json",
+        "Length":  2974948,
+        "LastWriteTime":  "\/Date(1783536022861)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543376905)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543410087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543377622)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543411165)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\audit\\XAUUSD_M5_v2026.07.08.audit.json",
+        "Name":  "XAUUSD_M5_v2026.07.08.audit.json",
+        "Length":  5211,
+        "LastWriteTime":  "\/Date(1783536002084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\datasets\\XAUUSD_D1.json",
+        "Name":  "XAUUSD_D1.json",
+        "Length":  353956,
+        "LastWriteTime":  "\/Date(1783543411352)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\datasets\\XAUUSD_H1.json",
+        "Name":  "XAUUSD_H1.json",
+        "Length":  6729124,
+        "LastWriteTime":  "\/Date(1783543411304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\datasets\\XAUUSD_M1.json",
+        "Name":  "XAUUSD_M1.json",
+        "Length":  403392736,
+        "LastWriteTime":  "\/Date(1783543409616)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\institutional-warehouse\\datasets\\XAUUSD_M5.json",
+        "Name":  "XAUUSD_M5.json",
+        "Length":  80699056,
+        "LastWriteTime":  "\/Date(1783543411061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Length":  15531,
+        "LastWriteTime":  "\/Date(1768085552000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Length":  1158,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\public\\datasets\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Length":  1912416,
+        "LastWriteTime":  "\/Date(1779855788000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Length":  1902252,
+        "LastWriteTime":  "\/Date(1781674988000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\.next\\standalone\\public\\sample-data\\XAUUSD_M1_sample.csv",
+        "Name":  "XAUUSD_M1_sample.csv",
+        "Length":  3397,
+        "LastWriteTime":  "\/Date(1783041599577)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_D1_seed-v1.audit.json",
+        "Name":  "BTCUSD_D1_seed-v1.audit.json",
+        "Length":  748313,
+        "LastWriteTime":  "\/Date(1783536022999)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_H1_seed-v1.audit.json",
+        "Name":  "BTCUSD_H1_seed-v1.audit.json",
+        "Length":  2943360,
+        "LastWriteTime":  "\/Date(1783536022993)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_M1_v2026.07.08.audit.json",
+        "Name":  "BTCUSD_M1_v2026.07.08.audit.json",
+        "Length":  3546,
+        "LastWriteTime":  "\/Date(1783536002087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\BTCUSD_M5_seed-v1.audit.json",
+        "Name":  "BTCUSD_M5_seed-v1.audit.json",
+        "Length":  17718424,
+        "LastWriteTime":  "\/Date(1783536022974)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_D1_seed-v1.audit.json",
+        "Name":  "EURUSD_D1_seed-v1.audit.json",
+        "Length":  762031,
+        "LastWriteTime":  "\/Date(1783536023128)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_H1_seed-v1.audit.json",
+        "Name":  "EURUSD_H1_seed-v1.audit.json",
+        "Length":  2997670,
+        "LastWriteTime":  "\/Date(1783536023122)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\EURUSD_M5_seed-v1.audit.json",
+        "Name":  "EURUSD_M5_seed-v1.audit.json",
+        "Length":  17964774,
+        "LastWriteTime":  "\/Date(1783536023104)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_D1_seed-v1.audit.json",
+        "Name":  "GBPUSD_D1_seed-v1.audit.json",
+        "Length":  763267,
+        "LastWriteTime":  "\/Date(1783536023249)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_H1_seed-v1.audit.json",
+        "Name":  "GBPUSD_H1_seed-v1.audit.json",
+        "Length":  3003098,
+        "LastWriteTime":  "\/Date(1783536023243)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\GBPUSD_M5_seed-v1.audit.json",
+        "Name":  "GBPUSD_M5_seed-v1.audit.json",
+        "Length":  17993482,
+        "LastWriteTime":  "\/Date(1783536023225)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_D1_seed-v1.audit.json",
+        "Name":  "NAS100_D1_seed-v1.audit.json",
+        "Length":  756733,
+        "LastWriteTime":  "\/Date(1783536023956)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_H1_seed-v1.audit.json",
+        "Name":  "NAS100_H1_seed-v1.audit.json",
+        "Length":  2976512,
+        "LastWriteTime":  "\/Date(1783536023950)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\NAS100_M5_seed-v1.audit.json",
+        "Name":  "NAS100_M5_seed-v1.audit.json",
+        "Length":  17824082,
+        "LastWriteTime":  "\/Date(1783536023933)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_D1_seed-v1.audit.json",
+        "Name":  "US30_D1_seed-v1.audit.json",
+        "Length":  753975,
+        "LastWriteTime":  "\/Date(1783536024071)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_H1_seed-v1.audit.json",
+        "Name":  "US30_H1_seed-v1.audit.json",
+        "Length":  2965894,
+        "LastWriteTime":  "\/Date(1783536024065)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\US30_M5_seed-v1.audit.json",
+        "Name":  "US30_M5_seed-v1.audit.json",
+        "Length":  17781974,
+        "LastWriteTime":  "\/Date(1783536024046)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_D1_seed-v1.audit.json",
+        "Name":  "USDJPY_D1_seed-v1.audit.json",
+        "Length":  757301,
+        "LastWriteTime":  "\/Date(1783536023366)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_H1_seed-v1.audit.json",
+        "Name":  "USDJPY_H1_seed-v1.audit.json",
+        "Length":  2978668,
+        "LastWriteTime":  "\/Date(1783536023360)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\USDJPY_M5_seed-v1.audit.json",
+        "Name":  "USDJPY_M5_seed-v1.audit.json",
+        "Length":  17842922,
+        "LastWriteTime":  "\/Date(1783536023343)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-42-51-597Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543377770)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Name":  "XAUUSD_D1_2026-07-08T20-43-23-155Z-D1.audit.json",
+        "Length":  153328,
+        "LastWriteTime":  "\/Date(1783543411354)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_D1_seed-v1.audit.json",
+        "Name":  "XAUUSD_D1_seed-v1.audit.json",
+        "Length":  756273,
+        "LastWriteTime":  "\/Date(1783536022867)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-42-51-597Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543377729)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Name":  "XAUUSD_H1_2026-07-08T20-43-23-155Z-H1.audit.json",
+        "Length":  2725645,
+        "LastWriteTime":  "\/Date(1783543411312)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_H1_seed-v1.audit.json",
+        "Name":  "XAUUSD_H1_seed-v1.audit.json",
+        "Length":  2974948,
+        "LastWriteTime":  "\/Date(1783536022861)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-42-51-597Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543376905)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Name":  "XAUUSD_M1_2026-07-08T20-43-23-155Z-M1.audit.json",
+        "Length":  159772886,
+        "LastWriteTime":  "\/Date(1783543410087)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-42-51-597Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543377622)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Name":  "XAUUSD_M5_2026-07-08T20-43-23-155Z-M5.audit.json",
+        "Length":  32011301,
+        "LastWriteTime":  "\/Date(1783543411165)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\audit\\XAUUSD_M5_v2026.07.08.audit.json",
+        "Name":  "XAUUSD_M5_v2026.07.08.audit.json",
+        "Length":  5211,
+        "LastWriteTime":  "\/Date(1783536002084)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_D1.json",
+        "Name":  "XAUUSD_D1.json",
+        "Length":  353956,
+        "LastWriteTime":  "\/Date(1783543411352)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_H1.json",
+        "Name":  "XAUUSD_H1.json",
+        "Length":  6729124,
+        "LastWriteTime":  "\/Date(1783543411304)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_M1.json",
+        "Name":  "XAUUSD_M1.json",
+        "Length":  403392736,
+        "LastWriteTime":  "\/Date(1783543409616)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\institutional-warehouse\\datasets\\XAUUSD_M5.json",
+        "Name":  "XAUUSD_M5.json",
+        "Length":  80699056,
+        "LastWriteTime":  "\/Date(1783543411061)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.txt",
+        "Length":  15531,
+        "LastWriteTime":  "\/Date(1768085552000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\data\\market-history\\DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.txt",
+        "Length":  1158,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_2025.csv",
+        "Length":  23364726,
+        "LastWriteTime":  "\/Date(1768085550000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202604.csv",
+        "Length":  1912416,
+        "LastWriteTime":  "\/Date(1779855788000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202605.csv",
+        "Length":  1902252,
+        "LastWriteTime":  "\/Date(1781674988000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\datasets\\DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Name":  "DAT_ASCII_XAUUSD_M1_202606.csv",
+        "Length":  1781868,
+        "LastWriteTime":  "\/Date(1782708916000)\/"
+    },
+    {
+        "FullName":  "C:\\Users\\user1\\carvipix\\public\\sample-data\\XAUUSD_M1_sample.csv",
+        "Name":  "XAUUSD_M1_sample.csv",
+        "Length":  3397,
+        "LastWriteTime":  "\/Date(1783041599577)\/"
+    }
+]

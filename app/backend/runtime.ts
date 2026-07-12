@@ -4,6 +4,7 @@ import type { EcosystemServiceLayer } from "./contracts";
 import { NoopAuthorizationPort } from "./core/auth";
 import { InMemoryBackendCache } from "./core/cache";
 import { backendConfig } from "./core/config";
+import { assertCriticalEnvironment, isStrictRuntime } from "./core/config";
 import { InMemoryEnterpriseAuditTrail } from "./core/enterprise-audit";
 import { InMemoryServiceEventBus } from "./core/event-bus";
 import { normalizeBackendError } from "./core/errors";
@@ -20,12 +21,19 @@ import { MembershipsDomainService } from "./services/memberships-domain-service"
 import { OperationsDomainService } from "./services/operations-domain-service";
 import { PaymentsDomainService } from "./services/payments-domain-service";
 import { ResultsDomainService } from "./services/results-domain-service";
+import { DeliveryDomainService } from "./services/delivery-domain-service";
+import {
+  buildDefaultExecutionEnginePorts,
+  CarvipixExecutionEngine,
+  InMemoryExecutionTransitionSink,
+} from "./system/carvipix-execution-engine";
 import {
   AdminDomainService,
   AIDomainService,
   DashboardDomainService,
   FundingDomainService,
   HistoryDomainService,
+  MasterSignalDomainService,
   StatsDomainService,
 } from "./services/system-domain-services";
 
@@ -88,6 +96,9 @@ function instrumentService<TService extends object>(
 }
 
 const container = new ServiceContainer();
+if (isStrictRuntime()) {
+  assertCriticalEnvironment();
+}
 const logger = new InMemoryBackendLogger(backendConfig.logging.level, "backend");
 const observability = new InMemoryObservability(backendConfig.observability.enabled);
 const eventBus = new InMemoryServiceEventBus();
@@ -110,6 +121,13 @@ const resultsService = instrumentService(
   observability,
   logger
 );
+const deliveryService = instrumentService(
+  "delivery",
+  new DeliveryDomainService(queueLayer),
+  observability,
+  logger
+);
+const executionEngineTransitions = new InMemoryExecutionTransitionSink();
 
 const ecosystemServices: EcosystemServiceLayer = {
   alerts: alertsService,
@@ -120,12 +138,21 @@ const ecosystemServices: EcosystemServiceLayer = {
   operations: instrumentService("operations", new OperationsDomainService(eventBus), observability, logger),
   funding: instrumentService("funding", new FundingDomainService(), observability, logger),
   dashboard: instrumentService("dashboard", new DashboardDomainService(), observability, logger),
+  masterSignal: instrumentService("masterSignal", new MasterSignalDomainService(), observability, logger),
+  delivery: deliveryService,
   results: resultsService,
   admin: instrumentService("admin", new AdminDomainService(), observability, logger),
   ai: instrumentService("ai", new AIDomainService(), observability, logger),
   history: instrumentService("history", new HistoryDomainService(), observability, logger),
   stats: instrumentService("stats", new StatsDomainService(), observability, logger),
 };
+
+const executionEngine = new CarvipixExecutionEngine(
+  buildDefaultExecutionEnginePorts({
+    ecosystemServices,
+    transitions: executionEngineTransitions,
+  })
+);
 
 container.register("config", backendConfig);
 container.register("logger", logger);
@@ -144,6 +171,8 @@ export {
   backendConfig,
   cache,
   container,
+  executionEngine,
+  executionEngineTransitions,
   ecosystemServices,
   enterpriseAudit,
   eventBus,

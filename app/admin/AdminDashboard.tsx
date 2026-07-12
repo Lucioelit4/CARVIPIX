@@ -22,6 +22,7 @@ import AdminDataHealth from './components/AdminDataHealth';
 import AdminSistema from './components/AdminSistema';
 import { ToastProvider } from './components/Toast';
 import { CARVIPIXButton } from '../design-system';
+import DataSourceBanner from '@/app/components/DataSourceBanner';
 
 type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'configuracion' | 'utilidades';
 
@@ -106,6 +107,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <ToastProvider>
       <main className="min-h-screen bg-[#030303] text-white">
+      <div className="mx-auto max-w-7xl px-6 pt-4 sm:px-8">
+        <DataSourceBanner />
+      </div>
       {/* Header */}
       <header className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-6 py-4 sm:px-8 flex items-center justify-between">

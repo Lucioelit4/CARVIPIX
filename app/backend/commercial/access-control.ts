@@ -1,11 +1,12 @@
+import {
+  COMMERCIAL_PLAN_ENTITLEMENTS,
+  type CommercialSubscriptionPlan,
+  type TradingWindow,
+} from "@/app/lib/commercial/business-model";
+
 export type SubscriptionPlan = "free" | "basic" | "advanced";
 
 export type CommercialFeature = "alertas" | "bot";
-
-export type TradingWindow = {
-  startHourUtc: number;
-  endHourUtc: number;
-};
 
 export type PlanEntitlements = {
   plan: SubscriptionPlan;
@@ -49,50 +50,25 @@ export class CommercialAccessError extends Error {
   }
 }
 
-const DEFAULT_ALLOWED_PAIRS = {
-  free: ["EURUSD"],
-  basic: ["EURUSD", "GBPUSD", "XAUUSD", "USDJPY"],
-} as const;
-
-const BASIC_WINDOWS: TradingWindow[] = [
-  { startHourUtc: 7, endHourUtc: 16 },
-  { startHourUtc: 18, endHourUtc: 21 },
-];
+function fromCommercialPlan(plan: CommercialSubscriptionPlan): PlanEntitlements {
+  const source = COMMERCIAL_PLAN_ENTITLEMENTS[plan];
+  return {
+    plan,
+    alertsEnabled: source.alertsEnabled,
+    botEnabled: source.botEnabled,
+    maxAlertsPerDay: source.maxAlertsPerDay,
+    maxPairs: source.maxPairs,
+    maxBots: source.maxBots,
+    historyLimit: source.historyLimit,
+    allowedPairs: source.allowedPairs ? [...source.allowedPairs] : null,
+    tradingWindowsUtc: source.tradingWindowsUtc.map((window) => ({ ...window })),
+  };
+}
 
 export const DEFAULT_PLAN_ENTITLEMENTS: Record<SubscriptionPlan, PlanEntitlements> = {
-  free: {
-    plan: "free",
-    alertsEnabled: false,
-    botEnabled: false,
-    maxAlertsPerDay: 0,
-    maxPairs: 1,
-    maxBots: 0,
-    historyLimit: 3,
-    allowedPairs: [...DEFAULT_ALLOWED_PAIRS.free],
-    tradingWindowsUtc: [],
-  },
-  basic: {
-    plan: "basic",
-    alertsEnabled: true,
-    botEnabled: true,
-    maxAlertsPerDay: 5,
-    maxPairs: 4,
-    maxBots: 1,
-    historyLimit: 25,
-    allowedPairs: [...DEFAULT_ALLOWED_PAIRS.basic],
-    tradingWindowsUtc: [...BASIC_WINDOWS],
-  },
-  advanced: {
-    plan: "advanced",
-    alertsEnabled: true,
-    botEnabled: true,
-    maxAlertsPerDay: 25,
-    maxPairs: 12,
-    maxBots: 3,
-    historyLimit: 180,
-    allowedPairs: null,
-    tradingWindowsUtc: [{ startHourUtc: 0, endHourUtc: 23 }],
-  },
+  free: fromCommercialPlan("free"),
+  basic: fromCommercialPlan("basic"),
+  advanced: fromCommercialPlan("advanced"),
 };
 
 function normalizeValue(value: string | null | undefined): string {
@@ -133,7 +109,7 @@ export function normalizeSubscriptionPlan(value: string | null | undefined): Sub
     case "elite":
       return "advanced";
     case "pro":
-      return "basic";
+      return "advanced";
     default:
       return "free";
   }

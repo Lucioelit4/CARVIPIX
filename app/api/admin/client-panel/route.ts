@@ -52,7 +52,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
   }
 
-  const response = NextResponse.json({ ok: true, redirectTo: "/dashboard" }, { status: 200 });
+  const classification = String(process.env.CARVIPIX_DATA_CLASSIFICATION ?? "UNKNOWN").trim() || "UNKNOWN";
+  const response = NextResponse.json(
+    {
+      ok: true,
+      redirectTo: "/dashboard",
+      dataSource: {
+        origin: classification,
+        status: classification === "REAL" ? "active" : "non-production",
+        capturedAt: new Date().toISOString(),
+      },
+    },
+    { status: 200 }
+  );
   response.cookies.set({
     name: ADMIN_DASHBOARD_ACCESS_COOKIE,
     value: "1",

@@ -17,13 +17,12 @@ export default function AppShell({ children }: AppShellProps) {
     pathname === "/" ||
     pathname === "/servicios" ||
     pathname.startsWith("/servicios/") ||
-    pathname === "/checkout" ||
+    pathname.startsWith("/checkout") ||
     pathname === "/login" ||
     pathname === "/crear-cuenta" ||
     pathname === "/registro" ||
     pathname === "/recuperar-password" ||
     pathname === "/verificar-correo" ||
-    pathname === "/soporte" ||
     pathname === "/legal" ||
     pathname === "/terms" ||
     pathname === "/privacy" ||

@@ -18,9 +18,11 @@ type AlertFiltersProps = {
   selectedSymbol: string;
   selectedStatus: StatusFilterValue;
   symbolOptions: string[];
+  isRefreshing?: boolean;
   onSearchChange: (value: string) => void;
   onSymbolChange: (value: string) => void;
   onStatusChange: (value: StatusFilterValue) => void;
+  onRefresh: () => void;
   onClear: () => void;
 };
 
@@ -29,9 +31,11 @@ export default function AlertFilters({
   selectedSymbol,
   selectedStatus,
   symbolOptions,
+  isRefreshing = false,
   onSearchChange,
   onSymbolChange,
   onStatusChange,
+  onRefresh,
   onClear,
 }: AlertFiltersProps) {
   return (
@@ -76,6 +80,10 @@ export default function AlertFilters({
             ))}
           </select>
         </label>
+
+        <CARVIPIXButton type="button" variant="secondary" size="sm" onClick={onRefresh} isLoading={isRefreshing}>
+          Actualizar
+        </CARVIPIXButton>
 
         <CARVIPIXButton type="button" variant="ghost" size="sm" onClick={onClear}>
           Limpiar filtros

@@ -56,7 +56,12 @@ export default function LoginPage() {
 
       const sessionValidation = await fetch('/api/auth/session', { cache: 'no-store' });
       if (!sessionValidation.ok) {
-        window.location.replace('/servicios');
+        if (sessionValidation.status === 401 || sessionValidation.status === 403) {
+          setError('No se pudo validar la sesión. Intenta nuevamente.');
+          return;
+        }
+
+        window.location.replace('/dashboard');
         return;
       }
 
@@ -66,7 +71,7 @@ export default function LoginPage() {
       };
 
       if (!sessionPayload.authenticated) {
-        window.location.replace('/servicios');
+        setError('No se pudo validar la sesión. Intenta nuevamente.');
         return;
       }
 

@@ -1,5 +1,6 @@
 export type BackendEnvironment = "development" | "staging" | "production" | "test";
 export type BackendLogLevel = "debug" | "info" | "warn" | "error";
+export type RuntimeStage = "development" | "test" | "shadow" | "production";
 
 export interface BackendConfig {
   environment: BackendEnvironment;
@@ -46,6 +47,119 @@ export interface BackendConfig {
 }
 
 type EnvRecord = Record<string, string | undefined>;
+
+export interface RuntimeEnvironmentValidation {
+  stage: RuntimeStage;
+  strict: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+function readEnv(env: EnvRecord, key: string): string {
+  return String(env[key] ?? "").trim();
+}
+
+export function getRuntimeStage(env: EnvRecord = process.env): RuntimeStage {
+  const explicit = readEnv(env, "CARVIPIX_ENV").toLowerCase();
+  if (explicit === "shadow") {
+    return "shadow";
+  }
+  if (explicit === "production") {
+    return "production";
+  }
+  if (explicit === "test") {
+    return "test";
+  }
+  if (explicit === "development") {
+    return "development";
+  }
+
+  const nodeEnv = readEnv(env, "NODE_ENV").toLowerCase();
+  if (nodeEnv === "production") {
+    return "production";
+  }
+  if (nodeEnv === "test") {
+    return "test";
+  }
+
+  return "development";
+}
+
+export function isStrictRuntime(env: EnvRecord = process.env): boolean {
+  const stage = getRuntimeStage(env);
+  return stage === "shadow" || stage === "production";
+}
+
+function requiredEnvKeysForPayments(env: EnvRecord): string[] {
+  const provider = readEnv(env, "PAYMENT_GATEWAY_PROVIDER").toLowerCase() || "custom";
+  const paymentEnv = readEnv(env, "PAYMENT_GATEWAY_ENV").toLowerCase() || "sandbox";
+
+  if (provider === "mercadopago") {
+    const prefix = paymentEnv === "production" ? "MERCADOPAGO_PRODUCTION" : "MERCADOPAGO_SANDBOX";
+    return [`${prefix}_ACCESS_TOKEN`, `${prefix}_WEBHOOK_SECRET`];
+  }
+
+  return ["PAYMENT_GATEWAY_PROVIDER"];
+}
+
+export function validateCriticalEnvironment(env: EnvRecord = process.env): RuntimeEnvironmentValidation {
+  const stage = getRuntimeStage(env);
+  const strict = isStrictRuntime(env);
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  const requiredBase = [
+    "ADMIN_SECRET",
+    "OPENAI_API_KEY",
+    "MT5_BRIDGE_BASE_URL",
+    "CARVIPIX_JWT_SECRET",
+    "COOKIE_SIGNING_SECRET",
+    "DATABASE_URL",
+  ];
+
+  const required = [...requiredBase, ...requiredEnvKeysForPayments(env)];
+  for (const key of required) {
+    if (!readEnv(env, key)) {
+      const message = `Missing required environment variable: ${key}`;
+      if (strict) {
+        errors.push(message);
+      } else {
+        warnings.push(message);
+      }
+    }
+  }
+
+  const classification = readEnv(env, "CARVIPIX_DATA_CLASSIFICATION");
+  const validClassification = ["REAL", "SANDBOX", "DEMO", "MOCK", "PLACEHOLDER", "EMPTY"];
+  if (!classification) {
+    const message = "Missing required environment variable: CARVIPIX_DATA_CLASSIFICATION";
+    if (strict) {
+      errors.push(message);
+    } else {
+      warnings.push(message);
+    }
+  } else if (!validClassification.includes(classification)) {
+    errors.push(
+      `Invalid CARVIPIX_DATA_CLASSIFICATION: ${classification}. Expected one of ${validClassification.join(", ")}`
+    );
+  }
+
+  return {
+    stage,
+    strict,
+    errors,
+    warnings,
+  };
+}
+
+export function assertCriticalEnvironment(env: EnvRecord = process.env): void {
+  const validation = validateCriticalEnvironment(env);
+  if (validation.errors.length > 0) {
+    throw new Error(
+      `CARVIPIX_STARTUP_BLOCKED (${validation.stage}): ${validation.errors.join(" | ")}`
+    );
+  }
+}
 
 function parseBoolean(value: string | undefined, fallback: boolean): boolean {
   if (value === undefined) {

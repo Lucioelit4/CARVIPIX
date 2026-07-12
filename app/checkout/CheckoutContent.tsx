@@ -1,120 +1,144 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { AlertCircle, CreditCard, ShieldCheck } from "lucide-react";
 
 import { CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
+import { COMMERCIAL_PRODUCTS, resolveCheckoutProductId } from "@/app/lib/commercial/business-model";
 
 type Product = {
   id: string;
   name: string;
   description: string;
-  price: number;
+  amount: number;
   currency: string;
+  type: "one_time" | "subscription";
   features?: string[];
-};
-
-type Order = {
-  id: string;
-  productId: string;
-  total: number;
-  currency: string;
-  status: string;
-};
-
-type PaymentOrderResponse = {
-  id: string;
-  status: string;
-  total: { amount: number; currency: string };
-};
-
-type CheckoutSessionResponse = {
-  orderId: string;
-  status: string;
-  provider: string;
-  providerCheckoutId: string;
-  checkoutUrl: string;
-  expiresAt: string;
 };
 
 type SessionPayload = {
   authenticated?: boolean;
-  user?: { nombre?: string; apellido?: string; email?: string };
+  user?: { id?: string; nombre?: string; apellido?: string; email?: string };
 };
 
-const FALLBACK_PRODUCTS: Record<string, Product> = {
-  "plan-basic": {
-    id: "plan-basic",
-    name: "Plan BASIC",
-    description: "Alertas manuales, pares limitados, historial limitado y bot limitado.",
-    price: 49,
-    currency: "USD",
-    features: ["5 alertas/dia", "4 pares", "1 bot"],
-  },
-  "plan-advanced": {
-    id: "plan-advanced",
-    name: "Plan ADVANCED",
-    description: "Mas pares, mas alertas, mas historial y bot completo.",
-    price: 149,
-    currency: "USD",
-    features: ["25 alertas/dia", "12 pares", "3 bots"],
-  },
-  "bot-carvipix-license": {
-    id: "bot-carvipix-license",
-    name: "Licencia Bot CARVIPIX",
-    description: "Licencia comercial con activacion y conexion preparada.",
-    price: 999,
-    currency: "USD",
-    features: ["Licencia activa", "Diagnostico", "Conexion broker sujeta a activacion"],
-  },
-  "capital-gestionado": {
-    id: "capital-gestionado",
-    name: "Gestion de Capital",
-    description: "Solicitud y seguimiento de servicio separado de capital.",
-    price: 10000,
-    currency: "USD",
-    features: ["Solicitud", "Contrato", "Dashboard", "Reportes"],
-  },
+type CreateOrderResponse = {
+  orderId: string;
 };
 
-const LEGACY_PRODUCT_ALIASES: Record<string, string> = {
-  membership: "plan-basic",
-  bot: "bot-carvipix-license",
-  capital: "capital-gestionado",
+type CaptureOrderResponse = {
+  orderId: string;
+  status: string;
+  recordStatus: string;
 };
+
+type CreateSubscriptionResponse = {
+  subscriptionId: string;
+  status: string;
+};
+
+declare global {
+  interface Window {
+    paypal?: {
+      Buttons: (options: Record<string, unknown>) => {
+        render: (selector: string) => Promise<void>;
+        close: () => void;
+      };
+    };
+  }
+}
+
+const FALLBACK_PRODUCTS: Record<string, Product> = COMMERCIAL_PRODUCTS.filter(
+  (item) => item.checkoutEnabled && item.status === "active" && item.priceUsd !== null
+).reduce<Record<string, Product>>((acc, item) => {
+  acc[item.checkoutId] = {
+    id: item.checkoutId,
+    name: item.name,
+    description: item.description,
+    amount: item.priceUsd ?? 0,
+    currency: item.currency,
+    type: item.billingType === "subscription" ? "subscription" : "one_time",
+    features: item.features,
+  };
+  return acc;
+}, {});
 
 async function parseJsonSafe<T>(response: Response): Promise<T> {
   return (await response.json().catch(() => ({}))) as T;
 }
 
+function scriptIdForType(type: Product["type"]): string {
+  return `paypal-sdk-${type}`;
+}
+
+async function loadPayPalSdk(product: Product): Promise<void> {
+  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  if (!clientId) {
+    throw new Error("Falta NEXT_PUBLIC_PAYPAL_CLIENT_ID para cargar PayPal SDK");
+  }
+
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const id = scriptIdForType(product.type);
+  const existing = document.getElementById(id) as HTMLScriptElement | null;
+  if (existing && window.paypal) {
+    return;
+  }
+
+  const previous = document.querySelectorAll("script[data-paypal-sdk='true']");
+  previous.forEach((node) => node.parentNode?.removeChild(node));
+
+  const params = new URLSearchParams({
+    "client-id": clientId,
+    currency: product.currency,
+    components: "buttons",
+  });
+
+  if (product.type === "subscription") {
+    params.set("vault", "true");
+    params.set("intent", "subscription");
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.id = id;
+    script.async = true;
+    script.dataset.paypalSdk = "true";
+    script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("No se pudo cargar PayPal JavaScript SDK"));
+    document.body.appendChild(script);
+  });
+}
+
 export default function CheckoutContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const rawProductId = searchParams?.get("product") ?? "plan-basic";
-  const productId = LEGACY_PRODUCT_ALIASES[rawProductId] ?? rawProductId;
+  const rawProductId = searchParams?.get("product") ?? "plan-basic-monthly";
+  const productId = resolveCheckoutProductId(rawProductId);
   const [product, setProduct] = useState<Product | null>(FALLBACK_PRODUCTS[productId] ?? null);
   const [session, setSession] = useState<SessionPayload | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [sdkReady, setSdkReady] = useState(false);
+  const [creatingButton, setCreatingButton] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const buttonContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (rawProductId === "fondeo") {
-      window.location.replace("/soporte");
-      return;
-    }
-
     const load = async () => {
-      const [paymentsResponse, sessionResponse] = await Promise.all([
-        fetch(`/api/client/payments?productId=${encodeURIComponent(productId)}`, { cache: "no-store" }).catch(() => null),
+      const [offeringsResponse, sessionResponse] = await Promise.all([
+        fetch("/api/paypal/offerings", { cache: "no-store" }).catch(() => null),
         fetch("/api/auth/session", { cache: "no-store" }).catch(() => null),
       ]);
 
-      if (paymentsResponse?.ok) {
-        const payload = await parseJsonSafe<{ data?: { product?: Product | null } }>(paymentsResponse);
-        if (payload.data?.product) {
-          setProduct(payload.data.product);
+      if (offeringsResponse?.ok) {
+        const payload = await parseJsonSafe<{ data?: Product[] }>(offeringsResponse);
+        const found = payload.data?.find((item) => item.id === productId);
+        if (found) {
+          setProduct(found);
         }
       }
 
@@ -124,66 +148,141 @@ export default function CheckoutContent() {
     };
 
     void load();
-  }, [productId, rawProductId]);
+  }, [productId]);
 
   const summaryItems = useMemo(() => product?.features ?? [], [product]);
 
-  const handlePurchase = async () => {
-    setSubmitting(true);
-    setMessage(null);
-
-    try {
-      const idempotencyKey = `checkout-${productId}-${Date.now()}`;
-      const createResponse = await fetch("/api/client/payment-orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId,
-          paymentMethodRequested: "card_credit",
-          providerPreferred: "mercadopago",
-          idempotencyKey,
-        }),
-      });
-      const createPayload = await parseJsonSafe<{ data?: PaymentOrderResponse; error?: string }>(createResponse);
-      if (!createResponse.ok || !createPayload.data) {
-        throw new Error(createPayload.error || "No se pudo crear la orden");
-      }
-
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set("checkoutStatus", "return");
-      currentUrl.searchParams.set("orderId", createPayload.data.id);
-
-      const cancelUrl = new URL(window.location.href);
-      cancelUrl.searchParams.set("checkoutStatus", "cancelled");
-
-      const sessionResponse = await fetch(`/api/client/payment-orders/${encodeURIComponent(createPayload.data.id)}/checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          returnUrl: currentUrl.toString(),
-          cancelUrl: cancelUrl.toString(),
-        }),
-      });
-      const sessionPayload = await parseJsonSafe<{ data?: CheckoutSessionResponse; error?: string }>(sessionResponse);
-      if (!sessionResponse.ok || !sessionPayload.data) {
-        throw new Error(sessionPayload.error || "No se pudo iniciar el checkout del proveedor");
-      }
-
-      setCreatedOrder({
-        id: createPayload.data.id,
-        productId,
-        total: createPayload.data.total.amount,
-        currency: createPayload.data.total.currency,
-        status: createPayload.data.status,
-      });
-      setMessage(`Orden ${createPayload.data.id} creada. Redirigiendo al checkout del proveedor (${sessionPayload.data.provider})...`);
-      window.location.assign(sessionPayload.data.checkoutUrl);
-    } catch (caught) {
-      setMessage(caught instanceof Error ? caught.message : "No se pudo completar la compra");
-    } finally {
-      setSubmitting(false);
+  useEffect(() => {
+    const container = buttonContainerRef.current;
+    if (!product || !session?.authenticated || !container) {
+      return;
     }
-  };
+
+    let mounted = true;
+    let instance: { render: (selector: string) => Promise<void>; close: () => void } | null = null;
+
+    const renderButtons = async () => {
+      setCreatingButton(true);
+      setMessage(null);
+
+      try {
+        await loadPayPalSdk(product);
+        if (!mounted || !window.paypal) {
+          return;
+        }
+
+        container.innerHTML = "";
+
+        instance = window.paypal.Buttons({
+          style: {
+            layout: "vertical",
+            shape: "rect",
+            label: product.type === "subscription" ? "subscribe" : "paypal",
+          },
+          createOrder: product.type === "one_time"
+            ? async () => {
+                const response = await fetch("/api/paypal/orders", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ productId: product.id }),
+                });
+
+                const payload = await parseJsonSafe<{ data?: CreateOrderResponse; error?: string }>(response);
+                if (!response.ok || !payload.data?.orderId) {
+                  throw new Error(payload.error || "No se pudo crear orden PayPal");
+                }
+
+                return payload.data.orderId;
+              }
+            : undefined,
+          createSubscription: product.type === "subscription"
+            ? async () => {
+                const ensurePlan = await fetch("/api/paypal/plans", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ productId: product.id }),
+                });
+
+                if (!ensurePlan.ok) {
+                  const ensurePayload = await parseJsonSafe<{ error?: string }>(ensurePlan);
+                  throw new Error(ensurePayload.error || "No se pudo preparar el plan PayPal");
+                }
+
+                const response = await fetch("/api/paypal/subscriptions", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ productId: product.id }),
+                });
+
+                const payload = await parseJsonSafe<{ data?: CreateSubscriptionResponse; error?: string }>(response);
+                if (!response.ok || !payload.data?.subscriptionId) {
+                  throw new Error(payload.error || "No se pudo crear suscripcion PayPal");
+                }
+
+                return payload.data.subscriptionId;
+              }
+            : undefined,
+          onApprove: async (data: Record<string, unknown>) => {
+            try {
+              if (product.type === "one_time") {
+                const orderID = String(data.orderID || "");
+                const response = await fetch(`/api/paypal/orders/${encodeURIComponent(orderID)}/capture`, {
+                  method: "POST",
+                });
+
+                const payload = await parseJsonSafe<{ data?: CaptureOrderResponse; error?: string }>(response);
+                if (!response.ok || !payload.data) {
+                  throw new Error(payload.error || "No se pudo capturar la orden");
+                }
+
+                router.push(`/checkout/success?kind=order&id=${encodeURIComponent(payload.data.orderId)}`);
+                return;
+              }
+
+              const subscriptionID = String(data.subscriptionID || "");
+              router.push(`/checkout/success?kind=subscription&id=${encodeURIComponent(subscriptionID)}`);
+            } catch (error) {
+              const message = error instanceof Error ? error.message : "No se pudo confirmar PayPal";
+              router.push(`/checkout/error?message=${encodeURIComponent(message)}`);
+            }
+          },
+          onCancel: () => {
+            router.push(`/checkout/cancel?product=${encodeURIComponent(product.id)}`);
+          },
+          onError: (error: unknown) => {
+            const errorMessage = error instanceof Error ? error.message : "Error en PayPal SDK";
+            router.push(`/checkout/error?message=${encodeURIComponent(errorMessage)}`);
+          },
+        });
+
+        await instance.render("#paypal-button-container");
+        if (mounted) {
+          setSdkReady(true);
+        }
+      } catch (error) {
+        if (mounted) {
+          setSdkReady(false);
+          setMessage(error instanceof Error ? error.message : "No se pudo inicializar PayPal");
+        }
+      } finally {
+        if (mounted) {
+          setCreatingButton(false);
+        }
+      }
+    };
+
+    void renderButtons();
+
+    return () => {
+      mounted = false;
+      if (instance) {
+        instance.close();
+      }
+      container.innerHTML = "";
+    };
+  }, [product, router, session?.authenticated]);
+
+  const paymentLabel = product?.type === "subscription" ? "al mes" : "pago unico";
 
   if (!product) {
     return <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">Producto no disponible</div>;
@@ -193,7 +292,7 @@ export default function CheckoutContent() {
     <main className="min-h-screen bg-[#030303] text-white px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
         <section className="rounded-3xl border border-[#D4AF37]/25 bg-[linear-gradient(180deg,#121212_0%,#0B0B0B_100%)] p-6">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Checkout oficial</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Checkout oficial PayPal Sandbox</p>
           <h1 className="mt-2 text-3xl font-bold">{product.name}</h1>
           <p className="mt-2 text-white/65">{product.description}</p>
         </section>
@@ -210,7 +309,7 @@ export default function CheckoutContent() {
             <div className="space-y-3 text-sm text-white/70">
               <p>Cliente: <span className="text-white">{session?.user?.nombre ? `${session.user.nombre ?? ""} ${session.user.apellido ?? ""}`.trim() : "Sesion requerida"}</span></p>
               <p>Email: <span className="text-white">{session?.user?.email ?? "Inicia sesion para continuar"}</span></p>
-              <p>Proteccion: <span className="text-white">Validacion backend y auditoria comercial activa</span></p>
+              <p>Proteccion: <span className="text-white">Activacion solo por confirmacion real de PayPal</span></p>
             </div>
             <ul className="mt-6 space-y-2 text-sm text-white/70">
               {summaryItems.map((feature) => (
@@ -224,17 +323,22 @@ export default function CheckoutContent() {
               <CreditCard className="h-5 w-5" />
               <h2 className="text-xl font-semibold">Pago</h2>
             </div>
-            <p className="mt-4 text-4xl font-bold text-white">{product.price.toLocaleString()} {product.currency}</p>
-            <p className="mt-2 text-sm text-white/60">La compra crea una orden comercial y solicita una sesión real del proveedor cuando la infraestructura de pagos está conectada.</p>
+            <p className="mt-4 text-4xl font-bold text-white">{product.amount.toLocaleString()} {product.currency}</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.22em] text-white/60">{paymentLabel}</p>
+            <p className="mt-2 text-sm text-white/60">
+              El acceso solo se activa despues de captura confirmada o webhook validado con firma oficial PayPal.
+            </p>
+
             <div className="mt-6 space-y-3">
-              <CARVIPIXButton variant="premium" fullWidth disabled={!session?.authenticated || submitting} onClick={() => void handlePurchase()}>
-                {submitting ? "Procesando..." : "Comprar ahora"}
-              </CARVIPIXButton>
+              <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
+              {(creatingButton || !sdkReady) && session?.authenticated && (
+                <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
+              )}
               <Link href="/dashboard">
                 <CARVIPIXButton variant="ghost" fullWidth>Ir al panel cliente</CARVIPIXButton>
               </Link>
             </div>
-            {createdOrder && <p className="mt-4 text-xs text-white/60">Orden creada: {createdOrder.id}</p>}
+
             {message && (
               <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-white/80 flex items-start gap-2">
                 <AlertCircle className="mt-0.5 h-4 w-4 text-[#D4AF37]" />

@@ -2,6 +2,7 @@
 
 import { AIConversation, AIBriefing, AISuggestion, AIMessage } from "./types";
 import { getDemoAIConversation, getDemoAIBriefing, getDemoAISuggestions } from "./demo-data";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 
 export class AISupportService {
   private isDemoMode = true;
@@ -19,6 +20,26 @@ export class AISupportService {
 
   // Obtener briefing diario
   async getDailyBriefing(userId: string): Promise<AIBriefing> {
+    const latestSignal = masterSignalStore.getLatest();
+    if (latestSignal) {
+      return {
+        id: `brief-${latestSignal.analysis_id}`,
+        userId,
+        generatedAt: new Date(latestSignal.created_at),
+        content: `Briefing basado en la Señal Maestra ${latestSignal.signal.analysis_id}.
+
+Dirección: ${latestSignal.signal.direction}
+Estrategia: ${latestSignal.signal.selected_strategy_id}
+Estado: ${latestSignal.signal.status}
+`,
+        highlights: {
+          alertsToday: 1,
+          recommendedActions: ["Revisar la Señal Maestra CADP V2", "Aplicar permisos y Risk Engine antes de cualquier ejecución"],
+          riskLevel: latestSignal.signal.human_review_required ? "medium" : "low",
+        },
+      };
+    }
+
     if (this.isDemoMode) {
       return getDemoAIBriefing();
     }
@@ -34,6 +55,22 @@ export class AISupportService {
 
   // Obtener sugerencias de trading
   async getTradingSuggestions(userId: string, context?: string): Promise<AISuggestion[]> {
+    const latestSignal = masterSignalStore.getLatest();
+    if (latestSignal) {
+      return [
+        {
+          category: "trade",
+          suggestion: `Consumir la Señal Maestra ${latestSignal.signal.analysis_id} para ${latestSignal.signal.symbol}.`,
+          confidence: 100,
+        },
+        {
+          category: "risk",
+          suggestion: "No recalcular entrada, SL o TP; usar la señal publicada por CADP V2.",
+          confidence: 100,
+        },
+      ];
+    }
+
     if (this.isDemoMode) {
       return getDemoAISuggestions();
     }

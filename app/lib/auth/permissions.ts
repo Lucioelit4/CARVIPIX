@@ -36,12 +36,12 @@ export function canAccessRoute(pathname: string, context: RouteAccessContext): b
     return tier === "usuario_registrado" || tier === "miembro_activo" || tier === "administrador";
   }
 
-  const authenticatedRoutes = ["/capital", "/gestion-capital", "/perfil", "/comunidad"];
+  const authenticatedRoutes = ["/capital", "/gestion", "/gestion-capital", "/perfil", "/comunidad", "/soporte"];
   if (authenticatedRoutes.some((route) => pathname.startsWith(route))) {
     return tier === "usuario_registrado" || tier === "miembro_activo" || tier === "administrador";
   }
 
-  const memberOnlyRoutes = ["/alertas", "/bot", "/fondeo", "/resultados", "/analisis", "/herramientas"];
+  const memberOnlyRoutes = ["/alertas", "/bot", "/fondeo", "/resultados", "/analisis", "/herramientas", "/academia"];
   if (memberOnlyRoutes.some((route) => pathname.startsWith(route))) {
     return tier === "miembro_activo";
   }

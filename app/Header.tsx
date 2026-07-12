@@ -21,7 +21,7 @@ export default function Header() {
           <Link href="/" className="transition hover:text-[#D4AF37]">Inicio</Link>
           <Link href="/alertas" className="transition hover:text-[#D4AF37]">Alertas</Link>
           <Link href="/bot" className="transition hover:text-[#D4AF37]">Bot</Link>
-          <Link href="/fondeo" className="transition hover:text-[#D4AF37]">Fondeo</Link>
+          <Link href="/fondeo" className="transition hover:text-[#D4AF37]">Cuentas Fondeadas</Link>
           <Link href="/resultados" className="transition hover:text-[#D4AF37]">Resultados</Link>
         </nav>
 

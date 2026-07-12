@@ -8,6 +8,7 @@ import type {
 import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 
 type MembershipRow = {
   id: string;
@@ -220,10 +221,11 @@ export class MembershipsDomainService implements IMembershipsDomainService {
   async getActivePlan(): Promise<ServicePlanType> {
     const user = await this.getCurrentUserProfile();
     const membership = await this.getCurrentMembership();
+    const latestSignal = masterSignalStore.getLatest();
 
     this.eventBus.publish("memberships.active-plan.read", {
       userId: user.id,
-      plan: membership.estado === "activo" ? user.plan : "demo",
+      plan: latestSignal ? (membership.estado === "activo" ? user.plan : "demo") : membership.estado === "activo" ? user.plan : "demo",
       queriedAt: new Date(),
     });
 

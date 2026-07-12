@@ -365,8 +365,8 @@ export default function BotPage() {
               a: "Sí. Diseñado para ambas plataformas. Compatible con mayoría de brokers.",
             },
             {
-              q: "¿La membresía Elite incluye el bot?",
-              a: "No. Producto separado (999 USD). Elite (150/mes) añade actualizaciones.",
+              q: "¿La membresía activa incluye el bot?",
+              a: "No. Es un producto separado (999 USD) y requiere membresía activa para operar.",
             },
             {
               q: "¿Necesito estar conectado todo el día?",
@@ -374,7 +374,7 @@ export default function BotPage() {
             },
             {
               q: "¿Qué pasa con las actualizaciones?",
-              a: "Sin membresía: bot fijo. Con Elite: actualizaciones continuas. Cambios críticos sin membresía.",
+              a: "Con membresía activa se habilitan permisos operativos y continuidad de servicio según plan.",
             },
             {
               q: "¿El bot garantiza ganancias?",

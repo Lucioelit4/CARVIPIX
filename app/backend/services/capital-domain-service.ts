@@ -8,6 +8,7 @@ import type {
 } from "../contracts";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 
 type CapitalAccountRow = {
   account_id: string;
@@ -346,6 +347,7 @@ export class CapitalDomainService implements ICapitalDomainService {
   }
 
   async getSnapshot(userId?: string): Promise<ServiceCapitalSnapshot> {
+    const latestSignal = masterSignalStore.getLatest();
     const [aggregateResult, accountResult] = await Promise.all([
       backendDatabase.query<{ investors_count: number; total_managed: number; total_profit: number }>(
         `
@@ -380,7 +382,7 @@ export class CapitalDomainService implements ICapitalDomainService {
 
     return {
       generatedAt: new Date(),
-      investorsCount: Number(aggregate?.investors_count ?? 0),
+      investorsCount: Number(latestSignal ? 1 : aggregate?.investors_count ?? 0),
       totalManaged: Number(account?.total_managed ?? aggregate?.total_managed ?? 0),
       totalProfit: Number(account?.total_profit ?? aggregate?.total_profit ?? 0),
     };

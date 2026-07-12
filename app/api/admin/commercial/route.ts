@@ -26,9 +26,11 @@ export async function GET(request: NextRequest) {
       created_at: Date | null;
       membership_estado: string | null;
       membership_plan: string | null;
+      exclude_from_commercial_metrics: boolean;
+      user_type: string | null;
     }>(
       `
-      SELECT u.id, u.email, u.nombre, u.apellido, u.plan, u.estado, u.verificado, u.created_at, m.estado AS membership_estado, m.plan AS membership_plan
+      SELECT u.id, u.email, u.nombre, u.apellido, u.plan, u.estado, u.verificado, u.created_at, m.estado AS membership_estado, m.plan AS membership_plan, COALESCE(u.exclude_from_commercial_metrics, false) AS exclude_from_commercial_metrics, u.user_type
       FROM users u
       LEFT JOIN memberships m ON m.user_id = u.id
       ORDER BY u.created_at DESC NULLS LAST, u.id DESC
@@ -71,15 +73,19 @@ export async function GET(request: NextRequest) {
     membershipStatus: row.membership_estado ?? "inactivo",
     verified: row.verificado,
     registeredAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+    excludedFromCommercialMetrics: row.exclude_from_commercial_metrics,
+    userType: row.user_type ?? "STANDARD",
   }));
+
+  const commercialUsers = users.filter((user) => !user.excludedFromCommercialMetrics);
 
   return NextResponse.json(
     {
       ok: true,
       data: {
         overview: {
-          users: users.length,
-          activeMemberships: users.filter((user) => user.membershipStatus === "activo").length,
+          users: commercialUsers.length,
+          activeMemberships: commercialUsers.filter((user) => user.membershipStatus === "activo").length,
           pendingCapitalRequests: capitalRequests.rows.filter((row) => row.status === "pending").length,
           openTickets: supportTickets.rows.filter((row) => row.status === "open" || row.status === "in_progress").length,
           blockedAttempts: audit.filter((row) => row.result === "denied").length,

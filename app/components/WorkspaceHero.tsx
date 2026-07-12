@@ -30,8 +30,8 @@ const routeTitles: Record<string, { title: string; subtitle: string }> = {
     subtitle: "Panel de capital con lectura clara, segura y profesional.",
   },
   "/fondeo": {
-    title: "Programa de Fondeo",
-    subtitle: "Seguimiento integral de cuentas fondeadas con vista premium unificada.",
+    title: "Cuentas Fondeadas",
+    subtitle: "Servicio en desarrollo. Proximamente sin flujo de venta activo.",
   },
   "/perfil": {
     title: "Perfil",

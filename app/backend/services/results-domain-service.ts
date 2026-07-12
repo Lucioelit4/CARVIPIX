@@ -5,26 +5,17 @@ import type {
 } from "../contracts";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 export class ResultsDomainService implements IResultsDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getPlatformResults(period: "monthly" | "yearly" | "all-time"): Promise<ServicePlatformResults> {
-    const [alertsMetricsResult, botMetricsResult, capitalMetricsResult, fundingMetricsResult, usersResult] = await Promise.all([
-      backendDatabase.query<{
-        total_trades: number;
-        win_rate: number;
-        profit_loss: number;
-      }>(
-        `
-        SELECT
-          COUNT(*) AS total_trades,
-          CASE WHEN COUNT(*) > 0 THEN (COUNT(*) FILTER (WHERE pnl > 0)::numeric / COUNT(*)::numeric) * 100 ELSE 0 END AS win_rate,
-          COALESCE(SUM(pnl), 0) AS profit_loss
-        FROM operations
-        WHERE COALESCE(metadata->>'module', '') IN ('alerts', 'trading')
-        `
-      ),
+    const latestSignal = masterSignalStore.getLatest();
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const [lifecycleMetrics, botMetricsResult, capitalMetricsResult, fundingMetricsResult, usersResult] = await Promise.all([
+      realSignalLifecycleService.getResultsAggregate(),
       backendDatabase.query<{
         total_trades: number;
         win_rate: number;
@@ -71,19 +62,19 @@ export class ResultsDomainService implements IResultsDomainService {
         SELECT COUNT(*) AS active_users
         FROM users
         WHERE estado = 'activo'
+          AND COALESCE(exclude_from_commercial_metrics, false) = false
         `
       ),
     ]);
 
-    const alertsMetrics = alertsMetricsResult.rows[0];
     const botMetrics = botMetricsResult.rows[0];
     const capitalMetrics = capitalMetricsResult.rows[0];
     const fundingMetrics = fundingMetricsResult.rows[0];
     const users = usersResult.rows[0];
 
-    const alertsTrades = Number(alertsMetrics?.total_trades ?? 0);
-    const alertsWinRate = Number(alertsMetrics?.win_rate ?? 0);
-    const alertsProfit = Number(alertsMetrics?.profit_loss ?? 0);
+    const alertsTrades = lifecycleMetrics.totalTrades;
+    const alertsWinRate = lifecycleMetrics.winRate;
+    const alertsProfit = lifecycleMetrics.profitLoss;
 
     const botTrades = Number(botMetrics?.total_trades ?? 0);
     const botProfit = Number(botMetrics?.profit_loss ?? 0);
@@ -128,6 +119,19 @@ export class ResultsDomainService implements IResultsDomainService {
         totalProfit: Number((alertsProfit + botProfit + Number(capitalMetrics?.total_profit ?? 0)).toFixed(2)),
         userCount: Number(users?.active_users ?? 0),
       },
+      masterSignal: latestSignal
+        ? {
+            signalId: latestSignal.signal_id,
+            analysisId: latestSignal.analysis_id,
+            symbol: latestSignal.signal.symbol,
+            decision: latestSignal.signal.direction,
+            entry: latestSignal.signal.entry,
+            stopLoss: latestSignal.signal.stop_loss,
+            takeProfit: latestSignal.signal.take_profit,
+            strategyId: latestSignal.signal.selected_strategy_id,
+            status: latestSignal.signal.status,
+          }
+        : null,
     };
 
     this.eventBus.publish("results.read", {
@@ -140,26 +144,10 @@ export class ResultsDomainService implements IResultsDomainService {
   }
 
   async getHistory(months = 12): Promise<ServiceResultsHistoryRecord[]> {
-    const [operationsResult, reportsResult] = await Promise.all([
-      backendDatabase.query<{
-        month: string;
-        total_trades: number;
-        winning_trades: number;
-        profit_loss: number;
-      }>(
-        `
-        SELECT
-          COALESCE(metadata->>'reportMonth', TO_CHAR(executed_at, 'YYYY-MM')) AS month,
-          COUNT(*) AS total_trades,
-          COUNT(*) FILTER (WHERE pnl > 0) AS winning_trades,
-          COALESCE(SUM(pnl), 0) AS profit_loss
-        FROM operations
-        GROUP BY 1
-        ORDER BY MAX(executed_at) DESC
-        LIMIT $1
-        `,
-        [months]
-      ),
+    const latestSignal = masterSignalStore.getLatest();
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const [lifecycleHistory, reportsResult] = await Promise.all([
+      realSignalLifecycleService.getMonthlyResults(months),
       backendDatabase.query<{
         month: string;
         investors_count: number;
@@ -183,15 +171,15 @@ export class ResultsDomainService implements IResultsDomainService {
       ),
     ]);
 
-    const operationByMonth = new Map(operationsResult.rows.map((row) => [row.month, row]));
+    const operationByMonth = new Map(lifecycleHistory.map((row) => [row.month, row]));
     const reportByMonth = new Map(reportsResult.rows.map((row) => [row.month, row]));
     const monthsIndex = Array.from(new Set([...operationByMonth.keys(), ...reportByMonth.keys()])).slice(0, months);
 
     const history = monthsIndex.map((month, index) => {
       const operation = operationByMonth.get(month);
       const report = reportByMonth.get(month);
-      const totalTrades = Number(operation?.total_trades ?? 0);
-      const winningTrades = Number(operation?.winning_trades ?? 0);
+      const totalTrades = Number(operation?.totalTrades ?? 0);
+      const winningTrades = Number(operation?.winningTrades ?? 0);
       const winRate = totalTrades > 0 ? Number(((winningTrades / totalTrades) * 100).toFixed(2)) : 0;
 
       return {
@@ -201,7 +189,7 @@ export class ResultsDomainService implements IResultsDomainService {
           alertas: {
             totalTrades,
             winRate,
-            profitLoss: Number(operation?.profit_loss ?? 0),
+            profitLoss: Number(operation?.profitLoss ?? 0),
           },
           bot: {
             totalTrades: 0,

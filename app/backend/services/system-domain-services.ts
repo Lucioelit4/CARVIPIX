@@ -2,6 +2,7 @@ import type {
   IAIDomainService,
   IAdminDomainService,
   IDashboardDomainService,
+  IMasterSignalDomainService,
   IFundingDomainService,
   IHistoryDomainService,
   IStatsDomainService,
@@ -11,8 +12,11 @@ import type {
   ServiceFundingSnapshot,
   ServiceHistoryEntry,
   ServiceStatsSnapshot,
+  ServiceMasterSignal,
 } from "../contracts";
 import { backendDatabase } from "../core/database";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 export class FundingDomainService implements IFundingDomainService {
   async getSnapshot(): Promise<ServiceFundingSnapshot> {
@@ -38,15 +42,21 @@ export class FundingDomainService implements IFundingDomainService {
 
 export class DashboardDomainService implements IDashboardDomainService {
   async getSnapshot(): Promise<ServiceDashboardSnapshot> {
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
     const [alertsResult, operationsResult] = await Promise.all([
       backendDatabase.query<{ active_alerts: number }>(
-        `SELECT COUNT(*) AS active_alerts FROM alert_rules WHERE enabled = true`
+        `
+        SELECT COUNT(*)::int AS active_alerts
+        FROM real_signal_lifecycle
+        WHERE signal_status IN ('CREATED', 'CONDITIONAL', 'ACTIVE')
+          AND decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
+        `
       ),
       backendDatabase.query<{ recent_signals: number }>(
         `
-        SELECT COUNT(*) AS recent_signals
-        FROM operations
-        WHERE executed_at >= NOW() - INTERVAL '24 hours'
+        SELECT COUNT(*)::int AS recent_signals
+        FROM real_signal_lifecycle
+        WHERE signal_timestamp >= NOW() - INTERVAL '24 hours'
         `
       ),
     ]);
@@ -60,10 +70,40 @@ export class DashboardDomainService implements IDashboardDomainService {
   }
 }
 
+export class MasterSignalDomainService implements IMasterSignalDomainService {
+  async getLatestSignal(): Promise<ServiceMasterSignal | null> {
+    const latest = masterSignalStore.getLatest();
+    if (!latest) {
+      return null;
+    }
+
+    const signal = latest.signal;
+    return {
+      signalId: signal.signal_id,
+      analysisId: signal.analysis_id,
+      symbol: signal.symbol,
+      analysisProfile: signal.analysis_profile,
+      selectedStrategyId: signal.selected_strategy_id,
+      direction: signal.direction,
+      entry: signal.entry,
+      stopLoss: signal.stop_loss,
+      takeProfit: signal.take_profit,
+      grossRR: signal.calculated_gross_rr,
+      netRR: signal.calculated_net_rr,
+      expiresAt: signal.expires_at,
+      status: signal.status,
+      humanReviewRequired: signal.human_review_required,
+      autoExecutionEligible: signal.auto_execution_eligible,
+      createdAt: latest.created_at,
+    };
+  }
+}
+
 export class AdminDomainService implements IAdminDomainService {
   async getSnapshot(): Promise<ServiceAdminSnapshot> {
+    const latestSignal = masterSignalStore.getLatest();
     const [activeUsersResult, incidentsResult] = await Promise.all([
-      backendDatabase.query<{ active_users: number }>(`SELECT COUNT(*) AS active_users FROM users WHERE estado = 'activo'`),
+      backendDatabase.query<{ active_users: number }>(`SELECT COUNT(*) AS active_users FROM users WHERE estado = 'activo' AND COALESCE(exclude_from_commercial_metrics, false) = false`),
       backendDatabase.query<{ pending_incidents: number }>(
         `SELECT COUNT(*) AS pending_incidents FROM alert_history WHERE action = 'triggered' AND timestamp >= NOW() - INTERVAL '48 hours'`
       ),
@@ -74,6 +114,20 @@ export class AdminDomainService implements IAdminDomainService {
       engineStatus: "healthy",
       activeUsers: Number(activeUsersResult.rows[0]?.active_users ?? 0),
       pendingIncidents: Number(incidentsResult.rows[0]?.pending_incidents ?? 0),
+      masterSignal: latestSignal
+        ? {
+            signalId: latestSignal.signal_id,
+            analysisId: latestSignal.analysis_id,
+            decision: latestSignal.signal.direction,
+            strategyId: latestSignal.signal.selected_strategy_id,
+            status: latestSignal.signal.status,
+            source: "CADP_V2",
+            validationStatus: "VALIDATED",
+            mode: latestSignal.signal.status === "SHADOW" ? "SHADOW" : "PRODUCTION",
+            humanReviewRequired: latestSignal.signal.human_review_required,
+            autoExecutionEligible: latestSignal.signal.auto_execution_eligible,
+          }
+        : null,
     };
   }
 }
@@ -104,42 +158,29 @@ export class AIDomainService implements IAIDomainService {
 
 export class HistoryDomainService implements IHistoryDomainService {
   async getHistory(userId?: string, limit = 20): Promise<ServiceHistoryEntry[]> {
-    const params: Array<string | number> = [];
-    let where = "";
+    void userId;
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const signals = await realSignalLifecycleService.getRecentSignals({ limit, includeAuditOnly: true });
 
-    if (userId) {
-      params.push(userId);
-      where = `WHERE user_id = $${params.length}`;
-    }
-
-    params.push(Math.max(1, Math.min(limit, 200)));
-
-    const { rows } = await backendDatabase.query<{ id: string; user_id: string; action: string; timestamp: Date }>(
-      `
-      SELECT id, user_id, action, timestamp
-      FROM alert_history
-      ${where}
-      ORDER BY timestamp DESC
-      LIMIT $${params.length}
-      `,
-      params
-    );
-
-    return rows.map((row) => ({
-      id: row.id,
-      module: "alerts",
-      timestamp: new Date(row.timestamp),
-      title: `Alerta ${row.action}`,
-      detail: `Usuario ${row.user_id}`,
+    return signals.map((record) => ({
+      id: record.signalId,
+      module: "ai",
+      timestamp: record.signalTimestamp,
+      title: `Señal ${record.signalId}`,
+      detail: `${record.decision} · ${record.status} · ${record.classification}`,
+      signalId: record.signalId,
+      analysisId: record.analysisId,
+      legacy: false,
     }));
   }
 }
 
 export class StatsDomainService implements IStatsDomainService {
   async getSnapshot(): Promise<ServiceStatsSnapshot> {
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
     const [eventsResult, usersResult] = await Promise.all([
-      backendDatabase.query<{ total_events: number }>(`SELECT COUNT(*) AS total_events FROM operations`),
-      backendDatabase.query<{ active_users: number }>(`SELECT COUNT(*) AS active_users FROM users WHERE estado = 'activo'`),
+      backendDatabase.query<{ total_events: number }>(`SELECT COUNT(*)::int AS total_events FROM real_signal_lifecycle`),
+      backendDatabase.query<{ active_users: number }>(`SELECT COUNT(*) AS active_users FROM users WHERE estado = 'activo' AND COALESCE(exclude_from_commercial_metrics, false) = false`),
     ]);
 
     return {

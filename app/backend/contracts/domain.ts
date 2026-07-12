@@ -78,6 +78,17 @@ export interface ServicePlatformResults {
     totalProfit: number;
     userCount: number;
   };
+  masterSignal?: {
+    signalId: string;
+    analysisId: string;
+    symbol: string;
+    decision: "BUY" | "SELL" | "NONE";
+    entry: number | null;
+    stopLoss: number | null;
+    takeProfit: number | null;
+    strategyId: string;
+    status: "SHADOW";
+  } | null;
 }
 
 export interface ServiceResultsHistoryRecord {
@@ -119,6 +130,18 @@ export interface ServiceAdminSnapshot {
   engineStatus: "healthy" | "degraded" | "offline";
   activeUsers: number;
   pendingIncidents: number;
+  masterSignal?: {
+    signalId: string;
+    analysisId: string;
+    decision: "BUY" | "SELL" | "NONE";
+    strategyId: string;
+    status: "SHADOW";
+    source: "CADP_V2";
+    validationStatus: "VALIDATED" | "PENDING";
+    mode: "SHADOW" | "PRODUCTION";
+    humanReviewRequired: boolean;
+    autoExecutionEligible: boolean;
+  } | null;
 }
 
 export interface ServiceAIContext {
@@ -142,6 +165,46 @@ export interface ServiceHistoryEntry {
   timestamp: Date;
   title: string;
   detail: string;
+  signalId?: string;
+  analysisId?: string;
+  legacy?: boolean;
+}
+
+export interface ServiceMasterSignal {
+  signalId: string;
+  analysisId: string;
+  symbol: string;
+  analysisProfile: string;
+  selectedStrategyId: string;
+  direction: "BUY" | "SELL" | "NONE";
+  entry: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  grossRR: number | null;
+  netRR: number | null;
+  expiresAt: string | null;
+  status: "SHADOW";
+  humanReviewRequired: boolean;
+  autoExecutionEligible: boolean;
+  createdAt: string;
+}
+
+export interface ServiceDeliveryReference {
+  signalId: string;
+  analysisId: string;
+  signalVersion: string;
+}
+
+export interface ServiceDeliveryJob {
+  id: string;
+  queue: string;
+  type: string;
+  status: "queued" | "processing" | "completed" | "failed";
+  attempts: number;
+  maxRetries: number;
+  lastError?: string;
+  createdAt: Date;
+  reference: ServiceDeliveryReference;
 }
 
 export interface ServiceStatsSnapshot {

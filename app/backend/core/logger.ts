@@ -30,6 +30,29 @@ const logPriority: Record<BackendLogLevel, number> = {
   error: 40,
 };
 
+const sensitiveKeyPattern = /(password|passwd|secret|token|api[-_]?key|authorization|cookie|set-cookie|clientsecret|access[-_]?token|refresh[-_]?token)/i;
+
+function sanitizeValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeValue(item));
+  }
+  if (value && typeof value === "object") {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      if (sensitiveKeyPattern.test(key)) {
+        sanitized[key] = "[REDACTED]";
+      } else {
+        sanitized[key] = sanitizeValue(nested);
+      }
+    }
+    return sanitized;
+  }
+  if (typeof value === "string" && value.length > 512) {
+    return `${value.slice(0, 509)}...`;
+  }
+  return value;
+}
+
 export class InMemoryBackendLogger implements BackendLogger {
   readonly entries: BackendLogEntry[] = [];
 
@@ -89,8 +112,8 @@ export class InMemoryBackendLogger implements BackendLogger {
       message,
       context: this.scope ? `${this.scope}.${context}` : context,
       timestamp: new Date().toISOString(),
-      metadata,
-      error,
+      metadata: metadata ? (sanitizeValue(metadata) as Record<string, unknown>) : undefined,
+      error: error ? (sanitizeValue(error) as BackendErrorPayload) : undefined,
     };
 
     this.entries.push(entry);

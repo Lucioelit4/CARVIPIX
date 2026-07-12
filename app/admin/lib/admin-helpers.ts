@@ -1,3 +1,5 @@
+import { getCommercialProductById } from "@/app/lib/commercial/business-model";
+
 // Admin localStorage helper
 // Gestiona datos demo del panel admin usando localStorage
 
@@ -40,6 +42,20 @@ interface AdminData {
   timestamp: number;
 }
 
+function formatCommercialAmount(productId: string): string {
+  const product = getCommercialProductById(productId);
+  const amount = product?.priceUsd;
+  if (typeof amount !== "number") {
+    return "N/A";
+  }
+
+  return `$${amount.toFixed(2)}`;
+}
+
+function commercialName(productId: string, fallback: string): string {
+  return getCommercialProductById(productId)?.name ?? fallback;
+}
+
 // Datos iniciales demo
 const defaultAdminData: AdminData = {
   solicitudes: [
@@ -50,11 +66,11 @@ const defaultAdminData: AdminData = {
     { id: 'SOL-2843', usuario: 'Roberto Silva', producto: 'Fondeo de Cuenta', monto: 'N/A', estado: 'pendiente', fecha: '2026-06-30' },
   ],
   pagos: [
-    { id: 'ORD-20260702001', fecha: '2026-07-02 14:32', cliente: 'Juan Pérez', producto: 'Membership PRO', monto: '$99.00', metodo: 'Tarjeta', estado: 'completado' },
-    { id: 'ORD-20260702002', fecha: '2026-07-02 13:15', cliente: 'María García', producto: 'Bot CARVIPIX Pro', monto: '$999.00', metodo: 'Crypto', estado: 'completado' },
+    { id: 'ORD-20260702001', fecha: '2026-07-02 14:32', cliente: 'Juan Pérez', producto: commercialName('plan-advanced', 'Plan PRO'), monto: formatCommercialAmount('plan-advanced'), metodo: 'Tarjeta', estado: 'completado' },
+    { id: 'ORD-20260702002', fecha: '2026-07-02 13:15', cliente: 'María García', producto: commercialName('bot-carvipix-license', 'Bot CARVIPIX'), monto: formatCommercialAmount('bot-carvipix-license'), metodo: 'Crypto', estado: 'completado' },
     { id: 'ORD-20260702003', fecha: '2026-07-02 11:42', cliente: 'Carlos López', producto: 'Capital Gestionado', monto: '$50,000.00', metodo: 'Transferencia', estado: 'pendiente' },
-    { id: 'ORD-20260701001', fecha: '2026-07-01 16:20', cliente: 'Ana Martínez', producto: 'Membership PRO', monto: '$99.00', metodo: 'Tarjeta', estado: 'completado' },
-    { id: 'ORD-20260701002', fecha: '2026-07-01 14:10', cliente: 'Roberto Silva', producto: 'Bot CARVIPIX Pro', monto: '$999.00', metodo: 'Crypto', estado: 'completado' },
+    { id: 'ORD-20260701001', fecha: '2026-07-01 16:20', cliente: 'Ana Martínez', producto: commercialName('plan-advanced', 'Plan PRO'), monto: formatCommercialAmount('plan-advanced'), metodo: 'Tarjeta', estado: 'completado' },
+    { id: 'ORD-20260701002', fecha: '2026-07-01 14:10', cliente: 'Roberto Silva', producto: commercialName('bot-carvipix-license', 'Bot CARVIPIX'), monto: formatCommercialAmount('bot-carvipix-license'), metodo: 'Crypto', estado: 'completado' },
   ],
   alertas: [
     { id: 'XAUUSD-1432', symbol: 'XAUUSD', tipo: 'Compra', estado: 'ganada', entrada: '2338.45', tp: '2345.00', sl: '2332.00', fecha: '2026-07-02 14:32' },

@@ -6,6 +6,7 @@ import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, U
 import Link from 'next/link';
 import { getAlertStats, getCurrentMembership, getCurrentUser, getPlatformResults } from '@/app/lib/client-data-helpers';
 import { validateProfileForm } from '@/app/lib/form-validators';
+import DataSourceBanner from '@/app/components/DataSourceBanner';
 
 const DEFAULT_USER_DATA = {
   nombre: '',
@@ -140,6 +141,9 @@ export default function PerfilPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      <div className="cv-workspace max-w-6xl pt-6">
+        <DataSourceBanner />
+      </div>
       {/* Hero Section */}
       <div className="border-b border-white/5 bg-gradient-to-b from-[#0B0B0B] to-[#030303] py-12 sm:py-16">
         <div className="cv-workspace max-w-6xl">

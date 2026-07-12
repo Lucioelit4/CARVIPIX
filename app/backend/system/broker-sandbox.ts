@@ -103,7 +103,10 @@ function nowIso(): string {
 }
 
 function keyMaterial(): Buffer {
-  const source = process.env.SANDBOX_VAULT_KEY ?? "carvipix-sandbox-vault-key-dev-only";
+  const source = process.env.SANDBOX_VAULT_KEY?.trim();
+  if (!source) {
+    throw new Error("CARVIPIX_STARTUP_BLOCKED: Missing required environment variable: SANDBOX_VAULT_KEY");
+  }
   return crypto.createHash("sha256").update(source).digest();
 }
 

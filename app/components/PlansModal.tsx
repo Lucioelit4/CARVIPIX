@@ -4,6 +4,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 
 import { CARVIPIXButton } from "@/app/design-system";
+import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
 
 type Props = {
   open: boolean;
@@ -19,22 +20,14 @@ const OFFICIAL_PLANS = [
     href: "/dashboard",
     cta: "Entrar con FREE",
   },
-  {
-    title: "BASIC",
-    price: "49 USD",
-    description: "Alertas manuales, pares limitados, historial limitado y bot limitado.",
-    features: ["Alertas manuales", "4 pares", "5 alertas/día", "1 bot"],
-    href: "/checkout?product=plan-basic",
-    cta: "Comprar BASIC",
-  },
-  {
-    title: "ADVANCED",
-    price: "149 USD",
-    description: "Mas pares, mas alertas, mas historial y bot completo.",
-    features: ["12 pares", "25 alertas/día", "3 bots", "Historial ampliado"],
-    href: "/checkout?product=plan-advanced",
-    cta: "Comprar ADVANCED",
-  },
+  ...COMMERCIAL_PRODUCTS.filter((item) => item.planCode === "basic" || item.planCode === "pro").map((item) => ({
+    title: item.planCode === "basic" ? "BASIC" : "PRO",
+    price: `${item.priceUsd?.toFixed(2)} USD / mes`,
+    description: item.description,
+    features: item.features,
+    href: item.planCode === "basic" ? "/checkout?product=plan-basic" : "/checkout?product=plan-advanced",
+    cta: item.planCode === "basic" ? "Comprar BASIC" : "Comprar PRO",
+  })),
 ];
 
 export default function PlansModal({ open, onClose }: Props) {
@@ -46,7 +39,7 @@ export default function PlansModal({ open, onClose }: Props) {
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-bold text-white">Planes oficiales CARVIPIX</h3>
-            <p className="mt-1 text-sm text-slate-400">Una sola implementación comercial: FREE, BASIC y ADVANCED.</p>
+            <p className="mt-1 text-sm text-slate-400">Modelo comercial vigente: FREE, BASIC y PRO.</p>
           </div>
           <button aria-label="Cerrar" onClick={onClose} className="cv-icon-btn">
             <X />
@@ -66,7 +59,7 @@ export default function PlansModal({ open, onClose }: Props) {
               </ul>
               <div className="mt-5">
                 <Link href={plan.href} onClick={onClose}>
-                  <CARVIPIXButton variant={plan.title === "ADVANCED" ? "premium" : "secondary"} size="md" fullWidth>
+                  <CARVIPIXButton variant={plan.title === "PRO" ? "premium" : "secondary"} size="md" fullWidth>
                     {plan.cta}
                   </CARVIPIXButton>
                 </Link>

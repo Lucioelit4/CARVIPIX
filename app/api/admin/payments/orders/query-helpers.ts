@@ -100,6 +100,7 @@ export type LocalUserLike = {
   email?: string;
   nombre?: string;
   apellido?: string;
+  excludeFromCommercialMetrics?: boolean;
 };
 
 export function filterLocalPayments(
@@ -122,6 +123,11 @@ export function filterLocalPayments(
 
   return payments
     .filter((payment) => {
+      const user = usersById.get(payment.userId);
+      if (user?.excludeFromCommercialMetrics) {
+        return false;
+      }
+
       if (filters.orderStatus && payment.status !== filters.orderStatus) {
         return false;
       }
@@ -135,7 +141,6 @@ export function filterLocalPayments(
       }
 
       if (filters.userQuery) {
-        const user = usersById.get(payment.userId);
         const haystack = `${payment.userId} ${user?.email ?? ""} ${user?.nombre ?? ""} ${user?.apellido ?? ""}`.toLowerCase();
         if (!haystack.includes(filters.userQuery.toLowerCase())) {
           return false;

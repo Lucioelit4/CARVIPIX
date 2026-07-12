@@ -9,6 +9,7 @@ import { AlertLimitGuard, PairAccessGuard } from "../commercial/access-control";
 import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
+import { realSignalLifecycleService, type RealSignalLifecycleRecord } from "./real-signal-lifecycle-service";
 
 function mapStateToStatus(state: string): ServiceAlertRecord["status"] {
   if (state === "activa" || state === "pendiente" || state === "active" || state === "pending") {
@@ -38,6 +39,50 @@ function mapConfidenceToPriority(confidence: number): ServiceAlertRecord["priori
   return "low";
 }
 
+function mapLifecycleStatusToAlertStatus(status: RealSignalLifecycleRecord["status"]): ServiceAlertRecord["status"] {
+  if (status === "CREATED" || status === "CONDITIONAL" || status === "ACTIVE") {
+    return "active";
+  }
+
+  if (status === "TP_HIT" || status === "SL_HIT") {
+    return "triggered";
+  }
+
+  return "resolved";
+}
+
+function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAlertRecord {
+  const direction = record.decision === "ENTER_SELL" ? "Venta" : record.decision === "ENTER_BUY" ? "Compra" : "Condicional";
+
+  return {
+    id: record.signalId,
+    type: "signal",
+    symbol: record.symbol,
+    title: `${direction} ${record.symbol}`,
+    description: `Señal real ${record.classification} (${record.analysisId})`,
+    priority: record.status === "ACTIVE" ? "high" : record.status === "CONDITIONAL" ? "medium" : "low",
+    status: mapLifecycleStatusToAlertStatus(record.status),
+    timestamp: record.signalTimestamp,
+    actionUrl: "/alertas",
+    data: {
+      entryPrice: record.entry ?? 0,
+      stopLossPrice: record.stopLoss ?? 0,
+      takeProfitPrice: record.takeProfit ?? 0,
+      riskRewardRatio:
+        record.entry && record.stopLoss && record.takeProfit
+          ? Number((Math.abs((record.takeProfit - record.entry) / (record.entry - record.stopLoss || 1))).toFixed(2))
+          : 0,
+      timeframe: String(record.metadata.analysisProfile ?? "N/A"),
+      direction,
+      confidence: Number(record.metadata.modelConfidence ?? 0),
+      approvalCount: 1,
+      signalStatus: record.status,
+      source: record.source,
+      dataOrigin: record.dataOrigin,
+    },
+  };
+}
+
 export class AlertsDomainService implements IAlertsDomainService {
   private readonly alertLimitGuard = new AlertLimitGuard();
 
@@ -46,6 +91,21 @@ export class AlertsDomainService implements IAlertsDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getAlerts(query?: { userId?: string; limit?: number }): Promise<ServiceAlertRecord[]> {
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+
+    const lifecycleSignals = await realSignalLifecycleService.getRecentSignals({
+      limit: query?.limit,
+      includeAuditOnly: false,
+    });
+    if (lifecycleSignals.length > 0) {
+      const mappedSignals = lifecycleSignals.map(mapLifecycleRecordToAlert);
+      this.eventBus.publish("alerts.read", {
+        count: mappedSignals.length,
+        queriedAt: new Date(),
+      });
+      return mappedSignals;
+    }
+
     const params: Array<string | number> = [];
     let where = "WHERE COALESCE(metadata->>'module', '') IN ('alerts', 'trading')";
 
@@ -112,6 +172,13 @@ export class AlertsDomainService implements IAlertsDomainService {
   }
 
   async getAlertStats(_userId?: string): Promise<ServiceAlertStats> {
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+
+    const lifecycleStats = await realSignalLifecycleService.getAlertStats();
+    if (lifecycleStats.total > 0) {
+      return lifecycleStats;
+    }
+
     const params: string[] = [];
     let where = "WHERE COALESCE(metadata->>'module', '') IN ('alerts', 'trading')";
 

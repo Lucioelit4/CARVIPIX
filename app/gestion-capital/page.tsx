@@ -7,6 +7,7 @@ import { ShieldCheck, FileCheck2, Landmark, Scale, X, CircleCheckBig, LockKeyhol
 import { getCapitalAccount, getCapitalMovements, getCapitalMonthlyReports } from '@/app/lib/client-data-helpers';
 import { CARVIPIXButton } from '@/app/design-system';
 import type { CapitalMovement, MonthlyReport } from '@/app/lib/modules/capital/types';
+import DataSourceBanner from '@/app/components/DataSourceBanner';
 
 export default function GestionCapitalPage() {
   const [showModal, setShowModal] = useState(false);
@@ -108,6 +109,9 @@ export default function GestionCapitalPage() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white">
+      <div className="max-w-7xl mx-auto px-4 pt-6 sm:px-6">
+        <DataSourceBanner />
+      </div>
       <div className="bg-[radial-gradient(circle_at_85%_-10%,rgba(212,175,55,0.14),transparent_36%),linear-gradient(180deg,#0B0B0B_0%,#030303_100%)]">
         <div className="max-w-7xl mx-auto px-4 pt-12 pb-16 sm:px-6 md:pt-16 md:pb-24">
           <motion.div

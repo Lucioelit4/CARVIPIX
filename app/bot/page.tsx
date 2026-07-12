@@ -18,6 +18,7 @@ import {
 import Link from "next/link";
 import { getBotInstances, getBotLicense } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors, spacing } from "@/app/design-system";
+import DataSourceBanner from "@/app/components/DataSourceBanner";
 
 type DashboardMetrics = {
   rendimiento30d: string;
@@ -204,6 +205,9 @@ export default function BotPage() {
         paddingBottom: spacing[32],
       }}
     >
+      <div className="cv-workspace max-w-7xl">
+        <DataSourceBanner />
+      </div>
       <div className="bot-page-shell">
         <section className="bot-hero" aria-label="Hero BOT CARVIPIX PRO">
           <div className="hero-background-grid" />

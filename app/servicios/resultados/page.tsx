@@ -21,6 +21,7 @@ import {
   Activity,
   AlertCircle,
 } from "lucide-react";
+import DataSourceBanner from "@/app/components/DataSourceBanner";
 
 const globalGrowthData = [
   { month: "Mes 1", value: 100 },
@@ -81,6 +82,9 @@ const topMembers = [
 export default function ResultadosComercialPage() {
   return (
     <main className="min-h-screen bg-[#030303] text-white">
+      <div className="max-w-6xl mx-auto px-4 pt-6">
+        <DataSourceBanner />
+      </div>
       {/* Hero Section */}
       <div className="bg-gradient-to-b from-[#0B0B0B] to-[#030303] border-b border-white/5 px-4 py-12 sm:py-16">
         <div className="max-w-6xl mx-auto">

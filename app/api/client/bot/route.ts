@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
       const nextStatus = String(body.status ?? "inactive") as "inactive" | "running" | "paused" | "error";
       const license = await ecosystemServices.bot.getLicense(auth.user.id);
       if (nextStatus === "running") {
+        new BotAccessGuard().assertCanProvisionBot(context, 0);
         new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
       }
       await backendDatabase.query(

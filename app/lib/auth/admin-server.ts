@@ -18,7 +18,11 @@ function base64UrlDecode(value: string): string {
 }
 
 function getAdminSessionSecret(): string {
-  return process.env.ADMIN_SESSION_SECRET?.trim() || process.env.ADMIN_ACCESS_CODE?.trim() || "admin-session-fallback-secret";
+  const secret = process.env.ADMIN_SECRET?.trim() || process.env.ADMIN_SESSION_SECRET?.trim();
+  if (!secret) {
+    throw new Error("CARVIPIX_STARTUP_BLOCKED: Missing required environment variable: ADMIN_SECRET");
+  }
+  return secret;
 }
 
 function buildFingerprint(request: NextRequest): string {

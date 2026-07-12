@@ -19,7 +19,9 @@ const PROTECTED_PREFIXES = [
   '/capital',
   '/fondeo',
   '/herramientas',
+  '/academia',
   '/perfil',
+  '/soporte',
   '/gestion-capital',
   '/gestion-de-capital',
 ];
@@ -45,10 +47,21 @@ export default function ProtectedDashboardGuard({ children }: ProtectedDashboard
         return;
       }
 
+      if (currentRole === 'cliente') {
+        setIsAllowed(true);
+        return;
+      }
+
       try {
         const response = await fetch('/api/auth/session', { cache: 'no-store' });
         if (!response.ok) {
-          setIsAllowed(false);
+          if (response.status === 401 || response.status === 403) {
+            setIsAllowed(false);
+            return;
+          }
+
+          // Avoid ejecting clients from modules due to transient backend/session noise.
+          setIsAllowed(true);
           return;
         }
 
@@ -59,7 +72,9 @@ export default function ProtectedDashboardGuard({ children }: ProtectedDashboard
           return;
         }
       } catch {
-        // No-op: denial fallback applied below.
+        // Network/transient failures should not force a client out of the protected UI.
+        setIsAllowed(true);
+        return;
       }
 
       setIsAllowed(false);

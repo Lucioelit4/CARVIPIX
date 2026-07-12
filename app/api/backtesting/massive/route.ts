@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   discoverHistoricalDatasetInventory,
   runMassiveBacktestingLab,
+  validateDatasetFile,
   type MassiveLabConfig,
 } from '../../../engine/backtesting/massiveLab';
 import type { Asset, Timeframe } from '../../../engine/types/marketData';
@@ -38,9 +39,71 @@ function sanitizeConfig(payload: Partial<MassiveLabConfig>): MassiveLabConfig {
   };
 }
 
+function isLocalDatasetModeEnabled(): boolean {
+  return (process.env.CARVIPIX_ENABLE_LOCAL_DATASETS || '').trim().toLowerCase() === 'true';
+}
+
+function buildExternalDependencyBlock() {
+  return {
+    ok: false,
+    error: 'BLOCKED_BY_EXTERNAL_DEPENDENCY: MARKET_DATA_PROVIDER',
+    code: 'MARKET_DATA_PROVIDER_NOT_CONFIGURED',
+  };
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const action = searchParams.get('action') || 'inventory';
+
+  if (!isLocalDatasetModeEnabled() && (action === 'validate-dataset' || action === 'gap-inventory' || action === 'inventory' || action === 'plan')) {
+    return NextResponse.json(buildExternalDependencyBlock(), { status: 503 });
+  }
+
+  if (action === 'validate-dataset') {
+    const filePath = searchParams.get('filePath') || undefined;
+    const inventory = discoverHistoricalDatasetInventory();
+    const target = filePath || inventory.files[0]?.path;
+
+    if (!target) {
+      return NextResponse.json({ ok: false, error: 'No se encontro dataset para validar' }, { status: 404 });
+    }
+
+    try {
+      const report = await validateDatasetFile(target);
+      return NextResponse.json({ ok: true, report, inventory });
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: error instanceof Error ? error.message : 'Error validando dataset' },
+        { status: 500 }
+      );
+    }
+  }
+
+  if (action === 'gap-inventory') {
+    const filePath = searchParams.get('filePath') || undefined;
+    const inventory = discoverHistoricalDatasetInventory();
+    const target = filePath || inventory.files[0]?.path;
+
+    if (!target) {
+      return NextResponse.json({ ok: false, error: 'No se encontro dataset para inventario de huecos' }, { status: 404 });
+    }
+
+    try {
+      const report = await validateDatasetFile(target);
+      return NextResponse.json({
+        ok: true,
+        filePath: report.filePath,
+        totalGapsOver1h: report.gapsOver1h.length,
+        gapsOver1h: report.gapsOver1h,
+        maxGapAnalysis: report.maxGapAnalysis,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { ok: false, error: error instanceof Error ? error.message : 'Error generando inventario de huecos' },
+        { status: 500 }
+      );
+    }
+  }
 
   if (action === 'inventory' || action === 'plan') {
     const inventory = discoverHistoricalDatasetInventory();
@@ -60,6 +123,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isLocalDatasetModeEnabled()) {
+    return NextResponse.json(buildExternalDependencyBlock(), { status: 503 });
+  }
+
   try {
     const body = (await request.json()) as Partial<MassiveLabConfig>;
     const config = sanitizeConfig(body);
@@ -82,6 +149,10 @@ export async function POST(request: NextRequest) {
  * /api/backtesting/massive?action=plan
  */
 export async function PATCH(request: NextRequest) {
+  if (!isLocalDatasetModeEnabled()) {
+    return NextResponse.json(buildExternalDependencyBlock(), { status: 503 });
+  }
+
   const searchParams = request.nextUrl.searchParams;
 
   const years = parseCsvList<string>(searchParams.get('years'));

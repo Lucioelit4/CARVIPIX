@@ -1,5 +1,6 @@
 import { DataProvider } from './dataProvider';
 import { getDemoDataSource } from './demoDataSource';
+import { MT5MarketDataAdapter } from './mt5MarketDataAdapter';
 import { TwelveDataProvider } from './twelveDataProvider';
 import {
   BrokerProviderId,
@@ -12,6 +13,10 @@ type ProviderFactoryFn = (config: ProviderSelectionConfig) => DataProvider;
 
 const providerFactories: Partial<Record<BrokerProviderId, ProviderFactoryFn>> = {
   demo: () => getDemoDataSource(),
+  mt5: (config) => new MT5MarketDataAdapter(config.assets, config.timeframes, {
+    provider: 'mt5',
+    ...config.realConfig,
+  }),
   twelve_data: (config) => {
     const provider = new TwelveDataProvider(config.assets, config.timeframes, {
       provider: 'twelve_data',
@@ -50,6 +55,12 @@ export async function createDataProvider(
 ): Promise<{ provider: DataProvider; resolution: ProviderResolution }> {
   const fallbackPolicy = config.fallbackPolicy ?? 'fallback-demo';
   const requested = config.preferred;
+
+  if (requested === 'mt5' && fallbackPolicy === 'fallback-demo') {
+    throw new Error(
+      "MT5 official mode requires strict fallback policy. Set CARVIPIX_DATA_FALLBACK=strict."
+    );
+  }
 
   const preferredFactory = resolveFactory(requested);
   const preferredProvider = preferredFactory(config);

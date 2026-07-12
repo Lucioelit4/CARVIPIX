@@ -108,12 +108,12 @@ export function buildProviderSelectionFromEnv(
   const preferred =
     (process.env.CARVIPIX_DATA_PROVIDER as ProviderSelectionConfig['preferred']) ||
     defaults?.preferred ||
-    'twelve_data';
+    'mt5';
 
   const fallbackPolicy =
     (process.env.CARVIPIX_DATA_FALLBACK as ProviderSelectionConfig['fallbackPolicy']) ||
     defaults?.fallbackPolicy ||
-    'fallback-demo';
+    'strict';
 
   const resolvedRealProvider = preferred === 'demo' || preferred === 'institutional_warehouse'
     ? 'custom'
@@ -126,7 +126,9 @@ export function buildProviderSelectionFromEnv(
     timeframes: defaults?.timeframes || ['1H', '45M', '5M'],
     realConfig: {
       provider: resolvedRealProvider,
-      apiKey: process.env.TWELVE_DATA_API_KEY,
+      apiKey: process.env.MT5_BRIDGE_API_TOKEN ?? process.env.TWELVE_DATA_API_KEY,
+      baseUrl: process.env.MT5_BRIDGE_BASE_URL,
+      timeout: process.env.MT5_BRIDGE_TIMEOUT_MS ? Number(process.env.MT5_BRIDGE_TIMEOUT_MS) : undefined,
       ...defaults?.realConfig,
     },
   };

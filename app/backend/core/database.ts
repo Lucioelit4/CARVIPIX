@@ -1,6 +1,13 @@
 import "server-only";
 
+import { randomBytes, scryptSync } from "crypto";
 import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg";
+import {
+  COMMERCIAL_PLAN_ENTITLEMENTS,
+  COMMERCIAL_PRODUCTS,
+  type CommercialSubscriptionPlan,
+  type CommercialProduct,
+} from "@/app/lib/commercial/business-model";
 
 type QueryParam = string | number | boolean | Date | null | string[];
 
@@ -72,6 +79,52 @@ function buildPlanPermissions(plan: string) {
         maxBots: 0,
       };
   }
+}
+
+function resolveProductType(product: CommercialProduct): string {
+  if (product.planCode === "basic") {
+    return "plan_pro";
+  }
+
+  if (product.planCode === "pro") {
+    return "plan_premium";
+  }
+
+  if (product.id === "bot-carvipix-license") {
+    return "bot";
+  }
+
+  if (product.id === "capital-gestionado") {
+    return "capital";
+  }
+
+  if (product.id === "cuenta-fondeada") {
+    return "fondeo";
+  }
+
+  if (product.id === "academia") {
+    return "support";
+  }
+
+  return "product";
+}
+
+function resolveSubscriptionPlanCode(plan: CommercialSubscriptionPlan): string {
+  if (plan === "advanced") {
+    return "advanced";
+  }
+
+  if (plan === "basic") {
+    return "basic";
+  }
+
+  return "free";
+}
+
+function hashAuthPassword(password: string): string {
+  const salt = randomBytes(16).toString("hex");
+  const key = scryptSync(password, salt, 64).toString("hex");
+  return `scrypt:${salt}:${key}`;
 }
 
 class BackendDatabase {
@@ -162,6 +215,9 @@ class BackendDatabase {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS telefono TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS pais TEXT;
       ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS user_type TEXT NOT NULL DEFAULT 'STANDARD';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS user_role TEXT NOT NULL DEFAULT 'CLIENT';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS exclude_from_commercial_metrics BOOLEAN NOT NULL DEFAULT false;
 
       CREATE TABLE IF NOT EXISTS memberships (
         user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -589,6 +645,31 @@ class BackendDatabase {
         metadata JSONB NOT NULL DEFAULT '{}'::jsonb
       );
 
+      CREATE TABLE IF NOT EXISTS real_signal_lifecycle (
+        signal_id TEXT PRIMARY KEY,
+        analysis_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        decision TEXT NOT NULL,
+        entry_price NUMERIC(18, 8),
+        stop_loss NUMERIC(18, 8),
+        take_profit NUMERIC(18, 8),
+        strategy_id TEXT NOT NULL,
+        signal_status TEXT NOT NULL,
+        source TEXT NOT NULL,
+        data_origin TEXT NOT NULL,
+        tracking_account TEXT NOT NULL,
+        classification TEXT NOT NULL DEFAULT 'REAL_SIGNAL_RESULT',
+        signal_timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        activated_at TIMESTAMPTZ,
+        closed_at TIMESTAMPTZ,
+        realized_pnl NUMERIC(14, 2) NOT NULL DEFAULT 0,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE (analysis_id),
+        CHECK (classification = 'REAL_SIGNAL_RESULT')
+      );
+
       CREATE TABLE IF NOT EXISTS alert_rules (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -841,6 +922,15 @@ class BackendDatabase {
       CREATE INDEX IF NOT EXISTS idx_operations_account_executed
         ON operations(account_id, executed_at DESC);
 
+      CREATE INDEX IF NOT EXISTS idx_real_signal_lifecycle_symbol_time
+        ON real_signal_lifecycle(symbol, signal_timestamp DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_real_signal_lifecycle_status
+        ON real_signal_lifecycle(signal_status, signal_timestamp DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_real_signal_lifecycle_decision
+        ON real_signal_lifecycle(decision, signal_timestamp DESC);
+
       CREATE INDEX IF NOT EXISTS idx_auth_sessions_user
         ON auth_sessions(user_id, expires_at DESC);
 
@@ -986,13 +1076,34 @@ class BackendDatabase {
     const defaultPlan = process.env.BACKEND_DEFAULT_USER_PLAN ?? "pro";
     const permissions = buildPlanPermissions(defaultPlan);
 
+    const founderEmail = String(process.env.FOUNDER_EMAIL ?? "fundador.uat@carvipix.local").trim().toLowerCase();
+    const founderFirstName = String(process.env.FOUNDER_FIRST_NAME ?? "Daniel").trim() || "Daniel";
+    const founderLastName = String(process.env.FOUNDER_LAST_NAME ?? "Ortega").trim() || "Ortega";
+    const founderPhone = String(process.env.FOUNDER_PHONE ?? "5512345678").trim() || "5512345678";
+    const founderCountry = String(process.env.FOUNDER_COUNTRY ?? "MX").trim() || "MX";
+    const founderId = String(process.env.FOUNDER_USER_ID ?? "founder-client").trim() || "founder-client";
+    const founderPasswordHash = String(process.env.FOUNDER_PASSWORD_HASH ?? "").trim();
+    const founderPassword = String(process.env.FOUNDER_PASSWORD ?? "").trim();
+    const resolvedFounderPasswordHash = founderPasswordHash || (founderPassword ? hashAuthPassword(founderPassword) : "");
+
     await this.pool.query(
       `
-      INSERT INTO users (id, email, nombre, apellido, plan, estado, verificado)
-      VALUES ($1, $2, $3, $4, $5, 'activo', true)
+      INSERT INTO users (id, email, nombre, apellido, plan, estado, verificado, user_type, user_role, exclude_from_commercial_metrics)
+      VALUES ($1, $2, $3, $4, $5, 'activo', true, 'STANDARD', 'CLIENT', false)
       ON CONFLICT (id) DO NOTHING
       `,
       [defaultUserId, "operaciones@carvipix.com", "Cuenta", "Operativa", defaultPlan]
+    );
+
+    await this.pool.query(
+      `
+      UPDATE users
+      SET user_type = COALESCE(NULLIF(user_type, ''), 'STANDARD'),
+          user_role = COALESCE(NULLIF(user_role, ''), 'CLIENT'),
+          exclude_from_commercial_metrics = COALESCE(exclude_from_commercial_metrics, false)
+      WHERE id = $1
+      `,
+      [defaultUserId]
     );
 
     await this.pool.query(
@@ -1019,22 +1130,175 @@ class BackendDatabase {
       INSERT INTO plan_entitlements (plan, alerts_enabled, bot_enabled, max_alerts_per_day, max_pairs, max_bots, history_limit, allowed_pairs, trading_windows_utc)
       VALUES
         ('free', false, false, 0, 1, 0, 3, '["EURUSD"]'::jsonb, '[]'::jsonb),
-        ('basic', true, true, 5, 4, 1, 25, '["EURUSD","GBPUSD","XAUUSD","USDJPY"]'::jsonb, '[{"startHourUtc":7,"endHourUtc":16},{"startHourUtc":18,"endHourUtc":21}]'::jsonb),
-        ('advanced', true, true, 25, 12, 3, 180, 'null'::jsonb, '[{"startHourUtc":0,"endHourUtc":23}]'::jsonb)
+        ('basic', true, true, 5, 2, 1, 25, '["XAUUSD","BTCUSD"]'::jsonb, '[{"startHourUtc":7,"endHourUtc":16},{"startHourUtc":18,"endHourUtc":21}]'::jsonb),
+        ('advanced', true, true, 14, 50, 3, 180, 'null'::jsonb, '[{"startHourUtc":0,"endHourUtc":23}]'::jsonb)
       ON CONFLICT (plan) DO NOTHING
     `);
 
+    for (const plan of ["free", "basic", "advanced"] as const) {
+      const entitlements = COMMERCIAL_PLAN_ENTITLEMENTS[plan];
+      await this.pool.query(
+        `
+        UPDATE plan_entitlements
+        SET alerts_enabled = $2,
+            bot_enabled = $3,
+            max_alerts_per_day = $4,
+            max_pairs = $5,
+            max_bots = $6,
+            history_limit = $7,
+            allowed_pairs = $8::jsonb,
+            trading_windows_utc = $9::jsonb
+        WHERE plan = $1
+        `,
+        [
+          plan,
+          entitlements.alertsEnabled,
+          entitlements.botEnabled,
+          entitlements.maxAlertsPerDay,
+          entitlements.maxPairs,
+          entitlements.maxBots,
+          entitlements.historyLimit,
+          JSON.stringify(entitlements.allowedPairs),
+          JSON.stringify(entitlements.tradingWindowsUtc),
+        ]
+      );
+    }
+
+    const seedProducts = COMMERCIAL_PRODUCTS.filter((product) => product.id !== "plan-free");
+
+    if (resolvedFounderPasswordHash) {
+      const founderInsert = await this.pool.query<{ id: string }>(
+        `
+        INSERT INTO users (
+          id,
+          email,
+          nombre,
+          apellido,
+          plan,
+          estado,
+          fecha_vencimiento,
+          verificado,
+          password_hash,
+          telefono,
+          pais,
+          user_type,
+          user_role,
+          exclude_from_commercial_metrics
+        )
+        VALUES (
+          $1,
+          $2,
+          $3,
+          $4,
+          'pro',
+          'activo',
+          NULL,
+          true,
+          $5,
+          $6,
+          $7,
+          'FOUNDER',
+          'CLIENT',
+          true
+        )
+        ON CONFLICT (email)
+        DO UPDATE SET
+          plan = 'pro',
+          estado = 'activo',
+          fecha_vencimiento = NULL,
+          verificado = true,
+          password_hash = COALESCE(NULLIF($5, ''), users.password_hash),
+          telefono = COALESCE(NULLIF($6, ''), users.telefono),
+          pais = COALESCE(NULLIF($7, ''), users.pais),
+          user_type = 'FOUNDER',
+          user_role = 'CLIENT',
+          exclude_from_commercial_metrics = true
+        RETURNING id
+        `,
+        [founderId, founderEmail, founderFirstName, founderLastName, resolvedFounderPasswordHash, founderPhone, founderCountry]
+      );
+
+      const founderUserId = founderInsert.rows[0]?.id;
+      if (founderUserId) {
+        await this.pool.query(
+          `
+          INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica)
+          VALUES ($1, 'pro', 'activo', NOW(), NULL, false)
+          ON CONFLICT (user_id)
+          DO UPDATE SET
+            plan = 'pro',
+            estado = 'activo',
+            fecha_fin = NULL,
+            renovacion_automatica = false
+          `,
+          [founderUserId]
+        );
+
+        await this.pool.query(
+          `
+          INSERT INTO bot_licenses (user_id, license_key, purchase_date, expiry_date, active, broker_connected)
+          VALUES ($1, $2, NOW(), NULL, true, NULL)
+          ON CONFLICT (user_id)
+          DO UPDATE SET
+            active = true,
+            expiry_date = NULL
+          `,
+          [founderUserId, `FOUNDER-BOT-LIFETIME-${founderUserId.toUpperCase()}`]
+        );
+      }
+    }
+
+    for (const product of seedProducts) {
+      const dbType = resolveProductType(product);
+      const oneTime = product.billingType === "one_time";
+      const price = Number(product.priceUsd ?? 0);
+
+      await this.pool.query(
+        `
+        INSERT INTO products (id, name, description, price, currency, type, one_time, features)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8::jsonb)
+        ON CONFLICT (id) DO NOTHING
+        `,
+        [
+          product.id,
+          product.name,
+          product.description,
+          price,
+          product.currency,
+          dbType,
+          oneTime,
+          JSON.stringify(product.features),
+        ]
+      );
+
+      await this.pool.query(
+        `
+        UPDATE products
+        SET name = $2,
+            description = $3,
+            price = $4,
+            currency = $5,
+            type = $6,
+            one_time = $7,
+            features = $8::jsonb
+        WHERE id = $1
+        `,
+        [
+          product.id,
+          product.name,
+          product.description,
+          price,
+          product.currency,
+          dbType,
+          oneTime,
+          JSON.stringify(product.features),
+        ]
+      );
+    }
+
     await this.pool.query(`
-      INSERT INTO products (id, name, description, price, currency, type, one_time, features)
-      VALUES
-        ('bot-carvipix-license', 'Bot CARVIPIX', 'Licencia de por vida para Bot CARVIPIX', 999, 'USD', 'bot', true, '["Ejecucion automatica de reglas","Control de riesgo","MT4/MT5 compatible","Actualizaciones futuras"]'::jsonb),
-        ('capital-gestionado', 'Gestion de Capital', 'Gestion institucional de capital', 10000, 'USD', 'capital', false, '["Capital objetivo 10K-1M USD","Reportes mensuales","Soporte dedicado"]'::jsonb),
-        ('cuenta-fondeada', 'Cuenta Fondeada', 'Servicio de gestion de fondeo', 5000, 'USD', 'fondeo', true, '["Capital objetivo 200K USD","30-45 dias","Credenciales al completar"]'::jsonb),
-        ('plan-basic', 'Plan BASIC', 'Plan mensual comercial con alertas manuales y bot limitado', 49, 'USD', 'plan_pro', false, '["Alertas manuales","4 pares habilitados","Historial limitado","1 bot"]'::jsonb),
-        ('plan-advanced', 'Plan ADVANCED', 'Plan mensual comercial con mas cobertura y bot completo', 149, 'USD', 'plan_premium', false, '["Mas alertas","12 pares habilitados","Historial extendido","3 bots"]'::jsonb),
-        ('plan-pro', 'Plan Pro', 'Plan mensual con acceso operativo', 49, 'USD', 'plan_pro', false, '["50 alertas","1 bot","Reportes"]'::jsonb),
-        ('plan-premium', 'Plan Premium', 'Plan mensual con acceso completo', 199, 'USD', 'plan_premium', false, '["Alertas ilimitadas","3 bots","Capital gestionado","IA Briefing"]'::jsonb)
-      ON CONFLICT (id) DO NOTHING
+      DELETE FROM products
+      WHERE id IN ('plan-pro', 'plan-premium');
     `);
   }
 }

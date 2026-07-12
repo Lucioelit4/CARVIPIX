@@ -43,9 +43,41 @@ export async function POST(request: NextRequest) {
     return auth.response;
   }
 
-  const body = (await request.json().catch(() => ({}))) as { action?: "submitRequest"; targetCapital?: number; riskProfile?: string; notes?: string };
-  if (body.action !== "submitRequest") {
+  const body = (await request.json().catch(() => ({}))) as {
+    action?: "submitRequest" | "requestEvaluation";
+    targetCapital?: number;
+    riskProfile?: string;
+    notes?: string;
+    requestId?: string;
+  };
+  if (body.action !== "submitRequest" && body.action !== "requestEvaluation") {
     return NextResponse.json({ error: "Accion no soportada" }, { status: 400 });
+  }
+
+  if (body.action === "requestEvaluation") {
+    const requestId = String(body.requestId ?? "").trim();
+    if (!requestId) {
+      return NextResponse.json({ error: "requestId invalido" }, { status: 400 });
+    }
+
+    await backendDatabase.query(
+      `
+      UPDATE capital_requests
+      SET status = 'contract_sent', updated_at = NOW()
+      WHERE id = $1 AND user_id = $2
+      `,
+      [requestId, auth.user.id]
+    );
+
+    await recordCommercialAuditEvent({
+      userId: auth.user.id,
+      actorType: "client",
+      action: "capital.request.evaluation",
+      resource: requestId,
+      result: "success",
+    });
+
+    return NextResponse.json({ ok: true, id: requestId }, { status: 200 });
   }
 
   const targetCapital = Number(body.targetCapital ?? 0);

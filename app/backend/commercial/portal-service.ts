@@ -10,7 +10,7 @@ import { resolveUserCommercialAccess } from "./plan-entitlements-store";
 
 export type ClientPortalSnapshot = {
   plan: {
-    officialPlan: "FREE" | "BASIC" | "ADVANCED";
+    officialPlan: "FREE" | "BASIC" | "PRO";
     membershipActive: boolean;
     renewalDate?: string;
     entitlements: {

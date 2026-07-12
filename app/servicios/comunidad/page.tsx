@@ -16,11 +16,11 @@ export default function ServiciosComunidadPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-                Comunidad privada
+                Canal CARVIPIX
               </p>
-              <h1 className="mt-6 text-4xl font-bold text-white">Chat interno de CARVIPIX</h1>
+              <h1 className="mt-6 text-4xl font-bold text-white">Canal interno de actualizaciones</h1>
               <p className="mt-4 max-w-2xl text-zinc-400">
-                Un espacio privado estilo Telegram/Discord para preguntas, seguimiento de ideas y convivencia moderada.
+                Espacio interno para avisos operativos, soporte y seguimiento de ideas con moderación.
               </p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6 text-right">
@@ -63,7 +63,7 @@ export default function ServiciosComunidadPage() {
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-zinc-500">Servicio comercial</p>
-              <p className="mt-2 text-zinc-300">La comunidad privada es ideal para seguimiento, preguntas y respuestas con un ambiente moderado.</p>
+              <p className="mt-2 text-zinc-300">Canal de soporte y seguimiento operativo con ambiente moderado.</p>
             </div>
             <Link
               href="/comunidad"

@@ -9,6 +9,7 @@ import { BotLimitGuard, PairAccessGuard } from "../commercial/access-control";
 import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
+import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -276,7 +277,9 @@ export class BotDomainService implements IBotDomainService {
   }
 
   async getSnapshot(userId?: string): Promise<ServiceBotSnapshot> {
-    const { rows } = await backendDatabase.query<{ running_instances: number; connected_accounts: number }>(
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const [{ rows }, lifecycleSignals] = await Promise.all([
+      backendDatabase.query<{ running_instances: number; connected_accounts: number }>(
       userId
         ? `
           SELECT
@@ -292,13 +295,23 @@ export class BotDomainService implements IBotDomainService {
           FROM bot_instances
           `,
       userId ? [userId] : []
-    );
+      ),
+      backendDatabase.query<{ active_signals: number }>(
+        `
+        SELECT COUNT(*)::int AS active_signals
+        FROM real_signal_lifecycle
+        WHERE signal_status IN ('CREATED', 'CONDITIONAL', 'ACTIVE')
+          AND decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
+        `
+      ),
+    ]);
 
     const snapshot = rows[0] ?? { running_instances: 0, connected_accounts: 0 };
+    const signals = lifecycleSignals.rows[0];
 
     return {
       generatedAt: new Date(),
-      runningInstances: Number(snapshot.running_instances ?? 0),
+      runningInstances: Math.max(Number(snapshot.running_instances ?? 0), Number(signals?.active_signals ?? 0)),
       connectedAccounts: Number(snapshot.connected_accounts ?? 0),
       health: "healthy",
     };

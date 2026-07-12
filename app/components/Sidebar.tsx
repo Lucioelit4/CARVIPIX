@@ -10,6 +10,7 @@ import AdminMenuItem from "./AdminMenuItem";
 import { clearAuthSession } from "@/app/lib/auth/session";
 
 const menuItems = [
+  { name: "Inicio", href: "/servicios" },
   { name: "Dashboard", href: "/dashboard" },
   { name: "Alertas en Vivo", href: "/alertas" },
   { name: "Resultados", href: "/resultados" },
@@ -17,7 +18,8 @@ const menuItems = [
   { name: "Comunidad", href: "/comunidad" },
   { name: "Bot CARVIPIX", href: "/bot" },
   { name: "Gestión de Capital", href: "/gestion-capital" },
-  { name: "Programa de Fondeo", href: "/fondeo" },
+  { name: "Cuentas Fondeadas (Próximamente)", href: "/fondeo" },
+  { name: "Academia", href: "/academia" },
   { name: "Herramientas", href: "/herramientas" },
   { name: "Perfil", href: "/perfil" },
   { name: "Soporte", href: "/soporte" },

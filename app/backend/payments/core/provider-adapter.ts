@@ -35,7 +35,10 @@ class PlaceholderAdapter implements ProviderPaymentAdapter {
 
   async verifyWebhookSignature(input: VerifyWebhookInput): Promise<boolean> {
     const runtimeConfig = await getPaymentRuntimeConfiguration(this.provider);
-    const webhookSecret = runtimeConfig.webhookMockSecret ?? "mock-webhook-secret";
+    const webhookSecret = runtimeConfig.webhookMockSecret;
+    if (!webhookSecret) {
+      throw new Error("CARVIPIX_STARTUP_BLOCKED: Missing required environment variable: PAYMENT_WEBHOOK_MOCK_SECRET");
+    }
 
     return verifyMockWebhookSignature({
       payloadRaw: input.payloadRaw,

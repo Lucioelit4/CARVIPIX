@@ -8,6 +8,7 @@ import { RealProviderConfig } from './realDataProvider';
 export type BrokerProviderId =
   | 'institutional_warehouse'
   | 'demo'
+  | 'mt5'
   | 'twelve_data'
   | 'oanda'
   | 'alpha-vantage'

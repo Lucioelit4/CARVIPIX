@@ -10,7 +10,6 @@ import {
   syncSandboxPositions,
   type SandboxProvider,
 } from "./broker-sandbox";
-import { evaluateRisk } from "../../engine/core/riskEngine";
 
 export type ExecutionOrderType =
   | "BUY"
@@ -344,19 +343,23 @@ function validateRisk(state: ExecutionRuntimeState, order: ExecutionOrder): { ok
   const takeProfitPrice = order.takeProfit
     ?? (order.type.startsWith("SELL") ? entryPrice - riskDistance * 1.5 : entryPrice + riskDistance * 1.5);
 
-  const riskEvaluation = evaluateRisk({
-    entryPrice,
-    stopLossPrice,
-    takeProfitPrice,
-    accountBalance: state.account.balance,
-    riskPercent: Math.min(100, state.riskLimits.maximumRiskPct),
-    pipValuePerLot: 1,
-  });
+  const riskPercent = Math.min(100, state.riskLimits.maximumRiskPct);
+  const stopDistance = Math.abs(entryPrice - stopLossPrice);
+  const targetDistance = Math.abs(takeProfitPrice - entryPrice);
 
-  if (!riskEvaluation.valid) {
+  const issues: string[] = [];
+  if (!Number.isFinite(entryPrice) || entryPrice <= 0) issues.push('entryPrice:INVALID');
+  if (!Number.isFinite(stopLossPrice) || stopLossPrice <= 0) issues.push('stopLossPrice:INVALID');
+  if (!Number.isFinite(takeProfitPrice) || takeProfitPrice <= 0) issues.push('takeProfitPrice:INVALID');
+  if (!Number.isFinite(state.account.balance) || state.account.balance <= 0) issues.push('accountBalance:INVALID');
+  if (!Number.isFinite(riskPercent) || riskPercent <= 0 || riskPercent > 100) issues.push('riskPercent:INVALID_RANGE');
+  if (!Number.isFinite(stopDistance) || stopDistance <= 0) issues.push('stopDistance:INVALID_RANGE');
+  if (!Number.isFinite(targetDistance) || targetDistance <= 0) issues.push('targetDistance:INVALID_RANGE');
+
+  if (issues.length > 0) {
     return {
       ok: false,
-      reason: `Risk engine rejected order: ${riskEvaluation.issues.map((issue) => `${issue.field}:${issue.code}`).join("|")}`,
+      reason: `Risk engine rejected order: ${issues.join('|')}`,
     };
   }
 

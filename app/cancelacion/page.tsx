@@ -40,7 +40,7 @@ export default function CancelacionPage() {
 
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">5. Efecto sobre accesos</h2>
-              <p>Una vez concluido el periodo pagado, los accesos premium, alertas, bots, comunidad privada u otros beneficios asociados al plan podrán ser limitados o desactivados.</p>
+              <p>Una vez concluido el periodo pagado, los accesos premium, alertas, bots y otros beneficios asociados al plan podrán ser limitados o desactivados.</p>
             </section>
           </div>
         </motion.div>

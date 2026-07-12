@@ -170,35 +170,50 @@ export async function findMembershipByUserId(userId: string): Promise<AuthMember
   };
 }
 
-export async function ensureInactiveMembership(userId: string): Promise<AuthMembershipSnapshot> {
+export async function ensureInactiveMembership(
+  userId: string,
+  options?: { preferredPlan?: string; userStatus?: string }
+): Promise<AuthMembershipSnapshot> {
+  const normalizedPlan = String(options?.preferredPlan ?? "demo").trim().toLowerCase();
+  const normalizedUserStatus = String(options?.userStatus ?? "").trim().toLowerCase();
+  const shouldForceActive =
+    normalizedUserStatus === "activo" &&
+    (normalizedPlan === "pro" || normalizedPlan === "premium" || normalizedPlan === "enterprise");
+
+  const fallbackPlan =
+    normalizedPlan === "pro" || normalizedPlan === "premium" || normalizedPlan === "enterprise" || normalizedPlan === "demo"
+      ? normalizedPlan
+      : "demo";
+
   if (!backendDatabase.enabled) {
     await seedDemoStore();
     const membership = await upsertLocalMembership({
       userId,
-      plan: "demo",
-      estado: "inactivo",
+      plan: fallbackPlan,
+      estado: shouldForceActive ? "activo" : "inactivo",
       fechaInicio: new Date().toISOString(),
-      fechaFin: null,
-      renovacionAutomatica: false,
+      fechaFin: shouldForceActive ? null : null,
+      renovacionAutomatica: shouldForceActive ? true : false,
     });
 
+    const active = membership.estado === "activo" && (!membership.fechaFin || new Date(membership.fechaFin) > new Date());
     return {
       plan: membership.plan,
-      estado: membership.estado,
+      estado: active ? "activo" : membership.estado,
       fechaInicio: new Date(membership.fechaInicio),
       fechaFin: membership.fechaFin ? new Date(membership.fechaFin) : undefined,
       renovacionAutomatica: membership.renovacionAutomatica,
-      active: false,
+      active,
     };
   }
 
   await backendDatabase.query(
     `
     INSERT INTO memberships (user_id, plan, estado, fecha_inicio, renovacion_automatica)
-    VALUES ($1, 'demo', 'inactivo', NOW(), false)
+    VALUES ($1, $2, $3, NOW(), $4)
     ON CONFLICT (user_id) DO NOTHING
     `,
-    [userId]
+    [userId, fallbackPlan, shouldForceActive ? "activo" : "inactivo", shouldForceActive]
   );
 
   const snapshot = await findMembershipByUserId(userId);

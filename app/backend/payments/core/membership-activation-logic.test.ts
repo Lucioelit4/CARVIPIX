@@ -9,7 +9,9 @@ import {
 } from "./membership-activation-logic";
 
 test("resolveMembershipPlanForProduct maps known plan products", () => {
-  assert.equal(resolveMembershipPlanForProduct({ productId: "plan-pro" }), "pro");
+  assert.equal(resolveMembershipPlanForProduct({ productId: "plan-basic" }), "pro");
+  assert.equal(resolveMembershipPlanForProduct({ productId: "plan-basic-monthly" }), "pro");
+  assert.equal(resolveMembershipPlanForProduct({ productId: "plan-pro-monthly" }), "premium");
   assert.equal(resolveMembershipPlanForProduct({ productId: "x", productType: "plan_premium" }), "premium");
   assert.equal(resolveMembershipPlanForProduct({ productId: "x", productType: "plan_enterprise" }), "enterprise");
   assert.equal(resolveMembershipPlanForProduct({ productId: "bot-carvipix-license", productType: "bot" }), null);

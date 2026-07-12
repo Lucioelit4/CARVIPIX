@@ -21,7 +21,7 @@ test("normalizeSubscriptionPlan maps legacy and official plans", () => {
   assert.equal(normalizeSubscriptionPlan("demo"), "free");
   assert.equal(normalizeSubscriptionPlan("free"), "free");
   assert.equal(normalizeSubscriptionPlan("basic"), "basic");
-  assert.equal(normalizeSubscriptionPlan("pro"), "basic");
+  assert.equal(normalizeSubscriptionPlan("pro"), "advanced");
   assert.equal(normalizeSubscriptionPlan("advanced"), "advanced");
   assert.equal(normalizeSubscriptionPlan("premium"), "advanced");
   assert.equal(normalizeSubscriptionPlan("enterprise"), "advanced");
@@ -31,7 +31,7 @@ test("resolveDefaultPlanEntitlements returns independent copies", () => {
   const entitlements = resolveDefaultPlanEntitlements("basic");
   entitlements.allowedPairs?.push("AUDUSD");
 
-  assert.deepEqual(DEFAULT_PLAN_ENTITLEMENTS.basic.allowedPairs, ["EURUSD", "GBPUSD", "XAUUSD", "USDJPY"]);
+  assert.deepEqual(DEFAULT_PLAN_ENTITLEMENTS.basic.allowedPairs, ["XAUUSD", "BTCUSD"]);
 });
 
 test("FeatureAccessGuard differentiates free vs paid access", () => {
@@ -53,8 +53,8 @@ test("AlertLimitGuard blocks when daily alerts are exhausted", () => {
   const context = { membershipActive: true, entitlements: resolveDefaultPlanEntitlements("advanced") };
   const withinWindow = new Date(Date.UTC(2026, 0, 1, 10, 0, 0));
 
-  assert.doesNotThrow(() => guard.assertCanCreateAlert(context, 24, withinWindow));
-  assert.throws(() => guard.assertCanCreateAlert(context, 25, withinWindow), (error: unknown) => {
+  assert.doesNotThrow(() => guard.assertCanCreateAlert(context, 13, withinWindow));
+  assert.throws(() => guard.assertCanCreateAlert(context, 14, withinWindow), (error: unknown) => {
     assert.ok(error instanceof CommercialAccessError);
     assert.equal(error.code, "ALERT_LIMIT_EXCEEDED");
     return true;
@@ -98,8 +98,8 @@ test("PairAccessGuard blocks forbidden pairs and pair-count overflow", () => {
   assert.doesNotThrow(() =>
     guard.assertPairAccess(basicContext, {
       feature: "alertas",
-      pair: "EURUSD",
-      existingPairs: ["GBPUSD", "XAUUSD"],
+      pair: "XAUUSD",
+      existingPairs: ["BTCUSD"],
     })
   );
 
@@ -107,8 +107,8 @@ test("PairAccessGuard blocks forbidden pairs and pair-count overflow", () => {
     () =>
       guard.assertPairAccess(basicContext, {
         feature: "alertas",
-        pair: "BTCUSD",
-        existingPairs: ["EURUSD"],
+        pair: "EURUSD",
+        existingPairs: ["XAUUSD"],
       }),
     (error: unknown) => {
       assert.ok(error instanceof CommercialAccessError);
@@ -122,7 +122,7 @@ test("PairAccessGuard blocks forbidden pairs and pair-count overflow", () => {
       guard.assertPairAccess(advancedContext, {
         feature: "bot",
         pair: "AUDUSD",
-        existingPairs: Array.from({ length: 12 }, (_, index) => `PAIR${index}`),
+        existingPairs: Array.from({ length: 50 }, (_, index) => `PAIR${index}`),
       }),
     (error: unknown) => {
       assert.ok(error instanceof CommercialAccessError);

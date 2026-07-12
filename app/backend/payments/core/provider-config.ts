@@ -124,12 +124,16 @@ function parseConfigJson(value: unknown): Record<string, unknown> {
 
 function fallbackRuntimeConfiguration(): PaymentRuntimeConfiguration {
   const environment = toEnvironment(process.env.PAYMENT_GATEWAY_ENV?.trim().toLowerCase());
+  const webhookMockSecret = process.env.PAYMENT_WEBHOOK_MOCK_SECRET?.trim();
+  if (!webhookMockSecret) {
+    throw new Error("CARVIPIX_STARTUP_BLOCKED: Missing required environment variable: PAYMENT_WEBHOOK_MOCK_SECRET");
+  }
   return {
     activeProvider: toProvider(process.env.PAYMENT_GATEWAY_PROVIDER?.trim().toLowerCase()),
     environment,
     subscriptionConfig: {},
     retryConfig: {},
-    webhookMockSecret: process.env.PAYMENT_WEBHOOK_MOCK_SECRET?.trim() || "mock-webhook-secret",
+    webhookMockSecret,
     connectionStatus: "unknown",
     mercadoPagoCredentials: getMercadoPagoCredentials(environment),
   };
@@ -219,7 +223,9 @@ export async function getPaymentRuntimeConfiguration(preferredProvider?: Provide
     webhookMockSecret:
       String(appConfig.get("payments.webhook.mock_secret") ?? "").trim() ||
       process.env.PAYMENT_WEBHOOK_MOCK_SECRET?.trim() ||
-      "mock-webhook-secret",
+      (() => {
+        throw new Error("CARVIPIX_STARTUP_BLOCKED: Missing required environment variable: PAYMENT_WEBHOOK_MOCK_SECRET");
+      })(),
     settlementAccount: settlement
       ? {
           id: settlement.id,

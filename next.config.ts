@@ -1,4 +1,11 @@
 import type { NextConfig } from "next";
+import { assertCriticalEnvironment, getRuntimeStage } from "./app/backend/core/config";
+
+// Block startup in strict runtime stages when critical env is missing.
+const runtimeStage = getRuntimeStage();
+if (runtimeStage === "shadow" || runtimeStage === "production") {
+  assertCriticalEnvironment();
+}
 
 const nextConfig: NextConfig = {
   output: "standalone",

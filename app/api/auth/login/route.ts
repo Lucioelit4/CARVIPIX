@@ -83,7 +83,12 @@ export async function POST(request: NextRequest) {
     }
 
     const { token, expiresAt } = await createSession(user.id);
-    const membership = (await findMembershipByUserId(user.id)) ?? (await ensureInactiveMembership(user.id));
+    const membership =
+      (await findMembershipByUserId(user.id)) ??
+      (await ensureInactiveMembership(user.id, {
+        preferredPlan: user.plan,
+        userStatus: user.estado,
+      }));
     const response = NextResponse.json({
       success: true,
       ok: true,
