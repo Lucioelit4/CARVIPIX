@@ -58,6 +58,28 @@ export type PasswordChangedEmailInput = {
   recipientName: string;
 };
 
+export type IdentityVerificationReceivedEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+};
+
+export type IdentityVerificationApprovedEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+};
+
+export type IdentityVerificationRejectedEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+  reason: string;
+};
+
+export type IdentityVerificationNewDocumentEmailInput = {
+  recipientEmail: string;
+  recipientName: string;
+  reason: string;
+};
+
 export type PromotionCampaignEmailInput = {
   recipientEmail: string;
   recipientName: string;

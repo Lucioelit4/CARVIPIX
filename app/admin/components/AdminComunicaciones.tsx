@@ -58,7 +58,7 @@ export default function AdminComunicaciones() {
   const [message, setMessage] = useState('');
 
   const [testEmail, setTestEmail] = useState('');
-  const [testTemplate, setTestTemplate] = useState<'welcome' | 'password-reset' | 'promotion'>('welcome');
+  const [testTemplate, setTestTemplate] = useState<'welcome' | 'password-reset' | 'promotion' | 'identity-received' | 'identity-approved' | 'identity-rejected' | 'identity-new-document'>('welcome');
   const [retryOutboxId, setRetryOutboxId] = useState('');
   const [busyAction, setBusyAction] = useState<'test' | 'retry' | null>(null);
 
@@ -215,12 +215,16 @@ export default function AdminComunicaciones() {
             />
             <select
               value={testTemplate}
-              onChange={(event) => setTestTemplate(event.target.value as 'welcome' | 'password-reset' | 'promotion')}
+              onChange={(event) => setTestTemplate(event.target.value as 'welcome' | 'password-reset' | 'promotion' | 'identity-received' | 'identity-approved' | 'identity-rejected' | 'identity-new-document')}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm"
             >
               <option value="welcome">Bienvenida / Verificacion</option>
               <option value="password-reset">Recuperacion de contrasena</option>
               <option value="promotion">Promocion comercial</option>
+              <option value="identity-received">Identidad recibida</option>
+              <option value="identity-approved">Identidad aprobada</option>
+              <option value="identity-rejected">Identidad rechazada</option>
+              <option value="identity-new-document">Solicitud nuevo documento</option>
             </select>
             <CARVIPIXButton type="submit" variant="premium" fullWidth isLoading={busyAction === 'test'} leftIcon={<Send className="w-4 h-4" />}>
               Enviar prueba

@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       action?: "retryOutboxEmail" | "sendTestEmail";
       outboxEventId?: string;
       recipientEmail?: string;
-      template?: "welcome" | "password-reset" | "promotion";
+      template?: "welcome" | "password-reset" | "promotion" | "identity-received" | "identity-approved" | "identity-rejected" | "identity-new-document";
     };
 
     if (body.action === "retryOutboxEmail") {
@@ -188,6 +188,40 @@ export async function POST(request: NextRequest) {
           unsubscribeUrl: `${getEmailNotificationConfig().appPublicUrl.replace(/\/$/, "")}/perfil/notificaciones`,
         });
 
+        return NextResponse.json({ ok: true, result }, { status: 200 });
+      }
+
+      if (template === "identity-received") {
+        const result = await emailNotificationService.sendIdentityVerificationReceived({
+          recipientEmail,
+          recipientName: "Admin QA",
+        });
+        return NextResponse.json({ ok: true, result }, { status: 200 });
+      }
+
+      if (template === "identity-approved") {
+        const result = await emailNotificationService.sendIdentityVerificationApproved({
+          recipientEmail,
+          recipientName: "Admin QA",
+        });
+        return NextResponse.json({ ok: true, result }, { status: 200 });
+      }
+
+      if (template === "identity-rejected") {
+        const result = await emailNotificationService.sendIdentityVerificationRejected({
+          recipientEmail,
+          recipientName: "Admin QA",
+          reason: "Documento ilegible",
+        });
+        return NextResponse.json({ ok: true, result }, { status: 200 });
+      }
+
+      if (template === "identity-new-document") {
+        const result = await emailNotificationService.sendIdentityVerificationNewDocumentRequest({
+          recipientEmail,
+          recipientName: "Admin QA",
+          reason: "Necesitamos una nueva fotografia",
+        });
         return NextResponse.json({ ok: true, result }, { status: 200 });
       }
 

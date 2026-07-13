@@ -1,4 +1,8 @@
 import type {
+  IdentityVerificationApprovedEmailInput,
+  IdentityVerificationNewDocumentEmailInput,
+  IdentityVerificationReceivedEmailInput,
+  IdentityVerificationRejectedEmailInput,
   PasswordChangedEmailInput,
   PasswordResetEmailInput,
   PaymentTransactionalEmailInput,
@@ -268,6 +272,134 @@ export function buildPasswordChangedEmailTemplate(
     html: rendered.html,
     text: rendered.text,
   };
+}
+
+function renderIdentityVerificationTemplate(input: {
+  headline: string;
+  preheader: string;
+  bodyLines: string[];
+  recipientName: string;
+  supportEmail: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  legalNote: string;
+}) {
+  return renderBrandLayout({
+    preheader: input.preheader,
+    headline: input.headline,
+    bodyHtml: [
+      `<p>Hola ${escapeHtml(input.recipientName)},</p>`,
+      ...input.bodyLines.map((line) => `<p>${escapeHtml(line)}</p>`),
+      `<p>Soporte: ${escapeHtml(input.supportEmail)}</p>`,
+    ].join(""),
+    bodyText: [
+      `Hola ${input.recipientName},`,
+      ...input.bodyLines,
+      `Soporte: ${input.supportEmail}`,
+    ].join("\n"),
+    ctaLabel: input.ctaLabel,
+    ctaUrl: input.ctaUrl,
+    supportEmail: input.supportEmail,
+    legalNote: input.legalNote,
+  });
+}
+
+export function buildIdentityVerificationReceivedEmailTemplate(
+  input: IdentityVerificationReceivedEmailInput,
+  options: {
+    appPublicUrl: string;
+    supportEmail: string;
+  }
+): RenderedEmailTemplate {
+  const rendered = renderIdentityVerificationTemplate({
+    headline: "Solicitud recibida",
+    preheader: "Tus documentos estan en revision.",
+    bodyLines: [
+      "Recibimos tus documentos de identidad y ya iniciamos la revision.",
+      "Te notificaremos cuando exista una resolucion.",
+    ],
+    recipientName: input.recipientName,
+    supportEmail: options.supportEmail,
+    ctaLabel: "Abrir perfil",
+    ctaUrl: `${options.appPublicUrl.replace(/\/$/, "")}/perfil`,
+    legalNote: "Correo transaccional de verificacion de identidad.",
+  });
+
+  return { subject: "CARVIPIX: recibimos tu solicitud de verificacion", html: rendered.html, text: rendered.text };
+}
+
+export function buildIdentityVerificationApprovedEmailTemplate(
+  input: IdentityVerificationApprovedEmailInput,
+  options: {
+    appPublicUrl: string;
+    supportEmail: string;
+  }
+): RenderedEmailTemplate {
+  const rendered = renderIdentityVerificationTemplate({
+    headline: "Verificacion aprobada",
+    preheader: "Ya puedes usar los servicios que la requieren.",
+    bodyLines: [
+      "Tu verificacion fue aprobada correctamente.",
+      "Los servicios que requieren identidad validada ya pueden activarse segun tu acceso.",
+    ],
+    recipientName: input.recipientName,
+    supportEmail: options.supportEmail,
+    ctaLabel: "Ir al dashboard",
+    ctaUrl: `${options.appPublicUrl.replace(/\/$/, "")}/dashboard`,
+    legalNote: "Correo transaccional de cumplimiento.",
+  });
+
+  return { subject: "CARVIPIX: tu verificacion fue aprobada", html: rendered.html, text: rendered.text };
+}
+
+export function buildIdentityVerificationRejectedEmailTemplate(
+  input: IdentityVerificationRejectedEmailInput,
+  options: {
+    appPublicUrl: string;
+    supportEmail: string;
+  }
+): RenderedEmailTemplate {
+  const rendered = renderIdentityVerificationTemplate({
+    headline: "Verificacion rechazada",
+    preheader: "Necesitamos que ajustes tu documento.",
+    bodyLines: [
+      "Tu solicitud fue rechazada.",
+      `Motivo: ${input.reason}`,
+      "Revisa la legibilidad, vigencia y completitud de ambos lados del documento.",
+    ],
+    recipientName: input.recipientName,
+    supportEmail: options.supportEmail,
+    ctaLabel: "Reenviar documentos",
+    ctaUrl: `${options.appPublicUrl.replace(/\/$/, "")}/perfil`,
+    legalNote: "Correo transaccional de cumplimiento.",
+  });
+
+  return { subject: "CARVIPIX: tu verificacion fue rechazada", html: rendered.html, text: rendered.text };
+}
+
+export function buildIdentityVerificationNewDocumentEmailTemplate(
+  input: IdentityVerificationNewDocumentEmailInput,
+  options: {
+    appPublicUrl: string;
+    supportEmail: string;
+  }
+): RenderedEmailTemplate {
+  const rendered = renderIdentityVerificationTemplate({
+    headline: "Solicitud de nuevo documento",
+    preheader: "Necesitamos una fotografia mas clara.",
+    bodyLines: [
+      "Necesitamos una nueva fotografia de tu documento para continuar con la verificacion.",
+      `Motivo: ${input.reason}`,
+      "Puedes reemplazar el archivo desde tu perfil mientras el estado lo permita.",
+    ],
+    recipientName: input.recipientName,
+    supportEmail: options.supportEmail,
+    ctaLabel: "Actualizar documentos",
+    ctaUrl: `${options.appPublicUrl.replace(/\/$/, "")}/perfil`,
+    legalNote: "Correo transaccional de cumplimiento.",
+  });
+
+  return { subject: "CARVIPIX: necesitamos nueva fotografia de tu documento", html: rendered.html, text: rendered.text };
 }
 
 function escapeHtml(value: string): string {

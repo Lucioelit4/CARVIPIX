@@ -23,6 +23,10 @@ export type CommunicationEmailType =
   | "support-ticket-created"
   | "support-ticket-replied"
   | "support-ticket-closed"
+  | "identity-verification-received"
+  | "identity-verification-approved"
+  | "identity-verification-rejected"
+  | "identity-verification-new-document"
   | "marketing-promotion"
   | "marketing-new-plans"
   | "marketing-new-features"
@@ -254,6 +258,45 @@ export const COMMUNICATION_EMAIL_COPY_CATALOG: CommunicationEmailCopy[] = [
     headline: "Ticket cerrado",
     body: "Marcamos tu caso como resuelto. Si necesitas mas ayuda, puedes crear uno nuevo.",
     legalNote: "Gracias por contactarnos.",
+  },
+  {
+    type: "identity-verification-received",
+    category: "support",
+    subject: "Recibimos tu solicitud de verificacion",
+    preheader: "Tus documentos estan en revision.",
+    headline: "Solicitud recibida",
+    body: "Recibimos tus documentos de verificacion de identidad y ya estan en revision por parte del equipo autorizado.",
+    legalNote: "No respondas con datos sensibles por correo.",
+  },
+  {
+    type: "identity-verification-approved",
+    category: "support",
+    subject: "Tu verificacion fue aprobada",
+    preheader: "Ya puedes usar los servicios que la requieren.",
+    headline: "Verificacion aprobada",
+    body: "Tu identidad fue aprobada correctamente. Los servicios que requieren verificacion ya pueden quedar habilitados segun tu plan.",
+    ctaLabel: "Ir al perfil",
+    legalNote: "Notificacion automatica de cumplimiento.",
+  },
+  {
+    type: "identity-verification-rejected",
+    category: "support",
+    subject: "Tu verificacion fue rechazada",
+    preheader: "Debes revisar el motivo indicado.",
+    headline: "Verificacion rechazada",
+    body: "Tu solicitud fue rechazada. Revisa el motivo y vuelve a cargar documentos legibles y vigentes.",
+    ctaLabel: "Reintentar carga",
+    legalNote: "La validacion puede repetirse tras corregir los documentos.",
+  },
+  {
+    type: "identity-verification-new-document",
+    category: "support",
+    subject: "Necesitamos nueva fotografia de tu documento",
+    preheader: "Debes reenviar una version mas clara.",
+    headline: "Solicitud de nuevo documento",
+    body: "Necesitamos una nueva fotografia de tu documento para continuar con la verificacion.",
+    ctaLabel: "Actualizar documentos",
+    legalNote: "Solo usamos el material para verificacion.",
   },
   {
     type: "marketing-promotion",

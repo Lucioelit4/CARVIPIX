@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
       actorType: "admin",
       action: "campaign.promotion.send",
       resource: campaignName,
-      result: failed > 0 ? "partial" : "success",
+      result: failed > 0 ? "error" : "success",
       metadata: { recipients: sendResults.length, sent, failed },
     });
 

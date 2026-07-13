@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, Lock, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3, AlertCircle, RotateCcw } from 'lucide-react';
+import Image from 'next/image';
+import { Camera, Bell, Award, Shield, CreditCard, Edit2, Save, X, Crown, Users, Star, CheckCircle2, Clock, BarChart3, AlertCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { getAlertStats, getCurrentMembership, getCurrentUser, getPlatformResults } from '@/app/lib/client-data-helpers';
 import { validateProfileForm } from '@/app/lib/form-validators';
 import DataSourceBanner from '@/app/components/DataSourceBanner';
 import BillingCenter from '@/app/perfil/components/BillingCenter';
+import IdentityVerificationCenter from '@/app/perfil/components/IdentityVerificationCenter';
 
 const DEFAULT_USER_DATA = {
   nombre: '',
@@ -156,6 +158,15 @@ export default function PerfilPage() {
           >
             Mi cuenta CARVIPIX
           </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mb-10"
+          >
+            <IdentityVerificationCenter />
+          </motion.div>
         </div>
       </div>
 
@@ -173,7 +184,7 @@ export default function PerfilPage() {
             <div className="relative flex-shrink-0">
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#8B7500] flex items-center justify-center overflow-hidden border-4 border-[#D4AF37]">
                 {profilePhoto ? (
-                  <img src={profilePhoto} alt="Perfil" className="w-full h-full object-cover" />
+                  <Image src={profilePhoto} alt="Perfil" fill unoptimized className="object-cover" />
                 ) : (
                   <span className="text-5xl font-bold text-[#030303]">AB</span>
                 )}

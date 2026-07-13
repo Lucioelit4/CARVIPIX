@@ -3,6 +3,10 @@ import "server-only";
 import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { getEmailNotificationConfig, hasValidSmtpCredentials } from "./config";
 import {
+  buildIdentityVerificationApprovedEmailTemplate,
+  buildIdentityVerificationNewDocumentEmailTemplate,
+  buildIdentityVerificationReceivedEmailTemplate,
+  buildIdentityVerificationRejectedEmailTemplate,
   buildPasswordChangedEmailTemplate,
   buildPasswordResetEmailTemplate,
   buildPaymentTransactionalEmailTemplate,
@@ -16,6 +20,10 @@ import type {
   EmailMessage,
   EmailSendResult,
   EmailSenderRole,
+  IdentityVerificationApprovedEmailInput,
+  IdentityVerificationNewDocumentEmailInput,
+  IdentityVerificationReceivedEmailInput,
+  IdentityVerificationRejectedEmailInput,
   PasswordChangedEmailInput,
   PasswordResetEmailInput,
   PaymentTransactionalEmailInput,
@@ -183,6 +191,74 @@ export class EmailNotificationService {
       headers: {
         "X-CARVIPIX-Template": "security-password-changed",
       },
+    });
+  }
+
+  async sendIdentityVerificationReceived(input: IdentityVerificationReceivedEmailInput): Promise<EmailSendResult> {
+    const rendered = buildIdentityVerificationReceivedEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "noreply",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: { "X-CARVIPIX-Template": "identity-verification-received" },
+    });
+  }
+
+  async sendIdentityVerificationApproved(input: IdentityVerificationApprovedEmailInput): Promise<EmailSendResult> {
+    const rendered = buildIdentityVerificationApprovedEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "noreply",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: { "X-CARVIPIX-Template": "identity-verification-approved" },
+    });
+  }
+
+  async sendIdentityVerificationRejected(input: IdentityVerificationRejectedEmailInput): Promise<EmailSendResult> {
+    const rendered = buildIdentityVerificationRejectedEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "soporte",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: { "X-CARVIPIX-Template": "identity-verification-rejected" },
+    });
+  }
+
+  async sendIdentityVerificationNewDocumentRequest(input: IdentityVerificationNewDocumentEmailInput): Promise<EmailSendResult> {
+    const rendered = buildIdentityVerificationNewDocumentEmailTemplate(input, {
+      appPublicUrl: this.config.appPublicUrl,
+      supportEmail: this.config.addresses.soporte,
+    });
+
+    return this.sendEmail({
+      senderRole: "soporte",
+      to: { email: input.recipientEmail, name: input.recipientName },
+      replyTo: { email: this.config.addresses.soporte, name: `${this.config.fromName} Soporte` },
+      subject: rendered.subject,
+      html: rendered.html,
+      text: rendered.text,
+      headers: { "X-CARVIPIX-Template": "identity-verification-new-document" },
     });
   }
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileCheck, Film, History, Save, ShieldAlert } from 'lucide-react';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
+import AdminIdentityVerification from './AdminIdentityVerification';
 
 type LegalDocument = {
   slug: string;
@@ -317,6 +318,8 @@ export default function AdminCumplimiento() {
           )}
         </div>
       </CARVIPIXCard>
+
+      <AdminIdentityVerification />
     </div>
   );
 }
