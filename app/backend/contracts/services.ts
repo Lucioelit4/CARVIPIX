@@ -37,6 +37,7 @@ import type {
 export interface AlertsQuery {
   userId?: string;
   limit?: number;
+  includeAuditOnly?: boolean;
 }
 
 export interface IAlertsDomainService {

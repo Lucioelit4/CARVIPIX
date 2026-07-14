@@ -1,0 +1,11 @@
+{
+  "proposalId": "proposal",
+  "datasetId": "cert-dataset-json-1",
+  "checksum": "sha256:json-certified-dataset",
+  "schemaVersion": "1.0.0",
+  "source": "RESEARCH_LAB",
+  "status": "CERTIFIED",
+  "manualReviewRequired": true,
+  "experimentId": "exp-e2e-release",
+  "createdAt": 1720000001000
+}

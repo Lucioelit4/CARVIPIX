@@ -422,7 +422,7 @@ export class IntelligenceDirector {
     }
 
     const normalized = checksum.trim();
-    return /^[a-f0-9]{6,}$/i.test(normalized);
+    return normalized.length >= 6 && !/\s/.test(normalized);
   }
 
   private describeInvalidDataset(dataset: CertifiedDatasetEnvelope): string {

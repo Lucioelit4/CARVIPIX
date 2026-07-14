@@ -36,7 +36,7 @@ test("prompt builder keeps deterministic order and cache metadata", () => {
     "2. Mensaje Operativo del Analista",
     "3. Estrategias autorizadas",
     "4. Expediente numérico",
-    "5. Contexto visual (H1 + M45 + M5)",
+    "5. Contexto visual (H1 + M30 + M5)",
     "6. Noticias y contexto económico",
     "7. Sesiones de mercado",
     "8. Restricciones objetivas",

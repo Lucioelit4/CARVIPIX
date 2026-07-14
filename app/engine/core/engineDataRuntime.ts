@@ -123,7 +123,7 @@ export function buildProviderSelectionFromEnv(
     preferred,
     fallbackPolicy,
     assets: defaults?.assets || ['XAUUSD', 'EURUSD', 'GBPUSD', 'BTCUSD'],
-    timeframes: defaults?.timeframes || ['1H', '45M', '5M'],
+    timeframes: defaults?.timeframes || ['1H', '30M', '5M'],
     realConfig: {
       provider: resolvedRealProvider,
       apiKey: process.env.MT5_BRIDGE_API_TOKEN ?? process.env.TWELVE_DATA_API_KEY,

@@ -15,7 +15,6 @@ import type {
   ServiceMasterSignal,
 } from "../contracts";
 import { backendDatabase } from "../core/database";
-import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 export class FundingDomainService implements IFundingDomainService {
@@ -72,36 +71,37 @@ export class DashboardDomainService implements IDashboardDomainService {
 
 export class MasterSignalDomainService implements IMasterSignalDomainService {
   async getLatestSignal(): Promise<ServiceMasterSignal | null> {
-    const latest = masterSignalStore.getLatest();
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const latest = await realSignalLifecycleService.getLatestSignal();
     if (!latest) {
       return null;
     }
 
-    const signal = latest.signal;
     return {
-      signalId: signal.signal_id,
-      analysisId: signal.analysis_id,
-      symbol: signal.symbol,
-      analysisProfile: signal.analysis_profile,
-      selectedStrategyId: signal.selected_strategy_id,
-      direction: signal.direction,
-      entry: signal.entry,
-      stopLoss: signal.stop_loss,
-      takeProfit: signal.take_profit,
-      grossRR: signal.calculated_gross_rr,
-      netRR: signal.calculated_net_rr,
-      expiresAt: signal.expires_at,
-      status: signal.status,
-      humanReviewRequired: signal.human_review_required,
-      autoExecutionEligible: signal.auto_execution_eligible,
-      createdAt: latest.created_at,
+      signalId: latest.signalId,
+      analysisId: latest.analysisId,
+      symbol: latest.symbol,
+      analysisProfile: String(latest.metadata.analysisProfile ?? "N/A"),
+      selectedStrategyId: latest.strategyId,
+      direction: latest.decision === "ENTER_BUY" ? "BUY" : latest.decision === "ENTER_SELL" ? "SELL" : "NONE",
+      entry: latest.entry,
+      stopLoss: latest.stopLoss,
+      takeProfit: latest.takeProfit,
+      grossRR: typeof latest.metadata.grossRR === "number" ? latest.metadata.grossRR : null,
+      netRR: typeof latest.metadata.netRR === "number" ? latest.metadata.netRR : null,
+      expiresAt: typeof latest.metadata.expiresAt === "string" ? latest.metadata.expiresAt : null,
+      status: "SHADOW",
+      humanReviewRequired: latest.metadata.humanReviewRequired !== false,
+      autoExecutionEligible: latest.metadata.autoExecutionEligible === true,
+      createdAt: latest.signalTimestamp.toISOString(),
     };
   }
 }
 
 export class AdminDomainService implements IAdminDomainService {
   async getSnapshot(): Promise<ServiceAdminSnapshot> {
-    const latestSignal = masterSignalStore.getLatest();
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const latestSignal = await realSignalLifecycleService.getLatestSignal();
     const [activeUsersResult, incidentsResult] = await Promise.all([
       backendDatabase.query<{ active_users: number }>(`SELECT COUNT(*) AS active_users FROM users WHERE estado = 'activo' AND COALESCE(exclude_from_commercial_metrics, false) = false`),
       backendDatabase.query<{ pending_incidents: number }>(
@@ -116,16 +116,16 @@ export class AdminDomainService implements IAdminDomainService {
       pendingIncidents: Number(incidentsResult.rows[0]?.pending_incidents ?? 0),
       masterSignal: latestSignal
         ? {
-            signalId: latestSignal.signal_id,
-            analysisId: latestSignal.analysis_id,
-            decision: latestSignal.signal.direction,
-            strategyId: latestSignal.signal.selected_strategy_id,
-            status: latestSignal.signal.status,
+            signalId: latestSignal.signalId,
+            analysisId: latestSignal.analysisId,
+            decision: latestSignal.decision === "ENTER_BUY" ? "BUY" : latestSignal.decision === "ENTER_SELL" ? "SELL" : "NONE",
+            strategyId: latestSignal.strategyId,
+            status: "SHADOW",
             source: "CADP_V2",
             validationStatus: "VALIDATED",
-            mode: latestSignal.signal.status === "SHADOW" ? "SHADOW" : "PRODUCTION",
-            humanReviewRequired: latestSignal.signal.human_review_required,
-            autoExecutionEligible: latestSignal.signal.auto_execution_eligible,
+            mode: "SHADOW",
+            humanReviewRequired: latestSignal.metadata.humanReviewRequired !== false,
+            autoExecutionEligible: latestSignal.metadata.autoExecutionEligible === true,
           }
         : null,
     };

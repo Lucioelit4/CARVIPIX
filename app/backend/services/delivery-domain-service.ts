@@ -4,7 +4,7 @@ import type {
   ServiceDeliveryReference,
 } from "../contracts";
 import type { QueueLayer } from "../core/queue";
-import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 function toDeliveryJob(job: {
   id: string;
@@ -43,14 +43,15 @@ export class DeliveryDomainService implements IDeliveryDomainService {
   constructor(private readonly queueLayer: QueueLayer) {}
 
   async enqueueFromLatestSignal(signalVersion: string): Promise<ServiceDeliveryJob | null> {
-    const latest = masterSignalStore.getLatest();
+    await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const latest = await realSignalLifecycleService.getLatestSignal();
     if (!latest) {
       return null;
     }
 
     return this.enqueueReference({
-      signalId: latest.signal_id,
-      analysisId: latest.analysis_id,
+      signalId: latest.signalId,
+      analysisId: latest.analysisId,
       signalVersion,
     });
   }

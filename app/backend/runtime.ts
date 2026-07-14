@@ -36,6 +36,8 @@ import {
   MasterSignalDomainService,
   StatsDomainService,
 } from "./services/system-domain-services";
+import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { realSignalLifecycleService } from "./services/real-signal-lifecycle-service";
 
 function instrumentService<TService extends object>(
   serviceName: string,
@@ -153,6 +155,10 @@ const executionEngine = new CarvipixExecutionEngine(
     transitions: executionEngineTransitions,
   })
 );
+
+masterSignalStore.setPublishHandler(async (record) => {
+  await realSignalLifecycleService.upsertFromMasterSignalRecord(record);
+});
 
 container.register("config", backendConfig);
 container.register("logger", logger);

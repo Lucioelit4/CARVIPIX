@@ -354,7 +354,7 @@ export class CadpShadowFlow {
 
     const frameDefs = [
       { tf: "1H", block: request.timeframes.H1 },
-      { tf: "45M", block: request.timeframes.M45 },
+      { tf: "30M", block: request.timeframes.M30 },
       { tf: "5M", block: request.timeframes.M5 },
     ] as const;
 

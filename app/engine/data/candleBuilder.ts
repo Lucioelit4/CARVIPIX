@@ -2,6 +2,7 @@ import { Asset, Candle, Tick, Timeframe } from "../types/marketData";
 
 const TF_MS: Record<Timeframe, number> = {
   "5M": 5 * 60 * 1000,
+  "30M": 30 * 60 * 1000,
   "45M": 45 * 60 * 1000,
   "1H": 60 * 60 * 1000,
 };
@@ -26,7 +27,7 @@ export class CandleBuilder {
 
   constructor(private readonly maxCandlesPerKey = 1000) {}
 
-  ingestTick(tick: Tick, timeframes: Timeframe[] = ["5M", "45M", "1H"]): Candle[] {
+  ingestTick(tick: Tick, timeframes: Timeframe[] = ["5M", "30M", "1H"]): Candle[] {
     const emitted: Candle[] = [];
 
     for (const tf of timeframes) {

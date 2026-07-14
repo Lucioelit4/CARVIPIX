@@ -54,6 +54,7 @@ const ASSET_ALIASES: Record<string, Asset> = {
 
 const TF_MS: Record<Timeframe, number> = {
   "5M": 5 * 60 * 1000,
+  "30M": 30 * 60 * 1000,
   "45M": 45 * 60 * 1000,
   "1H": 60 * 60 * 1000,
 };

@@ -1,4 +1,4 @@
-import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { masterSignalStore, type MasterSignalRecord } from "@/app/ai/cadpV2/masterSignalStore";
 import { backendDatabase } from "../core/database";
 
 export type RealSignalDecision =
@@ -162,35 +162,71 @@ function defaultStatusForDecision(decision: RealSignalDecision): RealSignalLifec
 }
 
 export class RealSignalLifecycleService {
+  async upsertFromMasterSignalRecord(record: MasterSignalRecord): Promise<RealSignalLifecycleRecord | null> {
+    const decision = decisionFromDirection(record.signal.direction);
+    return this.upsertSignal({
+      signalId: record.signal_id,
+      analysisId: record.analysis_id,
+      symbol: record.signal.symbol,
+      decision,
+      entry: record.signal.entry,
+      stopLoss: record.signal.stop_loss,
+      takeProfit: record.signal.take_profit,
+      strategyId: record.signal.selected_strategy_id,
+      status: defaultStatusForDecision(decision),
+      source: "CADP_V2_MASTER_SIGNAL",
+      dataOrigin: normalizeDataOrigin(process.env.CARVIPIX_DATA_CLASSIFICATION),
+      trackingAccount: "UNASSIGNED",
+      signalTimestamp: new Date(record.created_at),
+      metadata: {
+        grossRR: record.signal.calculated_gross_rr,
+        netRR: record.signal.calculated_net_rr,
+        analysisProfile: record.signal.analysis_profile,
+        expiresAt: record.signal.expires_at,
+        shadowStatus: record.signal.status,
+        tags: ["TEST_ONLY", "SHADOW", "NON_EXECUTABLE", "NOT_FOR_CLIENTS"],
+      },
+    });
+  }
+
   async ensureLatestMasterSignalRegistered(): Promise<RealSignalLifecycleRecord | null> {
     const latest = masterSignalStore.getLatest();
     if (!latest) {
       return null;
     }
 
-    const decision = decisionFromDirection(latest.signal.direction);
-    return this.upsertSignal({
-      signalId: latest.signal_id,
-      analysisId: latest.signal.analysis_id,
-      symbol: latest.signal.symbol,
-      decision,
-      entry: latest.signal.entry,
-      stopLoss: latest.signal.stop_loss,
-      takeProfit: latest.signal.take_profit,
-      strategyId: latest.signal.selected_strategy_id,
-      status: defaultStatusForDecision(decision),
-      source: "CADP_V2_MASTER_SIGNAL",
-      dataOrigin: normalizeDataOrigin(process.env.CARVIPIX_DATA_CLASSIFICATION),
-      trackingAccount: "UNASSIGNED",
-      signalTimestamp: new Date(latest.created_at),
-      metadata: {
-        grossRR: latest.signal.calculated_gross_rr,
-        netRR: latest.signal.calculated_net_rr,
-        analysisProfile: latest.signal.analysis_profile,
-        expiresAt: latest.signal.expires_at,
-        shadowStatus: latest.signal.status,
-      },
-    });
+    return this.upsertFromMasterSignalRecord(latest);
+  }
+
+  async getLatestSignal(): Promise<RealSignalLifecycleRecord | null> {
+    const { rows } = await backendDatabase.query<LifecycleRow>(
+      `
+      SELECT
+        signal_id,
+        analysis_id,
+        symbol,
+        decision,
+        entry_price,
+        stop_loss,
+        take_profit,
+        strategy_id,
+        signal_status,
+        source,
+        data_origin,
+        tracking_account,
+        classification,
+        signal_timestamp,
+        activated_at,
+        closed_at,
+        realized_pnl,
+        metadata
+      FROM real_signal_lifecycle
+      ORDER BY signal_timestamp DESC
+      LIMIT 1
+      `
+    );
+
+    return rows[0] ? mapRow(rows[0]) : null;
   }
 
   async upsertSignal(input: {

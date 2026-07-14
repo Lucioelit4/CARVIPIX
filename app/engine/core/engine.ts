@@ -20,7 +20,10 @@ import {
   CreateAlertOptions,
   KnowledgeCard,
   SafetyGateEvaluation,
+  ResearchProposalEnvelope,
 } from '../types/index';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { AuditEngine } from './auditEngine';
 import { ConflictResolutionEngine } from './conflictResolutionEngine';
 import { DecisionEngine } from './decisionEngine';
@@ -137,6 +140,23 @@ export class CARVIPIXEngine {
     safetyGateResults?: SafetyGateEvaluation,
     options?: CreateAlertOptions,
   ): TradeAlert | null {
+    const researchProposalEnvelope =
+      options?.researchProposalEnvelope ?? this.loadOfficialResearchProposalEnvelope();
+
+    if (!options?.researchProposalEnvelope && !researchProposalEnvelope) {
+      this.auditEngine.recordDecision({
+        symbol: signal.symbol,
+        type: signal.type,
+        timeframe: signal.timeframe,
+        consensus: consensusResult,
+        action: 'NO_TRADE',
+        priority: this.priorityEngine.normalizePriority(options?.priority),
+        conflicts: options?.conflicts,
+        reason: `Official proposal.json not available for ${signal.id}`,
+      });
+      return null;
+    }
+
     if (this.metrics.activeAlerts >= this.config.maxActiveAlerts) {
       this.auditEngine.recordDecision({
         symbol: signal.symbol,
@@ -155,7 +175,10 @@ export class CARVIPIXEngine {
       signal,
       consensusResult,
       safetyGateResults,
-      options,
+      options: {
+        ...options,
+        ...(researchProposalEnvelope ? { researchProposalEnvelope } : {}),
+      },
       metrics: this.metrics,
       createAlert: () => {
         const alertId = `ALERT_${signal.symbol}_${Date.now()}`;
@@ -182,6 +205,22 @@ export class CARVIPIXEngine {
         return alert;
       },
     });
+  }
+
+  private loadOfficialResearchProposalEnvelope(): ResearchProposalEnvelope | null {
+    const proposalPath = path.join(process.cwd(), 'exports', 'research', 'latest', 'proposal.json');
+
+    try {
+      const rawJson = readFileSync(proposalPath, 'utf8');
+      const loaded = this.researchProposalLoader.loadFromJson(rawJson);
+      if (loaded.issues.length > 0 || !loaded.envelope) {
+        return null;
+      }
+
+      return loaded.envelope as ResearchProposalEnvelope;
+    } catch {
+      return null;
+    }
   }
 
   createAlertFromResearchProposalJson(

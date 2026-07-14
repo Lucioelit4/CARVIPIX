@@ -148,7 +148,7 @@ function escapeXml(value: string): string {
 }
 
 export async function sanitizeIdentityDocumentBuffer(buffer: Buffer, mimeType: string): Promise<{ buffer: Buffer; mimeType: string; width: number; height: number }> {
-  const pipeline = sharp(buffer, { failOnError: true }).rotate();
+  const pipeline = sharp(buffer).rotate();
 
   if (mimeType === "image/png") {
     const output = await pipeline.png({ compressionLevel: 9, adaptiveFiltering: true }).toBuffer({ resolveWithObject: true });
@@ -570,7 +570,7 @@ export async function reviewIdentityVerification(input: IdentityVerificationRevi
     reviewedBy: input.adminId,
     reviewedAt: nowIso(),
     updatedAt: nowIso(),
-    canceledAt: nextStatus === "canceled" ? nowIso() : current.canceledAt ?? null,
+    canceledAt: current.canceledAt ?? null,
   };
 
   await persistRequest(next);
@@ -664,4 +664,4 @@ export async function logIdentityVerificationDocumentAccess(input: { requestId: 
   });
 }
 
-export type { IdentityVerificationRequestSummary, IdentityVerificationRequirementRecord, IdentityVerificationStatus, IdentityVerificationServiceKey };
+export type { IdentityVerificationStatus, IdentityVerificationServiceKey };

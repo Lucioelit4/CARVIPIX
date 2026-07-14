@@ -268,9 +268,10 @@ export class TwelveDataProvider extends RealDataProvider {
    */
   private normalizeTimeframe(timeframe: Timeframe): string {
     // Twelve Data usa: 1min, 5min, 15min, 30min, 1h, etc.
-    // CARVIPIX soporta: 1H, 45M, 5M
+    // CARVIPIX soporta: 1H, 30M, 45M, 5M
     const timeframeMap: Record<Timeframe, string> = {
       '1H': '1h',
+      '30M': '30min',
       '45M': '45min',
       '5M': '5min',
     };

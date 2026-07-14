@@ -5,15 +5,14 @@ import type {
 } from "../contracts";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
-import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
 
 export class ResultsDomainService implements IResultsDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getPlatformResults(period: "monthly" | "yearly" | "all-time"): Promise<ServicePlatformResults> {
-    const latestSignal = masterSignalStore.getLatest();
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+    const latestSignal = await realSignalLifecycleService.getLatestSignal();
     const [lifecycleMetrics, botMetricsResult, capitalMetricsResult, fundingMetricsResult, usersResult] = await Promise.all([
       realSignalLifecycleService.getResultsAggregate(),
       backendDatabase.query<{
@@ -121,15 +120,15 @@ export class ResultsDomainService implements IResultsDomainService {
       },
       masterSignal: latestSignal
         ? {
-            signalId: latestSignal.signal_id,
-            analysisId: latestSignal.analysis_id,
-            symbol: latestSignal.signal.symbol,
-            decision: latestSignal.signal.direction,
-            entry: latestSignal.signal.entry,
-            stopLoss: latestSignal.signal.stop_loss,
-            takeProfit: latestSignal.signal.take_profit,
-            strategyId: latestSignal.signal.selected_strategy_id,
-            status: latestSignal.signal.status,
+            signalId: latestSignal.signalId,
+            analysisId: latestSignal.analysisId,
+            symbol: latestSignal.symbol,
+            decision: latestSignal.decision === "ENTER_BUY" ? "BUY" : latestSignal.decision === "ENTER_SELL" ? "SELL" : "NONE",
+            entry: latestSignal.entry,
+            stopLoss: latestSignal.stopLoss,
+            takeProfit: latestSignal.takeProfit,
+            strategyId: latestSignal.strategyId,
+            status: "SHADOW",
           }
         : null,
     };
@@ -144,7 +143,7 @@ export class ResultsDomainService implements IResultsDomainService {
   }
 
   async getHistory(months = 12): Promise<ServiceResultsHistoryRecord[]> {
-    const latestSignal = masterSignalStore.getLatest();
+    void months;
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
     const [lifecycleHistory, reportsResult] = await Promise.all([
       realSignalLifecycleService.getMonthlyResults(months),

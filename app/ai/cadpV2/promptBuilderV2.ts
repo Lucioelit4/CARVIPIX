@@ -38,8 +38,8 @@ export class CadpPromptBuilderV2 {
           risk_envelope: input.request.risk_envelope,
         }),
       },
-      {
-        title: "5. Contexto visual (H1 + M45 + M5)",
+        {
+          title: "5. Contexto visual (H1 + M30 + M5)",
         content: JSON.stringify(input.request.visual_manifest),
       },
       {

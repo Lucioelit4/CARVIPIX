@@ -4,9 +4,11 @@ import {
   OfficialDataPlatformSource,
   type ConsumerAccessScope,
 } from "./official-source";
+import { FinnhubOfficialNewsAdapter, isFinnhubOfficialEnabled } from "./providers/finnhub";
+import { TwelveDataOfficialMarketAdapter, isTwelveDataOfficialEnabled } from "./providers/twelve-data";
 import type { DatasetKind } from "./types";
 
-const DEFAULT_KINDS: DatasetKind[] = ["tick", "ohlc", "news", "economic-calendar", "spread", "session", "metadata"];
+const DEFAULT_KINDS: DatasetKind[] = ["tick", "ohlc", "news", "economic-calendar", "metadata"];
 
 function toBoolean(value: string | undefined): boolean {
   if (!value) {
@@ -80,6 +82,14 @@ export async function getOfficialDataPlatformSource(): Promise<OfficialDataPlatf
       const platform = new InstitutionalDataPlatform();
       const source = new OfficialDataPlatformSource(platform);
       await source.bootstrap();
+
+      if (isTwelveDataOfficialEnabled()) {
+        source.registerProvider(new TwelveDataOfficialMarketAdapter());
+      }
+
+      if (isFinnhubOfficialEnabled()) {
+        source.registerProvider(new FinnhubOfficialNewsAdapter());
+      }
 
       registerDefaultConsumers(source);
       configureScheduler(source);

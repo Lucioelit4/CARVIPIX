@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       userId: auth.user.id,
       userName: `${auth.user.nombre ?? ""} ${auth.user.apellido ?? ""}`.trim() || auth.user.email || "Miembro",
       userEmail: auth.user.email,
-      userRole: auth.user.user_role ?? "client",
+      userRole: auth.user.plan ?? "client",
       declarationAccepted,
       declarationAuthorizedUse,
       frontDocument: {

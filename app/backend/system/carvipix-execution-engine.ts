@@ -343,7 +343,7 @@ export function buildDefaultExecutionEnginePorts(input: {
     readiness: {
       check: async (request) => {
         const tick = pipeline.getLatestTick(request.symbol);
-        const timeframeSeries = (["1H", "45M", "5M"] as const).map((tf) => {
+        const timeframeSeries = (["1H", "30M", "5M"] as const).map((tf) => {
           const candles = pipeline.getRecentCandles(request.symbol, tf, 360);
           const latest = indicators.getLatest(request.symbol, tf);
           return {

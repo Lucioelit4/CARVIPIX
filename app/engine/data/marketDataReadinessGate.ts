@@ -78,6 +78,7 @@ export class MarketDataReadinessGate {
 
     const minima: Record<Timeframe, number> = {
       "5M": input.minCandlesByTimeframe?.["5M"] ?? 300,
+      "30M": input.minCandlesByTimeframe?.["30M"] ?? 250,
       "45M": input.minCandlesByTimeframe?.["45M"] ?? 250,
       "1H": input.minCandlesByTimeframe?.["1H"] ?? 250,
     };
@@ -86,6 +87,7 @@ export class MarketDataReadinessGate {
       if (tf.closedCandles < minima[tf.timeframe]) {
         if (tf.timeframe === "1H") reasons.push("INSUFFICIENT_H1_HISTORY");
         if (tf.timeframe === "5M") reasons.push("INSUFFICIENT_M5_HISTORY");
+        if (tf.timeframe === "30M") reasons.push("INSUFFICIENT_M30_HISTORY");
         if (tf.timeframe === "45M") reasons.push("INSUFFICIENT_M45_HISTORY");
       }
       if (!Number.isFinite(tf.latestTimestamp ?? NaN)) {
@@ -147,7 +149,7 @@ export class MarketDataReadinessGate {
     const { request } = input;
     const toSeries = [
       { tf: "1H" as const, env: request.timeframes.H1 },
-      { tf: "45M" as const, env: request.timeframes.M45 },
+      { tf: "30M" as const, env: request.timeframes.M30 },
       { tf: "5M" as const, env: request.timeframes.M5 },
     ];
 

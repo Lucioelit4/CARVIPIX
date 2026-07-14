@@ -54,6 +54,9 @@ function mapLifecycleStatusToAlertStatus(status: RealSignalLifecycleRecord["stat
 function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAlertRecord {
   const direction = record.decision === "ENTER_SELL" ? "Venta" : record.decision === "ENTER_BUY" ? "Compra" : "Condicional";
   const modelConfidence = Number(record.metadata.modelConfidence ?? (record.status === "ACTIVE" ? 84 : record.status === "CONDITIONAL" ? 72 : 60));
+  const tags = Array.isArray(record.metadata.tags)
+    ? record.metadata.tags.map((item) => String(item))
+    : [];
 
   return {
     id: record.signalId,
@@ -80,6 +83,7 @@ function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAl
       signalStatus: record.status,
       source: record.source,
       dataOrigin: record.dataOrigin,
+      tags,
       signalId: record.signalId,
       analysisId: record.analysisId,
       strategyId: record.strategyId,
@@ -95,12 +99,12 @@ export class AlertsDomainService implements IAlertsDomainService {
 
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
-  async getAlerts(query?: { userId?: string; limit?: number }): Promise<ServiceAlertRecord[]> {
+  async getAlerts(query?: { userId?: string; limit?: number; includeAuditOnly?: boolean }): Promise<ServiceAlertRecord[]> {
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
 
     const lifecycleSignals = await realSignalLifecycleService.getRecentSignals({
       limit: query?.limit,
-      includeAuditOnly: false,
+      includeAuditOnly: query?.includeAuditOnly ?? false,
     });
     if (lifecycleSignals.length > 0) {
       const mappedSignals = lifecycleSignals.map(mapLifecycleRecordToAlert);

@@ -1,17 +1,16 @@
-# CARVIPIX Trading Engine - Phase 1
-## Professional Trading Decision System
+# CARVIPIX Trading Engine
+## Historical engine notes and active runtime references
 
 ### 🎯 Overview
 
-The CARVIPIX Trading Engine is a **consensus-based trading analysis system** that makes decisions only when multiple specialized agents agree. No single agent decides alone. This approach eliminates bias and improves decision quality.
+The legacy CARVIPIX Trading Engine is a **consensus-based trading analysis system** kept as reference. The active official runtime now runs through the backend execution chain and the CADP shadow flow.
 
-**Current Status:** Phase 1 (Demo & Foundation)
-- ✅ 11 Analysis Agents implemented
-- ✅ Consensus Engine with decision logging
-- ✅ 7 Alert States system
-- ✅ Demo Dashboard with 3 realistic scenarios
-- ⏳ Real data integration (Phase 2)
-- ⏳ Automated execution (Phase 3)
+**Current Status:** Legacy reference path documented; active production flow is code-backed in backend/system and ai/cadpV2.
+- ✅ Legacy consensus engine code exists
+- ✅ Active runtime and master signal flow exist elsewhere in the repo
+- ✅ Backtesting and demo artifacts exist but are isolated from publication flow
+- ⏳ Entry5M and SignalScoring remain unimplemented in active codebase
+- ⏳ Official export catalog freeze still pending
 
 ---
 
@@ -224,10 +223,8 @@ The Learning Engine tracks:
 ## 🔄 Future Phases
 
 ### Phase 2: Real Data Integration
-- Connect to live market data feeds
-- Use actual RSI, MACD, EMAs
-- Integrate news APIs
-- Real tick data analysis
+- Data platform exists in the repo and must remain aligned with the official publication catalog
+- This section is retained for historical context only
 
 ### Integration Architecture (Worker 7)
 - Single gateway: `app/engine/integrations/dataIntegrationGateway.ts`
@@ -236,10 +233,9 @@ The Learning Engine tracks:
 - Internal modules must not depend directly on external providers
 
 ### Phase 3: Execution
-- MT4/MT5 bridge
-- Automated entry
-- Position management
-- Live profit/loss tracking
+- MT4/MT5 bridge is outside the current release scope
+- Automated entry remains outside the official launch chain
+- Position management and live P/L are not part of this release
 
 ### Phase 4: Advanced
 - Machine learning from historical trades

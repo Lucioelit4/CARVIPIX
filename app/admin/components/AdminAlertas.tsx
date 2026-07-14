@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Clock, Eye } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Eye, FlaskConical } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { getAlerts } from '@/app/lib/client-data-helpers';
 import DetailModal from './DetailModal';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
@@ -16,6 +15,7 @@ type Alerta = {
   tp: string;
   sl: string;
   fecha: string;
+  tags: string[];
 };
 
 function toEstado(status: string): Alerta['estado'] {
@@ -28,30 +28,66 @@ export default function AdminAlertas() {
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [selectedAlerta, setSelectedAlerta] = useState<Alerta | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreatingTestAlert, setIsCreatingTestAlert] = useState(false);
+
+  const load = async () => {
+    try {
+      const response = await fetch('/api/admin/alerts?limit=50', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Admin alerts error: ${response.status}`);
+      }
+      const payload = (await response.json()) as {
+        ok: boolean;
+        data: Array<{
+          id: string;
+          symbol: string;
+          status: string;
+          timestamp: string | number | Date;
+          data?: {
+            direction?: string;
+            entryPrice?: number;
+            takeProfitPrice?: number;
+            stopLossPrice?: number;
+            tags?: string[];
+          };
+        }>;
+      };
+
+      setAlertas(
+        payload.data.map((item) => ({
+          id: item.id,
+          symbol: item.symbol,
+          tipo: String(item.data?.direction ?? 'Sin datos'),
+          estado: toEstado(item.status),
+          entrada: String(item.data?.entryPrice ?? 'Sin datos'),
+          tp: String(item.data?.takeProfitPrice ?? 'Sin datos'),
+          sl: String(item.data?.stopLossPrice ?? 'Sin datos'),
+          fecha: item.timestamp ? new Date(item.timestamp).toLocaleString('es-ES') : 'Sin datos',
+          tags: Array.isArray(item.data?.tags) ? item.data.tags : [],
+        }))
+      );
+    } catch {
+      setAlertas([]);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const rows = await getAlerts(50);
-        setAlertas(
-          rows.map((item) => ({
-            id: item.id,
-            symbol: item.symbol,
-            tipo: String(item.data?.direction ?? 'Sin datos'),
-            estado: toEstado(item.status),
-            entrada: String(item.data?.entryPrice ?? 'Sin datos'),
-            tp: String(item.data?.takeProfitPrice ?? 'Sin datos'),
-            sl: String(item.data?.stopLossPrice ?? 'Sin datos'),
-            fecha: item.timestamp ? new Date(item.timestamp).toLocaleString('es-ES') : 'Sin datos',
-          }))
-        );
-      } catch {
-        setAlertas([]);
-      }
-    };
-
     load();
   }, []);
+
+  const createTestAlert = async () => {
+    setIsCreatingTestAlert(true);
+    try {
+      await fetch('/api/admin/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: 'XAUUSD' }),
+      });
+      await load();
+    } finally {
+      setIsCreatingTestAlert(false);
+    }
+  };
 
   const stats = useMemo(
     () => [
@@ -69,6 +105,15 @@ export default function AdminAlertas() {
           <h2 className="text-2xl font-bold mb-2">Gestión de Alertas</h2>
           <p className="text-white/60">Monitoreo de alertas de trading</p>
         </div>
+        <CARVIPIXButton
+          variant="primary"
+          size="sm"
+          leftIcon={<FlaskConical className="w-4 h-4" />}
+          onClick={createTestAlert}
+          disabled={isCreatingTestAlert}
+        >
+          {isCreatingTestAlert ? 'Creando alerta...' : 'Crear alerta visible TEST_ONLY'}
+        </CARVIPIXButton>
       </motion.div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-3 gap-4">
@@ -100,13 +145,14 @@ export default function AdminAlertas() {
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">TP</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">SL</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Estado</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Marcadores</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-white/70 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {alertas.length === 0 ? (
                 <tr>
-                  <td className="px-6 py-8 text-white/60" colSpan={8}>Sin alertas</td>
+                  <td className="px-6 py-8 text-white/60" colSpan={9}>Sin alertas</td>
                 </tr>
               ) : (
                 alertas.map((alerta) => (
@@ -120,6 +166,7 @@ export default function AdminAlertas() {
                     <td className="px-6 py-4">
                       <CARVIPIXBadge variant={alerta.estado === 'ganada' ? 'success' : alerta.estado === 'perdida' ? 'danger' : 'warning'}>{alerta.estado}</CARVIPIXBadge>
                     </td>
+                    <td className="px-6 py-4 text-xs text-white/80">{alerta.tags.length > 0 ? alerta.tags.join(' | ') : 'Sin marcadores'}</td>
                     <td className="px-6 py-4">
                       <CARVIPIXButton onClick={() => { setSelectedAlerta(alerta); setIsModalOpen(true); }} variant="ghost" size="sm" leftIcon={<Eye className="w-4 h-4" />}>
                         Ver
@@ -147,6 +194,10 @@ export default function AdminAlertas() {
             <div>
               <p className="text-xs text-white/60 mb-1">Fecha</p>
               <p className="text-white/70">{selectedAlerta.fecha}</p>
+            </div>
+            <div>
+              <p className="text-xs text-white/60 mb-1">Marcadores</p>
+              <p className="text-white/70">{selectedAlerta.tags.length > 0 ? selectedAlerta.tags.join(' | ') : 'Sin marcadores'}</p>
             </div>
           </div>
         )}

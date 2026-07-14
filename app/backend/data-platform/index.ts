@@ -2,6 +2,8 @@ export { InstitutionalDataPlatform, createTemporaryPlatform } from "./core";
 export { OfficialDataPlatformSource } from "./official-source";
 export { OFFICIAL_ECOSYSTEM_ASSETS } from "./official-source";
 export { getOfficialDataPlatformSource } from "./service";
+export * as FinnhubEvaluationProvider from "./providers/finnhub";
+export * as TwelveDataEvaluationProvider from "./providers/twelve-data";
 export type {
   BenchmarkCaseResult,
   BenchmarkSuiteResult,

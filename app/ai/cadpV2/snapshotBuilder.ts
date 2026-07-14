@@ -10,7 +10,7 @@ function clampSeries(candles: Candle[], max = 32): Candle[] {
   return candles.slice(-max);
 }
 
-function buildEnvelope(timeframe: "H1" | "M45" | "M5", candles: Candle[], indicators: IndicatorFramework, symbol: Asset): CadpTimeframeEnvelope {
+function buildEnvelope(timeframe: "H1" | "M30" | "M5", candles: Candle[], indicators: IndicatorFramework, symbol: Asset): CadpTimeframeEnvelope {
   const series = clampSeries(candles, timeframe === "M5" ? 48 : 32);
   const closed = series.filter((c) => c.complete);
   const open = [...series].reverse().find((c) => !c.complete) ?? null;
@@ -41,16 +41,16 @@ export class CadpSnapshotBuilder {
   build(input: { analysisId: string; symbol: Asset; brokerSymbol: string; nowUtc?: number }): CadpAnalysisRequestV2 {
     const nowUtc = input.nowUtc ?? Date.now();
     const h1 = this.pipeline.getRecentCandles(input.symbol, "1H", 120);
-    const m45 = this.pipeline.getRecentCandles(input.symbol, "45M", 120);
+    const m30 = this.pipeline.getRecentCandles(input.symbol, "30M", 120);
     const m5 = this.pipeline.getRecentCandles(input.symbol, "5M", 144);
 
     const h1Env = buildEnvelope("H1", h1, this.indicators, input.symbol);
-    const m45Env = buildEnvelope("M45", m45, this.indicators, input.symbol);
+    const m30Env = buildEnvelope("M30", m30, this.indicators, input.symbol);
     const m5Env = buildEnvelope("M5", m5, this.indicators, input.symbol);
 
     const numericContext = {
       h1: h1Env,
-      m45: m45Env,
+      m30: m30Env,
       m5: m5Env,
       market: {
         bid: m5Env.open_candle?.close ?? m5Env.closed_candles.at(-1)?.close ?? 0,
@@ -72,19 +72,19 @@ export class CadpSnapshotBuilder {
       current_bid: numericContext.market.bid,
       current_ask: numericContext.market.ask,
       last_closed_candle_h1: h1Env.closed_candles.at(-1)?.timestamp ?? null,
-      last_closed_candle_m45: m45Env.closed_candles.at(-1)?.timestamp ?? null,
+      last_closed_candle_m30: m30Env.closed_candles.at(-1)?.timestamp ?? null,
       last_closed_candle_m5: m5Env.closed_candles.at(-1)?.timestamp ?? null,
       engine_version: AI_ENGINE_VERSION,
       context_version: AI_CONTEXT_VERSION,
       visual_schema_version: "cadp_visual_v1",
       prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
       response_schema_version: "cadp_response_v2",
-      m45_alignment_version: "m45_alignment_v1",
+      m30_alignment_version: "m30_alignment_v1",
     };
 
     return {
       identity,
-      timeframes: { H1: h1Env, M45: m45Env, M5: m5Env },
+      timeframes: { H1: h1Env, M30: m30Env, M5: m5Env },
       market_now: {
         spread: 0,
         spread_avg: 0,
@@ -127,7 +127,7 @@ export class CadpSnapshotBuilder {
           strategy_version: "1.0.0",
           status: "SHADOW",
           short_description: "MTF pullback for XAUUSD intraday.",
-          critical_requirements: ["H1_DIRECTION", "M45_PULLBACK_OR_COMPRESSION", "M5_CONFIRMATION"],
+          critical_requirements: ["H1_DIRECTION", "M30_PULLBACK_OR_COMPRESSION", "M5_CONFIRMATION"],
           allowed_profile: CADP_V1_PROFILE,
         },
         {
@@ -135,7 +135,7 @@ export class CadpSnapshotBuilder {
           strategy_version: "1.0.0",
           status: "SHADOW",
           short_description: "Volatility breakout for XAUUSD intraday.",
-          critical_requirements: ["H1_RANGE_OR_COMPRESSION", "M45_EXPANSION", "M5_TRIGGER"],
+          critical_requirements: ["H1_RANGE_OR_COMPRESSION", "M30_EXPANSION", "M5_TRIGGER"],
           allowed_profile: CADP_V1_PROFILE,
         },
         {

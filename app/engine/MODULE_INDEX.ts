@@ -6,99 +6,26 @@
 
 /**
  * STRUCTURE OVERVIEW
- * 
- * app/
- * ├── engine/
- * │   ├── ARCHITECTURE.md ......................... Diagrama completo de la plataforma
- * │   ├── trading/
- * │   │   └── tradingEngine.ts ................... Motor central (tipos e interfaces)
- * │   │       • TradingSignal
- * │   │       • CarvipixAlert
- * │   │       • ITradingEngine
- * │   │       • SignalState, TrendValidation
- * │   │
- * │   ├── strategy/
- * │   │   ├── carvipixStrategyTypes.ts .......... Tipos base estrategia
- * │   │   │   • CarvipixStrategyConfig
- * │   │   │   • StrategyPendingRule
- * │   │   │   • BacktestingProgress
- * │   │   │
- * │   │   ├── carvipixStrategyConfig.ts ........ Configuración oficial v1.0
- * │   │   │   • CARVIPIX_STRATEGY_V1
- * │   │   │   • CARVIPIX_CONSTANTS
- * │   │   │   • 10 pending rules definidas
- * │   │   │
- * │   │   └── trendValidation.ts ............... Validador de tendencia por niveles
- * │   │       • TrendValidator
- * │   │       • 4 condiciones (Price/EMA, EMA Order, Slope, Structure)
- * │   │       • A+/A/B/C classification
- * │   │       • Structure OVERRIDE priority
- * │   │
- * │   └── alerts/
- * │       └── carvipixAlerts.ts ................. Sistema de alertas
- * │           • CarvipixAlertManager
- * │           • createSignalAlert()
- * │           • createUpdateAlert()
- * │           • createCloseAlert()
- * │           • getAlertStats()
- * │
- * ├── admin/components/
- * │   ├── BacktestExecutor.tsx .................. Panel ejecución backtests
- * │   │   • Aviso: CARVIPIX v1.0 registrada
- * │   │   • MultiDatasetLoader
- * │   │   • Integración SignalDiagnosticsPanel
- * │   │
- * │   └── SignalDiagnosticsPanel.tsx .......... Panel diagnóstico privado
- * │       • Autorización grandes datasets
- * │       • Score breakdown (si se extiende)
- * │       • Agentes estadísticas
- * │
- * ├── engine/backtesting/backtestEngine.ts .... Engine de backtesting existente
- * │   • runDemoBacktest()
- * │   • Integrar con TradingEngine
- * │
- * └── [Otros archivos sin cambios]
- * 
- * docs/
- * └── CARVIPIX_STRATEGY_V1.md .................. Especificación completa
- *     • Objetivo estratégico
- *     • 4 condiciones validación
- *     • Estados de señal
- *     • 10 reglas pending
+ *
+ * Active official flow:
+ * - app/engine/core/engine.ts
+ * - app/backend/system/carvipix-execution-engine.ts
+ * - app/ai/cadpV2/shadowFlow.ts
+ * - app/engine/strategy/trendValidation.ts
+ * - app/engine/strategy/pullbackValidator.ts
+ *
+ * Legacy / reference only:
+ * - app/engine/trading/tradingEngine.ts
+ * - app/engine/backtesting/backtestEngine.ts
+ * - admin-facing historical diagnostics and docs
  */
 
 /**
  * QUICK REFERENCE
- * 
- * CREAR NUEVA SIGNAL:
- * 1. Crear TradingSignal con todos los campos
- * 2. Llenar trendValidation usando TrendValidator.validateTrend()
- * 3. Llenar pullback45M con análisis manual (PENDING cálculos)
- * 4. Llenar entry5M con análisis manual (PENDING trigger)
- * 5. Llenar scoreBreakdown (7 componentes)
- * 6. Crear alerta con CarvipixAlertManager.createSignalAlert()
- * 
- * VALIDAR TENDENCIA:
- * const validation = TrendValidator.validateTrend({
- *   timeframe: '1H',
- *   asset: 'XAUUSD',
- *   currentPrice: 2500.50,
- *   ema20: 2498.00,
- *   ema50: 2495.00,
- *   ema200: 2490.00,
- *   ema20Slope: 0.5,
- *   ema50Slope: 0.3,
- *   ema200Slope: 0.1,
- * });
- * // Retorna: TrendValidation con confidenceLevel A+/A/B/C
- * 
- * CREAR ALERTA:
- * const alertManager = getAlertManager();
- * const alert = alertManager.createSignalAlert(signal);
- * 
- * VERIFICAR STATS:
- * const stats = alertManager.getAlertStats(1); // últimas 24h
- * if (!stats.isWithinTarget) console.log('⚠️ Fuera de rango 3-8/día');
+ *
+ * - Pullback validation is already integrated in the active signal flow.
+ * - Entry5M and score breakdown remain unimplemented in the active codebase.
+ * - Backtesting is isolated and must not be treated as the publication path.
  */
 
 /**

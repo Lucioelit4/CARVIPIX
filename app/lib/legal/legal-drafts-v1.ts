@@ -68,7 +68,7 @@ function draftDate(): string {
   return "2026-07-12T00:00:00.000Z";
 }
 
-function makeDraft(input: Omit<LegalDraftDocument, "status" | "updatedAt" | "author" | "effectiveDate" | "history" | "statusNote"> & {
+function makeDraft(input: Omit<LegalDraftDocument, "status" | "updatedAt" | "author" | "effectiveDate" | "history" | "statusNote" | "specialNotes"> & {
   title: string;
   version: string;
   statusNote?: string;
@@ -791,7 +791,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
   }),
 ];
 
-export const LEGAL_DRAFT_DOCUMENTS_V1 = LEGAL_DRAFT_CONTENTS_V1.map((item) => item.document);
+export const LEGAL_DRAFT_DOCUMENTS_V1 = LEGAL_DRAFT_CONTENTS_V1;
 
 function formatList(items: string[]): string {
   return items.map((item) => `- ${item}`).join("\n");

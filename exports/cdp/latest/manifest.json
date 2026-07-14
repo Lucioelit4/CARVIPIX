@@ -1,0 +1,10 @@
+{
+  "datasetId": "cert-dataset-json-1",
+  "asset": "XAUUSD",
+  "timeframe": "5M",
+  "exportedAt": 1720000001000,
+  "rowCount": 12,
+  "checksum": "sha256:json-certified-dataset",
+  "source": "CDP",
+  "status": "CERTIFIED"
+}

@@ -3,7 +3,7 @@
  * Solo lectura - no operaciones
  */
 
-export type Timeframe = '1H' | '45M' | '5M';
+export type Timeframe = '1H' | '30M' | '45M' | '5M';
 export type Asset = 'XAUUSD' | 'EURUSD' | 'GBPUSD' | 'BTCUSD';
 
 /**

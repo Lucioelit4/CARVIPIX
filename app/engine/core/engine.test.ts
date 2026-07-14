@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
 
 import { CARVIPIXEngine } from './engine';
+import {
+  exportResearchProposalEnvelope,
+  runMinimumCertifiedExperimentFromCDPExportJsonFile,
+} from '../../research-lab/core/cdp-export-adapter';
 import type {
   AgentScore,
   CertifiedDatasetEnvelope,
@@ -11,6 +16,9 @@ import type {
   ResearchProposalEnvelope,
   TradeSignal,
 } from '../types';
+
+const officialResearchProposalDir = path.join(process.cwd(), 'exports', 'research', 'latest');
+const officialCdpFixturePath = path.join(process.cwd(), 'app', 'research-lab', 'fixtures', 'cdp-certified-dataset.export.json');
 
 type CertifiedDatasetOverrides = Partial<Omit<CertifiedDatasetEnvelope, 'status' | 'source'>> & {
   status?: CertifiedDatasetStatus;
@@ -190,6 +198,70 @@ test('allows analysis with valid research proposal envelope but SAFE_MODE still 
   assert.ok(alert);
   const blockedExecution = engine.createAlert(buildSignal({ id: 'signal-research-exec' }), consensus, undefined, {
     researchProposalEnvelope: buildResearchProposalEnvelope() as unknown as ResearchProposalEnvelope,
+    executionRequested: true,
+  });
+
+  assert.equal(blockedExecution, null);
+  assert.equal(engine.getDecisionLog().at(-1)?.action, 'EXECUTE_BLOCKED');
+});
+
+test('end-to-end flow uses frozen proposal.json automatically', async () => {
+  const studyResult = await runMinimumCertifiedExperimentFromCDPExportJsonFile({
+    filePath: officialCdpFixturePath,
+    hypothesis: {
+      hypothesisId: 'hyp-e2e-release',
+      title: 'Official release E2E remains stable',
+      statement: 'The frozen proposal path should be consumable by the production engine.',
+      metricKey: 'candidateValue',
+      criteria: {
+        minSampleSize: 4,
+        minSuccessRate: 0.75,
+        minEffectSize: 0.1,
+        maxFailureRate: 0.25,
+        maxPValue: 0.05,
+      },
+    },
+    experiment: {
+      experimentId: 'exp-e2e-release',
+      hypothesisId: 'hyp-e2e-release',
+      name: 'Official release E2E experiment',
+      datasetRules: {
+        minRecords: 10,
+        minCoverage: 0.95,
+        maxInvalidRecordRatio: 0.05,
+        allowPartialAuthorized: false,
+      },
+      guardrails: {
+        minTrials: 4,
+        maxFailureRate: 0.4,
+        maxRejectedTrials: 1,
+      },
+    },
+    trials: [
+      { trialId: 't1', status: 'passed', baselineValue: 1, candidateValue: 1.2, pValue: 0.03 },
+      { trialId: 't2', status: 'passed', baselineValue: 1, candidateValue: 1.18, pValue: 0.04 },
+      { trialId: 't3', status: 'passed', baselineValue: 1, candidateValue: 1.22, pValue: 0.02 },
+      { trialId: 't4', status: 'failed', baselineValue: 1, candidateValue: 0.98, pValue: 0.08 },
+    ],
+  });
+
+  const exported = await exportResearchProposalEnvelope({
+    studyResult,
+    outputDir: officialResearchProposalDir,
+    proposalId: 'proposal',
+    createdAt: studyResult.datasetProfile.receivedAt ?? Date.now(),
+  });
+
+  assert.equal(exported.proposalPath, path.join(officialResearchProposalDir, 'proposal.json'));
+
+  const engine = new CARVIPIXEngine({ safeMode: true });
+  const consensus = engine.evaluateConsensus(buildApprovedConsensus());
+
+  const alert = engine.createAlert(buildSignal({ id: 'signal-official-e2e' }), consensus);
+  assert.ok(alert);
+  assert.equal(engine.getDecisionLog().at(-1)?.action, 'ALERT_CREATED');
+
+  const blockedExecution = engine.createAlert(buildSignal({ id: 'signal-official-e2e-exec' }), consensus, undefined, {
     executionRequested: true,
   });
 

@@ -1,12 +1,12 @@
 import type { Asset, Candle, Timeframe } from "../../engine/types/marketData";
 import type { AIClientMessageCode } from "../types";
 
-export const CADP_V1_PROFILE = "XAUUSD_INTRADAY_H1_M45_M5_V1" as const;
+export const CADP_V1_PROFILE = "XAUUSD_INTRADAY_H1_M30_M5_V1" as const;
 export const CADP_V1_PROMPT_ID = "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT" as const;
 
 export type CadpAnalysisTriggerReason =
   | "NEW_H1_CLOSE"
-  | "NEW_M45_CLOSE"
+  | "NEW_M30_CLOSE"
   | "NEW_M5_CLOSE_WHEN_WATCHING"
   | "PRICE_NEAR_STRUCTURE"
   | "VOLATILITY_CHANGE"
@@ -72,14 +72,14 @@ export interface CadpSnapshotIdentity {
   current_bid: number;
   current_ask: number;
   last_closed_candle_h1: number | null;
-  last_closed_candle_m45: number | null;
+  last_closed_candle_m30: number | null;
   last_closed_candle_m5: number | null;
   engine_version: string;
   context_version: string;
   visual_schema_version: string;
   prompt_version: string;
   response_schema_version: string;
-  m45_alignment_version: string;
+  m30_alignment_version: string;
 }
 
 export interface CadpTimeframeEnvelope {
@@ -156,7 +156,7 @@ export interface CadpAnalysisRequestV2 {
   identity: CadpSnapshotIdentity;
   timeframes: {
     H1: CadpTimeframeEnvelope;
-    M45: CadpTimeframeEnvelope;
+    M30: CadpTimeframeEnvelope;
     M5: CadpTimeframeEnvelope;
   };
   market_now: {
