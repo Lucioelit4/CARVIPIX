@@ -102,11 +102,16 @@ export class PaymentOrchestrator {
     providerEventId?: string;
     providerPaymentId?: string | null;
     providerSubscriptionId?: string | null;
+    productId?: string;
+    productType?: string | null;
     amount?: number;
     currency?: string;
     failureReason?: string | null;
   }): Promise<void> {
-    const templateId = resolvePaymentEmailTemplateId(input.eventType);
+    const templateId = resolvePaymentEmailTemplateId({
+      eventType: input.eventType,
+      productType: input.productType,
+    });
     if (!templateId) {
       return;
     }
@@ -141,6 +146,8 @@ export class PaymentOrchestrator {
           currency: input.currency,
           provider: input.provider ?? null,
           providerEventId: input.providerEventId ?? null,
+          productId: input.productId ?? null,
+          productType: input.productType ?? null,
           failureReason: input.failureReason ?? null,
         }),
         input.now,
@@ -1157,6 +1164,8 @@ export class PaymentOrchestrator {
           providerEventId: canonical.providerEventId,
           providerPaymentId: canonical.providerPaymentId ?? tx.provider_payment_id,
           providerSubscriptionId: canonical.providerSubscriptionId,
+          productId: tx.product_id,
+          productType: tx.product_type,
           amount: canonical.amount?.amount ?? Number(tx.order_total),
           currency: canonical.amount?.currency ?? tx.order_currency,
           failureReason: canonical.failureReason,

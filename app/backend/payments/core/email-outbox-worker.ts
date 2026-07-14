@@ -140,6 +140,8 @@ export class PaymentEmailOutboxWorker {
         provider: payload.provider,
         providerEventId: payload.providerEventId,
         failureReason: payload.failureReason,
+        productId: payload.productId,
+        productType: payload.productType,
       });
 
       if (!sendResult.accepted) {

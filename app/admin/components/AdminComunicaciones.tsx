@@ -15,8 +15,9 @@ type CommunicationEvent = {
 
 type CommunicationsData = {
   transport: {
-    mode: 'smtp' | 'noop';
+    mode: 'smtp' | 'resend' | 'noop';
     smtpReady: boolean;
+    resendReady: boolean;
     fromName: string;
     appPublicUrl: string;
     addresses: {
@@ -169,7 +170,7 @@ export default function AdminComunicaciones() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <p className="text-xs text-white/60">Enviados SMTP</p>
+          <p className="text-xs text-white/60">Enviados transaccionales</p>
           <p className="mt-2 text-2xl font-bold text-green-400">{data?.metrics.sent ?? 0}</p>
         </CARVIPIXCard>
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
@@ -189,13 +190,26 @@ export default function AdminComunicaciones() {
       <CARVIPIXCard variant="admin" padding="16" hover={false}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2"><Mail className="w-5 h-5 text-[#D4AF37]" /> Estado de transporte</h3>
-          <CARVIPIXBadge variant={data?.transport.mode === 'smtp' && data?.transport.smtpReady ? 'success' : 'warning'}>
-            {data?.transport.mode === 'smtp' && data?.transport.smtpReady ? 'SMTP ACTIVO' : 'NOOP / SMTP INCOMPLETO'}
+          <CARVIPIXBadge
+            variant={
+              data?.transport.mode === 'smtp' && data?.transport.smtpReady
+                ? 'success'
+                : data?.transport.mode === 'resend' && data?.transport.resendReady
+                  ? 'success'
+                  : 'warning'
+            }
+          >
+            {data?.transport.mode === 'smtp' && data?.transport.smtpReady
+              ? 'SMTP ACTIVO'
+              : data?.transport.mode === 'resend' && data?.transport.resendReady
+                ? 'RESEND ACTIVO'
+                : 'NOOP / INCOMPLETO'}
           </CARVIPIXBadge>
         </div>
         <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-white/75 md:grid-cols-2">
           <p>Modo: <span className="text-white">{data?.transport.mode ?? '-'}</span></p>
           <p>SMTP listo: <span className="text-white">{data?.transport.smtpReady ? 'Si' : 'No'}</span></p>
+          <p>Resend listo: <span className="text-white">{data?.transport.resendReady ? 'Si' : 'No'}</span></p>
           <p>From: <span className="text-white">{data?.transport.fromName ?? '-'}</span></p>
           <p>App URL: <span className="text-white">{data?.transport.appPublicUrl ?? '-'}</span></p>
         </div>

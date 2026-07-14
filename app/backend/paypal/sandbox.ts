@@ -1088,6 +1088,9 @@ export async function getOrderStatus(input: {
   orderId: string;
   paypalStatus: string;
   recordStatus: PayPalRecordStatus;
+  productId: string;
+  productName: string;
+  isBotLicense: boolean;
 }> {
   const existing = await findRecordByOrderId(input.orderId);
   if (!existing) {
@@ -1102,10 +1105,16 @@ export async function getOrderStatus(input: {
     method: "GET",
   });
 
+  const checkoutId = resolveCheckoutProductId(existing.product_id);
+  const product = getCommercialProductByCheckoutId(checkoutId);
+
   return {
     orderId: response.data.id,
     paypalStatus: response.data.status,
     recordStatus: existing.status,
+    productId: existing.product_id,
+    productName: product?.name ?? existing.product_id,
+    isBotLicense: isBotLicenseCheckoutProduct(existing.product_id),
   };
 }
 

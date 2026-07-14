@@ -90,7 +90,7 @@ async function sendWelcomeEmail(correo: string, nombre: string, verificationToke
       verificationToken,
     });
 
-    const delivered = result.accepted && result.provider === "smtp";
+    const delivered = result.accepted;
 
     console.info("[CARVIPIX][AUTH][REGISTER][WELCOME_EMAIL]", {
       email: correo,

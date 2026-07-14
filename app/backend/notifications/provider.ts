@@ -69,3 +69,39 @@ export class SmtpEmailProvider implements EmailProvider {
     };
   }
 }
+
+export class ResendEmailProvider implements EmailProvider {
+  constructor(private readonly config: EmailNotificationConfig) {}
+
+  async send(message: EmailMessage): Promise<EmailSendResult> {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.config.resend.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: `${this.config.resend.fromName} <${this.config.resend.fromEmail}>`,
+        to: Array.isArray(message.to) ? message.to.map((item) => formatAddress(item)) : [formatAddress(message.to)],
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+        reply_to: message.replyTo ? formatAddress(message.replyTo) : undefined,
+        headers: message.headers,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`RESEND_HTTP_${response.status}:${errorText || "REQUEST_FAILED"}`);
+    }
+
+    const payload = (await response.json().catch(() => ({}))) as { id?: string };
+
+    return {
+      accepted: true,
+      provider: "resend",
+      messageId: payload.id,
+    };
+  }
+}

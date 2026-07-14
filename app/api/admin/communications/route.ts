@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { listCommercialAuditEvents, recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { backendDatabase } from "@/app/backend/core/database";
-import { getEmailNotificationConfig, hasValidSmtpCredentials } from "@/app/backend/notifications/config";
+import { getEmailNotificationConfig, hasValidResendCredentials, hasValidSmtpCredentials } from "@/app/backend/notifications/config";
 import { emailNotificationService } from "@/app/backend/notifications";
 import { COMMUNICATION_EMAIL_COPY_CATALOG } from "@/app/backend/notifications/email-copy-catalog";
 import { isValidAdminSession } from "@/app/lib/auth/admin-server";
@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
   try {
     const emailConfig = getEmailNotificationConfig();
     const smtpReady = hasValidSmtpCredentials(emailConfig);
+    const resendReady = hasValidResendCredentials(emailConfig);
     const outboxStatus = await readOutboxStatus();
     const audit = await listCommercialAuditEvents(300);
 
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
           transport: {
             mode: emailConfig.transport,
             smtpReady,
+            resendReady,
             fromName: emailConfig.fromName,
             appPublicUrl: emailConfig.appPublicUrl,
             addresses: emailConfig.addresses,

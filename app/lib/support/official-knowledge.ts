@@ -119,7 +119,7 @@ const modules: Record<OfficialKnowledgeCategory, { title: string; scope: string 
   },
   bot: {
     title: "Bot",
-    scope: "Licencia, requisitos de membresia y soporte tecnico del bot.",
+    scope: "Licencia, descarga, instalacion guiada, activacion y soporte tecnico del bot.",
   },
   membresias: {
     title: "Membresias",
@@ -282,9 +282,9 @@ const rawIntents: Array<Omit<KnowledgeIntent, "metadata">> = [
     title: "Bot CARVIPIX",
     keywords: ["bot", "licencia", "mt4", "mt5", "conexion", "error bot"],
     defaultResponse:
-      "Bot CARVIPIX se ofrece como licencia de pago unico y requiere membresia activa para operar. Errores de conexion deben escalarse con detalle tecnico.",
+      "Bot CARVIPIX se ofrece como producto descargable con licencia de pago unico. Tras el pago se prepara entrega de licencia, recursos de instalacion y soporte de activacion.",
     responseBySegment: {
-      "usuario-bot": "Como usuario bot, verifica licencia activa, estado de membresia y conexion broker. Si falla, se escala a soporte tecnico bot.",
+      "usuario-bot": "Como usuario bot, verifica licencia activa, estado de entrega del paquete, instalacion MT4/MT5 y conexion broker. Si falla, se escala a soporte tecnico bot.",
     },
   },
   {
@@ -474,7 +474,7 @@ const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
   {
     id: "faq-14",
     question: "Como funciona el Bot?",
-    answer: "El bot opera con licencia valida y membresia activa. Incidencias tecnicas deben escalarse a soporte con detalle.",
+    answer: "El Bot se compra como producto descargable: recibes licencia, recursos de instalacion y soporte para dejarlo listo en MT4/MT5.",
     category: "bot",
     popularity: 80,
     keywords: ["bot", "funciona", "licencia"],

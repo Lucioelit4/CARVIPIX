@@ -1,13 +1,19 @@
 export type PaymentEmailTemplateId =
   | "membership-payment-confirmed"
+  | "bot-license-delivery-ready"
   | "membership-renewal"
   | "payment-failed"
   | "payment-refunded";
 
-export function resolvePaymentEmailTemplateId(eventType: string): PaymentEmailTemplateId | null {
-  const normalized = String(eventType ?? "").trim().toLowerCase();
+export function resolvePaymentEmailTemplateId(input: { eventType: string; productType?: string | null }): PaymentEmailTemplateId | null {
+  const normalized = String(input.eventType ?? "").trim().toLowerCase();
+  const productType = String(input.productType ?? "").trim().toLowerCase();
 
   if (normalized === "payment_captured") {
+    if (productType === "bot") {
+      return "bot-license-delivery-ready";
+    }
+
     return "membership-payment-confirmed";
   }
 

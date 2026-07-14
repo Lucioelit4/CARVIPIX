@@ -1,11 +1,16 @@
 import "server-only";
 
-export type EmailTransportMode = "smtp" | "noop";
+export type EmailTransportMode = "smtp" | "resend" | "noop";
 
 export type EmailNotificationConfig = {
   transport: EmailTransportMode;
   appPublicUrl: string;
   fromName: string;
+  resend: {
+    apiKey: string;
+    fromEmail: string;
+    fromName: string;
+  };
   addresses: {
     noreply: string;
     soporte: string;
@@ -43,7 +48,20 @@ function asNumber(value: string | undefined, fallback: number): number {
 }
 
 function resolveTransportMode(value: string | undefined): EmailTransportMode {
-  if (value?.trim().toLowerCase() === "smtp") {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "smtp" || normalized === "resend") {
+    return normalized;
+  }
+
+  if (normalized === "noop") {
+    return "noop";
+  }
+
+  if (normalized === "resend") {
+    return "resend";
+  }
+
+  if (normalized === "smtp") {
     return "smtp";
   }
 
@@ -55,6 +73,11 @@ export function getEmailNotificationConfig(): EmailNotificationConfig {
     transport: resolveTransportMode(process.env.EMAIL_TRANSPORT),
     appPublicUrl: process.env.APP_PUBLIC_URL?.trim() || "http://localhost:3000",
     fromName: process.env.EMAIL_FROM_NAME?.trim() || "CARVIPIX",
+    resend: {
+      apiKey: process.env.RESEND_API_KEY?.trim() || "",
+      fromEmail: process.env.RESEND_FROM_EMAIL?.trim() || "",
+      fromName: process.env.RESEND_FROM_NAME?.trim() || process.env.EMAIL_FROM_NAME?.trim() || "CARVIPIX",
+    },
     addresses: {
       noreply: process.env.EMAIL_NOREPLY_ADDRESS?.trim() || "noreply@carvipix.com",
       soporte: process.env.EMAIL_SUPPORT_ADDRESS?.trim() || "soporte@carvipix.com",
@@ -74,4 +97,8 @@ export function getEmailNotificationConfig(): EmailNotificationConfig {
 
 export function hasValidSmtpCredentials(config: EmailNotificationConfig): boolean {
   return Boolean(config.smtp.host && config.smtp.user && config.smtp.password);
+}
+
+export function hasValidResendCredentials(config: EmailNotificationConfig): boolean {
+  return Boolean(config.resend.apiKey && config.resend.fromEmail);
 }

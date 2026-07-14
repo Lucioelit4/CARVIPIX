@@ -10,12 +10,13 @@ import {
 } from "./email-outbox-logic";
 
 test("resolvePaymentEmailTemplateId maps approved webhook events", () => {
-  assert.equal(resolvePaymentEmailTemplateId("payment_captured"), "membership-payment-confirmed");
-  assert.equal(resolvePaymentEmailTemplateId("subscription_renewed"), "membership-renewal");
-  assert.equal(resolvePaymentEmailTemplateId("payment_failed"), "payment-failed");
-  assert.equal(resolvePaymentEmailTemplateId("subscription_payment_failed"), "payment-failed");
-  assert.equal(resolvePaymentEmailTemplateId("payment_refunded"), "payment-refunded");
-  assert.equal(resolvePaymentEmailTemplateId("unknown"), null);
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "payment_captured", productType: "plan_pro" }), "membership-payment-confirmed");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "payment_captured", productType: "bot" }), "bot-license-delivery-ready");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "subscription_renewed" }), "membership-renewal");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "payment_failed" }), "payment-failed");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "subscription_payment_failed" }), "payment-failed");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "payment_refunded" }), "payment-refunded");
+  assert.equal(resolvePaymentEmailTemplateId({ eventType: "unknown" }), null);
 });
 
 test("buildPaymentEmailDedupeKey is stable for same transaction + event", () => {

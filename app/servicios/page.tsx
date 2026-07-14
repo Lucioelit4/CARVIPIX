@@ -77,7 +77,7 @@ export default function ServiciosPage() {
             Elige tu plan y accede a CARVIPIX.
           </h1>
           <p className="mt-4 max-w-3xl text-base text-white/70 sm:text-lg">
-            Catálogo comercial actualizado con Plan Básico, Plan Pro, licencia Bot y servicios complementarios sin romper el flujo actual.
+            Catálogo comercial actualizado con Plan Básico, Plan Pro, Bot como producto descargable y servicios complementarios sin romper el flujo actual.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <CARVIPIXButtonLink href="/" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>

@@ -55,6 +55,22 @@ test("buildPaymentTransactionalEmailTemplate renders renewal/failure/refund temp
   assert.match(refund.subject, /reembolso/i);
 });
 
+test("buildPaymentTransactionalEmailTemplate renders bot downloadable delivery template", () => {
+  const rendered = buildPaymentTransactionalEmailTemplate({
+    templateId: "bot-license-delivery-ready",
+    recipientEmail: "cliente@carvipix.local",
+    recipientName: "Cliente Demo",
+    paymentOrderId: "pord-bot-1",
+    amount: 999,
+    currency: "USD",
+    productId: "bot-carvipix-license",
+    productType: "bot",
+  });
+
+  assert.match(rendered.subject, /licencia/i);
+  assert.match(rendered.text, /Descarga del paquete EA/i);
+});
+
 test("buildWelcomeActivatedEmailTemplate renders activation copy", () => {
   const rendered = buildWelcomeActivatedEmailTemplate(
     {

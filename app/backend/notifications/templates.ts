@@ -457,6 +457,44 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
   const amount = amountLabel(input.amount, input.currency);
   const orderRef = input.paymentOrderId;
 
+  if (input.templateId === "bot-license-delivery-ready") {
+    return {
+      subject: "CARVIPIX: licencia de Bot confirmada y entrega preparada",
+      html: [
+        "<div style=\"font-family: Arial, sans-serif; color: #111; line-height: 1.5;\">",
+        `  <p>Hola ${recipientName},</p>`,
+        "  <p>Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada correctamente.</p>",
+        `  <p><strong>Orden:</strong> ${orderRef}<br/><strong>Monto:</strong> ${amount}</p>`,
+        "  <p>Tu flujo de entrega queda preparado con:</p>",
+        "  <ul>",
+        "    <li>Licencia oficial activa</li>",
+        "    <li>Descarga del paquete EA</li>",
+        "    <li>Guia de instalacion</li>",
+        "    <li>Manual y recursos de video</li>",
+        "    <li>Canal de soporte para activacion</li>",
+        "  </ul>",
+        "  <p>Equipo CARVIPIX</p>",
+        "</div>",
+      ].join("\n"),
+      text: [
+        `Hola ${recipientName},`,
+        "",
+        "Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada.",
+        `Orden: ${orderRef}`,
+        `Monto: ${amount}`,
+        "",
+        "Tu flujo de entrega queda preparado con:",
+        "- Licencia oficial activa",
+        "- Descarga del paquete EA",
+        "- Guia de instalacion",
+        "- Manual y recursos de video",
+        "- Soporte para activacion",
+        "",
+        "Equipo CARVIPIX",
+      ].join("\n"),
+    };
+  }
+
   if (input.templateId === "membership-payment-confirmed") {
     return {
       subject: "CARVIPIX: pago confirmado y membresia activada",
@@ -564,6 +602,7 @@ export function buildPaymentTransactionalEmailTemplate(
 ): RenderedEmailTemplate {
   const allowedTemplates = options?.allowedTemplates ?? [
     "membership-payment-confirmed",
+    "bot-license-delivery-ready",
     "membership-renewal",
     "payment-failed",
     "payment-refunded",

@@ -399,10 +399,10 @@ export default function DashboardPage() {
           </CARVIPIXCard>
 
           <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Bot CARVIPIX</h2>
+            <h2 className="text-xl font-semibold mb-4">Bot CARVIPIX (producto descargable)</h2>
             <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
             <div className="mb-4 text-sm text-white/70">
-              Licencia: <span className="text-white">{portal.bot.license?.active ? "Activa" : "Pendiente de compra"}</span>
+              Licencia: <span className="text-white">{portal.bot.license?.active ? "Activa y lista para entrega" : "Pendiente de compra"}</span>
               {portal.bot.license?.licenseKey ? ` · ${portal.bot.license.licenseKey}` : ""}
             </div>
             <div className="grid gap-3 md:grid-cols-4">
@@ -422,10 +422,10 @@ export default function DashboardPage() {
             </div>
             <div className="mt-4 flex gap-3">
               <CARVIPIXButton variant="premium" disabled={!canUseBot || busy === "bot-create" || !botForm.name.trim() || !botForm.symbol.trim()} onClick={() => void submitJson("bot-create", "/api/client/bot", { action: "createInstance", ...botForm })}>
-                Provisionar bot
+                Registrar instalacion
               </CARVIPIXButton>
             </div>
-            {!canUseBot ? <p className="mt-3 text-sm text-amber-300">Tu plan actual no habilita provisión de bot.</p> : null}
+            {!canUseBot ? <p className="mt-3 text-sm text-amber-300">Tu plan actual no habilita registro y activacion del bot.</p> : null}
             <div className="mt-6 space-y-3">
               {portal.bot.instances.length === 0 ? (
                 <p className="text-sm text-white/60">No hay instancias de bot creadas aún.</p>
@@ -462,7 +462,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-3 flex gap-3">
               <CARVIPIXButton variant="secondary" disabled={!canUseBot || busy === "broker" || !brokerForm.botId || !brokerForm.server.trim() || !brokerForm.login.trim() || !brokerForm.password.trim()} onClick={() => void submitJson("broker", "/api/client/bot", { action: "connectBroker", ...brokerForm })}>
-                Preparar conexion broker
+                Preparar activacion MT4/MT5
               </CARVIPIXButton>
               <CARVIPIXButton variant="ghost" disabled={!canUseBot || busy === "diagnostics" || !brokerForm.botId} onClick={() => brokerForm.botId && void submitJson("diagnostics", "/api/client/bot", { action: "runDiagnostics", botId: brokerForm.botId })}>
                 Diagnostico

@@ -89,19 +89,19 @@ export default function AdminBot() {
     },
     {
       id: 'autobot',
-      nombre: 'AutoBot Automático',
+      nombre: 'Entregas automáticas',
       estado: 'pendiente',
       progreso: 0,
     },
     {
       id: 'mt4-bridge',
-      nombre: 'Bridge MT4/MT5',
+      nombre: 'Activación MT4/MT5 (siguiente proyecto)',
       estado: 'pendiente',
       progreso: 0,
     },
     {
       id: 'backtesting',
-      nombre: 'Backtesting Engine',
+      nombre: 'Versionado y actualizaciones',
       estado: 'pendiente',
       progreso: 0,
     },
@@ -116,25 +116,25 @@ export default function AdminBot() {
     },
     {
       id: 'no-logica-interna',
-      titulo: 'No mostrar lógica interna al cliente',
+      titulo: 'Mostrar Bot como producto descargable',
       completado: true,
       critico: true,
     },
     {
       id: 'no-mt4',
-      titulo: 'No conectar MT4 todavía',
+      titulo: 'No implementar EA/bridge en esta fase',
       completado: true,
       critico: true,
     },
     {
       id: 'no-ops-reales',
-      titulo: 'No ejecutar operaciones reales',
+      titulo: 'Mantener flujo comercial y de pagos actual',
       completado: true,
       critico: true,
     },
     {
       id: 'no-autobot',
-      titulo: 'No activar AutoBot todavía',
+      titulo: 'No alterar arquitectura ni módulos core',
       completado: true,
       critico: true,
     },
@@ -163,8 +163,8 @@ export default function AdminBot() {
     ultimaAlerta: '2026-07-02 14:32:45',
     alertasHoy: 12,
     progreso: 75,
-    fase: 'Fase 1: Análisis y Validación',
-    proximaFase: 'Fase 2: Integración de Datos Reales',
+    fase: 'Fase 1: Licencias y entregas',
+    proximaFase: 'Fase 2: Descargas y actualizaciones',
   };
 
   const estadoMotor = {
@@ -279,8 +279,8 @@ export default function AdminBot() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-white mb-1">Centro de Control - Bot CARVIPIX</h2>
-            <p className="text-white/60">Gestión centralizada del motor de alertas y análisis automático</p>
+            <h2 className="text-3xl font-bold text-white mb-1">Centro de Control - Bot Descargable CARVIPIX</h2>
+            <p className="text-white/60">Gestión centralizada de licencias, entregas, descargas, versiones y actualizaciones</p>
           </div>
           <div className="text-right">
             <div className={`text-4xl font-bold ${estadoBot.operativo ? 'text-green-400' : 'text-red-400'}`}>
@@ -310,10 +310,10 @@ export default function AdminBot() {
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <div className="flex items-center gap-2 mb-3">
             <Send className="w-5 h-5 text-[#D4AF37]" />
-            <span className="font-mono text-xs text-white/80">Alertas Hoy</span>
+            <span className="font-mono text-xs text-white/80">Entregas Hoy</span>
           </div>
           <p className="text-[#D4AF37] font-bold text-lg">{estadoBot.alertasHoy}</p>
-          <p className="text-white/60 text-xs mt-1">Señales procesadas</p>
+          <p className="text-white/60 text-xs mt-1">Paquetes preparados</p>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
@@ -343,7 +343,7 @@ export default function AdminBot() {
         className="bg-gradient-to-br from-slate-900/50 to-slate-900/20 border border-white/10 rounded-lg p-6"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white">Progreso General del Bot</h3>
+          <h3 className="text-xl font-bold text-white">Progreso General de Entrega del Bot</h3>
           <span className="text-[#D4AF37] font-bold text-2xl">{estadoBot.progreso}%</span>
         </div>
         <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10">

@@ -14,7 +14,7 @@ import {
   buildWelcomeActivatedEmailTemplate,
   buildWelcomeRegistrationEmailTemplate,
 } from "./templates";
-import { NoopEmailProvider, SmtpEmailProvider, type EmailProvider } from "./provider";
+import { NoopEmailProvider, ResendEmailProvider, SmtpEmailProvider, type EmailProvider } from "./provider";
 import type {
   EmailAddress,
   EmailMessage,
@@ -46,6 +46,15 @@ function resolveSenderAddress(role: EmailSenderRole, fromName: string, addresses
 
 function createProvider(): EmailProvider {
   const config = getEmailNotificationConfig();
+
+  if (config.transport === "resend") {
+    if (!config.resend.apiKey || !config.resend.fromEmail) {
+      console.warn("[CARVIPIX][EMAIL] RESEND seleccionado sin credenciales completas. Se usa proveedor noop.");
+      return new NoopEmailProvider();
+    }
+
+    return new ResendEmailProvider(config);
+  }
 
   if (config.transport === "smtp" && hasValidSmtpCredentials(config)) {
     return new SmtpEmailProvider(config);
@@ -79,7 +88,7 @@ export class EmailNotificationService {
       try {
         await recordCommercialAuditEvent({
           actorType: "system",
-          action: result.accepted && providerResult === "smtp" ? "communications.email.sent" : "communications.email.noop",
+          action: result.accepted ? "communications.email.sent" : "communications.email.noop",
           resource: templateId,
           result: result.accepted ? "success" : "error",
           metadata: {

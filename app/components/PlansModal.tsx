@@ -16,7 +16,7 @@ const OFFICIAL_PLANS = [
     title: "FREE",
     price: "0 USD",
     description: "Informacion general, noticias y comunidad.",
-    features: ["Noticias", "Comunidad", "Sin alertas completas", "Sin Bot"],
+    features: ["Noticias", "Comunidad", "Sin alertas completas", "Bot descargable por compra separada"],
     href: "/dashboard",
     cta: "Entrar con FREE",
   },

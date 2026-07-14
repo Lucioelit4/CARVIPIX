@@ -21,6 +21,9 @@ type OrderStatusPayload = {
     orderId: string;
     paypalStatus: string;
     recordStatus: string;
+    productId: string;
+    productName: string;
+    isBotLicense: boolean;
   };
   error?: string;
 };
@@ -33,6 +36,7 @@ export default function SuccessContent({ kind, id }: { kind: string; id: string 
   );
   const [error, setError] = useState<string | null>(missingId ? "No se recibio identificador de pago." : null);
   const [subscriptionPayload, setSubscriptionPayload] = useState<SubscriptionStatusPayload["data"]>();
+  const [orderPayload, setOrderPayload] = useState<OrderStatusPayload["data"]>();
 
   useEffect(() => {
     if (missingId) {
@@ -63,6 +67,15 @@ export default function SuccessContent({ kind, id }: { kind: string; id: string 
         const payload = (await response.json().catch(() => ({}))) as OrderStatusPayload;
         if (!response.ok || !payload.data) {
           throw new Error(payload.error || "No se pudo consultar la orden");
+        }
+
+        setOrderPayload(payload.data);
+
+        if (payload.data.isBotLicense) {
+          setStatusLine(
+            `Pago confirmado para ${payload.data.productName}. Licencia registrada y flujo de entrega preparado.`
+          );
+          return;
         }
 
         setStatusLine(`Orden ${payload.data.orderId} verificada. Estado interno: ${payload.data.recordStatus}.`);
@@ -97,8 +110,22 @@ export default function SuccessContent({ kind, id }: { kind: string; id: string 
             <CancelSubscriptionButton subscriptionId={subscriptionPayload.subscriptionId} />
           </div>
         ) : null}
+        {kind !== "subscription" && orderPayload?.isBotLicense ? (
+          <div className="mt-4 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-white/85">
+            <p className="font-semibold text-[#D4AF37]">Flujo preparado para Bot descargable</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>Licencia validada para tu cuenta.</li>
+              <li>Correo automatico de entrega preparado (licencia, instrucciones, manual y soporte).</li>
+              <li>Descarga del EA y paquete de instalacion disponibles en tu area de cliente conforme a despliegue operativo.</li>
+              <li>Activacion en MT4/MT5 quedara habilitada en el siguiente proyecto tecnico.</li>
+            </ul>
+          </div>
+        ) : null}
         <div className="mt-8 flex flex-wrap gap-3">
           <Link href="/dashboard" className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5">Ir al dashboard</Link>
+          {orderPayload?.isBotLicense ? (
+            <Link href="/bot" className="rounded-lg border border-[#D4AF37]/40 px-4 py-2 text-sm text-[#D4AF37] hover:bg-[#D4AF37]/10">Ver guia del Bot</Link>
+          ) : null}
           <Link href="/checkout" className="rounded-lg border border-[#D4AF37]/40 px-4 py-2 text-sm text-[#D4AF37] hover:bg-[#D4AF37]/10">Volver a checkout</Link>
         </div>
       </div>

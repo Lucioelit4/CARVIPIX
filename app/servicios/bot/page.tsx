@@ -27,12 +27,12 @@ export default function BotPage() {
               </span>
               <h1 className="mt-6 text-5xl font-bold text-[#D4AF37]">Bot CARVIPIX</h1>
               <p className="mt-6 text-lg leading-relaxed text-white/80">
-                Automatización premium para MT4/MT5, diseñada para ejecutar reglas operativas con gestión de riesgo y seguimiento estructurado.
+                Producto descargable premium para MT4/MT5, diseñado para instalarse en tu terminal con licencia oficial y guía de implementación.
               </p>
 
               {/* Badges */}
               <div className="mt-8 flex flex-wrap gap-3">
-                {["Compatibilidad MT4/MT5 en activación controlada", "Pago único", "Gestión de riesgo", "Actualizaciones Elite"].map((badge) => (
+                {["Producto descargable", "Licencia oficial", "Instalación MT4/MT5", "Soporte de activación"].map((badge) => (
                   <span
                     key={badge}
                     className="inline-flex rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-2 text-xs font-semibold text-[#D4AF37]"
@@ -196,19 +196,19 @@ export default function BotPage() {
           className="text-center mb-8"
         >
           <span className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold text-[#D4AF37] uppercase">
-            Estado del servicio
+            Estado de entrega
           </span>
-          <h2 className="mt-4 text-3xl font-bold">Panel de rendimiento del Bot</h2>
+          <h2 className="mt-4 text-3xl font-bold">Panel de licencia y preparación</h2>
         </motion.div>
 
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
-            { label: "Rendimiento", value: "Disponible al activar servicio", color: "text-white" },
-            { label: "Operaciones", value: "Pendiente", color: "text-[#D4AF37]" },
-            { label: "Win Rate", value: "Pendiente", color: "text-[#D4AF37]" },
-            { label: "Drawdown", value: "Pendiente", color: "text-white" },
-            { label: "Estado", value: "En configuración", color: "text-[#D4AF37]" },
-            { label: "Motor", value: "Se habilita con Trading Engine", color: "text-white/70" },
+            { label: "Licencia", value: "Lista tras pago", color: "text-white" },
+            { label: "Descarga EA", value: "Preparada", color: "text-[#D4AF37]" },
+            { label: "Manual", value: "Incluido", color: "text-[#D4AF37]" },
+            { label: "Videos", value: "Incluidos", color: "text-white" },
+            { label: "Estado", value: "Listo para instalación", color: "text-[#D4AF37]" },
+            { label: "Activación", value: "Asistida por soporte", color: "text-white/70" },
           ].map((item, i) => (
             <motion.div
               key={i}
@@ -251,16 +251,16 @@ export default function BotPage() {
                 opacity="0.5"
               />
             </svg>
-            <p className="absolute bottom-1 right-2 text-xs text-white/40">Datos disponibles al activar el motor</p>
+            <p className="absolute bottom-1 right-2 text-xs text-white/40">Datos ilustrativos de entrega y preparación</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {[
-              { title: "Estado del bot", value: "Pendiente de activación", status: "neutral" },
-              { title: "Última operación", value: "Disponible al activar servicio", status: "neutral" },
-              { title: "Riesgo actual", value: "Se define al activar", status: "neutral" },
-              { title: "Mercado", value: "Monitoreo pendiente", status: "neutral" },
-              { title: "Próxima revisión", value: "Se programa tras activación", status: "neutral" },
+              { title: "Estado de licencia", value: "Lista para uso", status: "neutral" },
+              { title: "Paquete EA", value: "Disponible en descarga", status: "neutral" },
+              { title: "Manual", value: "Incluido en entrega", status: "neutral" },
+              { title: "Videos", value: "Guía paso a paso", status: "neutral" },
+              { title: "Próxima revisión", value: "Soporte post-instalación", status: "neutral" },
             ].map((item, i) => (
               <div key={i} className="rounded-lg bg-[#0B0B0B] border border-white/10 p-4">
                 <p className="text-xs uppercase text-zinc-400 mb-2">{item.title}</p>
@@ -279,7 +279,7 @@ export default function BotPage() {
           </div>
 
           <p className="text-xs text-white/40 mt-6 text-center">
-            Este panel se actualiza automáticamente cuando el servicio esté activo y conectado.
+            Este panel resume el estado comercial y de entrega del producto descargable.
           </p>
         </motion.div>
       </div>
@@ -362,19 +362,19 @@ export default function BotPage() {
           {[
             {
               q: "¿Funciona en MT4 y MT5?",
-              a: "Sí. Diseñado para ambas plataformas. Compatible con mayoría de brokers.",
+              a: "Sí. El paquete descargable está orientado a MT4 y MT5 en brokers compatibles.",
             },
             {
               q: "¿La membresía activa incluye el bot?",
-              a: "No. Es un producto separado (999 USD) y requiere membresía activa para operar.",
+              a: "No. Es un producto separado (999 USD) y su entrega se realiza tras confirmación de pago.",
             },
             {
               q: "¿Necesito estar conectado todo el día?",
-              a: "No. Corre en tu servidor MT4/MT5. Ejecuta reglas automáticamente.",
+              a: "No. Se instala en tu entorno MT4/MT5 y opera según configuración del usuario.",
             },
             {
               q: "¿Qué pasa con las actualizaciones?",
-              a: "Con membresía activa se habilitan permisos operativos y continuidad de servicio según plan.",
+              a: "El ecosistema queda preparado para actualizaciones de versiones, entregas y soporte técnico.",
             },
             {
               q: "¿El bot garantiza ganancias?",

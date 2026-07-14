@@ -3,6 +3,7 @@ export type EmailSenderRole = "noreply" | "soporte" | "pagos";
 export type TransactionalEmailTemplateId =
   | "welcome-registration"
   | "membership-payment-confirmed"
+  | "bot-license-delivery-ready"
   | "membership-renewal"
   | "membership-expiration"
   | "payment-failed"
@@ -32,7 +33,7 @@ export type EmailMessage = {
 
 export type EmailSendResult = {
   accepted: boolean;
-  provider: "smtp" | "noop";
+  provider: "smtp" | "resend" | "noop";
   messageId?: string;
 };
 
@@ -94,6 +95,7 @@ export type PromotionCampaignEmailInput = {
 export type PaymentTransactionalEmailInput = {
   templateId:
     | "membership-payment-confirmed"
+    | "bot-license-delivery-ready"
     | "membership-renewal"
     | "payment-failed"
     | "payment-refunded";
@@ -105,4 +107,6 @@ export type PaymentTransactionalEmailInput = {
   provider?: string;
   providerEventId?: string;
   failureReason?: string;
+  productId?: string;
+  productType?: string;
 };

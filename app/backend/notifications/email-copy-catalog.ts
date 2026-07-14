@@ -9,6 +9,7 @@ export type CommunicationEmailType =
   | "account-email-changed"
   | "account-suspended"
   | "membership-purchase-success"
+  | "bot-license-delivery-ready"
   | "membership-renewal-success"
   | "membership-payment-failed"
   | "membership-upcoming-charge"
@@ -125,6 +126,16 @@ export const COMMUNICATION_EMAIL_COPY_CATALOG: CommunicationEmailCopy[] = [
     body: "Recibimos tu pago y activamos tu plan. Ya puedes usar las funciones incluidas en tu membresia.",
     ctaLabel: "Ver membresia",
     legalNote: "Detalle fiscal y terminos en tu centro de facturacion.",
+  },
+  {
+    type: "bot-license-delivery-ready",
+    category: "membership",
+    subject: "Licencia Bot confirmada y entrega preparada",
+    preheader: "Tu compra fue validada correctamente.",
+    headline: "Entrega de Bot lista",
+    body: "Tu licencia del Bot CARVIPIX quedo activa y el flujo de entrega queda preparado con recursos de descarga, manual e instalacion guiada.",
+    ctaLabel: "Ver estado de entrega",
+    legalNote: "Correo transaccional ligado a compra de licencia.",
   },
   {
     type: "membership-renewal-success",

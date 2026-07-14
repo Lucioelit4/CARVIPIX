@@ -35,8 +35,8 @@ type DashboardMetrics = {
 const OUTCOME_ITEMS = [
   {
     icon: Bot,
-    title: "Opera mientras trabajas",
-    description: "Tu sistema mantiene ejecucion disciplinada 24/7 sin depender de tu tiempo libre.",
+    title: "Instala y opera en tu terminal",
+    description: "Recibes el paquete descargable, instalas en MT4/MT5 y ejecutas con reglas disciplinadas.",
   },
   {
     icon: Brain,
@@ -80,7 +80,7 @@ const ACTION_FEED = [
 const FAQ_ITEMS = [
   {
     q: "Cuanto tiempo tarda en quedar operativo?",
-    a: "El bot puede quedar instalado y listo el mismo dia con la guia de activacion incluida.",
+    a: "Normalmente el mismo dia: recibes licencia, guia de instalacion, manual y recursos de puesta en marcha.",
   },
   {
     q: "Necesito estar mirando la pantalla todo el dia?",
@@ -88,7 +88,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Funciona en cualquier broker?",
-    a: "La integración broker se habilita solo en entornos compatibles y después de completar la activación operativa correspondiente.",
+    a: "Funciona en brokers compatibles con MT4/MT5 y requiere completar instalacion y activacion guiada.",
   },
   {
     q: "Garantiza rentabilidad?",
@@ -115,7 +115,7 @@ const GUARANTEE_ITEMS = [
   {
     icon: Cpu,
     title: "Compatibilidad",
-    description: "Preparado para una futura activación controlada en ecosistemas MT4 y MT5 con requisitos claros de instalación.",
+    description: "Entrega preparada para ecosistemas MT4 y MT5 con requisitos claros de instalacion y soporte.",
   },
 ];
 
@@ -168,7 +168,7 @@ export default function BotPage() {
           drawdown: "0%",
           operaciones: String(primary.stats.totalTrades),
           broker: license?.brokerConnected ?? "MT4 / MT5",
-          estado: primary.status === "running" ? "Motor en vivo" : "Motor en preparacion",
+          estado: primary.status === "running" ? "Licencia activa" : "Pendiente de instalacion",
         });
       } catch {
         setMetrics({
@@ -223,7 +223,7 @@ export default function BotPage() {
               <CARVIPIXBadge variant="premium">AUTOMATIZACION CUANTITATIVA PREMIUM</CARVIPIXBadge>
               <h1 className="hero-title">Deja que la precision opere por ti cada minuto del mercado.</h1>
               <p className="hero-subtitle">
-                BOT CARVIPIX PRO muestra la estructura de analisis, gestion de riesgo y automatizacion disponible cuando la activacion operativa y la conexion broker han sido completadas.
+                BOT CARVIPIX PRO es un producto descargable: compras, recibes licencia y paquete de instalacion, y quedas listo para configurar tu terminal MT4/MT5.
               </p>
 
               <div className="hero-cta-row">
@@ -270,9 +270,9 @@ export default function BotPage() {
                 <div className="hero-orb-core">
                   <Bot size={42} />
                 </div>
-                <div className="hero-orb-tag hero-orb-tag-top">AI ENGINE</div>
+                <div className="hero-orb-tag hero-orb-tag-top">LICENCIA</div>
                 <div className="hero-orb-tag hero-orb-tag-right">RISK LAYER</div>
-                <div className="hero-orb-tag hero-orb-tag-bottom">AUTO EXECUTION</div>
+                <div className="hero-orb-tag hero-orb-tag-bottom">DESCARGA EA</div>
               </div>
 
               <CARVIPIXCard variant="premium" padding="16">
@@ -486,7 +486,7 @@ export default function BotPage() {
                 <CARVIPIXBadge variant="premium">MT4</CARVIPIXBadge>
                 <CARVIPIXBadge variant="premium">MT5</CARVIPIXBadge>
               </div>
-              <p>Compatibilidad prevista para entornos MetaTrader soportados una vez completada la activación operativa.</p>
+              <p>Compatibilidad orientada a entornos MetaTrader soportados mediante instalacion y activacion guiadas.</p>
             </CARVIPIXCard>
 
             <CARVIPIXCard variant="info" padding="16">
@@ -494,7 +494,7 @@ export default function BotPage() {
                 <Activity size={20} />
                 <h3>Instalacion</h3>
               </div>
-              <p>Proceso guiado en 3 pasos: descargar, vincular cuenta y validar parametros de riesgo.</p>
+              <p>Proceso guiado en 3 pasos: descargar paquete, instalar EA y completar activacion asistida.</p>
             </CARVIPIXCard>
 
             <CARVIPIXCard variant="info" padding="16">
