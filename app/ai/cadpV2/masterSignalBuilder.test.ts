@@ -9,7 +9,7 @@ function response(decision: CadpAnalysisResponseV2["analyst_decision"]): CadpAna
     analysis_id: "ana-1",
     snapshot_utc: new Date().toISOString(),
     symbol: "XAUUSD",
-    analysis_profile: "XAUUSD_INTRADAY_H1_M45_M5_V1",
+    analysis_profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
     data_assessment: { sufficient: true, visual_numeric_consistent: true, issues: [] },
     market_assessment: { regime: null, timeframe_alignment: null, volatility_state: null, session_assessment: null, news_risk: null },
     strategy: { selected_strategy_id: "CARVIPIX_NO_TRADE_V1", selected_strategy_version: "1", selection_reason: "TEST" },
@@ -62,7 +62,7 @@ test("master signal builder maps ENTER_BUY into BUY without mutating levels", ()
     signalId: "sig-1",
     analysisId: "ana-1",
     symbol: "XAUUSD",
-    profile: "XAUUSD_INTRADAY_H1_M45_M5_V1",
+    profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
     response: response("ENTER_BUY"),
   });
 

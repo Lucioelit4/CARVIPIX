@@ -1,3 +1,9 @@
+/**
+ * @deprecated DESCONECTADO DEL RUNTIME — No importado en shadowFlow ni snapshotBuilder.
+ * Contiene referencias obsoletas a M45 (eliminado). Mantenido como artefacto histórico.
+ * Las estrategias activas se encuentran en instrumentRegistry.ts (Expediente Maestro V3).
+ * NO eliminar hasta aprobación explícita de limpieza.
+ */
 export const XAUUSD_MTF_STRATEGY_CATALOG = [
   {
     strategy_id: "CARVIPIX_MTF_TREND_PULLBACK_XAUUSD_V1",

@@ -204,4 +204,12 @@ export class CadpCostManager {
       total_records: this.records.length,
     };
   }
+
+  /** Quick cost estimate for V3 — used by ShadowFlowV3 */
+  estimate(modelId: string, usage: { input_tokens: number; output_tokens: number; cached_tokens: number; reasoning_tokens: number }): {
+    locally_estimated_cost_usd: number;
+    pricing_version: string;
+  } {
+    return estimateByCatalog(modelId, usage);
+  }
 }

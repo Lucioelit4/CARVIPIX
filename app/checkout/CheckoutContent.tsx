@@ -130,12 +130,71 @@ export default function CheckoutContent() {
   const [legalError, setLegalError] = useState<string | null>(null);
   const buttonContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // ── Código de Fundador ────────────────────────────────────────────────────
+  const [founderCode, setFounderCode] = useState("");
+  const [founderCodeStatus, setFounderCodeStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
+  const [founderCodeError, setFounderCodeError] = useState<string | null>(null);
+  const [applyingCode, setApplyingCode] = useState(false);
+
+  const validateFounderCode = async () => {
+    const code = founderCode.trim().toUpperCase();
+    if (!code) return;
+    setFounderCodeStatus("validating");
+    setFounderCodeError(null);
+    try {
+      const res = await fetch("/api/beta/validate-code", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; valid?: boolean; error?: string };
+      if (payload.ok && payload.valid) {
+        setFounderCodeStatus("valid");
+      } else {
+        setFounderCodeStatus("invalid");
+        setFounderCodeError(payload.error ?? "Código no válido");
+      }
+    } catch {
+      setFounderCodeStatus("invalid");
+      setFounderCodeError("Error de conexión");
+    }
+  };
+
+  const applyFounderCode = async () => {
+    setApplyingCode(true);
+    try {
+      const res = await fetch("/api/beta/apply-code", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: founderCode.trim().toUpperCase(),
+          product_id: product?.id,
+          user_id: session?.user?.id,
+          user_email: session?.user?.email,
+        }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; order_id?: string; error?: string };
+      if (payload.ok && payload.order_id) {
+        router.push(`/checkout/success?kind=order&id=${encodeURIComponent(payload.order_id)}`);
+      } else {
+        setFounderCodeError(payload.error ?? "No se pudo aplicar el código");
+        setFounderCodeStatus("invalid");
+      }
+    } catch {
+      setFounderCodeError("Error de conexión");
+    } finally {
+      setApplyingCode(false);
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       const [offeringsResponse, sessionResponse, statusResponse] = await Promise.all([
-        fetch("/api/paypal/offerings", { cache: "no-store" }).catch(() => null),
-        fetch("/api/auth/session", { cache: "no-store" }).catch(() => null),
-        fetch("/api/payments/paypal/status", { cache: "no-store" }).catch(() => null),
+        fetch("/api/paypal/offerings", { cache: "no-store", credentials: "include" }).catch(() => null),
+        fetch("/api/auth/session", { cache: "no-store", credentials: "include" }).catch(() => null),
+        fetch("/api/payments/paypal/status", { cache: "no-store", credentials: "include" }).catch(() => null),
       ]);
 
       if (offeringsResponse?.ok) {
@@ -176,7 +235,7 @@ export default function CheckoutContent() {
         return;
       }
 
-      const response = await fetch("/api/client/compliance/acceptances", { cache: "no-store" });
+      const response = await fetch("/api/client/compliance/acceptances", { cache: "no-store", credentials: "include" });
       const payload = await parseJsonSafe<{
         data?: {
           requiredBeforePayment?: LegalDocumentSummary[];
@@ -211,6 +270,7 @@ export default function CheckoutContent() {
     try {
       const response = await fetch("/api/client/compliance/acceptances", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documentSlugs: requiredDocuments.map((doc) => doc.slug) }),
       });
@@ -266,6 +326,7 @@ export default function CheckoutContent() {
         const createOrder = async () => {
           const response = await fetch("/api/payments/paypal/orders", {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ productId: product.id }),
           });
@@ -281,6 +342,7 @@ export default function CheckoutContent() {
         const createSubscription = async () => {
           const response = await fetch("/api/payments/paypal/subscriptions", {
             method: "POST",
+            credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ productId: product.id }),
           });
@@ -299,6 +361,7 @@ export default function CheckoutContent() {
               const orderID = String(data.orderID || "");
               const response = await fetch(`/api/payments/paypal/orders/${encodeURIComponent(orderID)}/capture`, {
                 method: "POST",
+                credentials: "include",
               });
 
               const payload = await parseJsonSafe<{ data?: CaptureOrderResponse; error?: string }>(response);
@@ -449,10 +512,64 @@ export default function CheckoutContent() {
               {legalError && <p className="mt-2 text-xs text-red-300">{legalError}</p>}
             </div>
 
+            {/* ── Código de Fundador ──────────────────────────────────── */}
+            <div className="mt-4 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-3 space-y-2">
+              <p className="text-xs font-semibold text-[#D4AF37]">🎟️ Código de Fundador</p>
+              <p className="text-xs text-white/50">Si tienes un código FOUNDER-XXXX, ingrésalo para acceder sin costo.</p>
+              {founderCodeStatus !== "valid" ? (
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm uppercase focus:border-[#D4AF37] outline-none placeholder-white/30"
+                    placeholder="FOUNDER-XXXX"
+                    value={founderCode}
+                    maxLength={15}
+                    onChange={(e) => {
+                      setFounderCode(e.target.value.toUpperCase());
+                      setFounderCodeStatus("idle");
+                      setFounderCodeError(null);
+                    }}
+                    onKeyDown={(e) => { if (e.key === "Enter") void validateFounderCode(); }}
+                  />
+                  <CARVIPIXButton
+                    size="sm"
+                    variant="secondary"
+                    disabled={!founderCode.trim() || founderCodeStatus === "validating"}
+                    isLoading={founderCodeStatus === "validating"}
+                    onClick={() => void validateFounderCode()}
+                  >
+                    Validar
+                  </CARVIPIXButton>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-green-400 font-semibold">✅ Código válido — 100% de descuento aplicado</p>
+                  <CARVIPIXButton
+                    variant="primary"
+                    fullWidth
+                    isLoading={applyingCode}
+                    onClick={() => void applyFounderCode()}
+                  >
+                    Completar como Fundador
+                  </CARVIPIXButton>
+                  <button
+                    className="text-xs text-white/40 hover:text-white/60 transition w-full text-center"
+                    onClick={() => { setFounderCodeStatus("idle"); setFounderCode(""); setFounderCodeError(null); }}
+                  >
+                    Usar otro método de pago
+                  </button>
+                </div>
+              )}
+              {founderCodeError && <p className="text-xs text-red-400">{founderCodeError}</p>}
+            </div>
+
             <div className="mt-6 space-y-3">
-              <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
-              {(creatingButton || !sdkReady) && session?.authenticated && legalChecked && missingDocuments.length === 0 && (
-                <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
+              {founderCodeStatus !== "valid" && (
+                <>
+                  <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
+                  {(creatingButton || !sdkReady) && session?.authenticated && legalChecked && missingDocuments.length === 0 && (
+                    <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
+                  )}
+                </>
               )}
               <Link href="/dashboard">
                 <CARVIPIXButton variant="ghost" fullWidth>Ir al panel cliente</CARVIPIXButton>

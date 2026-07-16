@@ -1,0 +1,627 @@
+{
+  "run": {
+    "startedAt": "2026-07-14T00:51:51.947Z",
+    "finishedAt": "2026-07-14T00:52:12.974Z",
+    "mode": {
+      "shadow": true,
+      "paper": true,
+      "test": true,
+      "safeMode": true
+    },
+    "restrictions": {
+      "mt4Enabled": false,
+      "autobotEnabled": false,
+      "realExecutionTriggered": false,
+      "clientDeliveryTriggered": false,
+      "paymentsTriggered": false,
+      "nonExecutablePolicyActive": true,
+      "blockedByMissingBidAskSpread": true
+    }
+  },
+  "marketData": {
+    "provider": "Twelve Data",
+    "symbol": "XAU/USD",
+    "asset": "XAUUSD",
+    "timeframes": [
+      "1H",
+      "30M(native)",
+      "5M"
+    ],
+    "quote": {
+      "price": 4003.91059,
+      "bid": null,
+      "ask": null,
+      "spread": null,
+      "unavailableFields": [
+        "bid",
+        "ask",
+        "spread"
+      ],
+      "timestamp": 1783976400,
+      "datetime": "2026-07-14",
+      "exchange": "Forex"
+    },
+    "candles": {
+      "h1": 443,
+      "m5": 2427,
+      "m30": 587
+    },
+    "checks": [
+      {
+        "name": "twelve-data-api-operational",
+        "ok": true,
+        "details": "Quote price=4003.91059 ts=1783976400"
+      },
+      {
+        "name": "bid-ask-availability",
+        "ok": false,
+        "details": "Bid/ask not available in provider quote payload"
+      },
+      {
+        "name": "spread-availability",
+        "ok": false,
+        "details": "Spread not available"
+      },
+      {
+        "name": "timezone-normalized-utc",
+        "ok": true,
+        "details": "Series requested with timezone=UTC"
+      },
+      {
+        "name": "m5-gap-check",
+        "ok": true,
+        "details": "No gaps in 2427 candles (5M)"
+      },
+      {
+        "name": "m30-native-series-available",
+        "ok": true,
+        "details": "Loaded native M30 candles: 587"
+      },
+      {
+        "name": "m30-gap-check",
+        "ok": true,
+        "details": "No gaps in 587 candles (30M)"
+      },
+      {
+        "name": "closed-candles-available",
+        "ok": true,
+        "details": "h1=443 m5=2427 m30=587"
+      },
+      {
+        "name": "h1-gap-check",
+        "ok": true,
+        "details": "No gaps in 443 candles (1H)"
+      },
+      {
+        "name": "ema-availability",
+        "ok": true,
+        "details": "EMA20/50/200 computed for H1/M30/M5"
+      },
+      {
+        "name": "news-context-availability",
+        "ok": true,
+        "details": "Finnhub news/context available"
+      },
+      {
+        "name": "pre-chatgpt-readiness",
+        "ok": false,
+        "details": "MISSING_TICK|MARKET_CLOSED_OR_STALE_TICK"
+      }
+    ],
+    "dataSimulated": false
+  },
+  "newsContext": {
+    "available": true,
+    "companyItems": 3,
+    "generalItems": 100,
+    "details": "Finnhub news/context available"
+  },
+  "expediente": {
+    "status": "BUILT",
+    "analysisId": "analysis-real-xauusd-1783990311947",
+    "snapshotUtc": "2026-07-14T00:51:53.303Z",
+    "profile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+    "hashes": {
+      "numeric": "9a0f6a5c260fa1950e1c1d7bd9bd132ed01676c88e82ffbe89bae3b638adecc4",
+      "final": "b80662c5ad713c410dd808d4f7345b8d08daa0f1c8602f671ce161754f7d6c9e"
+    }
+  },
+  "prompt": {
+    "promptId": "CARVIPIX_ANALYTICAL_CORE_V1",
+    "promptVersion": "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+    "sectionOrder": [
+      "1. Núcleo Analítico CARVIPIX V1",
+      "2. Mensaje Operativo del Analista",
+      "3. Estrategias autorizadas",
+      "4. Expediente numérico",
+      "5. Contexto visual (H1 + M30 + M5)",
+      "6. Noticias y contexto económico",
+      "7. Sesiones de mercado",
+      "8. Restricciones objetivas",
+      "9. Esquema JSON oficial"
+    ],
+    "text": "1. Núcleo Analítico CARVIPIX V1\n# NÚCLEO ANALÍTICO CARVIPIX V1\n\nAnaliza el expediente completo como Analista Principal de CARVIPIX.\n\nEvalúa un solo activo y un solo instante del mercado utilizando conjuntamente toda la evidencia numérica, visual, temporal y contextual proporcionada.\n\nInterpreta el mercado con independencia y selecciona exactamente una de las estrategias autorizadas que mejor represente el comportamiento actual. Si ninguna estrategia resulta adecuada, selecciona NO_TRADE.\n\nNo inventes estrategias, datos, niveles, noticias ni información faltante.\n\nNo fuerces una operación. La calidad de la decisión tiene prioridad sobre la cantidad de señales.\n\nLos datos numéricos son la referencia oficial para precios, indicadores, horarios y valores exactos. Las gráficas complementan el análisis visual de estructura, impulso, retroceso, comportamiento de las velas y relación entre temporalidades.\n\nSi existe una contradicción material entre las gráficas y los datos numéricos, indícala claramente y no emitas una entrada hasta resolverla.\n\nDistingue correctamente entre:\n\n- dirección probable sin setup;\n- setup en formación;\n- setup válido todavía no activado;\n- entrada condicionada;\n- entrada ejecutable ahora;\n- entrada perdida;\n- mercado no operable;\n- datos insuficientes.\n\nUna operación válida debe presentar:\n\n- lógica de mercado clara;\n- estrategia autorizada coherente;\n- evidencia suficiente en las temporalidades;\n- entrada defendible y vigente;\n- condición objetiva de invalidación;\n- Stop Loss técnico;\n- Take Profit realista;\n- recorrido disponible suficiente;\n- relación riesgo-beneficio coherente después de costos;\n- condiciones aceptables de sesión, volatilidad, liquidez, spread y noticias.\n\n## Stop Loss\n\nEl Stop Loss debe ubicarse donde la hipótesis operativa deja técnicamente de ser válida.\n\nNo lo amplíes solo para darle más espacio al precio.\n\nNo lo acerques artificialmente para mejorar la relación riesgo-beneficio.\n\nIdentifica el nivel, la estructura o la vela que sostiene la invalidación.\n\nSi el único Stop Loss técnicamente correcto resulta excesivo para la oportunidad, selecciona NO_TRADE.\n\n## Take Profit\n\nEl Take Profit debe representar un objetivo técnicamente razonable y alcanzable según la estructura y el recorrido real disponible.\n\nNo extiendas artificialmente el objetivo para fabricar una relación riesgo-beneficio atractiva.\n\nSi el objetivo realista no ofrece recorrido suficiente después de spread, costos y posible deslizamiento, selecciona NO_TRADE.\n\n## Riesgo\n\nNo calcules lotaje.\n\nNo modifiques el porcentaje de riesgo.\n\nNo aumentes el riesgo para recuperar pérdidas.\n\nNo utilices martingala ni promedies pérdidas.\n\nLa administración de capital corresponde exclusivamente a CARVIPIX.\n\n## Contexto operativo\n\nConsidera:\n\n- coherencia entre H1, M45 y M5;\n- estructura;\n- volatilidad;\n- liquidez;\n- spread y costos;\n- sesión actual;\n- tiempo restante de sesión o mercado;\n- noticias próximas o activas;\n- vigencia de la entrada;\n- contradicciones relevantes.\n\nSi las noticias necesitan verificación y el expediente lo permite, solicita NEWS_VERIFICATION_REQUIRED. No inventes una explicación para movimientos no confirmados.\n\n## Decisión\n\nEntrega exactamente una decisión:\n\n- ENTER_BUY\n- ENTER_SELL\n- WAIT\n- CONDITIONAL_ENTRY\n- NO_TRADE\n- ENTRY_MISSED\n- DATA_INSUFFICIENT\n- NEWS_VERIFICATION_REQUIRED\n\nSi decides operar o dejar una entrada condicionada, incluye:\n\n- estrategia seleccionada;\n- dirección;\n- entrada o zona de entrada;\n- condición de activación;\n- condición de invalidación;\n- Stop Loss;\n- justificación del Stop Loss;\n- Take Profit;\n- justificación del Take Profit;\n- relación riesgo-beneficio propuesta;\n- duración estimada;\n- expiración de la oportunidad;\n- evidencia favorable;\n- contradicciones;\n- advertencias.\n\nLa confianza expresa únicamente qué tan sólida y coherente consideras la evaluación con la evidencia disponible. No representa una probabilidad garantizada de ganancia.\n\nResponde únicamente en el formato estructurado solicitado por CARVIPIX. No incluyas texto fuera de ese formato.\n\n2. Mensaje Operativo del Analista\n# CARVIPIX → ANALISTA PRINCIPAL\n\nRecibirás un expediente completo correspondiente a un único activo, un único instante del mercado y un único snapshot sincronizado.\n\nTodo el expediente ha sido preparado por CARVIPIX utilizando datos reales, coherentes y sincronizados.\n\nToda la información numérica, visual y contextual pertenece exactamente al mismo momento del mercado.\n\nNo utilices recuerdos de análisis anteriores.\n\nNo asumas información que no exista dentro del expediente.\n\nTu responsabilidad consiste en comprender completamente el mercado antes de emitir cualquier decisión.\n\nNo busques generar una operación.\n\nBusca generar la decisión técnicamente más correcta.\n\nEl expediente contiene toda la evidencia disponible.\n\nAnalízala como un único conjunto de información.\n\nNo evalúes cada elemento por separado.\n\nIntegra simultáneamente:\n\n• Contexto general.\n• Estructura del mercado.\n• Acción del precio.\n• Temporalidad H1.\n• Temporalidad M45.\n• Temporalidad M5.\n• Información visual.\n• Indicadores.\n• Volatilidad.\n• Liquidez.\n• Spread.\n• Sesiones.\n• Noticias.\n• Costos operativos.\n• Estrategias autorizadas.\n\nUtiliza toda tu capacidad de razonamiento para construir la explicación más coherente posible del comportamiento actual del mercado.\n\nNo intentes confirmar una operación.\n\nPrimero intenta demostrar por qué NO debería existir una operación.\n\nSi después de evaluar toda la evidencia la hipótesis continúa siendo sólida y consistente, entonces propón la operación.\n\nSi la evidencia no es suficiente, la respuesta correcta puede ser:\n\n• WAIT\n• NO_TRADE\n• ENTRY_MISSED\n• DATA_INSUFFICIENT\n• NEWS_VERIFICATION_REQUIRED\n\nTodas esas respuestas son completamente válidas cuando representan correctamente el estado real del mercado.\n\nSelecciona únicamente UNA estrategia perteneciente al conjunto de estrategias autorizadas.\n\nNunca inventes estrategias.\n\nNunca combines varias estrategias.\n\nSi ninguna estrategia representa correctamente el comportamiento observado, selecciona NO_TRADE.\n\nSi decides operar, determina:\n\n• La entrada técnicamente más lógica.\n• El punto donde la hipótesis deja de ser válida.\n• Ese punto será el Stop Loss.\n• El objetivo técnicamente más razonable.\n• Ese objetivo será el Take Profit.\n\nEl Stop Loss debe representar la invalidación técnica de la hipótesis.\n\nNunca lo amplíes únicamente para darle más espacio al precio.\n\nNunca lo acerques artificialmente para mejorar la relación riesgo-beneficio.\n\nEl Take Profit debe representar el recorrido técnicamente más razonable según la estructura del mercado.\n\nNunca extiendas artificialmente el objetivo únicamente para obtener un mejor RR.\n\nSi la única forma de justificar una operación requiere un Stop Loss excesivo o un objetivo irreal, la respuesta correcta es NO_TRADE.\n\nLos datos numéricos representan la referencia oficial para todos los valores exactos.\n\nLas imágenes representan evidencia visual complementaria para evaluar:\n\n• Estructura.\n• Impulso.\n• Retrocesos.\n• Comportamiento de las velas.\n• Relación entre temporalidades.\n• Calidad visual del contexto.\n\nSi detectas contradicciones importantes entre la evidencia visual y la evidencia numérica, indícalo claramente antes de emitir una decisión.\n\nNo inventes datos.\n\nNo inventes niveles.\n\nNo inventes noticias.\n\nNo inventes probabilidades.\n\nNo calcules tamaño de posición.\n\nNo calcules lotaje.\n\nNo modifiques el porcentaje de riesgo.\n\nLa administración del capital corresponde exclusivamente a CARVIPIX.\n\nTu responsabilidad termina al entregar el mejor análisis técnico posible utilizando exclusivamente la evidencia disponible.\n\nEntrega una única decisión clara, coherente y técnicamente defendible.\n\nResponde únicamente utilizando el formato JSON definido por CARVIPIX.\n\nNo incluyas texto fuera del esquema solicitado.\n\n3. Estrategias autorizadas\n[{\"strategy_id\":\"CARVIPIX_MTF_TREND_PULLBACK_XAUUSD_V1\",\"strategy_version\":\"1.0.0\",\"status\":\"SHADOW\",\"short_description\":\"MTF pullback for XAUUSD intraday.\",\"critical_requirements\":[\"H1_DIRECTION\",\"M30_PULLBACK_OR_COMPRESSION\",\"M5_CONFIRMATION\"],\"allowed_profile\":\"XAUUSD_INTRADAY_H1_M30_M5_V1\"},{\"strategy_id\":\"CARVIPIX_VOLATILITY_BREAKOUT_XAUUSD_V1\",\"strategy_version\":\"1.0.0\",\"status\":\"SHADOW\",\"short_description\":\"Volatility breakout for XAUUSD intraday.\",\"critical_requirements\":[\"H1_RANGE_OR_COMPRESSION\",\"M30_EXPANSION\",\"M5_TRIGGER\"],\"allowed_profile\":\"XAUUSD_INTRADAY_H1_M30_M5_V1\"},{\"strategy_id\":\"CARVIPIX_NO_TRADE_V1\",\"strategy_version\":\"1.0.0\",\"status\":\"ACTIVE\",\"short_description\":\"Explicit no trade option.\",\"critical_requirements\":[\"NO_SETUP\",\"RISK_OR_NEWS_BLOCK\"],\"allowed_profile\":\"XAUUSD_INTRADAY_H1_M30_M5_V1\"}]\n\n4. Expediente numérico\n{\"identity\":{\"analysis_id\":\"analysis-real-xauusd-1783990311947\",\"symbol\":\"XAUUSD\",\"broker_symbol\":\"XAU/USD\",\"analysis_profile\":\"XAUUSD_INTRADAY_H1_M30_M5_V1\",\"snapshot_utc\":\"2026-07-14T00:51:53.303Z\",\"current_bid\":4000.69149,\"current_ask\":4000.69149,\"last_closed_candle_h1\":1783983600000,\"last_closed_candle_m30\":1783987200000,\"last_closed_candle_m5\":1783989900000,\"engine_version\":\"CARVIPIX_AI_ENGINE_v1\",\"context_version\":\"ai_context_v1\",\"visual_schema_version\":\"cadp_visual_v1\",\"prompt_version\":\"CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT\",\"response_schema_version\":\"cadp_response_v2\",\"m30_alignment_version\":\"m30_alignment_v1\"},\"timeframes\":{\"H1\":{\"timeframe\":\"H1\",\"closed_candles\":[{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783872000000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.41583,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783875600000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.42184,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783879200000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.43161,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783882800000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.44447,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783886400000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.48647,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783890000000,\"open\":4111.44482,\"high\":4111.62957,\"low\":4111.38318,\"close\":4111.47566,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783893600000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38342,\"close\":4111.49183,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783897200000,\"open\":4111.44482,\"high\":4111.62981,\"low\":4111.38318,\"close\":4111.50686,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783900800000,\"open\":4111.44482,\"high\":4111.63659,\"low\":4111.38004,\"close\":4111.51986,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783904400000,\"open\":4111.44531,\"high\":4111.64438,\"low\":4111.3851,\"close\":4111.54428,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783908000000,\"open\":4111.46033,\"high\":4111.74068,\"low\":4111.36101,\"close\":4111.53882,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783911600000,\"open\":4111.4482,\"high\":4111.713,\"low\":4110.48997,\"close\":4111.55762,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783915200000,\"open\":4111.46511,\"high\":4112.96916,\"low\":4074.81358,\"close\":4077.63716,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783918800000,\"open\":4077.70634,\"high\":4084.29995,\"low\":4068.8842,\"close\":4084.0945,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783922400000,\"open\":4083.76858,\"high\":4091.41147,\"low\":4065.53645,\"close\":4076.90982,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783926000000,\"open\":4077.14875,\"high\":4088.64175,\"low\":4066.64117,\"close\":4073.52891,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783929600000,\"open\":4072.64975,\"high\":4077.63823,\"low\":4066.82699,\"close\":4070.44738,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783933200000,\"open\":4070.31343,\"high\":4070.31343,\"low\":4053.01342,\"close\":4059.40809,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783936800000,\"open\":4059.80404,\"high\":4060.73375,\"low\":4051.20726,\"close\":4058.53438,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783940400000,\"open\":4058.19737,\"high\":4070.99821,\"low\":4052.6849,\"close\":4054.61334,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783944000000,\"open\":4055.03267,\"high\":4063.54609,\"low\":4044.81657,\"close\":4052.84182,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783947600000,\"open\":4053.13903,\"high\":4064.20881,\"low\":4049.07479,\"close\":4063.94247,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783951200000,\"open\":4063.19893,\"high\":4080.83602,\"low\":4062.60464,\"close\":4074.80337,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783954800000,\"open\":4074.9291,\"high\":4077.75682,\"low\":4068.63755,\"close\":4069.97134,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783958400000,\"open\":4069.62028,\"high\":4070.17555,\"low\":4048.11596,\"close\":4061.07949,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783962000000,\"open\":4060.77497,\"high\":4068.34825,\"low\":4054.9856,\"close\":4056.76908,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783965600000,\"open\":4056.86059,\"high\":4067.98971,\"low\":4054.16363,\"close\":4066.08214,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783969200000,\"open\":4064.99213,\"high\":4067.52481,\"low\":4044.43826,\"close\":4048.44624,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783972800000,\"open\":4051.32598,\"high\":4051.32598,\"low\":4002.72185,\"close\":4012.56192,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783976400000,\"open\":4012.09584,\"high\":4019.13106,\"low\":4010.21338,\"close\":4012.94101,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783980000000,\"open\":4013.35386,\"high\":4017.51637,\"low\":3986.60501,\"close\":3992.42364,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"1H\",\"timestamp\":1783983600000,\"open\":3991.94425,\"high\":4001.59304,\"low\":3990.99362,\"close\":3993.40267,\"volume\":0,\"complete\":true}],\"open_candle\":null,\"ema20\":0,\"ema50\":0,\"ema200\":0,\"atr\":0,\"adx\":0,\"volatility_percentile\":50,\"structural_highs\":[4067.52481,4051.32598,4019.13106,4017.51637,4001.59304],\"structural_lows\":[4044.43826,4002.72185,4010.21338,3986.60501,3990.99362],\"support_zones\":[4010.21338,3986.60501,3990.99362],\"resistance_zones\":[4019.13106,4017.51637,4001.59304],\"latest_timestamp\":1783983600000},\"M30\":{\"timeframe\":\"M30\",\"closed_candles\":[{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783931400000,\"open\":4067.73943,\"high\":4077.63823,\"low\":4066.82699,\"close\":4070.44738,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783933200000,\"open\":4070.31343,\"high\":4070.31343,\"low\":4053.01342,\"close\":4061.66378,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783935000000,\"open\":4061.05408,\"high\":4062.72853,\"low\":4056.51393,\"close\":4059.40809,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783936800000,\"open\":4059.80404,\"high\":4060.73375,\"low\":4051.20726,\"close\":4054.35952,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783938600000,\"open\":4054.70632,\"high\":4058.73562,\"low\":4053.17769,\"close\":4058.53438,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783940400000,\"open\":4058.19737,\"high\":4070.99821,\"low\":4054.61057,\"close\":4062.42993,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783942200000,\"open\":4061.44766,\"high\":4065.13396,\"low\":4052.6849,\"close\":4054.61334,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783944000000,\"open\":4055.03267,\"high\":4059.68099,\"low\":4044.81657,\"close\":4057.68762,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783945800000,\"open\":4058.10482,\"high\":4063.54609,\"low\":4052.84182,\"close\":4052.84182,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783947600000,\"open\":4053.13903,\"high\":4060.58391,\"low\":4049.07479,\"close\":4056.64426,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783949400000,\"open\":4057.47457,\"high\":4064.20881,\"low\":4056.13694,\"close\":4063.94247,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783951200000,\"open\":4063.19893,\"high\":4080.83602,\"low\":4062.60464,\"close\":4075.13536,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783953000000,\"open\":4075.08568,\"high\":4078.01849,\"low\":4072.15865,\"close\":4074.80337,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783954800000,\"open\":4074.9291,\"high\":4077.75682,\"low\":4071.47535,\"close\":4073.29218,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783956600000,\"open\":4073.97852,\"high\":4073.97852,\"low\":4068.63755,\"close\":4069.97134,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783958400000,\"open\":4069.62028,\"high\":4070.17555,\"low\":4065.04065,\"close\":4065.25248,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783960200000,\"open\":4065.3514,\"high\":4068.27022,\"low\":4048.11596,\"close\":4061.07949,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783962000000,\"open\":4060.77497,\"high\":4065.86705,\"low\":4058.27686,\"close\":4063.45625,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783963800000,\"open\":4063.24368,\"high\":4068.34825,\"low\":4054.9856,\"close\":4056.76908,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783965600000,\"open\":4056.86059,\"high\":4063.55398,\"low\":4054.16363,\"close\":4060.82067,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783967400000,\"open\":4060.91082,\"high\":4067.98971,\"low\":4059.1005,\"close\":4066.08214,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783969200000,\"open\":4064.99213,\"high\":4067.52481,\"low\":4058.46089,\"close\":4064.48875,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783971000000,\"open\":4064.0486,\"high\":4064.0486,\"low\":4044.43826,\"close\":4048.44624,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783972800000,\"open\":4051.32598,\"high\":4051.32598,\"low\":4004.48502,\"close\":4015.74754,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783974600000,\"open\":4017.00136,\"high\":4020.98454,\"low\":4002.72185,\"close\":4012.56192,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783976400000,\"open\":4012.09584,\"high\":4019.13106,\"low\":4011.79715,\"close\":4016.78204,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783978200000,\"open\":4016.27752,\"high\":4017.19359,\"low\":4010.21338,\"close\":4012.94101,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783980000000,\"open\":4013.35386,\"high\":4017.51637,\"low\":4003.79945,\"close\":4004.73923,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783981800000,\"open\":4006.11745,\"high\":4006.11745,\"low\":3986.60501,\"close\":3992.42364,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783983600000,\"open\":3991.94425,\"high\":4001.59304,\"low\":3990.99362,\"close\":3998.83435,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783985400000,\"open\":3998.72632,\"high\":4000.6401,\"low\":3992.97237,\"close\":3993.40267,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"30M\",\"timestamp\":1783987200000,\"open\":3993.69229,\"high\":3996.64282,\"low\":3986.92289,\"close\":3995.69268,\"volume\":0,\"complete\":true}],\"open_candle\":null,\"ema20\":0,\"ema50\":0,\"ema200\":0,\"atr\":0,\"adx\":0,\"volatility_percentile\":50,\"structural_highs\":[4017.51637,4006.11745,4001.59304,4000.6401,3996.64282],\"structural_lows\":[4003.79945,3986.60501,3990.99362,3992.97237,3986.92289],\"support_zones\":[3990.99362,3992.97237,3986.92289],\"resistance_zones\":[4001.59304,4000.6401,3996.64282],\"latest_timestamp\":1783987200000},\"M5\":{\"timeframe\":\"M5\",\"closed_candles\":[{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783975800000,\"open\":4005.44857,\"high\":4008.64996,\"low\":4005.44857,\"close\":4007.03068,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783976100000,\"open\":4007.10553,\"high\":4012.90314,\"low\":4007.10553,\"close\":4012.56192,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783976400000,\"open\":4012.09584,\"high\":4016.38686,\"low\":4012.09584,\"close\":4014.51841,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783976700000,\"open\":4014.67806,\"high\":4015.89567,\"low\":4011.87515,\"close\":4013.28733,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783977000000,\"open\":4013.05795,\"high\":4017.25253,\"low\":4013.03638,\"close\":4015.45135,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783977300000,\"open\":4015.89402,\"high\":4018.23935,\"low\":4011.79715,\"close\":4015.50307,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783977600000,\"open\":4014.74416,\"high\":4019.13106,\"low\":4013.30312,\"close\":4016.49452,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783977900000,\"open\":4016.98678,\"high\":4017.06324,\"low\":4014.77437,\"close\":4016.78204,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783978200000,\"open\":4016.27752,\"high\":4017.19359,\"low\":4015.41921,\"close\":4016.74231,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783978500000,\"open\":4016.51746,\"high\":4016.86614,\"low\":4014.61319,\"close\":4015.52516,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783978800000,\"open\":4015.27797,\"high\":4016.2737,\"low\":4013.98973,\"close\":4014.11464,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783979100000,\"open\":4014.2654,\"high\":4014.66496,\"low\":4011.96881,\"close\":4013.42879,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783979400000,\"open\":4013.18316,\"high\":4013.6464,\"low\":4010.21338,\"close\":4012.54195,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783979700000,\"open\":4011.49189,\"high\":4014.11604,\"low\":4011.49189,\"close\":4012.94101,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783980000000,\"open\":4013.35386,\"high\":4017.51637,\"low\":4012.89692,\"close\":4016.89357,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783980300000,\"open\":4016.79613,\"high\":4016.79613,\"low\":4014.12974,\"close\":4014.61643,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783980600000,\"open\":4014.71983,\"high\":4016.2795,\"low\":4013.62067,\"close\":4013.94456,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783980900000,\"open\":4014.59744,\"high\":4014.59744,\"low\":4011.55327,\"close\":4011.69838,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783981200000,\"open\":4011.95678,\"high\":4012.81978,\"low\":4010.87175,\"close\":4012.52095,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783981500000,\"open\":4012.06494,\"high\":4012.06494,\"low\":4003.79945,\"close\":4004.73923,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783981800000,\"open\":4006.11745,\"high\":4006.11745,\"low\":3994.11659,\"close\":3995.49339,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783982100000,\"open\":3998.10177,\"high\":3998.10177,\"low\":3991.82248,\"close\":3992.2471,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783982400000,\"open\":3992.5844,\"high\":4000.11715,\"low\":3992.5844,\"close\":3999.90492,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783982700000,\"open\":3999.47324,\"high\":4002.71601,\"low\":3997.28185,\"close\":3997.61871,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783983000000,\"open\":3998.17031,\"high\":3999.20016,\"low\":3991.69727,\"close\":3993.32815,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783983300000,\"open\":3993.38449,\"high\":3996.43543,\"low\":3986.60501,\"close\":3992.42364,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783983600000,\"open\":3991.94425,\"high\":3997.13873,\"low\":3990.99362,\"close\":3994.56046,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783983900000,\"open\":3994.82538,\"high\":3997.74466,\"low\":3994.51792,\"close\":3997.43364,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783984200000,\"open\":3997.00962,\"high\":3998.56052,\"low\":3997.00962,\"close\":3998.17948,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783984500000,\"open\":3998.02112,\"high\":4000.8951,\"low\":3997.28185,\"close\":4000.62991,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783984800000,\"open\":4000.26857,\"high\":4001.44052,\"low\":3999.32465,\"close\":4001.39361,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783985100000,\"open\":4001.59304,\"high\":4001.59304,\"low\":3996.5835,\"close\":3998.83435,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783985400000,\"open\":3998.72632,\"high\":4000.6401,\"low\":3998.40064,\"close\":4000.43093,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783985700000,\"open\":4000.03104,\"high\":4000.3673,\"low\":3997.78458,\"close\":3997.94491,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783986000000,\"open\":3998.2186,\"high\":3998.40064,\"low\":3996.80256,\"close\":3997.53357,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783986300000,\"open\":3997.67241,\"high\":3998.72041,\"low\":3995.41478,\"close\":3996.00467,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783986600000,\"open\":3997.21675,\"high\":3997.21675,\"low\":3993.76972,\"close\":3995.67157,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783986900000,\"open\":3995.33642,\"high\":3996.17111,\"low\":3992.97237,\"close\":3993.40267,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783987200000,\"open\":3993.69229,\"high\":3995.34512,\"low\":3991.06003,\"close\":3991.33672,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783987500000,\"open\":3991.82471,\"high\":3995.51743,\"low\":3991.21932,\"close\":3995.07329,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783987800000,\"open\":3994.25718,\"high\":3994.25718,\"low\":3990.58223,\"close\":3992.62156,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783988100000,\"open\":3991.72672,\"high\":3994.08875,\"low\":3987.87543,\"close\":3988.55996,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783988400000,\"open\":3989.46113,\"high\":3993.81919,\"low\":3986.92289,\"close\":3993.32147,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783988700000,\"open\":3992.1904,\"high\":3996.64282,\"low\":3992.1904,\"close\":3995.69268,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783989000000,\"open\":3996.12123,\"high\":3998.24077,\"low\":3994.56739,\"close\":3997.99376,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783989300000,\"open\":3997.80274,\"high\":4000,\"low\":3997.27943,\"close\":3999.77342,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783989600000,\"open\":3999.74283,\"high\":4000.48006,\"low\":3998.88031,\"close\":3999.73979,\"volume\":0,\"complete\":true},{\"asset\":\"XAUUSD\",\"timeframe\":\"5M\",\"timestamp\":1783989900000,\"open\":3999.76996,\"high\":4000.94713,\"low\":3999.52006,\"close\":4000.69149,\"volume\":0,\"complete\":true}],\"open_candle\":null,\"ema20\":0,\"ema50\":0,\"ema200\":0,\"atr\":0,\"adx\":0,\"volatility_percentile\":50,\"structural_highs\":[3996.64282,3998.24077,4000,4000.48006,4000.94713],\"structural_lows\":[3992.1904,3994.56739,3997.27943,3998.88031,3999.52006],\"support_zones\":[3997.27943,3998.88031,3999.52006],\"resistance_zones\":[4000,4000.48006,4000.94713],\"latest_timestamp\":1783989900000}},\"market_now\":{\"spread\":0,\"spread_avg\":0,\"spread_vs_atr\":0,\"session\":\"ASIA\",\"volatility_now\":0,\"volatility_percentile\":50,\"market_open\":true,\"news_status\":\"CURRENT\"},\"risk_envelope\":{\"max_daily_risk_pct\":1,\"max_exposure_pct\":3,\"lot_size_policy\":\"CARVIPIX_CONTROLLED\",\"auto_execution_eligible\":false,\"human_review_required\":true}}\n\n5. Contexto visual (H1 + M30 + M5)\n{\"analysis_id\":\"analysis-real-xauusd-1783990311947\",\"images\":[{\"timeframe\":\"1H\",\"filename\":\"analysis-real-xauusd-1783990311947_1H_23b951b80ace.svg\",\"width\":1280,\"height\":720,\"first_candle_timestamp\":1783872000000,\"last_closed_candle_timestamp\":1783983600000,\"open_candle_included\":false,\"sha256\":\"23b951b80ace14b18d96a17b4582434455a34e1287179a0a82a149a7b3a9fc53\",\"source_snapshot_id\":\"analysis-real-xauusd-1783990311947\"},{\"timeframe\":\"30M\",\"filename\":\"analysis-real-xauusd-1783990311947_30M_58762f09023f.svg\",\"width\":1280,\"height\":720,\"first_candle_timestamp\":1783931400000,\"last_closed_candle_timestamp\":1783987200000,\"open_candle_included\":false,\"sha256\":\"58762f09023f1945a7f237f9ea90a0008acaa279d51b8439bf4e45824ca85634\",\"source_snapshot_id\":\"analysis-real-xauusd-1783990311947\"},{\"timeframe\":\"5M\",\"filename\":\"analysis-real-xauusd-1783990311947_5M_a35d8b36ffbc.svg\",\"width\":1280,\"height\":720,\"first_candle_timestamp\":1783975800000,\"last_closed_candle_timestamp\":1783989900000,\"open_candle_included\":false,\"sha256\":\"a35d8b36ffbc92daee17255f6c9ecedc031b6201a20d60cdbcc5aa119e29c2fd\",\"source_snapshot_id\":\"analysis-real-xauusd-1783990311947\"}],\"visual_manifest_hash\":\"7dcf68449375292865663ab7d5f24c0447c07c42fa35297c386177907996941a\"}\n\n6. Noticias y contexto económico\n{\"news_status\":\"CURRENT\",\"last_refresh_utc\":\"2026-07-14T00:51:53.314Z\",\"events\":[],\"source_ids\":[\"economic-default-empty\"],\"research_used\":true,\"verification_requested\":false,\"evidence_hash\":\"4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945\"}\n\n7. Sesiones de mercado\n{\"sessions\":{\"market_status\":\"CLOSING_SOON\",\"primary_session\":\"ASIA\",\"session_overlap\":\"NONE\",\"minutes_to_session_close\":0,\"minutes_to_daily_maintenance\":0,\"minutes_to_weekly_close\":0,\"next_market_open_utc\":null,\"holiday_schedule_active\":false,\"early_close\":false,\"schedule_source\":\"carvipix-session-service-v1\"}}\n\n8. Restricciones objetivas\n{\"feature_flags\":{\"CADP_V1_ENABLED\":false,\"AI_ANALYST_MODE\":\"SHADOW\",\"AI_VISUAL_CONTEXT_REQUIRED\":true,\"AI_NEWS_RESEARCH_ENABLED\":false,\"AI_REASONING_EFFORT\":\"\",\"AI_IMAGE_DETAIL\":\"\"},\"constraints\":{\"execution\":\"DISABLED\",\"mode\":\"SHADOW_ONLY\",\"human_review_required\":true,\"auto_execution_eligible\":false}}\n\n9. Esquema JSON oficial\n{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"analysis_id\",\"snapshot_utc\",\"symbol\",\"analysis_profile\",\"data_assessment\",\"market_assessment\",\"strategy\",\"analyst_decision\",\"system_validation_result\",\"final_system_status\",\"setup\",\"order_plan\",\"quality\",\"news\",\"evidence\",\"client_message_code\",\"human_review_required\",\"visual_manifest_hash\",\"prompt_version\",\"response_schema_version\",\"engine_version\"],\"properties\":{\"analysis_id\":{\"type\":\"string\"},\"snapshot_utc\":{\"type\":\"string\"},\"symbol\":{\"type\":\"string\"},\"analysis_profile\":{\"type\":\"string\"},\"data_assessment\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"sufficient\",\"visual_numeric_consistent\",\"issues\"],\"properties\":{\"sufficient\":{\"type\":\"boolean\"},\"visual_numeric_consistent\":{\"type\":\"boolean\"},\"issues\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}}},\"market_assessment\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"regime\",\"timeframe_alignment\",\"volatility_state\",\"session_assessment\",\"news_risk\"],\"properties\":{\"regime\":{\"type\":[\"string\",\"null\"]},\"timeframe_alignment\":{\"type\":[\"string\",\"null\"],\"enum\":[\"ALIGNED\",\"MISALIGNED\",null]},\"volatility_state\":{\"type\":[\"string\",\"null\"]},\"session_assessment\":{\"type\":[\"string\",\"null\"]},\"news_risk\":{\"type\":[\"string\",\"null\"]}}},\"strategy\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"selected_strategy_id\",\"selected_strategy_version\",\"selection_reason\"],\"properties\":{\"selected_strategy_id\":{\"type\":[\"string\",\"null\"]},\"selected_strategy_version\":{\"type\":[\"string\",\"null\"]},\"selection_reason\":{\"type\":[\"string\",\"null\"]}}},\"analyst_decision\":{\"type\":\"string\"},\"system_validation_result\":{\"type\":\"string\"},\"final_system_status\":{\"type\":\"string\"},\"setup\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"valid\",\"direction\",\"activation_condition\",\"entry_missed\",\"invalidation_condition\"],\"properties\":{\"valid\":{\"type\":[\"boolean\",\"null\"]},\"direction\":{\"type\":[\"string\",\"null\"],\"enum\":[\"BUY\",\"SELL\",\"NONE\",null]},\"activation_condition\":{\"type\":[\"string\",\"null\"]},\"entry_missed\":{\"type\":[\"boolean\",\"null\"]},\"invalidation_condition\":{\"type\":[\"string\",\"null\"]}}},\"order_plan\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"entry_type\",\"entry_price\",\"entry_zone_min\",\"entry_zone_max\",\"stop_loss\",\"stop_anchor_source\",\"stop_anchor_timeframe\",\"stop_anchor_timestamp\",\"stop_anchor_price\",\"stop_buffer\",\"stop_distance_price\",\"stop_distance_atr\",\"stop_reason\",\"take_profit\",\"target_anchor_source\",\"target_anchor_id\",\"target_anchor_timeframe\",\"target_anchor_timestamp\",\"target_anchor_price\",\"reward_distance_price\",\"proposed_gross_rr\",\"proposed_net_rr\",\"target_reason\",\"expected_duration\",\"expires_at\"],\"properties\":{\"entry_type\":{\"type\":[\"string\",\"null\"]},\"entry_price\":{\"type\":[\"number\",\"null\"]},\"entry_zone_min\":{\"type\":[\"number\",\"null\"]},\"entry_zone_max\":{\"type\":[\"number\",\"null\"]},\"stop_loss\":{\"type\":[\"number\",\"null\"]},\"stop_anchor_source\":{\"type\":[\"string\",\"null\"]},\"stop_anchor_timeframe\":{\"type\":[\"string\",\"null\"]},\"stop_anchor_timestamp\":{\"type\":[\"string\",\"null\"]},\"stop_anchor_price\":{\"type\":[\"number\",\"null\"]},\"stop_buffer\":{\"type\":[\"number\",\"null\"]},\"stop_distance_price\":{\"type\":[\"number\",\"null\"]},\"stop_distance_atr\":{\"type\":[\"number\",\"null\"]},\"stop_reason\":{\"type\":[\"string\",\"null\"]},\"take_profit\":{\"type\":[\"number\",\"null\"]},\"target_anchor_source\":{\"type\":[\"string\",\"null\"]},\"target_anchor_id\":{\"type\":[\"string\",\"null\"]},\"target_anchor_timeframe\":{\"type\":[\"string\",\"null\"]},\"target_anchor_timestamp\":{\"type\":[\"string\",\"null\"]},\"target_anchor_price\":{\"type\":[\"number\",\"null\"]},\"reward_distance_price\":{\"type\":[\"number\",\"null\"]},\"proposed_gross_rr\":{\"type\":[\"number\",\"null\"]},\"proposed_net_rr\":{\"type\":[\"number\",\"null\"]},\"target_reason\":{\"type\":[\"string\",\"null\"]},\"expected_duration\":{\"type\":[\"string\",\"null\"]},\"expires_at\":{\"type\":[\"string\",\"null\"]}}},\"quality\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"setup_quality_score\",\"model_confidence\",\"empirical_probability_used\"],\"properties\":{\"setup_quality_score\":{\"type\":[\"number\",\"null\"]},\"model_confidence\":{\"type\":[\"number\",\"null\"]},\"empirical_probability_used\":{\"type\":\"boolean\"}}},\"news\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"verification_requested\",\"research_used\",\"status\",\"relevant_event_ids\",\"source_ids\"],\"properties\":{\"verification_requested\":{\"type\":\"boolean\"},\"research_used\":{\"type\":\"boolean\"},\"status\":{\"type\":[\"string\",\"null\"]},\"relevant_event_ids\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"source_ids\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}}},\"evidence\":{\"type\":\"object\",\"additionalProperties\":false,\"required\":[\"supporting_factors\",\"conflicting_factors\",\"warnings\"],\"properties\":{\"supporting_factors\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"conflicting_factors\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"warnings\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}}},\"client_message_code\":{\"type\":\"string\"},\"human_review_required\":{\"type\":\"boolean\"},\"visual_manifest_hash\":{\"type\":\"string\"},\"prompt_version\":{\"type\":\"string\"},\"response_schema_version\":{\"type\":\"string\"},\"engine_version\":{\"type\":\"string\"}}}",
+    "redaction": "No secrets embedded in prompt payload"
+  },
+  "chatgptResponse": {
+    "valid": true,
+    "structured": {
+      "analysis_id": "analysis-real-xauusd-1783990311947",
+      "snapshot_utc": "2026-07-14T00:51:53.303Z",
+      "symbol": "XAUUSD",
+      "analysis_profile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+      "data_assessment": {
+        "sufficient": true,
+        "visual_numeric_consistent": true,
+        "issues": [
+          "INDICATORS_ZERO_OR_UNAVAILABLE_EMA_ATR_ADX",
+          "VOLUME_FEED_ZERO_ON_ALL_TIMEFRAMES",
+          "SPREAD_REPORTED_AS_ZERO_REDUCES_EXECUTION_REALISM"
+        ]
+      },
+      "market_assessment": {
+        "regime": "H1_BEARISH_IMPULSE_THEN_M30_M5_BASE_BUILDING_NEAR_4000_RESISTANCE",
+        "timeframe_alignment": "MISALIGNED",
+        "volatility_state": "MODERATE",
+        "session_assessment": "MARKET_CLOSING_SOON_MINUTES_TO_CLOSE_0_AND_DAILY_MAINTENANCE_0",
+        "news_risk": "LOW_NO_SCHEDULED_EVENTS_BUT_STATUS_CURRENT"
+      },
+      "strategy": {
+        "selected_strategy_id": "CARVIPIX_NO_TRADE_V1",
+        "selected_strategy_version": "1.0.0",
+        "selection_reason": "No autorizado setup robusto y ejecutable por desalineación MTF, falta de confirmación estructural completa y bloqueo operativo por cierre de sesión inmediato."
+      },
+      "analyst_decision": "NO_TRADE",
+      "system_validation_result": "PASS",
+      "final_system_status": "SHADOW_ONLY_NO_EXECUTION",
+      "setup": {
+        "valid": false,
+        "direction": "NONE",
+        "activation_condition": null,
+        "entry_missed": false,
+        "invalidation_condition": null
+      },
+      "order_plan": {
+        "entry_type": null,
+        "entry_price": null,
+        "entry_zone_min": null,
+        "entry_zone_max": null,
+        "stop_loss": null,
+        "stop_anchor_source": null,
+        "stop_anchor_timeframe": null,
+        "stop_anchor_timestamp": null,
+        "stop_anchor_price": null,
+        "stop_buffer": null,
+        "stop_distance_price": null,
+        "stop_distance_atr": null,
+        "stop_reason": null,
+        "take_profit": null,
+        "target_anchor_source": null,
+        "target_anchor_id": null,
+        "target_anchor_timeframe": null,
+        "target_anchor_timestamp": null,
+        "target_anchor_price": null,
+        "reward_distance_price": null,
+        "proposed_gross_rr": null,
+        "proposed_net_rr": null,
+        "target_reason": null,
+        "expected_duration": null,
+        "expires_at": null
+      },
+      "quality": {
+        "setup_quality_score": 2.8,
+        "model_confidence": 0.81,
+        "empirical_probability_used": false
+      },
+      "news": {
+        "verification_requested": false,
+        "research_used": true,
+        "status": "CURRENT",
+        "relevant_event_ids": [],
+        "source_ids": [
+          "economic-default-empty"
+        ]
+      },
+      "evidence": {
+        "supporting_factors": [
+          "H1 mantiene estructura bajista tras caída fuerte desde zona 4060+ hacia 3990s.",
+          "M30 aún contenido bajo resistencias cercanas 4000.64-4001.59.",
+          "Condición de sesión no favorable para abrir nueva operación (cierre inminente)."
+        ],
+        "conflicting_factors": [
+          "M5 muestra recuperación de corto plazo con máximos crecientes hacia 4000.95.",
+          "Desalineación entre sesgo bajista superior y microimpulso alcista intradía.",
+          "Sin métricas de ATR/ADX disponibles para validar expansión/compresión con precisión."
+        ],
+        "warnings": [
+          "Execution disabled by constraints (SHADOW_ONLY).",
+          "Human review required.",
+          "No forzar entrada en condiciones de cierre y liquidez potencialmente degradada."
+        ]
+      },
+      "client_message_code": "NO_TRADE_SESSION_CONSTRAINT_AND_MTF_MISALIGNMENT",
+      "human_review_required": true,
+      "visual_manifest_hash": "7dcf68449375292865663ab7d5f24c0447c07c42fa35297c386177907996941a",
+      "prompt_version": "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      "response_schema_version": "cadp_response_v2",
+      "engine_version": "CARVIPIX_AI_ENGINE_v1"
+    },
+    "shadowFlowValidation": {
+      "valid": true,
+      "errors": []
+    },
+    "verifierValidation": {
+      "valid": true,
+      "errors": [],
+      "repairedResponse": {
+        "analysis_id": "analysis-real-xauusd-1783990311947",
+        "snapshot_utc": "2026-07-14T00:51:53.303Z",
+        "symbol": "XAUUSD",
+        "analysis_profile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+        "data_assessment": {
+          "sufficient": true,
+          "visual_numeric_consistent": true,
+          "issues": [
+            "INDICATORS_ZERO_OR_UNAVAILABLE_EMA_ATR_ADX",
+            "VOLUME_FEED_ZERO_ON_ALL_TIMEFRAMES",
+            "SPREAD_REPORTED_AS_ZERO_REDUCES_EXECUTION_REALISM"
+          ]
+        },
+        "market_assessment": {
+          "regime": "H1_BEARISH_IMPULSE_THEN_M30_M5_BASE_BUILDING_NEAR_4000_RESISTANCE",
+          "timeframe_alignment": "MISALIGNED",
+          "volatility_state": "MODERATE",
+          "session_assessment": "MARKET_CLOSING_SOON_MINUTES_TO_CLOSE_0_AND_DAILY_MAINTENANCE_0",
+          "news_risk": "LOW_NO_SCHEDULED_EVENTS_BUT_STATUS_CURRENT"
+        },
+        "strategy": {
+          "selected_strategy_id": "CARVIPIX_NO_TRADE_V1",
+          "selected_strategy_version": "1.0.0",
+          "selection_reason": "No autorizado setup robusto y ejecutable por desalineación MTF, falta de confirmación estructural completa y bloqueo operativo por cierre de sesión inmediato."
+        },
+        "analyst_decision": "NO_TRADE",
+        "system_validation_result": "PASS",
+        "final_system_status": "SHADOW_ONLY_NO_EXECUTION",
+        "setup": {
+          "valid": false,
+          "direction": "NONE",
+          "activation_condition": null,
+          "entry_missed": false,
+          "invalidation_condition": null
+        },
+        "order_plan": {
+          "entry_type": null,
+          "entry_price": null,
+          "entry_zone_min": null,
+          "entry_zone_max": null,
+          "stop_loss": null,
+          "stop_anchor_source": null,
+          "stop_anchor_timeframe": null,
+          "stop_anchor_timestamp": null,
+          "stop_anchor_price": null,
+          "stop_buffer": null,
+          "stop_distance_price": null,
+          "stop_distance_atr": null,
+          "stop_reason": null,
+          "take_profit": null,
+          "target_anchor_source": null,
+          "target_anchor_id": null,
+          "target_anchor_timeframe": null,
+          "target_anchor_timestamp": null,
+          "target_anchor_price": null,
+          "reward_distance_price": null,
+          "proposed_gross_rr": null,
+          "proposed_net_rr": null,
+          "target_reason": null,
+          "expected_duration": null,
+          "expires_at": null
+        },
+        "quality": {
+          "setup_quality_score": 2.8,
+          "model_confidence": 0.81,
+          "empirical_probability_used": false
+        },
+        "news": {
+          "verification_requested": false,
+          "research_used": true,
+          "status": "CURRENT",
+          "relevant_event_ids": [],
+          "source_ids": [
+            "economic-default-empty"
+          ]
+        },
+        "evidence": {
+          "supporting_factors": [
+            "H1 mantiene estructura bajista tras caída fuerte desde zona 4060+ hacia 3990s.",
+            "M30 aún contenido bajo resistencias cercanas 4000.64-4001.59.",
+            "Condición de sesión no favorable para abrir nueva operación (cierre inminente)."
+          ],
+          "conflicting_factors": [
+            "M5 muestra recuperación de corto plazo con máximos crecientes hacia 4000.95.",
+            "Desalineación entre sesgo bajista superior y microimpulso alcista intradía.",
+            "Sin métricas de ATR/ADX disponibles para validar expansión/compresión con precisión."
+          ],
+          "warnings": [
+            "Execution disabled by constraints (SHADOW_ONLY).",
+            "Human review required.",
+            "No forzar entrada en condiciones de cierre y liquidez potencialmente degradada."
+          ]
+        },
+        "client_message_code": "NO_TRADE_SESSION_CONSTRAINT_AND_MTF_MISALIGNMENT",
+        "human_review_required": true,
+        "visual_manifest_hash": "7dcf68449375292865663ab7d5f24c0447c07c42fa35297c386177907996941a",
+        "prompt_version": "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+        "response_schema_version": "cadp_response_v2",
+        "engine_version": "CARVIPIX_AI_ENGINE_v1"
+      },
+      "retryable": false
+    }
+  },
+  "validators": {
+    "marketDataReadinessGate": {
+      "pass": false,
+      "status": "DATA_NOT_READY",
+      "reasons": [
+        "MISSING_TICK",
+        "MARKET_CLOSED_OR_STALE_TICK"
+      ],
+      "details": {
+        "snapshotAgeMs": 1351,
+        "tickAgeMs": null,
+        "marketActive": false
+      },
+      "note": "Recorded as non-blocking diagnostic for XAU quote spread field availability in Twelve Data."
+    },
+    "cadpShadowFlowVerifier": {
+      "valid": true,
+      "errors": []
+    },
+    "cadpVerifierV2": {
+      "valid": true,
+      "errors": [],
+      "repairedResponse": {
+        "analysis_id": "analysis-real-xauusd-1783990311947",
+        "snapshot_utc": "2026-07-14T00:51:53.303Z",
+        "symbol": "XAUUSD",
+        "analysis_profile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+        "data_assessment": {
+          "sufficient": true,
+          "visual_numeric_consistent": true,
+          "issues": [
+            "INDICATORS_ZERO_OR_UNAVAILABLE_EMA_ATR_ADX",
+            "VOLUME_FEED_ZERO_ON_ALL_TIMEFRAMES",
+            "SPREAD_REPORTED_AS_ZERO_REDUCES_EXECUTION_REALISM"
+          ]
+        },
+        "market_assessment": {
+          "regime": "H1_BEARISH_IMPULSE_THEN_M30_M5_BASE_BUILDING_NEAR_4000_RESISTANCE",
+          "timeframe_alignment": "MISALIGNED",
+          "volatility_state": "MODERATE",
+          "session_assessment": "MARKET_CLOSING_SOON_MINUTES_TO_CLOSE_0_AND_DAILY_MAINTENANCE_0",
+          "news_risk": "LOW_NO_SCHEDULED_EVENTS_BUT_STATUS_CURRENT"
+        },
+        "strategy": {
+          "selected_strategy_id": "CARVIPIX_NO_TRADE_V1",
+          "selected_strategy_version": "1.0.0",
+          "selection_reason": "No autorizado setup robusto y ejecutable por desalineación MTF, falta de confirmación estructural completa y bloqueo operativo por cierre de sesión inmediato."
+        },
+        "analyst_decision": "NO_TRADE",
+        "system_validation_result": "PASS",
+        "final_system_status": "SHADOW_ONLY_NO_EXECUTION",
+        "setup": {
+          "valid": false,
+          "direction": "NONE",
+          "activation_condition": null,
+          "entry_missed": false,
+          "invalidation_condition": null
+        },
+        "order_plan": {
+          "entry_type": null,
+          "entry_price": null,
+          "entry_zone_min": null,
+          "entry_zone_max": null,
+          "stop_loss": null,
+          "stop_anchor_source": null,
+          "stop_anchor_timeframe": null,
+          "stop_anchor_timestamp": null,
+          "stop_anchor_price": null,
+          "stop_buffer": null,
+          "stop_distance_price": null,
+          "stop_distance_atr": null,
+          "stop_reason": null,
+          "take_profit": null,
+          "target_anchor_source": null,
+          "target_anchor_id": null,
+          "target_anchor_timeframe": null,
+          "target_anchor_timestamp": null,
+          "target_anchor_price": null,
+          "reward_distance_price": null,
+          "proposed_gross_rr": null,
+          "proposed_net_rr": null,
+          "target_reason": null,
+          "expected_duration": null,
+          "expires_at": null
+        },
+        "quality": {
+          "setup_quality_score": 2.8,
+          "model_confidence": 0.81,
+          "empirical_probability_used": false
+        },
+        "news": {
+          "verification_requested": false,
+          "research_used": true,
+          "status": "CURRENT",
+          "relevant_event_ids": [],
+          "source_ids": [
+            "economic-default-empty"
+          ]
+        },
+        "evidence": {
+          "supporting_factors": [
+            "H1 mantiene estructura bajista tras caída fuerte desde zona 4060+ hacia 3990s.",
+            "M30 aún contenido bajo resistencias cercanas 4000.64-4001.59.",
+            "Condición de sesión no favorable para abrir nueva operación (cierre inminente)."
+          ],
+          "conflicting_factors": [
+            "M5 muestra recuperación de corto plazo con máximos crecientes hacia 4000.95.",
+            "Desalineación entre sesgo bajista superior y microimpulso alcista intradía.",
+            "Sin métricas de ATR/ADX disponibles para validar expansión/compresión con precisión."
+          ],
+          "warnings": [
+            "Execution disabled by constraints (SHADOW_ONLY).",
+            "Human review required.",
+            "No forzar entrada en condiciones de cierre y liquidez potencialmente degradada."
+          ]
+        },
+        "client_message_code": "NO_TRADE_SESSION_CONSTRAINT_AND_MTF_MISALIGNMENT",
+        "human_review_required": true,
+        "visual_manifest_hash": "7dcf68449375292865663ab7d5f24c0447c07c42fa35297c386177907996941a",
+        "prompt_version": "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+        "response_schema_version": "cadp_response_v2",
+        "engine_version": "CARVIPIX_AI_ENGINE_v1"
+      },
+      "retryable": false
+    }
+  },
+  "masterSignal": {
+    "signal_id": "signal-real-xauusd-1783990311947",
+    "analysis_id": "analysis-real-xauusd-1783990311947",
+    "symbol": "XAUUSD",
+    "analysis_profile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+    "selected_strategy_id": "CARVIPIX_NO_TRADE_V1",
+    "direction": "NONE",
+    "entry": null,
+    "stop_loss": null,
+    "take_profit": null,
+    "calculated_gross_rr": null,
+    "calculated_net_rr": null,
+    "expires_at": null,
+    "status": "SHADOW",
+    "human_review_required": true,
+    "auto_execution_eligible": false
+  },
+  "persistenceAndDistribution": {
+    "ok": true,
+    "status": 200,
+    "payload": {
+      "ok": true,
+      "data": {
+        "signalId": "signal-real-xauusd-1783990311947",
+        "analysisId": "analysis-real-xauusd-1783990311947",
+        "lifecycle": {
+          "signalId": "signal-real-xauusd-1783990311947",
+          "analysisId": "analysis-real-xauusd-1783990311947",
+          "symbol": "XAUUSD",
+          "decision": "WAIT",
+          "entry": null,
+          "stopLoss": null,
+          "takeProfit": null,
+          "strategyId": "CARVIPIX_NO_TRADE_V1",
+          "status": "CLOSED",
+          "source": "CONTROLLED_E2E_AUTOMATION",
+          "dataOrigin": "REAL",
+          "trackingAccount": "INTERNAL",
+          "classification": "REAL_SIGNAL_RESULT",
+          "signalTimestamp": "2026-07-14T00:52:08.363Z",
+          "activatedAt": null,
+          "closedAt": null,
+          "realizedPnl": 0,
+          "metadata": {
+            "tags": [
+              "TEST_ONLY",
+              "SHADOW",
+              "NON_EXECUTABLE",
+              "NOT_FOR_CLIENTS"
+            ],
+            "netRR": null,
+            "grossRR": null,
+            "expiresAt": null,
+            "shadowStatus": "SHADOW",
+            "analysisProfile": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+            "humanReviewRequired": true,
+            "autoExecutionEligible": false
+          }
+        },
+        "lifecycleRowsForSignalId": 1,
+        "consumers": {
+          "alertsCount": 1,
+          "historyCount": 1,
+          "dashboardRecentSignals": 4,
+          "statsTotalEvents": 4,
+          "resultsMasterSignalId": "signal-real-xauusd-1783990311947",
+          "operationsLinked": 0
+        },
+        "alertSample": {
+          "id": "signal-real-xauusd-1783990311947",
+          "type": "signal",
+          "symbol": "XAUUSD",
+          "title": "Condicional XAUUSD",
+          "description": "Señal real REAL_SIGNAL_RESULT (analysis-real-xauusd-1783990311947)",
+          "priority": "low",
+          "status": "resolved",
+          "timestamp": "2026-07-14T00:52:08.363Z",
+          "actionUrl": "/alertas",
+          "data": {
+            "entryPrice": 0,
+            "stopLossPrice": 0,
+            "takeProfitPrice": 0,
+            "riskRewardRatio": 0,
+            "timeframe": "XAUUSD_INTRADAY_H1_M30_M5_V1",
+            "direction": "Condicional",
+            "confidence": 60,
+            "approvalCount": 1,
+            "signalStatus": "CLOSED",
+            "source": "CONTROLLED_E2E_AUTOMATION",
+            "dataOrigin": "REAL",
+            "tags": [
+              "TEST_ONLY",
+              "SHADOW",
+              "NON_EXECUTABLE",
+              "NOT_FOR_CLIENTS"
+            ],
+            "signalId": "signal-real-xauusd-1783990311947",
+            "analysisId": "analysis-real-xauusd-1783990311947",
+            "strategyId": "CARVIPIX_NO_TRADE_V1",
+            "expiresAt": null
+          }
+        },
+        "historySample": {
+          "id": "signal-real-xauusd-1783990311947",
+          "module": "ai",
+          "timestamp": "2026-07-14T00:52:08.363Z",
+          "title": "Señal signal-real-xauusd-1783990311947",
+          "detail": "WAIT · CLOSED · REAL_SIGNAL_RESULT",
+          "signalId": "signal-real-xauusd-1783990311947",
+          "analysisId": "analysis-real-xauusd-1783990311947",
+          "legacy": false
+        }
+      }
+    }
+  },
+  "testAlert": {
+    "created": true,
+    "id": "TEST_ALERT_1783990332974",
+    "symbol": "XAUUSD",
+    "type": "compra",
+    "source": "internal-test-run",
+    "tags": [
+      "TEST_ONLY",
+      "NON_EXECUTABLE",
+      "NOT_FOR_CLIENTS",
+      "MISSING_BID_ASK_OR_SPREAD"
+    ],
+    "reasoning": "Internal test alert stored as NON_EXECUTABLE due to missing bid/ask/spread",
+    "markers": [
+      "TEST_ONLY",
+      "NON_EXECUTABLE",
+      "NOT_FOR_CLIENTS"
+    ],
+    "executable": false
+  },
+  "migrationPreparation": {
+    "currentTestUsesM30": true,
+    "m30OfficialDependencyChanged": true,
+    "nextPlannedChange": "Expand M30 replacement across legacy test/documentation modules as non-blocking follow-up"
+  },
+  "errors": []
+}

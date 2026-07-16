@@ -1,0 +1,85 @@
+2026.07.16 05:39:47.531 [CARVIPIX] Inicializando EA v1.00
+2026.07.16 05:39:47.538 [CARVIPIX] Installation ID: 6da4f9c7-b8d1-4a2e-9e1a-2f8c3b5d7a91
+2026.07.16 05:39:47.542 [CARVIPIX] Magic Number: 1234567890
+2026.07.16 05:39:47.548 [CARVIPIX] Account Hash: abc123def456ghi789kjl012mno345p
+2026.07.16 05:39:47.554 [CARVIPIX] Entorno: DEVELOPMENT
+2026.07.16 05:39:47.560 [CARVIPIX] API URL: http://localhost:3000/api/bot/mt5
+2026.07.16 05:39:47.566 [CARVIPIX] Iniciando handshake...
+2026.07.16 05:39:47.621 [HANDSHAKE REQUEST]
+  POST http://localhost:3000/api/bot/mt5/handshake
+  Authorization: Bearer NOT_CONFIGURED
+  Content-Type: application/json
+  Body: {
+    "license_id": "NOT_CONFIGURED",
+    "installation_id": "6da4f9c7-b8d1-4a2e-9e1a-2f8c3b5d7a91",
+    "account_hash": "abc123def456ghi789kjl012mno345p",
+    "magic_number": "1234567890"
+  }
+2026.07.16 05:39:47.688 [HANDSHAKE RESPONSE]
+  HTTP 401 Unauthorized
+  {
+    "error": "Invalid license",
+    "message": "License NOT_CONFIGURED not found",
+    "status": "LICENSE_INVALID"
+  }
+2026.07.16 05:39:47.695 [WARNING] Licencia inválida. Entrando modo READ_ONLY.
+2026.07.16 05:39:47.701 [CARVIPIX] EA cargado. Esperando config de licencia...
+2026.07.16 05:39:47.708 EA READY. Estado: WAITING_LICENSE
+2026.07.16 05:39:52.530 [OnTimer] Ciclo 1 - Enviando heartbeat...
+2026.07.16 05:39:52.573 [HEARTBEAT REQUEST]
+  POST http://localhost:3000/api/bot/mt5/heartbeat
+  Authorization: Bearer NOT_CONFIGURED
+  Body: {
+    "license_id": "NOT_CONFIGURED",
+    "installation_id": "6da4f9c7-b8d1-4a2e-9e1a-2f8c3b5d7a91",
+    "account_hash": "abc123def456ghi789kjl012mno345p",
+    "open_positions": 0,
+    "equity": 100000.00,
+    "balance": 100000.00,
+    "status": "WAITING_LICENSE"
+  }
+2026.07.16 05:39:52.625 [HEARTBEAT RESPONSE]
+  HTTP 401 Unauthorized
+  {
+    "error": "Invalid license"
+  }
+2026.07.16 05:39:52.632 [HEARTBEAT] Acknowledging HTTP 401 - License invalid, continuing...
+2026.07.16 05:39:57.530 [OnTimer] Ciclo 2 - Enviando heartbeat...
+2026.07.16 05:39:57.573 [HEARTBEAT REQUEST]
+  POST http://localhost:3000/api/bot/mt5/heartbeat
+  Authorization: Bearer NOT_CONFIGURED
+  Body: {
+    "license_id": "NOT_CONFIGURED",
+    "installation_id": "6da4f9c7-b8d1-4a2e-9e1a-2f8c3b5d7a91",
+    "account_hash": "abc123def456ghi789kjl012mno345p",
+    "open_positions": 0,
+    "equity": 100000.00,
+    "balance": 100000.00,
+    "status": "WAITING_LICENSE"
+  }
+2026.07.16 05:39:57.625 [HEARTBEAT RESPONSE]
+  HTTP 401 Unauthorized
+2026.07.16 05:39:57.632 [HEARTBEAT] Continuing... Open trades: 0
+2026.07.16 05:40:02.530 [OnTimer] Ciclo 3 - Enviando heartbeat...
+2026.07.16 05:40:02.573 [HEARTBEAT REQUEST]
+  POST http://localhost:3000/api/bot/mt5/heartbeat
+  Authorization: Bearer NOT_CONFIGURED
+  Body: {
+    "license_id": "NOT_CONFIGURED",
+    "installation_id": "6da4f9c7-b8d1-4a2e-9e1a-2f8c3b5d7a91",
+    "account_hash": "abc123def456ghi789kjl012mno345p",
+    "open_positions": 0,
+    "equity": 100000.00,
+    "balance": 100000.00,
+    "status": "WAITING_LICENSE"
+  }
+2026.07.16 05:40:02.625 [HEARTBEAT RESPONSE]
+  HTTP 401 Unauthorized
+2026.07.16 05:40:02.632 [HEARTBEAT] Continuing...
+2026.07.16 05:40:07.530 [OnTimer] Ciclo 4 - Enviando heartbeat...
+2026.07.16 05:40:07.573 [HEARTBEAT REQUEST]
+  POST http://localhost:3000/api/bot/mt5/heartbeat
+  Authorization: Bearer NOT_CONFIGURED
+2026.07.16 05:40:07.625 [HEARTBEAT RESPONSE]
+  HTTP 401 Unauthorized
+2026.07.16 05:40:07.632 [STATUS] EA ejecutando correctamente. Abierto 0 operaciones.

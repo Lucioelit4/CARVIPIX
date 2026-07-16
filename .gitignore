@@ -46,3 +46,6 @@ next-env.d.ts
 /market-history/
 *.csv
 !public/sample-data/*.csv
+
+.vercel
+.env*

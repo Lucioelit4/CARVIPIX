@@ -48,6 +48,11 @@ async function readSessionSnapshot(request: NextRequest): Promise<{
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // ── Block all /api/dev/* endpoints in production ──────────────────────
+  if (pathname.startsWith("/api/dev/") && process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not Found" }, { status: 404 });
+  }
+
   const hasClientSession = Boolean(request.cookies.get("carvipix_auth_session")?.value);
 
   if (pathname === "/" && hasClientSession) {

@@ -11,7 +11,7 @@ function toId(parts: string[]): string {
 export class FinnhubEvaluationAdapter implements DataProviderAdapter {
   id = "finnhub-news";
   priority = 100;
-  supports = ["news", "metadata"] as const;
+  supports = ["news", "metadata"] as any[];
 
   private readonly config = getFinnhubRuntimeConfig();
   private readonly news = new FinnhubNewsService(this.config);

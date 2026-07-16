@@ -14,7 +14,7 @@ function toId(parts: string[]): string {
 export class TwelveDataEvaluationAdapter implements DataProviderAdapter {
   id = "twelve-data-market";
   priority = 95;
-  supports = ["tick", "ohlc", "metadata"] as const;
+  supports = ["tick", "ohlc", "metadata"] as any[];
 
   private readonly config = getTwelveDataRuntimeConfig();
   private readonly quotes = new TwelveDataQuoteService(this.config);

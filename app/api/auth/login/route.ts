@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
 
-    if (!user.verificado) {
+    // ⚠️ DEVELOPMENT ONLY: Skip email verification in dev
+    if (!user.verificado && process.env.NODE_ENV === "production") {
       return NextResponse.json({ error: "Correo no verificado", requiresVerification: true }, { status: 403 });
     }
 

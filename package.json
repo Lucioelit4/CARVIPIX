@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:v3": "tsx --tsconfig tsconfig.json app/ai/cadpV2/maestroV3.certification.test.ts",
+    "observer:run": "tsx scripts/observer-status-monitor.ts --live",
+    "observer:status": "tsx scripts/observer-status-monitor.ts",
+    "observer:snapshot": "tsx scripts/observer-cli.ts snapshot",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -87,6 +91,7 @@
     "react-countup": "^6.5.3",
     "react-dom": "19.2.4",
     "recharts": "^3.9.1",
+    "resend": "^6.17.2",
     "server-only": "^0.0.1",
     "sharp": "^0.35.3"
   },

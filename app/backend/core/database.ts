@@ -1043,6 +1043,102 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS bot_mt5_installations (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        license_id TEXT NOT NULL,
+        installation_id TEXT NOT NULL,
+        account_hash TEXT NOT NULL,
+        account_number BIGINT NOT NULL,
+        broker_server TEXT NOT NULL,
+        magic_number INT NOT NULL,
+        ea_version TEXT NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('VALIDATING', 'ACTIVE', 'READ_ONLY', 'SUSPENDED', 'ERROR')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_heartbeat TIMESTAMPTZ,
+        is_revoked BOOLEAN NOT NULL DEFAULT false,
+        max_open_trades INT NOT NULL DEFAULT 3,
+        max_daily_trades INT NOT NULL DEFAULT 10,
+        max_daily_loss_percent NUMERIC(6, 2) NOT NULL DEFAULT 5.0,
+        UNIQUE (license_id, installation_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_mt5_signals (
+        id TEXT PRIMARY KEY,
+        signal_id TEXT NOT NULL UNIQUE,
+        analysis_id TEXT NOT NULL,
+        license_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        decision TEXT NOT NULL CHECK (decision IN ('BUY', 'SELL', 'NONE')),
+        entry NUMERIC(18, 8) NOT NULL,
+        stop_loss NUMERIC(18, 8) NOT NULL,
+        take_profit NUMERIC(18, 8) NOT NULL,
+        risk_reward NUMERIC(10, 2),
+        signature TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        delivered_at TIMESTAMPTZ,
+        status TEXT NOT NULL CHECK (status IN ('PENDING', 'DELIVERED', 'EXECUTED', 'EXPIRED', 'REJECTED')),
+        CONSTRAINT valid_entry_levels CHECK (take_profit > entry AND entry > stop_loss)
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_mt5_executions (
+        id TEXT PRIMARY KEY,
+        signal_id TEXT NOT NULL REFERENCES bot_mt5_signals(signal_id) ON DELETE CASCADE,
+        license_id TEXT NOT NULL,
+        installation_id TEXT NOT NULL,
+        symbol TEXT NOT NULL,
+        direction TEXT NOT NULL CHECK (direction IN ('BUY', 'SELL')),
+        requested_entry NUMERIC(18, 8) NOT NULL,
+        executed_entry NUMERIC(18, 8),
+        stop_loss NUMERIC(18, 8) NOT NULL,
+        take_profit NUMERIC(18, 8) NOT NULL,
+        lot_size NUMERIC(24, 8) NOT NULL,
+        magic_number INT NOT NULL,
+        broker_order_id BIGINT,
+        broker_server_response TEXT,
+        status TEXT NOT NULL CHECK (status IN ('PENDING', 'EXECUTED', 'FAILED', 'CLOSED')),
+        opened_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        closed_at TIMESTAMPTZ,
+        exit_price NUMERIC(18, 8),
+        gross_pnl NUMERIC(24, 8),
+        net_pnl NUMERIC(24, 8),
+        commission NUMERIC(18, 8),
+        swap NUMERIC(18, 8),
+        slippage NUMERIC(18, 8),
+        error_code TEXT,
+        error_message TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_mt5_heartbeats (
+        id TEXT PRIMARY KEY,
+        license_id TEXT NOT NULL,
+        installation_id TEXT NOT NULL,
+        ea_version TEXT NOT NULL,
+        status TEXT NOT NULL,
+        open_positions INT NOT NULL DEFAULT 0,
+        equity NUMERIC(24, 8),
+        balance NUMERIC(24, 8),
+        account_hash TEXT NOT NULL,
+        broker_server TEXT NOT NULL,
+        received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS bot_mt5_downloads (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        license_id TEXT NOT NULL,
+        file_hash TEXT NOT NULL,
+        download_token TEXT NOT NULL UNIQUE,
+        expires_at TIMESTAMPTZ NOT NULL,
+        downloaded_at TIMESTAMPTZ,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE INDEX IF NOT EXISTS idx_memberships_plan_estado
         ON memberships(plan, estado);
 

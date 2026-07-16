@@ -8,9 +8,18 @@ if (runtimeStage === "shadow" || runtimeStage === "production") {
 }
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  // "standalone" is for Docker/VPS deployments only.
+  // Vercel uses its own serverless output — do NOT set output:"standalone" here.
   poweredByHeader: false,
   compress: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      },
+    ],
+  },
   redirects: async () => [
     // CONSOLIDACIÓN NIVEL 1: Eliminar duplicados
     {

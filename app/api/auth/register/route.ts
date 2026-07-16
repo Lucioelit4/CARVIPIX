@@ -118,7 +118,33 @@ async function sendWelcomeEmail(correo: string, nombre: string, verificationToke
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json().catch(() => ({}))) as RegisterPayload;
+    const body = (await request.json().catch(() => ({}))) as RegisterPayload & { inviteCode?: string };
+
+    // ── Beta Privada: registros restringidos ──────────────────────────────
+    const betaMode = process.env.BETA_PRIVATE_MODE === "true" || process.env.TEST_ONLY === "true";
+    if (betaMode) {
+      const inviteCode = String(body.inviteCode ?? "").trim().toUpperCase();
+      if (!inviteCode || !/^FOUNDER-\d{3}$/.test(inviteCode)) {
+        return NextResponse.json(
+          { ok: false, error: "CARVIPIX está en Beta Privada. Se requiere un código de invitación para registrarse." },
+          { status: 403 }
+        );
+      }
+      if (backendDatabase.enabled) {
+        const codeCheck = await backendDatabase.query<{ is_active: boolean; used_count: number; max_uses: number }>(
+          `SELECT is_active, used_count, max_uses FROM beta_invitation_codes WHERE code = $1 LIMIT 1`,
+          [inviteCode]
+        ).catch(() => ({ rows: [] as Array<{ is_active: boolean; used_count: number; max_uses: number }> }));
+        const codeRow = codeCheck.rows[0];
+        if (!codeRow || !codeRow.is_active || codeRow.used_count >= codeRow.max_uses) {
+          return NextResponse.json(
+            { ok: false, error: "Código de invitación inválido, expirado o ya utilizado." },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     const errors = buildValidationErrors(body);
 
     if (Object.keys(errors).length > 0) {

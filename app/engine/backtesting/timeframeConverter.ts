@@ -11,6 +11,7 @@ import { Candle, Timeframe } from '../types/marketData';
  */
 const TIMEFRAME_MINUTES: Record<Timeframe, number> = {
   '5M': 5,
+  '30M': 30,
   '45M': 45,
   '1H': 60,
 };

@@ -22,11 +22,12 @@ import AdminBacktesting from './components/AdminBacktesting';
 import AdminDataHealth from './components/AdminDataHealth';
 import AdminSistema from './components/AdminSistema';
 import AdminComunicaciones from './components/AdminComunicaciones';
+import AdminBeta from './components/AdminBeta';
 import { ToastProvider } from './components/Toast';
 import { CARVIPIXButton } from '../design-system';
 import DataSourceBanner from '@/app/components/DataSourceBanner';
 
-type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'comunicaciones' | 'cumplimiento' | 'configuracion' | 'utilidades';
+type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'comunicaciones' | 'cumplimiento' | 'configuracion' | 'utilidades' | 'beta';
 
 interface TabConfig {
   id: TabType;
@@ -48,7 +49,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['resumen', 'sistema', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'comunicaciones', 'cumplimiento', 'configuracion', 'utilidades'].includes(tabParam)) {
+    if (tabParam && ['resumen', 'sistema', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'comunicaciones', 'cumplimiento', 'configuracion', 'utilidades', 'beta'].includes(tabParam)) {
       queueMicrotask(() => {
         setActiveTab(tabParam);
       });
@@ -104,6 +105,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'comunicaciones', label: 'Comunicaciones', icon: <Mail className="w-5 h-5" />, component: <AdminComunicaciones /> },
     { id: 'cumplimiento', label: 'Cumplimiento', icon: <ShieldCheck className="w-5 h-5" />, component: <AdminCumplimiento /> },
     { id: 'configuracion', label: 'Config', icon: <Settings className="w-5 h-5" />, component: <AdminConfiguracion /> },
+    { id: 'beta', label: '🚀 Beta Privada', icon: <Users className="w-5 h-5" />, component: <AdminBeta /> },
   ];
 
   const activeTabConfig = tabs.find((tab) => tab.id === activeTab);

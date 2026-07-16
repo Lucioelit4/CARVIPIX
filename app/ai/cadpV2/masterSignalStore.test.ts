@@ -9,7 +9,7 @@ function fixture(): CadpShadowSignal {
     signal_id: "sig-1",
     analysis_id: "ana-1",
     symbol: "XAUUSD",
-    analysis_profile: "XAUUSD_INTRADAY_H1_M45_M5_V1",
+    analysis_profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
     selected_strategy_id: "CARVIPIX_NO_TRADE_V1",
     direction: "NONE",
     entry: null,

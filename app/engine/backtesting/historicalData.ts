@@ -84,6 +84,7 @@ function getIntervalMs(timeframe: Timeframe): number {
   const intervals: Record<Timeframe, number> = {
     '1H': 60 * 60 * 1000,
     '45M': 45 * 60 * 1000,
+    '30M': 30 * 60 * 1000,
     '5M': 5 * 60 * 1000,
   };
 

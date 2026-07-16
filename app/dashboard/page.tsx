@@ -6,6 +6,7 @@ import { Bell, Bot, CreditCard, LifeBuoy, Monitor, RefreshCw, ShieldCheck } from
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
 import { writeAuthSession } from "@/app/lib/auth/session";
+import FounderBetaPanel from "@/app/dashboard/components/FounderBetaPanel";
 
 type PortalSnapshot = {
   plan: {
@@ -338,6 +339,9 @@ export default function DashboardPage() {
             })}
           </div>
         </section>
+
+        {/* ── Programa Fundadores Beta ──────────────────────────────────── */}
+        <FounderBetaPanel />
 
         {memberVideo && (
           <section className="rounded-3xl border border-white/10 bg-[#0b0f16] p-6">

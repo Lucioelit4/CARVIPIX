@@ -292,6 +292,7 @@ export class OandaV20DemoAdapter {
 
     return {
       "5M": buildFor("5M"),
+      "30M": buildFor("30M"),
       "45M": buildFor("45M"),
       "1H": buildFor("1H"),
     };
@@ -387,6 +388,7 @@ export class OandaV20DemoAdapter {
       selectedInstrument: "XAU_USD",
       generatedFrames: {
         "5M": aggregates["5M"].length,
+        "30M": aggregates["30M"].length,
         "45M": aggregates["45M"].length,
         "1H": aggregates["1H"].length,
       },

@@ -10,7 +10,7 @@ test("delivery enqueues reference from latest master signal with idempotency", a
     signal_id: "sig-del-1",
     analysis_id: "ana-del-1",
     symbol: "XAUUSD",
-    analysis_profile: "XAUUSD_INTRADAY_H1_M45_M5_V1",
+    analysis_profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
     selected_strategy_id: "CARVIPIX_NO_TRADE_V1",
     direction: "NONE",
     entry: 0,

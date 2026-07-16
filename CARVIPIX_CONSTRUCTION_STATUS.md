@@ -1,62 +1,146 @@
-# CARVIPIX Strategy Engine - Construction Status
+# CARVIPIX — Estado Oficial del Proyecto
 
-**Date:** July 2, 2026  
-**Mode:** 🔨 PLATFORM CONSTRUCTION  
-**Commitment:** Zero invented parameters, all configurable, professional structure
-
----
-
-## 📊 Overall Architecture
-
-```
-CARVIPIX Strategy v1.1
-│
-├─── TrendValidator 1H
-│    └─ Status: 🟡 FUNCIONAL v1.1 / PROVISIONAL / PENDIENTE DE VALIDACIÓN LOCAL
-│
-├─── PullbackValidator 45M
-│    └─ Status: 🔄 ESTRUCTURA LISTA (parámetros pendientes)
-│
-├─── EntryValidator 5M
-│    └─ Status: 🚫 BLOQUEADO (await Pullback completion)
-│
-├─── SignalScoring System
-│    └─ Status: 🚫 BLOQUEADO (await Entry completion)
-│
-├─── Data Integration
-│    └─ Status: 🚫 PENDIENTE
-│
-├─── Backtesting Local
-│    └─ Status: 🚫 PENDIENTE
-│
-├─── MT4/MT5 Integration
-│    └─ Status: 🚫 PENDIENTE
-│
-└─── AutoBot Trading
-     └─ Status: 🚫 PENDIENTE
-```
+**Última actualización:** 2026-07-14
+**Modo:** 🚀 BOT ENGINE — Fase activa
+**Temporalidades oficiales:** 1H · 30M · 5M (45M eliminado definitivamente)
 
 ---
 
-## ✅ Phase 1: TrendValidator v1.1 - FUNCIONAL / PROVISIONAL
+## 🧠 Arquitectura Oficial
 
-### Implementation Status
+| Componente | Rol | Estado |
+|---|---|---|
+| **CADP v2** | Cerebro oficial de análisis | ✅ COMPLETADO |
+| **ChatGPT (OpenAI)** | Analista Principal | ✅ INTEGRADO |
+| **Twelve Data** | Proveedor oficial de mercado (velas, series, quotes) | ✅ COMPLETADO |
+| **Finnhub** | Solo noticias y contexto económico | ✅ COMPLETADO |
+| **Resend** | Notificaciones y entrega por correo | ✅ COMPLETADO |
+| **Backend Enterprise** | Capa de servicios de dominio | ✅ COMPLETADO |
+| **Señal Maestra** | Generación y persistencia de señales reales | ✅ COMPLETADO |
+| **Historial** | Persistencia de señales y lifecycle | ✅ COMPLETADO |
+| **Dashboard** | Interfaz de usuario principal | ✅ COMPLETADO |
+| **Alertas** | Sistema de alertas con view-model | ✅ COMPLETADO |
+| **Modelo Comercial Bot** | Producto descargable, licencias, MT4/MT5 | ✅ COMPLETADO |
 
-**File:** `app/engine/strategy/trendValidation.ts`
+---
 
-**Status Real:**
-🟡 **FUNCIONAL v1.1** - Lógica real implementada, sin placeholders  
-🔧 **PROVISIONAL** - Thresholds sin validación local  
-⏳ **PENDIENTE DE VALIDACIÓN LOCAL** - No validado con datos históricos completos en computadora local
+## ✅ Módulos Terminados (NO marcar como pendientes)
 
-### What Works
+### Capa de Datos
+- `app/backend/data-platform/providers/twelve-data/` — Twelve Data completo (quotes, timeSeries, websocket, config, auth, symbols)
+- `app/backend/data-platform/providers/finnhub/` — Finnhub completo (news, prices, candles, calendar, websocket)
+- `app/backend/data-platform/official-source.ts` — Fuente oficial con XAUUSD, BTCUSD, DXY, SP500, US10Y, VIX
+- `app/engine/data/twelveDataProvider.ts` — Adaptador Twelve Data para el engine
 
-✅ 4 conditions implemented (real logic, no placeholders)  
-✅ Direction voting system (BUY/SELL/NEUTRAL)  
-✅ Confidence calculation with formula  
-✅ TypeScript compilation (3.5s)  
-✅ Professional documentation  
-✅ Configurable penalty system  
+### IA y Análisis (CADP v2)
+- `app/ai/cadpV2/` — CADP v2 completo: masterSignalStore, masterSignalBuilder, snapshotBuilder, promptBuilderV2, openAIAdapterV2, verifierV2, triggerPolicy, costManager, sessionContextService, shadowFlow, visualChartRenderer, analysisMissionRegistry, analyticalCoreRegistry, newsContextProvider
+
+### Backend Enterprise
+- `app/backend/services/real-signal-lifecycle-service.ts` — Ciclo de vida real de señales
+- `app/backend/services/alerts-domain-service.ts` — Dominio de alertas
+- `app/backend/services/bot-domain-service.ts` — Dominio de Bot (licencias, instancias, conexión broker)
+- `app/backend/services/delivery-domain-service.ts` — Entrega de productos
+- `app/backend/services/payments-domain-service.ts` — Pagos
+- `app/backend/services/memberships-domain-service.ts` — Membresías
+- `app/backend/services/results-domain-service.ts` — Resultados
+- `app/backend/system/carvipix-execution-engine.ts` — Motor de ejecución
+- `app/backend/runtime.ts` — Runtime con todos los servicios instrumentados
+
+### Persistencia y Motor Core
+- `app/engine/core/` — Engine completo (decisionEngine, evidenceEngine, intelligenceDirector, signalGenerationEngine, safetyGates, riskEngine, quantOptimizationEngine, knowledgeEvolutionEngine, lifecycleManager, auditEngine)
+- `app/engine/warehouse/` — Institutional Data Warehouse
+- `app/lib/modules/` — Módulos de dominio: bot, alerts, payments, memberships, capital, results
+
+### Interfaz y Comercial
+- `app/dashboard/page.tsx` — Dashboard funcional
+- `app/alertas/` — Vista de alertas con view-model
+- `app/lib/commercial/business-model.ts` — Modelo comercial: planes, entitlements, productos
+- `app/bot/page.tsx` — Página de Bot
+
+---
+
+## 🔒 Módulos Congelados (infraestructura compartida — NO tocar)
+
+- Auth / Login / Sesiones
+- Checkout / Pagos / PayPal
+- Usuarios / Registro
+- Correos / Resend
+- Infraestructura de base de datos
+- API routes base (`/api/auth`, `/api/payments`, `/api/paypal`)
+
+---
+
+## 🚫 Eliminado de Roadmap
+
+- PullbackValidator 45M — **ELIMINADO** (temporalidad 45M fuera de estrategia)
+- EntryValidator 5M separado — absorbido por SignalGenerationEngine
+- SignalScoring separado — integrado en CADP v2
+
+---
+
+## 🎯 Prioridad Oficial: BOT ENGINE
+
+### Componentes pendientes de implementar
+
+| Componente | Estado | Dependencia |
+|---|---|---|
+| EA MT5 (v1) | 🔴 NO INICIADO | — |
+| Bridge CARVIPIX ↔ MT5 | 🔴 NO INICIADO | EA MT5 |
+| Sistema de Licencias (activación técnica) | 🔴 NO INICIADO | Bridge |
+| Recepción de Señales en EA | 🔴 NO INICIADO | Bridge + EA |
+| Ejecución de Órdenes en MT5 | 🔴 NO INICIADO | Recepción de señales |
+| Reporte de Resultados (MT5 → CARVIPIX) | 🔴 NO INICIADO | Ejecución |
+
+### Infraestructura de Bot YA existente (reutilizar)
+
+- `app/backend/services/bot-domain-service.ts` — licencias, instancias, conexión broker
+- `app/lib/modules/bot/service.ts` — BotService delegando a Backend Enterprise
+- `app/lib/modules/bot/types.ts` — BotLicense, BotInstance, BotUpdate
+- `app/backend/system/carvipix-execution-engine.ts` — motor de ejecución ya estructurado
+- `app/lib/bridges/` — directorio listo para Bridge
+
+### Modelo Comercial Confirmado
+
+- Bot = producto descargable (NO servicio SaaS separado)
+- Infraestructura compartida con CARVIPIX (usuarios, pagos, correos, auth)
+- Licencia por activación
+- Actualizaciones mediante plan Pro
+- Instalación: MT4 / MT5
+
+---
+
+## 📋 Roadmap BOT ENGINE
+
+**Fase 1 — EA MT5 v1**
+- Estructura del EA en MQL5
+- Recepción de señales desde CARVIPIX (HTTP o WebSocket)
+- Ejecución de orden (BUY/SELL con SL/TP)
+- Log interno básico
+
+**Fase 2 — Bridge**
+- Endpoint CARVIPIX que recibe request del EA
+- Validación de licencia antes de entregar señal
+- Autenticación segura (token por licencia)
+- Rate limiting
+
+**Fase 3 — Activación de Licencia**
+- Flujo: compra → generación de clave → activación en EA → verificación
+- Integración con `bot-domain-service.ts` existente
+
+**Fase 4 — Reporte de Resultados**
+- EA reporta resultado de operación a CARVIPIX
+- Persistencia en `results-domain-service.ts`
+- Visualización en Dashboard
+
+---
+
+## 📝 Reglas vigentes
+
+- No inventar parámetros
+- No separar infraestructura del Bot de CARVIPIX
+- No retomar 45M como temporalidad de análisis
+- Toda señal pasa por CADP v2 antes de llegar al EA
+- El Bridge valida licencia SIEMPRE antes de entregar señal
 
 ### What's Pending
 

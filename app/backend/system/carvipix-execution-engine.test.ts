@@ -13,7 +13,7 @@ function buildSignal(seed?: Partial<CadpShadowSignal>): CadpShadowSignal {
     signal_id: seed?.signal_id ?? "signal-1",
     analysis_id: seed?.analysis_id ?? "analysis-1",
     symbol: seed?.symbol ?? "XAUUSD",
-    analysis_profile: "XAUUSD_INTRADAY_H1_M45_M5_V1",
+    analysis_profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
     selected_strategy_id: seed?.selected_strategy_id ?? "CARVIPIX_NO_TRADE_V1",
     direction: seed?.direction ?? "NONE",
     entry: seed?.entry ?? null,

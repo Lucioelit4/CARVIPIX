@@ -30,7 +30,7 @@ export class AnalysisTriggerPolicy {
   evaluate(input: AnalysisTriggerInput): AnalysisTriggerDecision {
     const meaningful =
       input.reason === "NEW_H1_CLOSE" ||
-      input.reason === "NEW_M45_CLOSE" ||
+      input.reason === "NEW_M30_CLOSE" ||
       (input.reason === "NEW_M5_CLOSE_WHEN_WATCHING" && input.watching) ||
       input.reason === "PRICE_NEAR_STRUCTURE" ||
       input.reason === "VOLATILITY_CHANGE" ||

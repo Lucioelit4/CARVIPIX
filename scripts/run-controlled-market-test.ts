@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { CadpShadowFlow } from "@/app/ai/cadpV2/shadowFlow";
 import { CadpVerifierV2 } from "@/app/ai/cadpV2/verifierV2";
+import type { CadpShadowSignal, CadpAnalysisResponseV2 } from "@/app/ai/cadpV2/types";
 import { FinnhubNewsService, getFinnhubRuntimeConfig } from "@/app/backend/data-platform/providers/finnhub";
 import {
   getTwelveDataRuntimeConfig,
@@ -23,6 +24,7 @@ const TEST_TAGS = ["TEST_ONLY", "NON_EXECUTABLE", "NOT_FOR_CLIENTS"] as const;
 const TF_MS: Record<Timeframe, number> = {
   "5M": 5 * 60 * 1000,
   "30M": 30 * 60 * 1000,
+  "45M": 45 * 60 * 1000,
   "1H": 60 * 60 * 1000,
 };
 
@@ -178,12 +180,8 @@ function buildApprovedConsensus(nowTs: number): AgentScore[] {
 
 function toTradeSignal(input: {
   signalId: string;
-  signal: ReturnType<CadpShadowFlow["build"]> extends Promise<infer T>
-    ? T extends { signal: infer S }
-      ? S
-      : never
-    : never;
-  response: NonNullable<Awaited<ReturnType<CadpShadowFlow["build"]>["response"]>>;
+  signal: CadpShadowSignal;
+  response: CadpAnalysisResponseV2;
   nowTs: number;
 }): TradeSignal {
   const side = input.signal.direction === "SELL" ? "venta" : "compra";
@@ -194,12 +192,12 @@ function toTradeSignal(input: {
     symbol: input.signal.symbol,
     type: side,
     timeframe: "5M",
-    entryPrice: input.response.order_plan.entry_price ?? 0,
-    takeProfitPrice: input.response.order_plan.take_profit ?? 0,
-    stopLossPrice: input.response.order_plan.stop_loss ?? 0,
+    entryPrice: input.response.order_plan?.entry_price ?? 0,
+    takeProfitPrice: input.response.order_plan?.take_profit ?? 0,
+    stopLossPrice: input.response.order_plan?.stop_loss ?? 0,
     consensusScore: 85,
-    confidenceScore: Number(input.response.quality.model_confidence ?? 75),
-    riskRewardRatio: Number(input.response.order_plan.proposed_net_rr ?? input.response.order_plan.proposed_gross_rr ?? 1),
+    confidenceScore: Number(input.response.quality?.model_confidence ?? 75),
+    riskRewardRatio: Number(input.response.order_plan?.proposed_net_rr ?? input.response.order_plan?.proposed_gross_rr ?? 1),
     primaryReason: `CADP decision=${input.response.analyst_decision}`,
     agentContributions: [...TEST_TAGS, "cadp-shadow-flow"],
     riskWarnings: [],

@@ -1,0 +1,10 @@
+CONEXIONES AL PUERTO 3000
+==================================================
+  TCP    0.0.0.0:3000           0.0.0.0:0              LISTENING       37448
+  TCP    [::]:3000              [::]:0                 LISTENING       37448
+  TCP    [::1]:3000             [::1]:54783            ESTABLISHED     37448
+  TCP    [::1]:3000             [::1]:55942            ESTABLISHED     37448
+  TCP    [::1]:54783            [::1]:3000             ESTABLISHED     32444
+  TCP    [::1]:55942            [::1]:3000             ESTABLISHED     15296
+
+Todos los endpoints del backend deberían aparecer en conexiones activas.
