@@ -12,6 +12,7 @@ export default function RegistroPage() {
   const [pais, setPais] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -35,6 +36,7 @@ export default function RegistroPage() {
           pais,
           password,
           confirmPassword,
+          inviteCode,
           aceptaTerminos,
         }),
       });
@@ -59,6 +61,7 @@ export default function RegistroPage() {
       setPais('');
       setPassword('');
       setConfirmPassword('');
+      setInviteCode('');
       setAceptaTerminos(false);
     } catch {
       setError('No se pudo completar el registro.');
@@ -79,6 +82,7 @@ export default function RegistroPage() {
             <input type="email" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Correo" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
             <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
             <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="País" value={pais} onChange={(e) => setPais(e.target.value)} required />
+            <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Código de invitación (FOUNDER-0XX)" value={inviteCode} onChange={(e) => setInviteCode(e.target.value.toUpperCase())} required />
             <input type="password" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Contraseña (mínimo 8)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             <input type="password" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} />
             <label className="flex items-center gap-2 text-xs text-white/80">
