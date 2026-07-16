@@ -122,8 +122,11 @@ export async function POST(request: NextRequest) {
 
     // ── Beta Privada: registros restringidos ──────────────────────────────
     const betaMode = process.env.BETA_PRIVATE_MODE === "true" || process.env.TEST_ONLY === "true";
+    let inviteCode = "";
+    let betaCodeValid = false;
+    
     if (betaMode) {
-      const inviteCode = String(body.inviteCode ?? "").trim().toUpperCase();
+      inviteCode = String(body.inviteCode ?? "").trim().toUpperCase();
       if (!inviteCode || !/^FOUNDER-\d{3}$/.test(inviteCode)) {
         return NextResponse.json(
           { ok: false, error: "CARVIPIX está en Beta Privada. Se requiere un código de invitación para registrarse." },
@@ -142,6 +145,7 @@ export async function POST(request: NextRequest) {
             { status: 403 }
           );
         }
+        betaCodeValid = true;
       }
     }
 
@@ -238,14 +242,37 @@ export async function POST(request: NextRequest) {
         [userId, correo, nombre, apellido, passwordHash, telefono, pais]
       );
 
-      await client.query(
-        `
-        INSERT INTO memberships (user_id, plan, estado, fecha_inicio, renovacion_automatica)
-        VALUES ($1, 'demo', 'inactivo', NOW(), false)
-        ON CONFLICT (user_id) DO NOTHING
-        `,
-        [userId]
-      );
+      // ── Crear membresía según tipo de registro ──────────────────────────────
+      if (betaCodeValid && betaMode) {
+        // Membresía FOUNDERS_BETA (90 días)
+        const fechaFin = new Date();
+        fechaFin.setDate(fechaFin.getDate() + 90);
+        
+        await client.query(
+          `
+          INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, origen)
+          VALUES ($1, 'PRO', 'activo', NOW(), $2, false, 'FOUNDERS_BETA')
+          ON CONFLICT (user_id) DO NOTHING
+          `,
+          [userId, fechaFin]
+        );
+        
+        // Incrementar used_count del código
+        await client.query(
+          `UPDATE beta_invitation_codes SET used_count = used_count + 1 WHERE code = $1`,
+          [inviteCode]
+        );
+      } else {
+        // Membresía regular DEMO
+        await client.query(
+          `
+          INSERT INTO memberships (user_id, plan, estado, fecha_inicio, renovacion_automatica)
+          VALUES ($1, 'demo', 'inactivo', NOW(), false)
+          ON CONFLICT (user_id) DO NOTHING
+          `,
+          [userId]
+        );
+      }
     });
 
     const verificationToken = await createVerificationToken(userId);
