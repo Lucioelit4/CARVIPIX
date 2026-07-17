@@ -9,8 +9,9 @@ const runtimeStage = getRuntimeStage();
 // Build-time validation would block Docker image creation which is counterproductive
 
 const nextConfig: NextConfig = {
-  // "standalone" is for Docker/VPS deployments only.
-  // Vercel uses its own serverless output — do NOT set output:"standalone" here.
+  // Set output to 'standalone' for Docker deployments (Railway)
+  // This creates .next/standalone directory required by Dockerfile
+  output: 'standalone',
   poweredByHeader: false,
   compress: true,
   images: {
