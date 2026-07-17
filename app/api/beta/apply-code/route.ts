@@ -138,16 +138,16 @@ export async function POST(request: NextRequest) {
         [user_id, 'PRO', 'activo', expiresAt, 'FOUNDERS_BETA', code]
       );
 
-      // ── 6. INSERT LICENCIA EA ────────────────────────────────────────────
-      const licenseId = `BETA-${randomUUID().toString().split('-')[0].toUpperCase()}-${Date.now()}`;
+      // ── 6. INSERT LICENCIA EA EN bot_licenses ─────────────────────────
+      const licenseKey = `BOTKEY-${randomUUID().toString().split('-')[0].toUpperCase()}-${Date.now()}`;
       const licenseExpiry = new Date();
       licenseExpiry.setDate(licenseExpiry.getDate() + 90);
 
       const licenseInsert = await client.query(
-        `INSERT INTO bot_mt5_licenses (id, license_id, user_id, status, expires_at, max_installations, subscription_tier, activated_at)
-         VALUES ($1, $2, $3, $4, $5, 1, $6, NOW())
-         RETURNING license_id, user_id`,
-        [randomUUID(), licenseId, user_id, 'ACTIVE', licenseExpiry, 'BASIC']
+        `INSERT INTO bot_licenses (user_id, license_key, purchase_date, expiry_date, active, broker_connected)
+         VALUES ($1, $2, NOW(), $3, true, 'pending')
+         RETURNING license_key, user_id`,
+        [user_id, licenseKey, licenseExpiry]
       );
 
       if (licenseInsert.rows.length === 0) {
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           user_email,
           JSON.stringify({
             order_id: orderId,
-            license_id: licenseId,
+            license_key: licenseKey,
             code: code,
             expires_at: licenseExpiry.toISOString(),
             action: "send_welcome_email",
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
           product_id,
           JSON.stringify({
             order_id: orderId,
-            license_id: licenseId,
+            license_key: licenseKey,
             codigo: code,
             tipo: 'BETA_FOUNDER',
             descuento_porciento: 100,
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       return {
         ok: true,
         order_id: orderId,
-        license_id: licenseId,
+        license_key: licenseKey,
         expires_at: licenseExpiry.toISOString(),
       };
     });
