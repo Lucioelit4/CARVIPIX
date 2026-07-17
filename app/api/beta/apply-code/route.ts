@@ -14,11 +14,14 @@
  * 9. INSERT pago $0 para auditoría (sin metadata column)
  * 10. COMMIT TRANSACTION
  *
+ * DESPUÉS: Enviar email automático con licencia
+ *
  * SI CUALQUIER PASO FALLA → ROLLBACK
  * NO hay catch silenciosos - todos los errores se propagan
  */
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
+import { emailService } from "@/app/backend/email/email-service";
 import { randomUUID } from "crypto";
 import { initializeBetaSchema } from "@/app/backend/schema/beta-schema";
 
@@ -195,9 +198,45 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // ── ENVIAR EMAIL AUTOMÁTICO (después de transacción exitosa) ──────────
+    let emailSent = false;
+    if (result.ok && user_email) {
+      try {
+        const emailResult = await emailService.sendLicenseEmail(
+          user_email,
+          user_email.split("@")[0], // nombre básico del email
+          result.license_key,
+          result.order_id,
+          new Date(result.expires_at)
+        );
+
+        if (emailResult.ok) {
+          emailSent = true;
+          console.log("[BETA-APPLY-CODE] Email sent successfully:", {
+            messageId: emailResult.messageId,
+            to: user_email,
+          });
+        } else {
+          console.warn("[BETA-APPLY-CODE] Email send failed:", {
+            error: emailResult.error,
+            to: user_email,
+          });
+        }
+      } catch (emailError) {
+        console.error("[BETA-APPLY-CODE-EMAIL-ERROR]", {
+          error:
+            emailError instanceof Error ? emailError.message : String(emailError),
+          to: user_email,
+        });
+      }
+    }
+
     return NextResponse.json({
       ...result,
-      message: "✅ Compra completada — Orden creada, Licencia activada, Email pendiente",
+      email_sent: emailSent,
+      message: emailSent
+        ? "✅ Compra completada — Email enviado"
+        : "✅ Compra completada — Revisar correo",
     });
 
   } catch (error) {

@@ -85,11 +85,25 @@ export async function initializeBetaSchema(): Promise<void> {
     )
   `);
 
+  await backendDatabase.query(`
+    CREATE TABLE IF NOT EXISTS bot_downloads (
+      id TEXT PRIMARY KEY,
+      license_key TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      download_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip_address TEXT,
+      user_agent TEXT
+    )
+  `);
+
   await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_beta_codes_code ON beta_invitation_codes(code)`);
   await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_beta_events_user ON beta_events(user_id)`);
   await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_beta_events_type ON beta_events(event_type)`);
   await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_beta_reports_status ON beta_reports(status)`);
   await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_email_logs_recipient ON email_logs(recipient)`);
+  await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_bot_downloads_license ON bot_downloads(license_key)`);
+  await backendDatabase.query(`CREATE INDEX IF NOT EXISTS idx_bot_downloads_user ON bot_downloads(user_id)`);
+
 
   console.log("[BETA] Schema initialized");
 }
