@@ -9,9 +9,9 @@
  * 4. INSERT uso en beta_code_uses
  * 5. UPDATE used_count en beta_invitation_codes
  * 6. INSERT membresía FOUNDERS_BETA (90 días)
- * 7. INSERT licencia EA en bot_mt5_licenses
+ * 7. INSERT licencia EA en bot_licenses (CORRECTED)
  * 8. INSERT evento (para email backend)
- * 9. INSERT pago $0 para auditoría
+ * 9. INSERT pago $0 para auditoría (sin metadata column)
  * 10. COMMIT TRANSACTION
  *
  * SI CUALQUIER PASO FALLA → ROLLBACK
