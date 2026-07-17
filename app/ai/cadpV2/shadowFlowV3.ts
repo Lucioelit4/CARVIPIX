@@ -23,6 +23,7 @@ import { disparadorModulos } from "./disparadorModulos";
 import { paperTradeMonitor } from "./paperTradeMonitor";
 import { observerV3 } from "./observerV3";
 import { analysisStore } from "./analysisStore";
+import { telegramNotificationService } from "./telegramNotificationService";
 import type {
   CanonicalSymbol,
   PreAnalysisTriggerReason,
@@ -295,6 +296,30 @@ export class ShadowFlowV3 {
       // ── PASO 13: Dispatch to all modules (resilient — failed destinations don't block others)
       const paperAccount = paperTradeMonitor.getAccountState();
       const dispatchResult = disparadorModulos.dispatch(response, expediente, paperAccount);
+
+      // ── PASO 13b: Send Telegram notification (resilient — failure doesn't block analysis)
+      if (dispatchResult.output.telegram) {
+        try {
+          const telegramResult = await telegramNotificationService.sendTradeAlert(
+            dispatchResult.output.telegram,
+            canonical_symbol,
+            response.master_decision.decision,
+          );
+          
+          if (!telegramResult.success) {
+            console.warn(
+              `[ShadowFlow] Telegram send failed for ${canonical_symbol}: ${telegramResult.error}`,
+            );
+          } else {
+            console.log(
+              `[ShadowFlow] Telegram sent for ${canonical_symbol} (${telegramResult.latency_ms}ms)`,
+            );
+          }
+        } catch (err) {
+          console.warn("[ShadowFlow] Telegram error:", err instanceof Error ? err.message : String(err));
+          // Do NOT rethrow — analysis succeeds even if Telegram fails
+        }
+      }
 
       // ── PASO 14: Update observer
       const analysisRecord = observerV3.recordCompleted({
