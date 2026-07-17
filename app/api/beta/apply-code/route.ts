@@ -93,6 +93,17 @@ export async function POST(request: NextRequest) {
       [code]
     );
 
+    // ── Crear orden en tabla orders ────────────────────────────────────────
+    if (user_id) {
+      await backendDatabase.query(
+        `INSERT INTO orders (id, user_id, product_id, quantity, total, currency, status, payment_id, fecha_creacion)
+         VALUES ($1, $2, $3, 1, 0, 'USD', 'completed', $4, NOW())`,
+        [orderId, user_id, product_id, code]
+      ).catch((err) => {
+        console.warn("[BETA] Order insert falló:", err);
+      });
+    }
+
     // ── Activar membresía FOUNDERS_BETA directamente (si user_id conocido) ───
     if (user_id) {
       console.log(`[BETA] Creating membership for user_id: ${user_id}`);
