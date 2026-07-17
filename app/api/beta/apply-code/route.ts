@@ -146,6 +146,8 @@ export async function POST(request: NextRequest) {
       const licenseInsert = await client.query(
         `INSERT INTO bot_licenses (user_id, license_key, purchase_date, expiry_date, active, broker_connected)
          VALUES ($1, $2, NOW(), $3, true, 'pending')
+         ON CONFLICT (user_id) DO UPDATE
+           SET license_key = EXCLUDED.license_key, purchase_date = NOW(), expiry_date = EXCLUDED.expiry_date, active = true
          RETURNING license_key, user_id`,
         [user_id, licenseKey, licenseExpiry]
       );
