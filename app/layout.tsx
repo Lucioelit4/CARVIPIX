@@ -3,6 +3,10 @@ import { Cormorant_Garamond, Geist_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import AppShell from "./components/AppShell";
 
+// Force dynamic rendering at runtime instead of static generation at build time
+// This prevents build-time database connection attempts
+export const dynamic = 'force-dynamic';
+
 const manrope = Manrope({
   variable: "--font-geist-sans",
   subsets: ["latin"],
