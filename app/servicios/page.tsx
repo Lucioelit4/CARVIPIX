@@ -1,6 +1,17 @@
+import type { Metadata } from "next";
 import { ArrowRight, BarChart3, Bot, ShieldCheck, Wallet, Users, CheckCircle2 } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
 import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
+
+export const metadata: Metadata = {
+  title: "Servicios y Planes — CARVIPIX",
+  description: "Planes BASIC, PRO y Bot EA MT5 de CARVIPIX. Alertas en vivo, herramientas de trading y automatización profesional.",
+  alternates: { canonical: "https://carvipix.com/servicios" },
+  openGraph: {
+    title: "Servicios y Planes — CARVIPIX",
+    url: "https://carvipix.com/servicios",
+  },
+};
 
 const services = [
   {

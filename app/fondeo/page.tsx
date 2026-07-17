@@ -1,4 +1,15 @@
+import type { Metadata } from "next";
 import BackToDashboard from "../components/BackToDashboard";
+
+export const metadata: Metadata = {
+  title: "Programa de Fondeo — CARVIPIX",
+  description: "Programa de cuentas fondeadas CARVIPIX. Próximamente disponible para traders calificados.",
+  alternates: { canonical: "https://carvipix.com/fondeo" },
+  openGraph: {
+    title: "Programa de Fondeo — CARVIPIX",
+    url: "https://carvipix.com/fondeo",
+  },
+};
 
 export default function FondeoPage() {
   return (
