@@ -176,19 +176,13 @@ export async function POST(request: NextRequest) {
 
       // ── 8. INSERT PAGO $0 ────────────────────────────────────────────────
       await client.query(
-        `INSERT INTO payments (id, user_id, product_id, amount, currency, status, method, metadata, fecha)
+        `INSERT INTO payments (id, user_id, product_id, amount, currency, status, method, reference_id, fecha)
          VALUES ($1, $2, $3, 0, 'USD', 'completed', 'founder_code', $4, NOW())`,
         [
           randomUUID(),
           user_id,
           product_id,
-          JSON.stringify({
-            order_id: orderId,
-            license_key: licenseKey,
-            codigo: code,
-            tipo: 'BETA_FOUNDER',
-            descuento_porciento: 100,
-          }),
+          orderId,
         ]
       );
 
