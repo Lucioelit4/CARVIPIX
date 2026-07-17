@@ -2,8 +2,12 @@ import type { NextConfig } from "next";
 import { assertCriticalEnvironment, getRuntimeStage } from "./app/backend/core/config";
 
 // Block startup in strict runtime stages when critical env is missing.
+// Skip validation during Docker build (when running `next build` in container)
+// but enforce after startup (validation happens in runtime via middleware/api)
 const runtimeStage = getRuntimeStage();
-if (runtimeStage === "shadow" || runtimeStage === "production") {
+const skipValidationForDockerBuild = process.env.SKIP_ENV_VALIDATION === "true" || process.env.NODE_ENV === "production" && !process.env.DATABASE_URL;
+
+if ((runtimeStage === "shadow" || runtimeStage === "production") && !skipValidationForDockerBuild) {
   assertCriticalEnvironment();
 }
 
