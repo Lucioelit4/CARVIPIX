@@ -170,9 +170,14 @@ function ensureObserverRuntimeInitialization(): void {
 
   observerInitializationInFlight = initializeMaestroV3Observer()
     .catch((error) => {
-      logger.error("observer.init", "Maestro V3 observer auto-initialization failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
+      logger.error(
+        "observer.init",
+        "Maestro V3 observer auto-initialization failed",
+        undefined,
+        {
+          errorMessage: error instanceof Error ? error.message : String(error),
+        }
+      );
     })
     .finally(() => {
       observerInitializationInFlight = null;
