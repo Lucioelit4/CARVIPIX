@@ -37,9 +37,23 @@ jobs:
     needs: resolve-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.resolve-environment.outputs.env_name }}
-    if: ${{ secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_PORT != '' && secrets.DEPLOY_APP_DIR != '' }}
 
     steps:
+      - name: Validate deployment secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR }}
+        run: |
+          set -e
+          [ -n "$DEPLOY_HOST" ] || { echo "Missing DEPLOY_HOST"; exit 1; }
+          [ -n "$DEPLOY_USER" ] || { echo "Missing DEPLOY_USER"; exit 1; }
+          [ -n "$DEPLOY_SSH_KEY" ] || { echo "Missing DEPLOY_SSH_KEY"; exit 1; }
+          [ -n "$DEPLOY_PORT" ] || { echo "Missing DEPLOY_PORT"; exit 1; }
+          [ -n "$DEPLOY_APP_DIR" ] || { echo "Missing DEPLOY_APP_DIR"; exit 1; }
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         env:
