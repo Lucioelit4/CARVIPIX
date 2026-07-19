@@ -71,7 +71,7 @@ function scriptIdForType(type: Product["type"]): string {
   return `paypal-sdk-${type}`;
 }
 
-async function loadPayPalSdk(product: Product, clientId: string): Promise<void> {
+async function loadPayPalSdk(product: Product, clientId: string, merchantId?: string): Promise<void> {
   if (!clientId) {
     throw new Error("Falta PAYPAL_CLIENT_ID para cargar PayPal SDK");
   }
@@ -94,6 +94,10 @@ async function loadPayPalSdk(product: Product, clientId: string): Promise<void> 
     currency: product.currency,
     components: "buttons",
   });
+
+  if (merchantId) {
+    params.set("merchant-id", merchantId);
+  }
 
   if (product.type === "subscription") {
     params.set("vault", "true");
@@ -123,6 +127,7 @@ export default function CheckoutContent() {
   const [creatingButton, setCreatingButton] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalMerchantId, setPaypalMerchantId] = useState("");
   const [paypalEnv, setPaypalEnv] = useState<"sandbox" | "production" | string>("sandbox");
   const [requiredDocuments, setRequiredDocuments] = useState<LegalDocumentSummary[]>([]);
   const [missingDocuments, setMissingDocuments] = useState<LegalDocumentSummary[]>([]);
@@ -152,9 +157,12 @@ export default function CheckoutContent() {
       }
 
       if (statusResponse?.ok) {
-        const statusPayload = await parseJsonSafe<{ data?: { configured?: boolean; clientId?: string; env?: string } }>(statusResponse);
+        const statusPayload = await parseJsonSafe<{ data?: { configured?: boolean; clientId?: string; merchantId?: string; env?: string } }>(statusResponse);
         if (statusPayload.data?.clientId) {
           setPaypalClientId(statusPayload.data.clientId);
+        }
+        if (statusPayload.data?.merchantId) {
+          setPaypalMerchantId(statusPayload.data.merchantId);
         }
         if (statusPayload.data?.env) {
           setPaypalEnv(statusPayload.data.env);
@@ -262,7 +270,7 @@ export default function CheckoutContent() {
       setMessage(null);
 
       try {
-        await loadPayPalSdk(product, paypalClientId);
+        await loadPayPalSdk(product, paypalClientId, paypalMerchantId);
         if (!mounted) {
           return;
         }
@@ -375,7 +383,7 @@ export default function CheckoutContent() {
       mounted = false;
       container.innerHTML = "";
     };
-  }, [legalChecked, missingDocuments.length, paypalClientId, product, router, session?.authenticated]);
+  }, [legalChecked, missingDocuments.length, paypalClientId, paypalMerchantId, product, router, session?.authenticated]);
 
   const paymentLabel = product?.type === "subscription" ? "al mes" : "pago unico";
 

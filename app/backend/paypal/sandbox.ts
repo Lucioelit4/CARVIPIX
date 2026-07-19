@@ -189,6 +189,18 @@ function resolvePayPalWebhookId(): string {
   return String(process.env.PAYPAL_SANDBOX_WEBHOOK_ID || process.env.PAYPAL_WEBHOOK_ID || "").trim();
 }
 
+function resolvePayPalMerchantId(): string {
+  if (resolvePayPalMode() === "production") {
+    return String(process.env.PAYPAL_MERCHANT_ID || process.env.PAYPAL_LIVE_MERCHANT_ID || "").trim();
+  }
+
+  return String(process.env.PAYPAL_SANDBOX_MERCHANT_ID || process.env.PAYPAL_MERCHANT_ID || "").trim();
+}
+
+function resolvePayPalSoftDescriptor(): string {
+  return String(process.env.PAYPAL_SOFT_DESCRIPTOR || "CARVIPIX").trim().slice(0, 22);
+}
+
 function resolvePayPalEnvironmentSource(): string {
   return resolvePayPalMode() === "production" ? "paypal_live" : "paypal_sandbox";
 }
@@ -965,11 +977,14 @@ export async function listPayPalOfferings(): Promise<PayPalOffering[]> {
 export function getPayPalStatus() {
   const clientId = resolvePayPalClientId();
   const webhookId = resolvePayPalWebhookId();
+  const merchantId = resolvePayPalMerchantId();
   return {
     env: resolvePayPalMode(),
     configured: Boolean(clientId && resolvePayPalClientSecret()),
     webhookConfigured: Boolean(webhookId),
+    merchantConfigured: Boolean(merchantId),
     clientId,
+    merchantId,
     apiBase: resolvePayPalBaseUrl(),
   };
 }
@@ -1180,6 +1195,7 @@ export async function createPayPalOrder(input: {
         {
           custom_id: customId,
           description: offering.name,
+          soft_descriptor: resolvePayPalSoftDescriptor(),
           amount: {
             currency_code: offering.currency,
             value: offering.amount.toFixed(2),
