@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Bot, TrendingUp, Users, Wallet, ShieldCheck, BarChart3, Zap, Star, CheckCircle2, ArrowRight } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
-import { listActiveVideos } from "@/app/backend/compliance/compliance-service";
 
 const SITE_URL = "https://carvipix.com";
 
@@ -20,10 +19,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Home() {
-  const activeVideos = await listActiveVideos();
-  const publicVideo = activeVideos.find((item) => item.scope === "public-home");
-
+export default function Home() {
   return (
     <main className="min-h-screen bg-[#05070b] text-[#f5f1e8]">
 
@@ -58,20 +54,18 @@ export default async function Home() {
 
 
       {/* ── VIDEO INSTITUCIONAL ─────────────────────────────────────────────── */}
-      {publicVideo && (
-        <section aria-label="Video institucional" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-14">
-          <div className="rounded-2xl border border-white/10 bg-[#0d1119] p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d4af37]">Video institucional</p>
-            <h2 className="mt-3 text-2xl font-semibold">{publicVideo.title}</h2>
-            <p className="mt-2 text-sm text-[#c7c0b4]">{publicVideo.description}</p>
-            <div className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-              <video className="h-full w-full" controls preload="metadata" poster={publicVideo.posterUrl} src={publicVideo.videoUrl}>
-                Tu navegador no soporta video HTML5.
-              </video>
-            </div>
+      <section aria-label="Video institucional" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-14">
+        <div className="rounded-2xl border border-white/10 bg-[#0d1119] p-7">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d4af37]">Video institucional</p>
+          <h2 className="mt-3 text-2xl font-semibold">Proximamente</h2>
+          <p className="mt-2 text-sm text-[#c7c0b4]">Este espacio estara disponible pronto.</p>
+          <div className="mt-5 flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
+            <span className="rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#d4af37]">
+              Proximamente
+            </span>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ── QUÉ ES CARVIPIX ─────────────────────────────────────────────────── */}
       <section aria-label="Qué es CARVIPIX" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-14">
