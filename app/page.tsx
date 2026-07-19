@@ -8,13 +8,13 @@ const SITE_URL = "https://carvipix.com";
 export const metadata: Metadata = {
   title: "CARVIPIX — Plataforma Profesional de Trading",
   description:
-    "CARVIPIX es la plataforma profesional de trading con Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders. Opera con claridad y estructura.",
+    "CARVIPIX es una plataforma tecnologica para traders con Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad.",
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
     title: "CARVIPIX — Plataforma Profesional de Trading",
-    description: "Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders. Opera con claridad y estructura.",
+    description: "Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad de traders.",
     url: SITE_URL,
     type: "website",
   },
@@ -34,8 +34,8 @@ export default async function Home() {
           <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight sm:text-6xl">
             Opera con estructura.<br className="hidden sm:block" /> Decide con claridad.
           </h1>
-          <p className="mt-6 max-w-2xl text-base text-[#c7c0b4] sm:text-lg">
-            CARVIPIX integra Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders en un solo ecosistema profesional.
+          <p className="mt-4 max-w-2xl text-base text-[#c7c0b4] sm:text-lg">
+            CARVIPIX integra Bot EA MT5, alertas en vivo, herramientas operativas y comunidad en un solo ecosistema tecnologico.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <CARVIPIXButtonLink href="/registro" variant="primary" size="lg">
@@ -43,6 +43,9 @@ export default async function Home() {
             </CARVIPIXButtonLink>
             <CARVIPIXButtonLink href="/servicios" variant="secondary" size="lg">
               Ver planes y precios
+            </CARVIPIXButtonLink>
+            <CARVIPIXButtonLink href="/trust-center" variant="secondary" size="lg">
+              Ver Trust Center
             </CARVIPIXButtonLink>
           </div>
           <div className="mt-10 flex flex-wrap gap-6 text-xs text-[#c7c0b4]">
@@ -76,16 +79,16 @@ export default async function Home() {
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#d4af37]">Qué es CARVIPIX</p>
           <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Un ecosistema completo para el trader profesional</h2>
           <p className="mt-4 mx-auto max-w-2xl text-[#c7c0b4]">
-            No es solo un bot ni solo señales. CARVIPIX es la plataforma donde confluyen análisis, automatización, comunidad y capital en una sola experiencia.
+            No es solo un bot ni solo senales. CARVIPIX integra analisis, automatizacion, comunidad y herramientas operativas en una sola experiencia.
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[
             { icon: Zap, label: "Alertas en Vivo", desc: "Señales en tiempo real sobre XAUUSD, EURUSD, GBPUSD y BTCUSD con análisis estructural." },
             { icon: Bot, label: "Bot EA MT5", desc: "Expert Advisor descargable e instalable en MetaTrader 5. Opera automáticamente según tu configuración." },
-            { icon: TrendingUp, label: "Resultados", desc: "Historial verificado de operaciones, estadísticas de win rate y reporte mensual de rendimiento." },
-            { icon: Users, label: "Comunidad", desc: "Acceso a canales privados, análisis en grupo y actualizaciones directas de los operadores CARVIPIX." },
-            { icon: Wallet, label: "Programa de Fondeo", desc: "Próximamente: cuentas fondeadas para operar capital institucional con estructura definida." },
+            { icon: TrendingUp, label: "Resultados", desc: "Historial verificado de actividad operativa, win rate y seguimiento descriptivo del sistema." },
+            { icon: Users, label: "Comunidad", desc: "Acceso a canales privados, analisis en grupo y actualizaciones directas del equipo CARVIPIX." },
+            { icon: Wallet, label: "Programa de Fondeo", desc: "Proximamente: informacion oficial sobre un programa en preparacion, sin venta activa por ahora." },
             { icon: BarChart3, label: "Herramientas", desc: "Calculadoras de riesgo, gestión de posición, análisis de sesión y utilidades profesionales." },
           ].map(({ icon: Icon, label, desc }) => (
             <article key={label} className="rounded-2xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/[0.08]">
@@ -163,7 +166,7 @@ export default async function Home() {
               </div>
               <div className="rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-4">
                 <p className="text-xs text-[#d4af37]">Plan PRO</p>
-                <p className="mt-1 text-xl font-bold">$49.99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
+                <p className="mt-1 text-xl font-bold">$150 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
                 <p className="mt-1 text-xs text-[#c7c0b4]">Acceso completo + herramientas</p>
               </div>
             </div>
@@ -228,12 +231,12 @@ export default async function Home() {
               Próximamente
             </p>
             <p className="mt-4 text-xs font-semibold uppercase tracking-[0.28em] text-[#d4af37]">Programa de Fondeo</p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Opera con capital institucional</h2>
+            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Programa en preparacion para traders calificados</h2>
             <p className="mt-5 text-[#c7c0b4]">
-              El programa de cuentas fondeadas de CARVIPIX permitirá a traders calificados operar capital real bajo estructura profesional y división de utilidades.
+              CARVIPIX prepara una propuesta de evaluacion para traders calificados. Mientras no exista lanzamiento formal, esta seccion es informativa y no representa venta activa ni promesa de acceso.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-[#c7c0b4]">
-              {["Evaluación estructurada", "Capital desde $10,000 USD", "División de utilidades", "Sin riesgo de capital propio"].map((item) => (
+              {["Evaluacion estructurada", "Reglas operativas definidas", "Publicacion oficial al lanzamiento", "Sin venta activa por ahora"].map((item) => (
                 <li key={item} className="flex items-center gap-2">
                   <Star size={14} className="shrink-0 text-[#d4af37]" />
                   {item}
@@ -275,7 +278,7 @@ export default async function Home() {
             },
             {
               name: "PRO",
-              price: "$49.99",
+              price: "$150",
               period: "/ mes",
               desc: "Acceso completo a todos los módulos.",
               features: ["Todo BASIC incluido", "Más activos y alertas", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],
@@ -316,7 +319,7 @@ export default async function Home() {
           <ShieldCheck size={36} className="mx-auto text-[#d4af37]" />
           <h2 className="mt-5 text-3xl font-bold sm:text-5xl">Comienza hoy en CARVIPIX</h2>
           <p className="mt-5 mx-auto max-w-xl text-[#c7c0b4]">
-            Crea tu cuenta, elige tu plan y accede a la plataforma profesional de trading más completa del mercado hispano.
+            Crea tu cuenta, elige tu plan y accede a una plataforma tecnologica para traders con enfoque en transparencia y control operativo.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <CARVIPIXButtonLink href="/registro" variant="primary" size="lg">

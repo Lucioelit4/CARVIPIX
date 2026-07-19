@@ -406,7 +406,7 @@ export function createSupportTicketResolvedTemplate(params: {
 // Funciones auxiliares
 // ═══════════════════════════════════════════════════════════════════════
 
-export function renderTemplate(templateType: EmailTemplateType, params: Record<string, any>): EmailTemplate {
+export function renderTemplate(templateType: EmailTemplateType, params: Record<string, unknown>): EmailTemplate {
   switch (templateType) {
     case "welcome-registration":
       return createWelcomeRegistrationTemplate(params as Parameters<typeof createWelcomeRegistrationTemplate>[0]);

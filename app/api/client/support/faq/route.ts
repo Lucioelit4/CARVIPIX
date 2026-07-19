@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     | "membresias"
     | "pagos"
     | "facturacion"
-    | "gestion-capital"
+    | "socios-estrategicos"
     | "fondeo"
     | "resultados"
     | "comunidad"

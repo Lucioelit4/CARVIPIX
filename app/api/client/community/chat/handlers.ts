@@ -750,7 +750,7 @@ async function saveReport(
 
 function userRole(profile: CommunityUserProfile): string {
   if (profile.isAdmin) return "Administrador";
-  if (profile.hasCapital) return "Gestion de Capital";
+  if (profile.hasCapital) return "Socio Estrategico";
   if (profile.hasBot) return "Usuario Bot";
   if (profile.plan === "advanced") return "Miembro PRO";
   if (profile.plan === "basic") return "Miembro BASIC";

@@ -12,31 +12,31 @@ interface DisclaimerNoteProps {
 
 const disclaimerMessages: Record<DisclaimerVariant, { text: string; icon?: React.ReactNode }> = {
   demo: {
-    text: 'Contenido informativo sujeto a actualización operativa según disponibilidad del servicio.',
+    text: 'Contenido informativo sujeto a actualizacion operativa segun disponibilidad del servicio.',
     icon: <Info size={14} />,
   },
   risk: {
-    text: 'El trading implica riesgo significativo, incluida pérdida potencial de capital. Los resultados pasados no garantizan resultados futuros.',
+    text: 'El trading implica riesgo significativo, incluida posible perdida de capital. Los resultados historicos no garantizan resultados futuros.',
     icon: <AlertTriangle size={14} />,
   },
   legal: {
-    text: 'CARVIPIX proporciona herramientas y servicios informativos. No es un asesor financiero regulado ni gestor de inversiones autorizado.',
+    text: 'CARVIPIX proporciona herramientas y servicios informativos. No ofrece asesoria financiera personalizada ni administracion de dinero.',
     icon: <Info size={14} />,
   },
   payment: {
-    text: 'CARVIPIX no es empresa de fondeo. El servicio consiste en evaluación y seguimiento con empresas externas de acuerdo a sus reglas y condiciones.',
+    text: 'CARVIPIX no opera como empresa de fondeo. Cualquier servicio de este tipo se publicara solo cuando exista lanzamiento formal y condiciones oficiales.',
     icon: <Info size={14} />,
   },
   capital: {
-    text: 'La gestión de capital implica riesgo y los resultados pueden variar. CARVIPIX no garantiza rendimientos específicos. La participación aplica únicamente sobre utilidades generadas bajo los términos publicados.',
+    text: 'El proceso de Socios Estrategicos es una evaluacion comercial privada. CARVIPIX no garantiza aceptacion ni colaboracion hasta la firma del acuerdo correspondiente.',
     icon: <AlertTriangle size={14} />,
   },
   bot: {
-    text: 'El Bot CARVIPIX automatiza reglas operativas y no garantiza resultados específicos. El trading implica riesgo. Consulta términos y condiciones antes de usar.',
+    text: 'El Bot CARVIPIX automatiza reglas operativas y no garantiza resultados especificos. El trading implica riesgo. Consulta terminos y condiciones antes de usar.',
     icon: <AlertTriangle size={14} />,
   },
   academy: {
-    text: 'La Academia se habilita por etapas según el plan activo. El trading implica riesgo; CARVIPIX no garantiza resultados específicos.',
+    text: 'La Academia se habilita por etapas segun el plan activo. El trading implica riesgo y CARVIPIX no garantiza resultados especificos.',
     icon: <Info size={14} />,
   },
   support: {

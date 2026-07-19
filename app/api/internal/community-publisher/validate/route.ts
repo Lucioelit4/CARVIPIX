@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim() || "";
   const channelTest = process.env.TELEGRAM_CHANNEL_TEST?.trim() || "";
   const channelOfficial = process.env.TELEGRAM_CHANNEL_OFFICIAL?.trim() || "";
-  const testOnly = process.env.TEST_ONLY !== "false"; // default: true
+  const testOnly = process.env.TEST_ONLY === "true";
   const enabled = process.env.COMMUNITY_PUBLISHER_ENABLED === "true";
   const timezone = process.env.CARVIPIX_TIMEZONE || "America/Mazatlan";
 

@@ -82,6 +82,12 @@ function createUserId(): string {
   return `usr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+function buildVerificationUrl(request: NextRequest, verificationToken: string): string {
+  const verificationUrl = new URL("/verificar-correo", request.url);
+  verificationUrl.searchParams.set("token", verificationToken);
+  return verificationUrl.toString();
+}
+
 async function sendWelcomeEmail(correo: string, nombre: string, verificationToken: string): Promise<{ delivered: boolean; provider?: string; messageId?: string }> {
   try {
     const result = await emailNotificationService.sendWelcomeRegistration({
@@ -121,7 +127,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json().catch(() => ({}))) as RegisterPayload & { inviteCode?: string };
 
     // ── Beta Privada: registros restringidos ──────────────────────────────
-    const betaMode = process.env.BETA_PRIVATE_MODE === "true" || process.env.TEST_ONLY === "true";
+    const betaMode = process.env.BETA_PRIVATE_MODE === "true";
     let inviteCode = "";
     let betaCodeValid = false;
     
@@ -192,6 +198,7 @@ export async function POST(request: NextRequest) {
             ok: true,
             message: "Este correo ya tiene una cuenta pendiente de verificacion. Reenviamos el correo.",
             emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+            verificationUrl: welcomeEmail.delivered ? undefined : buildVerificationUrl(request, verificationToken),
             warning: welcomeEmail.delivered ? undefined : "No pudimos reenviar el correo de verificacion. Solicita reenvio desde login.",
           },
           { status: 200 }
@@ -227,6 +234,7 @@ export async function POST(request: NextRequest) {
           ok: true,
           message: "Cuenta creada. Verifica tu correo.",
           emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+          verificationUrl: welcomeEmail.delivered ? undefined : buildVerificationUrl(request, verificationToken),
           warning: welcomeEmail.delivered ? undefined : "La cuenta fue creada, pero no pudimos enviar el correo de verificacion. Solicita reenvio.",
         },
         { status: 201 }
@@ -283,6 +291,7 @@ export async function POST(request: NextRequest) {
         ok: true,
         message: "Cuenta creada. Verifica tu correo.",
         emailDelivery: welcomeEmail.delivered ? "sent" : "failed",
+        verificationUrl: welcomeEmail.delivered ? undefined : buildVerificationUrl(request, verificationToken),
         warning: welcomeEmail.delivered ? undefined : "La cuenta fue creada, pero no pudimos enviar el correo de verificacion. Solicita reenvio.",
       },
       { status: 201 }

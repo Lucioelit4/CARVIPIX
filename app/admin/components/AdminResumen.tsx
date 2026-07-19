@@ -8,13 +8,13 @@ import { CARVIPIXCard } from '@/app/design-system';
 type Overview = {
   users: number;
   activeMemberships: number;
-  pendingCapitalRequests: number;
+  pendingStrategicPartnerRequests: number;
   openTickets: number;
   blockedAttempts: number;
 };
 
 export default function AdminResumen() {
-  const [overview, setOverview] = useState<Overview>({ users: 0, activeMemberships: 0, pendingCapitalRequests: 0, openTickets: 0, blockedAttempts: 0 });
+  const [overview, setOverview] = useState<Overview>({ users: 0, activeMemberships: 0, pendingStrategicPartnerRequests: 0, openTickets: 0, blockedAttempts: 0 });
 
   const load = useCallback(async () => {
     const response = await fetch('/api/admin/commercial', { cache: 'no-store' });
@@ -38,7 +38,7 @@ export default function AdminResumen() {
   const cards = [
     { icon: Users, label: 'Usuarios', value: overview.users, color: 'text-blue-400' },
     { icon: CheckCircle, label: 'Membresías activas', value: overview.activeMemberships, color: 'text-green-400' },
-    { icon: Clock, label: 'Solicitudes de capital', value: overview.pendingCapitalRequests, color: 'text-yellow-400' },
+    { icon: Clock, label: 'Socios estrategicos (nuevas)', value: overview.pendingStrategicPartnerRequests, color: 'text-yellow-400' },
     { icon: DollarSign, label: 'Tickets abiertos', value: overview.openTickets, color: 'text-[#D4AF37]' },
     { icon: AlertCircle, label: 'Bloqueos auditados', value: overview.blockedAttempts, color: 'text-red-400' },
   ];

@@ -6,12 +6,21 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
+
+function isAdminRequest(request: NextRequest): boolean {
+  return isValidAdminSession(request);
+}
 
 /**
  * GET /api/admin/brain
  * Obtener estado del cerebro
  */
 export async function GET(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const status = masterEventDispatcher.getBrainStatus();
     
@@ -33,11 +42,15 @@ export async function GET(request: NextRequest) {
  * POST /api/admin/brain?action=...
  */
 export async function POST(request: NextRequest) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { searchParams } = request.nextUrl;
     const action = searchParams.get('action') || 'unknown';
     const body = await request.json().catch(() => ({}));
-    const userId = (body as Record<string, any>).userId || 'admin';
+    const userId = (body as { userId?: string }).userId || 'admin';
     
     let status;
     let message = "";

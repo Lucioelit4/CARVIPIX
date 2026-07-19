@@ -3,7 +3,7 @@ import BackToDashboard from "../components/BackToDashboard";
 
 export const metadata: Metadata = {
   title: "Programa de Fondeo — CARVIPIX",
-  description: "Programa de cuentas fondeadas CARVIPIX. Próximamente disponible para traders calificados.",
+  description: "Informacion preliminar sobre el programa de fondeo CARVIPIX. Servicio en preparacion y sin venta activa.",
   alternates: { canonical: "https://carvipix.com/fondeo" },
   openGraph: {
     title: "Programa de Fondeo — CARVIPIX",
@@ -22,7 +22,7 @@ export default function FondeoPage() {
           </p>
           <h1 className="mt-8 text-5xl font-bold text-white sm:text-6xl">Próximamente</h1>
           <p className="mt-6 max-w-2xl mx-auto text-base leading-8 text-zinc-400 sm:text-lg">
-            Este servicio está en desarrollo. Por ahora no hay venta activa, precio, formulario ni checkout para cuentas fondeadas.
+            Este servicio esta en desarrollo. Por ahora no hay venta activa, precio, formulario, evaluacion ni checkout disponibles para este programa.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-5">

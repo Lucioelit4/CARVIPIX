@@ -54,12 +54,14 @@ export async function POST(request: Request) {
       status: "PENDING",
       expiresAt: expiresAt.toISOString()
     });
-  } catch (error: any) {
-    console.error("[TEST-SIGNAL]", error);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("[TEST-SIGNAL]", errorMessage);
     return Response.json({
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: errorMessage,
+      stack: errorStack
     }, { status: 500 });
   }
 }

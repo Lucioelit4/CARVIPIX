@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { DataProviderAdapter, DataRecord, ProviderPullRequest, ProviderPullResponse } from "../../types";
+import type { DatasetKind } from "../../types";
 import { getFinnhubRuntimeConfig } from "./config";
 import { FinnhubNewsService } from "./news";
 
@@ -11,7 +12,7 @@ function toId(parts: string[]): string {
 export class FinnhubEvaluationAdapter implements DataProviderAdapter {
   id = "finnhub-news";
   priority = 100;
-  supports = ["news", "metadata"] as any[];
+  supports: DatasetKind[] = ["news", "metadata"];
 
   private readonly config = getFinnhubRuntimeConfig();
   private readonly news = new FinnhubNewsService(this.config);

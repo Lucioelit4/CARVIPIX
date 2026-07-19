@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import type { DataProviderAdapter, DataRecord, ProviderPullRequest, ProviderPullResponse } from "../../types";
+import type { DatasetKind } from "../../types";
 import { getTwelveDataRuntimeConfig } from "./config";
 import { TwelveDataQuoteService } from "./quotes";
 import { TwelveDataTimeSeriesService } from "./timeSeries";
@@ -14,7 +15,7 @@ function toId(parts: string[]): string {
 export class TwelveDataEvaluationAdapter implements DataProviderAdapter {
   id = "twelve-data-market";
   priority = 95;
-  supports = ["tick", "ohlc", "metadata"] as any[];
+  supports: DatasetKind[] = ["tick", "ohlc", "metadata"];
 
   private readonly config = getTwelveDataRuntimeConfig();
   private readonly quotes = new TwelveDataQuoteService(this.config);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface License {
   id: string;
@@ -43,13 +43,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"licenses" | "installations" | "signals">("licenses");
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 10000); // Actualizar cada 10 segundos
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       // Fetch licenses
       const licensesRes = await fetch("/api/admin/bot/mt5/licenses");
@@ -77,7 +71,20 @@ export default function AdminDashboard() {
       console.error("Error fetching data:", error);
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const bootstrap = setTimeout(() => {
+      void fetchData();
+    }, 0);
+    const interval = setInterval(() => {
+      void fetchData();
+    }, 10000); // Actualizar cada 10 segundos
+    return () => {
+      clearTimeout(bootstrap);
+      clearInterval(interval);
+    };
+  }, [fetchData]);
 
   const createNewLicense = async () => {
     const tier = prompt("Subscription tier (BASIC, PRO, ENTERPRISE):");

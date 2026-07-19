@@ -3,15 +3,22 @@
  * Returns summary of all recent analyses by symbol
  */
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { analysisStore } from "@/app/ai/cadpV2/analysisStore";
 import { paperTradeMonitor } from "@/app/ai/cadpV2/paperTradeMonitor";
+import { isSameOriginRequest } from "@/app/api/admin/_shared/security";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Reuse same-origin guard used by internal admin modules.
+    // In production this blocks direct public calls without origin/referer or token.
+    if (!isSameOriginRequest(request)) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 403 });
+    }
+
     const summary = analysisStore.getSummary();
     const paperAccount = paperTradeMonitor.getAccountState();
 

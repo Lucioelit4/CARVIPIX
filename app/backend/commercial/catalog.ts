@@ -1,7 +1,7 @@
 import type { SubscriptionPlan } from "./access-control";
 import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
 
-export type CommercialProductCategory = "membership" | "bot" | "capital" | "support";
+export type CommercialProductCategory = "membership" | "bot" | "strategic_partner" | "support";
 
 export type CommercialCatalogItem = {
   id: string;
@@ -27,8 +27,8 @@ function mapCategory(product: (typeof COMMERCIAL_PRODUCTS)[number]): CommercialP
     return "bot";
   }
 
-  if (product.id === "capital-gestionado") {
-    return "capital";
+  if (product.id === "socios-estrategicos") {
+    return "strategic_partner";
   }
 
   return "support";
@@ -51,8 +51,8 @@ function mapPlan(product: (typeof COMMERCIAL_PRODUCTS)[number]): SubscriptionPla
 }
 
 function mapRoute(product: (typeof COMMERCIAL_PRODUCTS)[number]): string {
-  if (product.id === "capital-gestionado") {
-    return "/servicios/capital";
+  if (product.id === "socios-estrategicos") {
+    return "/socios-estrategicos";
   }
 
   if (product.id === "cuenta-fondeada") {

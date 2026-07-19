@@ -16,14 +16,11 @@ const PROTECTED_PREFIXES = [
   '/analisis',
   '/comunidad',
   '/bot',
-  '/capital',
   '/fondeo',
   '/herramientas',
   '/academia',
   '/perfil',
   '/soporte',
-  '/gestion-capital',
-  '/gestion-de-capital',
 ];
 
 function isProtectedDashboardPath(pathname: string) {

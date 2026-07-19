@@ -303,7 +303,7 @@ export async function publishApprovedSuggestion(
     const { addToQueue } = await import('@/app/lib/community-publisher/queueService');
 
     const channelId = process.env.TELEGRAM_CHANNEL_TEST ?? '';
-    const testOnly = process.env.TEST_ONLY !== 'false';
+    const testOnly = process.env.TEST_ONLY === 'true';
 
     // Simular evento para el publisher (sin usar el procesador de eventos)
     const fakeEvent = {

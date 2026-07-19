@@ -518,8 +518,9 @@ export class BotMT5Service {
         );
 
         console.log(`[BOT-MT5] ✓ Signal insertada: ${signal.signalId} para ${signal.symbol} ${signal.direction}`);
-      } catch (tableError: any) {
-        if (tableError.message && tableError.message.includes('does not exist')) {
+      } catch (tableError) {
+        const tableErrorMessage = tableError instanceof Error ? tableError.message : String(tableError);
+        if (tableErrorMessage.includes('does not exist')) {
           console.log(`[BOT-MT5] ⚠️  Tabla bot_mt5_signals no existe, signal en memoria: ${signal.signalId}`);
         } else {
           throw tableError;

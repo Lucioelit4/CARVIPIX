@@ -217,11 +217,12 @@ function parseAuthStrategy(value: string | undefined): "none" | "jwt" | "session
 
 export function createBackendConfig(env: EnvRecord = process.env): BackendConfig {
   const environment = parseEnvironment(env.NODE_ENV);
+  const runtimeStage = getRuntimeStage(env);
 
   return {
     environment,
     engine: {
-      seedFromScenarios: parseBoolean(env.BACKEND_ENGINE_SEED_SCENARIOS, true),
+      seedFromScenarios: parseBoolean(env.BACKEND_ENGINE_SEED_SCENARIOS, runtimeStage === "development"),
     },
     logging: {
       level: parseLogLevel(env.BACKEND_LOG_LEVEL),

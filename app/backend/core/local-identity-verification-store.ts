@@ -146,7 +146,11 @@ async function ensureStoreDir() {
 }
 
 async function readStore(): Promise<IdentityVerificationStore> {
-  await ensureStoreDir();
+  try {
+    await ensureStoreDir();
+  } catch {
+    return blankStore();
+  }
 
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -162,7 +166,7 @@ async function readStore(): Promise<IdentityVerificationStore> {
     };
   } catch {
     const store = blankStore();
-    await writeStore(store);
+    await writeStore(store).catch(() => null);
     return store;
   }
 }
@@ -183,7 +187,7 @@ export async function getIdentityVerificationStoreSnapshot() {
 export async function upsertIdentityVerificationRequest(record: IdentityVerificationRequestRecord) {
   const store = await readStore();
   store.requests = [record, ...store.requests.filter((item) => item.id !== record.id && item.userId !== record.userId)];
-  await writeStore(store);
+  await writeStore(store).catch(() => null);
   return record;
 }
 
@@ -228,14 +232,14 @@ export async function saveIdentityVerificationRequirements(
   }
 
   store.requirements = Array.from(merged.values()).sort((left, right) => left.serviceKey.localeCompare(right.serviceKey));
-  await writeStore(store);
+  await writeStore(store).catch(() => null);
   return store.requirements;
 }
 
 export async function addIdentityVerificationAccessLog(log: IdentityVerificationAccessLogRecord) {
   const store = await readStore();
   store.accessLogs = [log, ...store.accessLogs];
-  await writeStore(store);
+  await writeStore(store).catch(() => null);
   return log;
 }
 
@@ -268,6 +272,6 @@ export async function getIdentityVerificationRetentionPolicy() {
 export async function saveIdentityVerificationRetentionPolicy(policy: IdentityVerificationRetentionPolicy) {
   const store = await readStore();
   store.retentionPolicy = policy;
-  await writeStore(store);
+  await writeStore(store).catch(() => null);
   return policy;
 }

@@ -259,8 +259,13 @@ async function readState(): Promise<ExecutionRuntimeState> {
 }
 
 async function writeState(state: ExecutionRuntimeState): Promise<void> {
-  await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await fs.writeFile(STORE_PATH, JSON.stringify(state, null, 2), "utf8");
+  try {
+    await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await fs.writeFile(STORE_PATH, JSON.stringify(state, null, 2), "utf8");
+  } catch {
+    // In serverless runtimes the filesystem can be read-only.
+    // Runtime metrics should still be served from in-memory/default state.
+  }
 }
 
 function appendAudit(

@@ -56,7 +56,7 @@ export class CommunityPublisherInitService {
         botToken: process.env.TELEGRAM_BOT_TOKEN || '',
         channelTest: process.env.TELEGRAM_CHANNEL_TEST || '',
         channelOfficial: process.env.TELEGRAM_CHANNEL_OFFICIAL || '',
-        testOnly: process.env.TEST_ONLY !== 'false'
+        testOnly: process.env.TEST_ONLY === 'true'
       };
 
       this.telegramClient = new TelegramClientService(config);

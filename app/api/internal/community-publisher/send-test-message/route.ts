@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
   const botToken       = process.env.TELEGRAM_BOT_TOKEN?.trim() ?? '';
   const channelTest    = process.env.TELEGRAM_CHANNEL_TEST?.trim() ?? '';
   const channelOfficial = process.env.TELEGRAM_CHANNEL_OFFICIAL?.trim() ?? '';
-  const testOnly       = process.env.TEST_ONLY !== 'false'; // default true
+  const testOnly       = process.env.TEST_ONLY === 'true';
   const enabled        = process.env.COMMUNITY_PUBLISHER_ENABLED === 'true';
 
   const preChecks = {
@@ -118,7 +118,17 @@ export async function POST(request: NextRequest) {
 
   // ── 3. Enviar mensaje — máx 2 intentos (rate limit únicamente) ──────────
   let attempts = 0;
-  let telegramResponse: any = null;
+  let telegramResponse: {
+    ok?: boolean;
+    error_code?: number;
+    description?: string;
+    parameters?: { retry_after?: number };
+    result?: {
+      message_id?: number;
+      date: number;
+      chat?: { id?: string | number; title?: string; type?: string };
+    };
+  } | null = null;
   let lastError: string | null = null;
 
   for (let i = 0; i < 2; i++) {
@@ -131,6 +141,11 @@ export async function POST(request: NextRequest) {
         disable_web_page_preview: true,
         disable_notification: false,
       });
+
+      if (!telegramResponse) {
+        lastError = 'Telegram response missing';
+        break;
+      }
 
       if (telegramResponse.ok) break; // éxito — salir del loop
 
@@ -156,6 +171,17 @@ export async function POST(request: NextRequest) {
   // ── 4. Construir resultado del envío ─────────────────────────────────────
   if (telegramResponse?.ok) {
     const msg = telegramResponse.result;
+    if (!msg) {
+      const result = {
+        publication_id: publicationId,
+        status: 'BLOCKED_NO_MESSAGE_PAYLOAD',
+        error: 'Telegram response did not include a message payload',
+        timestamp: new Date().toISOString(),
+        no_message_sent: true,
+      };
+      await persistLog(result);
+      return NextResponse.json(result, { status: 500 });
+    }
     const auditRecord = {
       publication_id: publicationId,
       status: 'DELIVERED',

@@ -14,13 +14,13 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   try {
     const { searchParams } = new URL(req.url);
-    const module = searchParams.get('module') as string | null;
+    const moduleFilter = searchParams.get('module') as string | null;
 
-    if (module) {
-      const health = await checkModuleHealth(module);
+    if (moduleFilter) {
+      const health = await checkModuleHealth(moduleFilter);
       return NextResponse.json({
         ok: health !== null,
-        health: health || { module_name: module, status: 'NOT_FOUND' },
+        health: health || { module_name: moduleFilter, status: 'NOT_FOUND' },
         timestamp: new Date().toISOString(),
       });
     }

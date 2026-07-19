@@ -90,7 +90,11 @@ async function ensureStoreDir() {
 }
 
 async function readStore(): Promise<LocalCommunityStore> {
-  await ensureStoreDir();
+  try {
+    await ensureStoreDir();
+  } catch {
+    return blankStore();
+  }
 
   try {
     const raw = await fs.readFile(STORE_PATH, "utf8");
@@ -100,15 +104,17 @@ async function readStore(): Promise<LocalCommunityStore> {
       ...parsed,
     };
   } catch {
-    const store = blankStore();
-    await writeStore(store);
-    return store;
+    return blankStore();
   }
 }
 
 async function writeStore(store: LocalCommunityStore) {
-  await ensureStoreDir();
-  await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+  try {
+    await ensureStoreDir();
+    await fs.writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
+  } catch {
+    // Best-effort local cache for environments with writable filesystem.
+  }
 }
 
 export async function listLocalCommunityMessages(channelId: string, limit: number) {

@@ -40,16 +40,16 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     if (action === 'events') {
-      const module = searchParams.get('module') as string | null;
+      const moduleFilter = searchParams.get('module') as string | null;
       const hours = searchParams.get('hours') ? parseInt(searchParams.get('hours')!) : 24;
 
-      const events = await getSystemEvents({ module: module || undefined, hours });
+      const events = await getSystemEvents({ module: moduleFilter || undefined, hours });
 
       return NextResponse.json({
         ok: true,
         total: events.length,
         events,
-        filters: { module: module || 'all', hours },
+        filters: { module: moduleFilter || 'all', hours },
         timestamp: new Date().toISOString(),
       });
     }

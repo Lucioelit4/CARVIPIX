@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
-import { cancelSandboxSubscription } from "@/app/backend/paypal/sandbox";
+import { cancelPayPalSubscription } from "@/app/backend/paypal/sandbox";
 
 export async function POST(request: NextRequest, context: { params: Promise<{ subscriptionId: string }> }) {
   const auth = await requireClientSession(request);
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ su
   const { subscriptionId } = await context.params;
 
   try {
-    const data = await cancelSandboxSubscription({
+    const data = await cancelPayPalSubscription({
       subscriptionId,
       userId: auth.user.id,
       reason,

@@ -9,7 +9,7 @@ import { isSameOriginRequest } from '@/app/api/admin/_shared/security';
 import { getTemplate } from '@/app/lib/community-publisher/templatePersistence';
 import { renderTemplate } from '@/app/lib/community-publisher/templateEngine';
 import { appendTemplateTestLog } from '@/app/lib/community-publisher/templatePersistence';
-import type { Publication } from '@/app/lib/community-publisher/types';
+import type { OriginType, Publication } from '@/app/lib/community-publisher/types';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHANNEL_TEST = process.env.TELEGRAM_CHANNEL_TEST || '-5370238696';
@@ -86,8 +86,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   // Crear Publication de test
-  const td = body.test_data as Record<string, any> || {};
-  const tradeResult = td.trade_result as Record<string, any> || {};
+  const td = (body.test_data ?? {}) as {
+    instrument?: string;
+    origin?: OriginType;
+    entry?: string;
+    stop_loss?: string;
+    take_profit?: string;
+    risk_reward?: string;
+    decision?: string;
+    confidence_level?: string;
+    trade_result?: {
+      result?: string;
+      pnl_pips?: number;
+      pnl_percent?: number;
+    };
+  };
+  const tradeResult = td.trade_result ?? {};
   
   const mockPublication: Publication = {
     publication_id: `TEST-${templateId}-${Date.now()}`,
@@ -102,7 +116,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     attempts: 0,
     max_attempts: 3,
     instrument: td.instrument || 'XAUUSD',
-    origin: td.origin || 'PAPER',
+    origin: td.origin ?? 'PAPER',
     test_only: true,
     idempotency_key: `test-${templateId}-${Date.now()}`,
     metadata: {
@@ -115,11 +129,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       },
       decision: td.decision || 'BUY',
       confidence_level: td.confidence_level || 'HIGH',
-      trade_result: tradeResult && Object.keys(tradeResult).length > 0 ? {
-        result: tradeResult.result || 'WIN',
-        pnl_pips: tradeResult.pnl_pips || 50,
-        pnl_percent: tradeResult.pnl_percent || 2.5,
-      } : undefined,
+      trade_result: tradeResult.result || tradeResult.pnl_pips || tradeResult.pnl_percent
+        ? {
+            result: tradeResult.result || 'WIN',
+            pnl_pips: tradeResult.pnl_pips || 50,
+            pnl_percent: tradeResult.pnl_percent || 2.5,
+          }
+        : undefined,
     },
   };
 

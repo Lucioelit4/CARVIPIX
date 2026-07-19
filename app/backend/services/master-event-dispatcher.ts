@@ -314,13 +314,13 @@ export class MasterEventDispatcher {
     console.log(`[DISPATCHER] Distribuyendo ${event.event_id} a ${event.modules_requested.length} módulos...`);
     
     // Inicializar estado de cada módulo
-    for (const module of event.modules_requested) {
-      event.modules_status.set(module, 'RECEIVED');
+    for (const moduleName of event.modules_requested) {
+      event.modules_status.set(moduleName, 'RECEIVED');
       
       // Registrar en BD
       await this.recordModuleState({
         event_id: event.event_id,
-        module_name: module,
+        module_name: moduleName,
         state: 'RECEIVED',
         progress: 0,
         received_at: new Date(),
@@ -413,7 +413,7 @@ export class MasterEventDispatcher {
       metadata?: Record<string, unknown>;
     }
   ): Promise<void> {
-    let event = this.events.get(event_id);
+    const event = this.events.get(event_id);
     
     // Si no está en memoria, verificar que exista en BD (no lo cargamos, solo validamos)
     if (!event) {
@@ -492,8 +492,8 @@ export class MasterEventDispatcher {
     };
     
     // Notificar a cada módulo que actualice su estado
-    for (const module of event.modules_requested) {
-      await this.notifyModuleOfExecution(event_id, module, payload);
+    for (const moduleName of event.modules_requested) {
+      await this.notifyModuleOfExecution(event_id, moduleName, payload);
     }
     
     event.type = 'MODULES_UPDATED';
@@ -525,7 +525,7 @@ export class MasterEventDispatcher {
       closed_at?: Date;
     }
   ): Promise<void> {
-    let event = this.events.get(event_id);
+    const event = this.events.get(event_id);
     let modulesRequested: string[] = [];
     
     // Si no está en memoria, verificar que exista en BD
@@ -581,8 +581,8 @@ export class MasterEventDispatcher {
     console.log(`[DISPATCHER] Cierre registrado: ${event_id} → ${closure.close_type} (${closure.pips} pips)`);
     
     // Notificar a módulos
-    for (const module of modulesRequested) {
-      await this.notifyModuleOfClosure(event_id, module, closure);
+    for (const moduleName of modulesRequested) {
+      await this.notifyModuleOfClosure(event_id, moduleName, closure);
     }
     
     if (event) {
@@ -604,7 +604,16 @@ export class MasterEventDispatcher {
     const event = this.events.get(event_id);
     
     // Obtener estado de módulos de BD
-    const { rows: moduleRows } = await backendDatabase.query<any>(
+    const { rows: moduleRows } = await backendDatabase.query<{
+      event_id: string;
+      module_name: string;
+      state: ModuleState;
+      progress: number;
+      received_at: Date;
+      started_at: Date | null;
+      completed_at: Date | null;
+      error_message: string | null;
+    }>(
       `
       SELECT DISTINCT ON (module_name) event_id, module_name, state, progress, received_at, started_at, completed_at, error_message
       FROM module_state_history
@@ -638,15 +647,15 @@ export class MasterEventDispatcher {
     
     return {
       event: event || null,
-      modules: moduleRows.map((row: any) => ({
+      modules: moduleRows.map((row) => ({
         event_id: row.event_id,
         module_name: row.module_name,
         state: row.state,
         progress: row.progress,
         received_at: row.received_at,
-        started_at: row.started_at,
-        completed_at: row.completed_at,
-        error_message: row.error_message,
+        started_at: row.started_at ?? undefined,
+        completed_at: row.completed_at ?? undefined,
+        error_message: row.error_message ?? undefined,
         steps_completed: 0,
         total_steps: 5
       })),
@@ -1284,7 +1293,14 @@ export class MasterEventDispatcher {
   private async notifyModuleOfExecution(
     event_id: string,
     module: string,
-    payload: any
+    payload: {
+      event_id: string;
+      signal_id: string;
+      execution_id?: string;
+      status: string;
+      ticket?: number;
+      timestamp: Date;
+    }
   ): Promise<void> {
     // Aquí iría la lógica de notificación a cada módulo específico
     console.log(`[DISPATCHER] → ${module} updated with execution result`);
@@ -1296,7 +1312,14 @@ export class MasterEventDispatcher {
   private async notifyModuleOfClosure(
     event_id: string,
     module: string,
-    closure: any
+    closure: {
+      status: 'CLOSED';
+      close_type: 'TAKE_PROFIT' | 'STOP_LOSS' | 'MANUAL' | 'PARTIAL';
+      close_price: number;
+      pips: number;
+      profit_loss: number;
+      closed_at?: Date;
+    }
   ): Promise<void> {
     // Aquí iría la lógica de notificación de cierre
     console.log(`[DISPATCHER] → ${module} updated with trade closure`);

@@ -26,65 +26,65 @@ export function ProgressDashboard() {
     {
       id: 1,
       name: 'Motor de Trading',
-      description: 'Core engine con 11 agentes y lógica de consenso',
+      description: 'Core engine con 11 agentes y logica de consenso',
       progress: 95,
       status: 'in-progress',
     },
     {
       id: 2,
       name: 'Alertas CARVIPIX',
-      description: 'Sistema de alertas con 7 estados y gestión de ciclo de vida',
+      description: 'Sistema de alertas con 7 estados y gestion de ciclo de vida',
       progress: 85,
       status: 'in-progress',
     },
     {
       id: 3,
       name: 'Datos en Tiempo Real',
-      description: 'Integración con proveedores de datos (AlphaVantage, etc)',
+      description: 'Integracion con proveedores de datos (AlphaVantage, etc)',
       progress: 10,
       status: 'pending',
     },
     {
       id: 4,
       name: 'Backtesting',
-      description: 'Motor de backtesting con análisis de desempeño',
+      description: 'Motor de backtesting con analisis de desempeno',
       progress: 5,
       status: 'pending',
     },
     {
       id: 5,
       name: 'AutoBot',
-      description: 'Bot automático de ejecución de trading',
+      description: 'Bot automatico de ejecucion de trading',
       progress: 0,
       status: 'pending',
     },
     {
       id: 6,
       name: 'Bridge MT4/MT5',
-      description: 'Integración con MetaTrader 4 y 5',
+      description: 'Integracion con MetaTrader 4 y 5',
       progress: 0,
       status: 'pending',
     },
     {
       id: 7,
-      name: 'Gestión de Capital',
-      description: 'Sistema de gestión de riesgo y portafolio',
+      name: 'Socios Estrategicos',
+      description: 'Flujo institucional de evaluacion y trazabilidad de solicitudes',
       progress: 20,
       status: 'pending',
     },
   ];
 
   const agents: Agent[] = [
-    { name: 'Analista de Régimen de Mercado', status: 'completed', score: 95 },
+    { name: 'Analista de Regimen de Mercado', status: 'completed', score: 95 },
     { name: 'Analista de Tendencia', status: 'completed', score: 98 },
     { name: 'Analista de Estructura', status: 'completed', score: 95 },
     { name: 'Analista de Momentum', status: 'completed', score: 96 },
     { name: 'Analista de Pullback', status: 'completed', score: 92 },
-    { name: 'Analista de Sesión', status: 'completed', score: 90 },
+    { name: 'Analista de Sesion', status: 'completed', score: 90 },
     { name: 'Analista de Noticias', status: 'completed', score: 88 },
     { name: 'Gestor de Riesgo', status: 'completed', score: 97 },
-    { name: 'Puntuación de Confianza', status: 'completed', score: 94 },
-    { name: 'Validador de Operación', status: 'completed', score: 96 },
+    { name: 'Puntuacion de Confianza', status: 'completed', score: 94 },
+    { name: 'Validador de Operacion', status: 'completed', score: 96 },
     { name: 'Motor de Aprendizaje', status: 'completed', score: 91 },
   ];
 
@@ -131,7 +131,7 @@ export function ProgressDashboard() {
         className="mb-8"
       >
         <h1 className="text-4xl font-bold text-white mb-2">CARVIPIX Trading Engine</h1>
-        <p className="text-white/60">Página de Progreso - Fase 1 en Desarrollo</p>
+        <p className="text-white/60">Pagina de Progreso - Fase 1 en Desarrollo</p>
       </motion.div>
 
       {/* Overall Progress */}
@@ -175,7 +175,7 @@ export function ProgressDashboard() {
             <CheckCircle className="w-5 h-5 text-green-400" />
             <span className="font-mono text-sm text-white/80">Build Status</span>
           </div>
-          <p className="text-white font-bold">✓ Exitoso</p>
+          <p className="text-white font-bold">Exitoso</p>
           <p className="text-white/60 text-xs">36/36 rutas precompiladas</p>
         </div>
 
@@ -194,7 +194,7 @@ export function ProgressDashboard() {
             <span className="font-mono text-sm text-white/80">TypeScript</span>
           </div>
           <p className="text-white font-bold">0 Errores</p>
-          <p className="text-white/60 text-xs">Compilación limpia</p>
+          <p className="text-white/60 text-xs">Compilacion limpia</p>
         </div>
       </motion.div>
 
@@ -255,9 +255,9 @@ export function ProgressDashboard() {
                   className="mt-4 pt-4 border-t border-white/10"
                 >
                   <p className="text-white/70 text-sm mb-3">
-                    {phase.status === 'completed' && '✓ Fase completada y validada'}
-                    {phase.status === 'in-progress' && '⚡ Actualmente en desarrollo y optimización'}
-                    {phase.status === 'pending' && '⏳ Fase pendiente de inicio'}
+                    {phase.status === 'completed' && 'Fase completada y validada'}
+                    {phase.status === 'in-progress' && 'Actualmente en desarrollo y optimizacion'}
+                    {phase.status === 'pending' && 'Fase pendiente de inicio'}
                   </p>
                   <div className="grid grid-cols-2 gap-3 text-xs text-white/60">
                     <div>
@@ -265,7 +265,7 @@ export function ProgressDashboard() {
                       <p>{phase.status}</p>
                     </div>
                     <div>
-                      <p className="text-white/80 font-mono">Próximo</p>
+                      <p className="text-white/80 font-mono">Proximo</p>
                       <p>{phase.id < 7 ? `Fase ${phase.id + 1}` : 'Mantenimiento'}</p>
                     </div>
                   </div>
@@ -336,10 +336,10 @@ export function ProgressDashboard() {
         <div className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Zap className="w-5 h-5 text-[#D4AF37]" />
-            <span className="font-mono text-sm text-white/80">En Revisión</span>
+            <span className="font-mono text-sm text-white/80">En Revision</span>
           </div>
           <p className="text-2xl font-bold text-[#D4AF37]">2/7 Fases</p>
-          <p className="text-white/60 text-sm">Motor y alertas optimizándose</p>
+          <p className="text-white/60 text-sm">Motor y alertas optimizandose</p>
         </div>
 
         <div className="bg-gradient-to-br from-slate-500/20 to-slate-500/5 border border-slate-500/30 rounded-lg p-4">
@@ -348,7 +348,7 @@ export function ProgressDashboard() {
             <span className="font-mono text-sm text-white/80">Por Hacer</span>
           </div>
           <p className="text-2xl font-bold text-slate-400">5/7 Fases</p>
-          <p className="text-white/60 text-sm">Datos, backtesting, integración</p>
+          <p className="text-white/60 text-sm">Datos, backtesting, integracion</p>
         </div>
       </motion.div>
 
@@ -378,9 +378,9 @@ export function ProgressDashboard() {
         transition={{ delay: 0.5 }}
         className="mt-12 pt-6 border-t border-white/10 text-center"
       >
-        <p className="text-white/60 text-sm mb-1">CARVIPIX Trading Engine • Fase 1</p>
+        <p className="text-white/60 text-sm mb-1">CARVIPIX Trading Engine - Fase 1</p>
         <p className="text-white/40 text-xs">
-          Última actualización: {new Date().toLocaleDateString('es-ES', { 
+          Ultima actualizacion: {new Date().toLocaleDateString('es-ES', { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric',

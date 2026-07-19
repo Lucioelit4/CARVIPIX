@@ -67,6 +67,11 @@ type LifecycleRow = {
 
 const TERMINAL_STATUSES = new Set<RealSignalLifecycleStatus>(["CANCELLED", "EXPIRED", "TP_HIT", "SL_HIT", "CLOSED"]);
 const AUDIT_ONLY_DECISIONS = new Set<RealSignalDecision>(["WAIT", "NO_TRADE", "DATA_INSUFFICIENT"]);
+const CLIENT_VISIBLE_SIGNAL_FILTER = `
+  NOT (COALESCE(metadata->'tags', '[]'::jsonb) ? 'TEST_ONLY')
+  AND NOT (COALESCE(metadata->'tags', '[]'::jsonb) ? 'NOT_FOR_CLIENTS')
+  AND source NOT IN ('ADMIN_ALERT_TEST', 'CONTROLLED_E2E_AUTOMATION')
+`;
 
 export function isEntryDecision(decision: RealSignalDecision): boolean {
   return !AUDIT_ONLY_DECISIONS.has(decision);
@@ -161,9 +166,32 @@ function defaultStatusForDecision(decision: RealSignalDecision): RealSignalLifec
   return "CLOSED";
 }
 
+function buildLifecycleTags(input: {
+  decision: RealSignalDecision;
+  dataOrigin: "REAL" | "SANDBOX" | "DEMO" | "MOCK";
+  shadowStatus?: unknown;
+}): string[] {
+  const tags = new Set<string>();
+
+  if (input.dataOrigin === "DEMO" || input.dataOrigin === "MOCK") {
+    tags.add("NON_PRODUCTION_DATA");
+  }
+
+  if (AUDIT_ONLY_DECISIONS.has(input.decision)) {
+    tags.add("AUDIT_ONLY");
+  }
+
+  if (typeof input.shadowStatus === "string" && input.shadowStatus.trim()) {
+    tags.add(input.shadowStatus.trim().toUpperCase());
+  }
+
+  return Array.from(tags);
+}
+
 export class RealSignalLifecycleService {
   async upsertFromMasterSignalRecord(record: MasterSignalRecord): Promise<RealSignalLifecycleRecord | null> {
     const decision = decisionFromDirection(record.signal.direction);
+    const dataOrigin = normalizeDataOrigin(process.env.CARVIPIX_DATA_CLASSIFICATION);
     return this.upsertSignal({
       signalId: record.signal_id,
       analysisId: record.analysis_id,
@@ -175,7 +203,7 @@ export class RealSignalLifecycleService {
       strategyId: record.signal.selected_strategy_id,
       status: defaultStatusForDecision(decision),
       source: "CADP_V2_MASTER_SIGNAL",
-      dataOrigin: normalizeDataOrigin(process.env.CARVIPIX_DATA_CLASSIFICATION),
+      dataOrigin,
       trackingAccount: "UNASSIGNED",
       signalTimestamp: new Date(record.created_at),
       metadata: {
@@ -184,7 +212,11 @@ export class RealSignalLifecycleService {
         analysisProfile: record.signal.analysis_profile,
         expiresAt: record.signal.expires_at,
         shadowStatus: record.signal.status,
-        tags: ["TEST_ONLY", "SHADOW", "NON_EXECUTABLE", "NOT_FOR_CLIENTS"],
+        tags: buildLifecycleTags({
+          decision,
+          dataOrigin,
+          shadowStatus: record.signal.status,
+        }),
       },
     });
   }
@@ -221,6 +253,7 @@ export class RealSignalLifecycleService {
         realized_pnl,
         metadata
       FROM real_signal_lifecycle
+      WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
       ORDER BY signal_timestamp DESC
       LIMIT 1
       `
@@ -413,7 +446,8 @@ export class RealSignalLifecycleService {
         realized_pnl,
         metadata
       FROM real_signal_lifecycle
-      WHERE ($1::boolean = true OR decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT'))
+      WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
+        AND ($1::boolean = true OR decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT'))
       ORDER BY signal_timestamp DESC
       LIMIT $2
       `,
@@ -437,7 +471,8 @@ export class RealSignalLifecycleService {
         COUNT(*) FILTER (WHERE signal_status IN ('TP_HIT', 'SL_HIT'))::int AS triggered,
         COUNT(*) FILTER (WHERE signal_status IN ('CANCELLED', 'EXPIRED', 'CLOSED'))::int AS resolved
       FROM real_signal_lifecycle
-      WHERE decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
+      WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
+        AND decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
       `
     );
 
@@ -462,7 +497,8 @@ export class RealSignalLifecycleService {
         COUNT(*) FILTER (WHERE signal_status = 'TP_HIT' OR realized_pnl > 0)::int AS winning_trades,
         COALESCE(SUM(realized_pnl), 0) AS profit_loss
       FROM real_signal_lifecycle
-      WHERE decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
+      WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
+        AND decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
       `
     );
 
@@ -491,7 +527,8 @@ export class RealSignalLifecycleService {
         COUNT(*) FILTER (WHERE signal_status = 'TP_HIT' OR realized_pnl > 0)::int AS winning_trades,
         COALESCE(SUM(realized_pnl), 0) AS profit_loss
       FROM real_signal_lifecycle
-      WHERE decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
+      WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
+        AND decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT')
       GROUP BY 1
       ORDER BY 1 DESC
       LIMIT $1

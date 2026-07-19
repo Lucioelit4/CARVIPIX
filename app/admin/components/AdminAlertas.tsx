@@ -112,7 +112,7 @@ export default function AdminAlertas() {
           onClick={createTestAlert}
           disabled={isCreatingTestAlert}
         >
-          {isCreatingTestAlert ? 'Creando alerta...' : 'Crear alerta visible TEST_ONLY'}
+          {isCreatingTestAlert ? 'Creando alerta...' : 'Crear alerta de verificacion'}
         </CARVIPIXButton>
       </motion.div>
 

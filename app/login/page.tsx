@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [verificationUrl, setVerificationUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendingVerification, setResendingVerification] = useState(false);
 
@@ -39,6 +40,7 @@ export default function LoginPage() {
         error?: string;
         requiresVerification?: boolean;
         success?: boolean;
+        verificationUrl?: string;
       };
 
       if (!response.ok) {
@@ -111,7 +113,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email }),
       });
 
-      const result = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+      const result = (await response.json().catch(() => ({}))) as { message?: string; error?: string; verificationUrl?: string };
 
       if (!response.ok) {
         setError(result.error || 'No se pudo reenviar el correo.');
@@ -119,6 +121,7 @@ export default function LoginPage() {
       }
 
       setInfo(result.message || 'Si la cuenta existe y no esta verificada, enviaremos instrucciones.');
+      setVerificationUrl(result.verificationUrl || '');
     } catch {
       setError('No se pudo reenviar el correo.');
     } finally {
@@ -160,6 +163,11 @@ export default function LoginPage() {
               />
               {error ? <p className="text-xs text-red-400">{error}</p> : null}
               {info ? <p className="text-xs text-emerald-400">{info}</p> : null}
+              {verificationUrl ? (
+                <p className="text-xs text-amber-300">
+                  Enlace de verificación disponible: <a href={verificationUrl} className="underline">abrir verificación</a>
+                </p>
+              ) : null}
               {error.includes('verificar') ? (
                 <button
                   type="button"

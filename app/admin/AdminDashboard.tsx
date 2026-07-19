@@ -22,12 +22,11 @@ import AdminBacktesting from './components/AdminBacktesting';
 import AdminDataHealth from './components/AdminDataHealth';
 import AdminSistema from './components/AdminSistema';
 import AdminComunicaciones from './components/AdminComunicaciones';
-import AdminBeta from './components/AdminBeta';
 import { ToastProvider } from './components/Toast';
 import { CARVIPIXButton } from '../design-system';
 import DataSourceBanner from '@/app/components/DataSourceBanner';
 
-type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'comunicaciones' | 'cumplimiento' | 'configuracion' | 'utilidades' | 'beta';
+type TabType = 'resumen' | 'sistema' | 'proyecto' | 'motor' | 'bot' | 'backtesting' | 'datos' | 'usuarios' | 'membresias' | 'solicitudes' | 'pagos' | 'alertas' | 'resultados' | 'soporte' | 'comunicaciones' | 'cumplimiento' | 'configuracion' | 'utilidades';
 
 interface TabConfig {
   id: TabType;
@@ -49,7 +48,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   useEffect(() => {
     const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['resumen', 'sistema', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'comunicaciones', 'cumplimiento', 'configuracion', 'utilidades', 'beta'].includes(tabParam)) {
+    if (tabParam && ['resumen', 'sistema', 'proyecto', 'motor', 'bot', 'backtesting', 'datos', 'usuarios', 'membresias', 'solicitudes', 'pagos', 'alertas', 'resultados', 'soporte', 'comunicaciones', 'cumplimiento', 'configuracion', 'utilidades'].includes(tabParam)) {
       queueMicrotask(() => {
         setActiveTab(tabParam);
       });
@@ -96,7 +95,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'datos', label: 'Datos', icon: <Database className="w-5 h-5" />, component: <AdminDataHealth isAdmin={true} /> },
     { id: 'usuarios', label: 'Usuarios', icon: <Users className="w-5 h-5" />, component: <AdminUsuarios /> },
     { id: 'membresias', label: 'Membresías', icon: <ShieldCheck className="w-5 h-5" />, component: <AdminMembresias /> },
-    { id: 'solicitudes', label: 'Solicitudes', icon: <FileText className="w-5 h-5" />, component: <AdminSolicitudes /> },
+    { id: 'solicitudes', label: 'Socios Estratégicos', icon: <FileText className="w-5 h-5" />, component: <AdminSolicitudes /> },
     { id: 'pagos', label: 'Pagos', icon: <DollarSign className="w-5 h-5" />, component: <AdminPagos /> },
     { id: 'alertas', label: 'Alertas', icon: <AlertCircle className="w-5 h-5" />, component: <AdminAlertas /> },
     { id: 'resultados', label: 'Resultados', icon: <TrendingUp className="w-5 h-5" />, component: <AdminResultados /> },
@@ -105,7 +104,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     { id: 'comunicaciones', label: 'Comunicaciones', icon: <Mail className="w-5 h-5" />, component: <AdminComunicaciones /> },
     { id: 'cumplimiento', label: 'Cumplimiento', icon: <ShieldCheck className="w-5 h-5" />, component: <AdminCumplimiento /> },
     { id: 'configuracion', label: 'Config', icon: <Settings className="w-5 h-5" />, component: <AdminConfiguracion /> },
-    { id: 'beta', label: '🚀 Beta Privada', icon: <Users className="w-5 h-5" />, component: <AdminBeta /> },
   ];
 
   const activeTabConfig = tabs.find((tab) => tab.id === activeTab);

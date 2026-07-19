@@ -35,7 +35,7 @@ export default function ServiciosAlertasPage() {
             <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">
               <h2 className="text-xl font-semibold text-white">Enfoque</h2>
               <p className="mt-4 text-zinc-300">
-                Diseño para miembros que buscan información accionable y una supervisión constante sin prometer rendimientos garantizados.
+                Disenado para miembros que buscan informacion accionable y supervision constante, con enfoque en disciplina operativa y gestion de riesgo.
               </p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-[#121212]/90 p-6">

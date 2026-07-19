@@ -77,6 +77,15 @@ export async function POST(request: NextRequest) {
   };
 
   try {
+    const commercialAccess = await resolveUserCommercialAccess(auth.user.id);
+    new FeatureAccessGuard().assertAccess(
+      {
+        membershipActive: commercialAccess.membershipActive,
+        entitlements: commercialAccess.entitlements,
+      },
+      "alertas"
+    );
+
     if (body.action === "createRule") {
       const rule = body.rule ?? {};
       const data = await ecosystemServices.alerts.createAlertRule(auth.user.id, {

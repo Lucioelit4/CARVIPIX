@@ -55,6 +55,10 @@ function getPlanPermissions(plan: string) {
   }
 }
 
+function normalizeClientPlan(plan: string | undefined): string {
+  return String(plan ?? "free").trim().toLowerCase() === "demo" ? "free" : String(plan ?? "free");
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireClientSession(request);
   if (!auth.ok) {
@@ -62,7 +66,7 @@ export async function GET(request: NextRequest) {
   }
 
   const membership = await findMembershipByUserId(auth.user.id);
-  const plan = membership?.active ? membership.plan : "demo";
+  const plan = normalizeClientPlan(membership?.active ? membership.plan : "free");
   const data = {
     id: auth.user.id,
     email: auth.user.email,

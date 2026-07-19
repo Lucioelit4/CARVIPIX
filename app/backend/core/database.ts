@@ -94,8 +94,8 @@ function resolveProductType(product: CommercialProduct): string {
     return "bot";
   }
 
-  if (product.id === "capital-gestionado") {
-    return "capital";
+  if (product.id === "socios-estrategicos") {
+    return "strategic_partner";
   }
 
   if (product.id === "cuenta-fondeada") {
@@ -335,6 +335,54 @@ class BackendDatabase {
         metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS strategic_partner_applications (
+        id TEXT PRIMARY KEY,
+        full_name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        whatsapp TEXT NOT NULL,
+        country TEXT NOT NULL,
+        city TEXT NOT NULL,
+        company_or_brand TEXT NOT NULL,
+        main_activity TEXT NOT NULL,
+        years_experience INT NOT NULL DEFAULT 0,
+        profile_description TEXT NOT NULL,
+        platforms JSONB NOT NULL DEFAULT '[]'::jsonb,
+        links JSONB NOT NULL DEFAULT '[]'::jsonb,
+        followers_approx TEXT NOT NULL,
+        primary_countries TEXT NOT NULL,
+        community_type TEXT NOT NULL,
+        motivation TEXT NOT NULL,
+        contribution TEXT NOT NULL,
+        presentation_strategy TEXT NOT NULL,
+        confirm_true_info BOOLEAN NOT NULL,
+        confirm_privacy BOOLEAN NOT NULL,
+        confirm_non_guarantee BOOLEAN NOT NULL,
+        confirm_contact_auth BOOLEAN NOT NULL,
+        legal_disclaimer_ack BOOLEAN NOT NULL,
+        legal_non_contract_ack BOOLEAN NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('new', 'in_review', 'info_required', 'approved_for_contact', 'rejected', 'archived')),
+        assigned_admin TEXT,
+        internal_notes TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_strategic_partner_applications_status_created
+      ON strategic_partner_applications(status, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS strategic_partner_application_events (
+        id TEXT PRIMARY KEY,
+        application_id TEXT NOT NULL REFERENCES strategic_partner_applications(id) ON DELETE CASCADE,
+        actor_type TEXT NOT NULL,
+        action TEXT NOT NULL,
+        note TEXT,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_strategic_partner_application_events_app_created
+      ON strategic_partner_application_events(application_id, created_at DESC);
 
       CREATE INDEX IF NOT EXISTS idx_support_ticket_events_ticket_created_at
       ON support_ticket_events(ticket_id, created_at DESC);

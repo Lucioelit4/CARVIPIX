@@ -20,7 +20,7 @@ export class TradingEngineGatewayAdapter implements EngineGateway {
   private readonly observability?: BackendObservability;
 
   constructor(options?: AdapterOptions) {
-    this.seedFromScenarios = options?.seedFromScenarios ?? true;
+    this.seedFromScenarios = options?.seedFromScenarios ?? backendConfig.engine.seedFromScenarios;
     this.logger = options?.logger;
     this.observability = options?.observability;
   }

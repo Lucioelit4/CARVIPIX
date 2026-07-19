@@ -6,7 +6,6 @@ import { Bell, Bot, CreditCard, LifeBuoy, Monitor, RefreshCw, ShieldCheck } from
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
 import { writeAuthSession } from "@/app/lib/auth/session";
-import FounderBetaPanel from "@/app/dashboard/components/FounderBetaPanel";
 
 type PortalSnapshot = {
   plan: {
@@ -32,9 +31,8 @@ type PortalSnapshot = {
     license: { active: boolean; licenseKey?: string; brokerConnected?: "MT4" | "MT5" } | null;
     instances: Array<{ id: string; name: string; symbol: string; status: string; strategy: string; riskLevel: string }>;
   };
-  capital: {
-    account: null | { status: string; initialCapital: number; currentBalance: number; utilidad: number };
-    requests: Array<{ id: string; status: string; targetCapital: number; riskProfile: string; contractSigned: boolean }>;
+  strategicPartners: {
+    requests: Array<{ id: string; status: string; companyOrBrand: string; createdAt: string }>;
   };
   payments: {
     orders: Array<{ id: string; productId: string; total: number; currency: string; status: string; fechaCreacion: string }>;
@@ -87,7 +85,6 @@ function formatDateTime(value: string | undefined): string {
 const emptyAlertForm = { name: "", symbol: "EURUSD", condition: "Confirmacion manual del cliente" };
 const emptyBotForm = { name: "Bot CARVIPIX", symbol: "EURUSD", strategy: "momentum", riskLevel: "medium" };
 const emptyBrokerForm = { botId: "", brokerType: "MT5", server: "", login: "", password: "", mode: "demo" };
-const emptyCapitalForm = { targetCapital: "10000", riskProfile: "moderado", notes: "" };
 const emptySupportForm = { subject: "", category: "general", priority: "medium", message: "" };
 
 async function parseJsonSafe<T>(response: Response): Promise<T> {
@@ -103,7 +100,6 @@ export default function DashboardPage() {
   const [alertForm, setAlertForm] = useState(emptyAlertForm);
   const [botForm, setBotForm] = useState(emptyBotForm);
   const [brokerForm, setBrokerForm] = useState(emptyBrokerForm);
-  const [capitalForm, setCapitalForm] = useState(emptyCapitalForm);
   const [supportForm, setSupportForm] = useState(emptySupportForm);
   const [busy, setBusy] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSourceMeta | null>(null);
@@ -267,7 +263,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">Dashboard oficial</p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">CARVIPIX {portal.plan.officialPlan}</h1>
-                <p className="mt-3 max-w-3xl text-sm text-white/70">Centro operativo con validación backend para alertas, bot, pagos, dispositivos, soporte y capital según el estado real de tu membresía.</p>
+                <p className="mt-3 max-w-3xl text-sm text-white/70">Centro operativo con validación backend para alertas, bot, pagos, dispositivos, soporte y solicitudes institucionales según el estado real de tu membresía.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <CARVIPIXBadge variant={portal.plan.membershipActive ? "success" : "warning"}>
@@ -339,9 +335,6 @@ export default function DashboardPage() {
             })}
           </div>
         </section>
-
-        {/* ── Programa Fundadores Beta ──────────────────────────────────── */}
-        <FounderBetaPanel />
 
         {memberVideo && (
           <section className="rounded-3xl border border-white/10 bg-[#0b0f16] p-6">
@@ -477,42 +470,25 @@ export default function DashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-2">
           <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Gestion de capital</h2>
+            <h2 className="text-xl font-semibold mb-4">Socios estrategicos CARVIPIX</h2>
             <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <input value={capitalForm.targetCapital} onChange={(e) => setCapitalForm((current) => ({ ...current, targetCapital: e.target.value }))} placeholder="Capital objetivo" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <select value={capitalForm.riskProfile} onChange={(e) => setCapitalForm((current) => ({ ...current, riskProfile: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="conservador">Conservador</option>
-                <option value="moderado">Moderado</option>
-                <option value="agresivo">Agresivo</option>
-              </select>
-              <input value={capitalForm.notes} onChange={(e) => setCapitalForm((current) => ({ ...current, notes: e.target.value }))} placeholder="Notas" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-            </div>
+            <p className="text-sm text-white/70">Programa institucional con evaluacion selectiva y cupos limitados.</p>
             <div className="mt-4 flex gap-3">
-              <CARVIPIXButton variant="premium" disabled={busy === "capital"} onClick={() => void submitJson("capital", "/api/client/capital", { action: "submitRequest", targetCapital: Number(capitalForm.targetCapital), riskProfile: capitalForm.riskProfile, notes: capitalForm.notes })}>
-                Solicitar gestion
+              <CARVIPIXButton variant="premium" onClick={() => router.push("/socios-estrategicos/solicitud")}>
+                Solicitar evaluacion
               </CARVIPIXButton>
             </div>
             <div className="mt-6 space-y-3">
-              {portal.capital.account ? (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
-                  <p>Estado: <span className="text-white">{portal.capital.account.status}</span></p>
-                  <p>Capital inicial: <span className="text-white">${portal.capital.account.initialCapital.toLocaleString()}</span></p>
-                  <p>Balance actual: <span className="text-white">${portal.capital.account.currentBalance.toLocaleString()}</span></p>
-                </div>
+              {portal.strategicPartners.requests.length === 0 ? (
+                <p className="text-sm text-white/60">Sin solicitudes registradas en Socios estrategicos.</p>
               ) : (
-                <p className="text-sm text-white/60">Todavia no tienes una cuenta de capital activa. Puedes enviar una solicitud desde este panel.</p>
-              )}
-              {portal.capital.requests.length === 0 ? (
-                <p className="text-sm text-white/60">Sin solicitudes de gestión registradas.</p>
-              ) : (
-                portal.capital.requests.map((request) => (
+                portal.strategicPartners.requests.map((request) => (
                   <div key={request.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-medium text-white">Solicitud {request.id}</p>
-                      <CARVIPIXBadge variant={request.status === "accepted" || request.status === "active" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{request.status}</CARVIPIXBadge>
+                      <CARVIPIXBadge variant={request.status === "approved_for_contact" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{request.status}</CARVIPIXBadge>
                     </div>
-                    <p className="mt-1 text-white/60">Objetivo ${request.targetCapital.toLocaleString()} · Riesgo {request.riskProfile}</p>
+                    <p className="mt-1 text-white/60">{request.companyOrBrand || "Perfil institucional"} · {new Date(request.createdAt).toLocaleDateString("es-ES")}</p>
                   </div>
                 ))
               )}

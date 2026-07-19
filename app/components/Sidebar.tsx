@@ -17,12 +17,13 @@ const menuItems = [
   { name: "Análisis Diario", href: "/analisis" },
   { name: "Comunidad", href: "/comunidad" },
   { name: "Bot CARVIPIX", href: "/bot" },
-  { name: "Gestión de Capital", href: "/gestion-capital" },
+  { name: "Socios Estratégicos", href: "/socios-estrategicos" },
   { name: "Cuentas Fondeadas (Próximamente)", href: "/fondeo" },
   { name: "Academia", href: "/academia" },
   { name: "Herramientas", href: "/herramientas" },
   { name: "Perfil", href: "/perfil" },
   { name: "Soporte", href: "/soporte" },
+  { name: "Trust Center", href: "/trust-center" },
 ];
 
 export default function Sidebar() {

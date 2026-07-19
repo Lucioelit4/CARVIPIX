@@ -19,7 +19,28 @@ export type EmailHistoryRecord = {
   status: "sent" | "failed" | "queued";
   error_message?: string;
   user_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+};
+
+export type EmailHistoryRow = {
+  id: string;
+  recipient_email: string;
+  recipient_name: string | null;
+  email_type: string;
+  subject: string;
+  template_type: string | null;
+  from_email: string;
+  from_name: string | null;
+  reply_to: string | null;
+  provider: string;
+  provider_message_id: string | null;
+  status: string;
+  error_message: string | null;
+  user_id: string | null;
+  metadata: Record<string, unknown> | null;
+  sent_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export class EmailHistoryService {
@@ -86,7 +107,7 @@ export class EmailHistoryService {
   static async updateEmailStatus(
     emailHistoryId: string,
     status: "sent" | "delivered" | "failed" | "bounced" | "opened" | "clicked",
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     if (!backendDatabase.enabled) {
       return;
@@ -123,13 +144,13 @@ export class EmailHistoryService {
     toDate?: Date;
     limit?: number;
     offset?: number;
-  }): Promise<any[]> {
+  }): Promise<EmailHistoryRow[]> {
     if (!backendDatabase.enabled) {
       return [];
     }
 
     let query = "SELECT * FROM email_history WHERE 1=1";
-    const params: any[] = [];
+    const params: Array<string | number | boolean | Date | null | string[]> = [];
     let paramIndex = 1;
 
     if (filters?.recipientEmail) {
@@ -175,7 +196,7 @@ export class EmailHistoryService {
     }
 
     try {
-      const result = await backendDatabase.query(query, params);
+      const result = await backendDatabase.query<EmailHistoryRow>(query, params);
       return result.rows;
     } catch (error) {
       console.error("[EMAIL-HISTORY] Error al obtener historial", error);

@@ -93,7 +93,7 @@ function makeSkip(reason: SkipReason, detail: string, processingId: string): Pro
 export async function processEvent(rawEvent: unknown): Promise<ProcessorResult> {
   const processingId = `PROC-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const channelId = process.env.TELEGRAM_CHANNEL_TEST ?? '';
-  const testOnly  = process.env.TEST_ONLY !== 'false';
+  const testOnly  = process.env.TEST_ONLY === 'true';
 
   // 1. Validación de contrato
   const contract = validateContract(rawEvent);
@@ -192,9 +192,10 @@ async function log(opts: {
   pubType?: PublicationType;
 }): Promise<void> {
   const e = opts.event as CPEvent | undefined;
+  const rawEvent = opts.rawEvent as { event_type?: string } | undefined;
   await appendProcessorLog({
     processing_id: opts.processingId,
-    event_type: e?.event_type ?? (opts.rawEvent as any)?.event_type ?? 'UNKNOWN',
+    event_type: e?.event_type ?? rawEvent?.event_type ?? 'UNKNOWN',
     signal_id: e?.signal_id,
     analysis_id: e?.analysis_id,
     decision: e?.event_type === 'ANALYSIS_COMPLETED' ? (e as AnalysisCompletedEvent).decision : undefined,

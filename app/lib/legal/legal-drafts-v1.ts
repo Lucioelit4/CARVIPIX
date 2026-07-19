@@ -219,7 +219,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     definitions: [
       { term: "Comunicacion electronica", definition: "Correo, mensaje in-app, notificacion o aviso enviado por medios digitales." },
       { term: "Transaccional", definition: "Mensaje necesario para operar la cuenta, el pago o la seguridad." },
-      { term: "Comercial", definition: "Mensaje promocional o informativo sobre productos, mejoras o campañas." },
+      { term: "Comercial", definition: "Mensaje promocional o informativo sobre productos, mejoras o campanas." },
     ],
     scopeBullets: [
       "Cubre mensajes de cuenta, seguridad, soporte, versionado legal y comunicaciones comerciales.",
@@ -275,7 +275,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     definitions: [
       { term: "Comunidad", definition: "Espacios internos o sociales donde los usuarios interactuan con otros miembros o con el equipo." },
       { term: "Moderacion", definition: "Acciones de orden, revision y proteccion de la convivencia." },
-      { term: "Contenido sensible", definition: "Material que requiere trato prudente para evitar daño, abuso o desinformacion." },
+      { term: "Contenido sensible", definition: "Material que requiere trato prudente para evitar dano, abuso o desinformacion." },
     ],
     scopeBullets: [
       "Aplica a chat, foros, comentarios, reacciones y cualquier espacio participativo.",
@@ -439,14 +439,14 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     relatedModules: ["marketing", "checkout", "communications"],
     requiredBeforePayment: false,
     summary:
-      "Reglas para descuentos, bonos, cupones y campañas, redactadas para comunicar valor sin exagerar resultados ni crear falsas expectativas.",
+      "Reglas para descuentos, bonos, cupones y campanas, redactadas para comunicar valor sin exagerar resultados ni crear falsas expectativas.",
     definitions: [
       { term: "Promocion", definition: "Beneficio temporal o adicional que modifica precio, acceso o condiciones de un servicio." },
       { term: "Elegibilidad", definition: "Requisitos para recibir una promocion concreta." },
       { term: "Vigencia", definition: "Fecha de inicio y fin durante la cual la promocion esta disponible." },
     ],
     scopeBullets: [
-      "Aplica a descuentos, upgrades, campañas de lanzamiento y beneficios para clientes leales.",
+      "Aplica a descuentos, upgrades, campanas de lanzamiento y beneficios para clientes leales.",
       "Evita mensajes alarmistas y prioriza claridad sobre condiciones, vigencia y disponibilidad.",
       "Protege el tono comercial de la marca y la credibilidad del equipo.",
     ],
@@ -457,7 +457,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     responsibilitiesBullets: [...commonResponsibilities, "CARVIPIX debe publicar promociones de forma veraz, medible y consistente con el checkout."],
     law: "Ley Federal de Proteccion al Consumidor y buenas practicas de publicidad digital aplicables en Mexico.",
     contact: "marketing@carvipix.com",
-    historyNote: "Se crea el marco promocional para campañas limpias y confiables.",
+    historyNote: "Se crea el marco promocional para campanas limpias y confiables.",
   }),
   makeDraft({
     slug: "divulgacion-riesgos-general",
@@ -498,7 +498,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
       "Condiciones especificas del servicio de alertas para explicar alcance, frecuencia, fuentes de datos y limites operativos de una herramienta informativa y accionable.",
     definitions: [
       { term: "Alerta", definition: "Aviso generado por la plataforma a partir de reglas, eventos o criterios configurados." },
-      { term: "Señal informativa", definition: "Referencia operativa que no sustituye analisis personal ni asesoramiento regulado." },
+      { term: "Senal informativa", definition: "Referencia operativa que no sustituye analisis personal ni asesoramiento regulado." },
       { term: "Fuente de datos", definition: "Origen tecnico o de mercado usado para generar el evento de alerta." },
     ],
     scopeBullets: [
@@ -567,7 +567,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     proceduresBullets: [...commonProcedures, "Explicar filtros, periodos y exclusiones que puedan afectar las cifras."],
     limitationsBullets: [...commonLimitations, "Los datos pueden cambiar por actualizaciones, correcciones o ajustes de metodologia."],
     responsibilitiesBullets: [...commonResponsibilities, "CARVIPIX debe mostrar cifras honestas, auditables y con contexto suficiente."],
-    law: "Buenas practicas de disclosure, publicidad no engañosa y principios de transparencia digital aplicables en Mexico.",
+    law: "Buenas practicas de disclosure, publicidad no enganosa y principios de transparencia digital aplicables en Mexico.",
     contact: "analytics@carvipix.com",
     historyNote: "Se establecen reglas para mostrar resultados y estadisticas con sentido comercial y tecnico.",
   }),
@@ -647,7 +647,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
       "Se redacta para generar confianza sin exagerar riesgos ni blindajes absolutos.",
     ],
     rightsBullets: [...commonRights, "Saber que medidas razonables se usan para proteger su cuenta y su informacion."],
-    obligationsBullets: [...commonObligations, "Usar contraseñas seguras, MFA cuando exista y no compartir credenciales."],
+    obligationsBullets: [...commonObligations, "Usar contrasenas seguras, MFA cuando exista y no compartir credenciales."],
     proceduresBullets: [...commonProcedures, "Informar como reportar incidentes y como se documenta la respuesta."],
     limitationsBullets: [...commonLimitations, "Ningun sistema elimina por completo el riesgo, pero puede reducirlo de forma razonable."],
     responsibilitiesBullets: [...commonResponsibilities, "CARVIPIX debe prevenir, detectar, responder y aprender de incidentes con trazabilidad."],
@@ -698,7 +698,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
       { term: "Canal autorizado", definition: "Medio oficial para tramitar restauracion de acceso." },
     ],
     scopeBullets: [
-      "Aplica a contraseñas olvidadas, cuenta comprometida, correo inaccesible o sesiones perdidas.",
+      "Aplica a contrasenas olvidadas, cuenta comprometida, correo inaccesible o sesiones perdidas.",
       "Usa el modulo de soporte y verificacion ya existente para evitar duplicar flujos.",
       "Mantiene una experiencia de recuperacion sencilla, clara y segura.",
     ],
@@ -712,17 +712,17 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     historyNote: "Se formaliza el flujo de recuperacion de cuenta con enfoque de seguridad y servicio.",
   }),
   makeDraft({
-    slug: "condiciones-gestion-capital",
-    title: "Condiciones de Gestion de Capital",
-    route: "/legal-drafts-v1/condiciones-gestion-capital",
+    slug: "condiciones-socios-estrategicos",
+    title: "Condiciones de Socios Estrategicos",
+    route: "/legal-drafts-v1/condiciones-socios-estrategicos",
     version: "0.1.0",
     relatedModules: ["capital-management", "compliance", "admin"],
     requiredBeforePayment: false,
     summary:
-      "Documento de proximamente para futuros servicios de gestion de capital. Se conserva como borrador interno y no activa ningun derecho comercial en produccion.",
+      "Documento de proximamente para futuros servicios de socios estrategicos. Se conserva como borrador interno y no activa ningun derecho comercial en produccion.",
     definitions: [
-      { term: "Próximamente", definition: "Estado interno que indica que el servicio aun no esta abierto al publico." },
-      { term: "Gestion de capital", definition: "Servicio futuro orientado a administrar capital bajo parametros y limites definidos." },
+      { term: "Proximamente", definition: "Estado interno que indica que el servicio aun no esta abierto al publico." },
+      { term: "socios estrategicos", definition: "Servicio futuro orientado a administrar capital bajo parametros y limites definidos." },
       { term: "Aprobacion previa", definition: "Validacion interna necesaria antes de habilitar cualquier version comercial." },
     ],
     scopeBullets: ["Se mantiene como borrador estrategico para futura revision juridica y operativa.", "No activa el servicio ni crea oferta vigente."],
@@ -733,7 +733,7 @@ export const LEGAL_DRAFT_CONTENTS_V1: LegalDraftDocument[] = [
     responsibilitiesBullets: [...commonResponsibilities, "CARVIPIX debe mantener este borrador separado de la oferta vigente."],
     law: "Marco juridico futuro por definir conforme al producto que se libere y a la asesoria regulatoria aplicable.",
     contact: "legal@carvipix.com",
-    historyNote: "Se reserva el borrador de gestion de capital para futura auditoria.",
+    historyNote: "Se reserva el borrador de socios estrategicos para futura auditoria.",
     statusNote: "Documento proximamente. No activo, no comercializable y sujeto a revision final.",
   }),
   makeDraft({

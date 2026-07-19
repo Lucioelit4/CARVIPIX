@@ -7,7 +7,7 @@ export type OfficialKnowledgeCategory =
   | "membresias"
   | "pagos"
   | "facturacion"
-  | "gestion-capital"
+  | "socios-estrategicos"
   | "fondeo"
   | "resultados"
   | "comunidad"
@@ -23,7 +23,7 @@ export type UserSegment =
   | "miembro-basico"
   | "miembro-pro"
   | "usuario-bot"
-  | "gestion-capital"
+  | "socios-estrategicos"
   | "administrador";
 
 export type OfficialFaqItem = {
@@ -133,9 +133,9 @@ const modules: Record<OfficialKnowledgeCategory, { title: string; scope: string 
     title: "Facturacion",
     scope: "Datos fiscales y estado de facturacion del usuario.",
   },
-  "gestion-capital": {
-    title: "Gestion de Capital",
-    scope: "Flujo de solicitud, estado y seguimiento de gestion de capital.",
+  "socios-estrategicos": {
+    title: "Socios Estrategicos CARVIPIX",
+    scope: "Flujo de solicitud, estado y seguimiento de Socios Estrategicos CARVIPIX.",
   },
   fondeo: {
     title: "Programa de Fondeo",
@@ -289,13 +289,13 @@ const rawIntents: Array<Omit<KnowledgeIntent, "metadata">> = [
   },
   {
     id: "capital-gestion",
-    category: "gestion-capital",
-    title: "Gestion de capital",
+    category: "socios-estrategicos",
+    title: "Socios Estrategicos CARVIPIX",
     keywords: ["capital", "gestion", "cuenta gestionada", "solicitud", "capital request"],
     defaultResponse:
-      "Gestion de Capital opera con flujo de solicitud, revision, aprobacion y seguimiento desde panel del cliente.",
+      "Socios Estrategicos CARVIPIX opera con flujo de solicitud, revision, aprobacion y seguimiento desde panel del cliente.",
     responseBySegment: {
-      "gestion-capital": "Tienes flujo de gestion de capital activo; cualquier conflicto de estado o contrato debe escalarse por ticket de alta prioridad.",
+      "socios-estrategicos": "Tienes flujo de Socios Estrategicos CARVIPIX activo; cualquier conflicto de estado o contrato debe escalarse por ticket de alta prioridad.",
     },
   },
   {
@@ -368,16 +368,18 @@ const intents: KnowledgeIntent[] = rawIntents.map((intent) => ({
 const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
   {
     id: "faq-1",
-    question: "Como funciona CARVIPIX?",
-    answer: "CARVIPIX integra alertas, membresias, bot, resultados, comunidad y soporte con permisos segun plan y estado de membresia.",
+    question: "Que es CARVIPIX y como funciona?",
+    answer:
+      "CARVIPIX es una plataforma de alertas, membresia y herramientas operativas para trading. El flujo es: registro y verificacion de cuenta, activacion de plan, acceso a dashboard, consumo de alertas segun limites del plan, y soporte por ticket para incidencias.",
     category: "empresa",
     popularity: 95,
     keywords: ["carvipix", "funciona", "plataforma"],
   },
   {
     id: "faq-2",
-    question: "Como recibo una alerta?",
-    answer: "Las alertas se publican segun condiciones reales de mercado y disponibilidad del servicio para tu plan.",
+    question: "Como se reciben y como funcionan las alertas?",
+    answer:
+      "Las alertas se habilitan segun tu membresia y se generan cuando el motor valida condiciones de mercado. Se consultan desde el dashboard y su historial; cada alerta tiene estado y trazabilidad para que puedas revisar contexto y seguimiento.",
     category: "alertas",
     popularity: 91,
     keywords: ["recibo", "alerta", "senal"],
@@ -458,7 +460,7 @@ const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
   {
     id: "faq-12",
     question: "Que diferencia existe entre los planes?",
-    answer: planSummary,
+    answer: `${planSummary}. La diferencia operativa real esta en limites diarios, cantidad de pares, historial y acceso a modulos premium como bot o herramientas avanzadas.`,
     category: "membresias",
     popularity: 90,
     keywords: ["diferencia", "planes", "precio"],
@@ -466,7 +468,8 @@ const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
   {
     id: "faq-13",
     question: "Que incluye exactamente cada plan?",
-    answer: "Cada plan define limites oficiales de alertas, pares, bots e historial. Consulta plan BASIC/PRO en catalogo oficial.",
+    answer:
+      "Cada plan incluye limites oficiales de alertas por dia, pares habilitados, historial y acceso a funciones premium. FREE es entrada con alcance limitado; BASIC y PRO amplian capacidad operativa, cobertura y herramientas segun catalogo comercial activo.",
     category: "membresias",
     popularity: 87,
     keywords: ["incluye", "plan", "exactamente"],
@@ -474,7 +477,8 @@ const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
   {
     id: "faq-14",
     question: "Como funciona el Bot?",
-    answer: "El Bot se compra como producto descargable: recibes licencia, recursos de instalacion y soporte para dejarlo listo en MT4/MT5.",
+    answer:
+      "El Bot CARVIPIX se vende como licencia y descarga. Tras compra confirmada, recibes habilitacion de licencia, guia de instalacion para MT4/MT5 y soporte de activacion. Si la licencia no aparece activa, soporte valida estado comercial y tecnico.",
     category: "bot",
     popularity: 80,
     keywords: ["bot", "funciona", "licencia"],
@@ -526,6 +530,42 @@ const rawFaq: Array<Omit<OfficialFaqItem, "metadata">> = [
     category: "seguridad",
     popularity: 58,
     keywords: ["seguridad", "datos", "cuenta"],
+  },
+  {
+    id: "faq-21",
+    question: "Como funcionan las membresias en CARVIPIX?",
+    answer:
+      "La membresia controla acceso y limites del panel. Con membresia activa se habilitan modulos de plan; si vence o queda inactiva, el sistema reduce acceso a funciones premium hasta regularizar pago o renovacion.",
+    category: "membresias",
+    popularity: 86,
+    keywords: ["membresia", "estado", "activa", "renovacion", "limites"],
+  },
+  {
+    id: "faq-22",
+    question: "Como funciona Socios Estrategicos CARVIPIX?",
+    answer:
+      "Socios Estrategicos CARVIPIX opera con solicitud desde dashboard, revision interna y seguimiento por estado. El cliente ve progreso y soporte en su panel; no se activa automaticamente sin aprobacion operativa/comercial.",
+    category: "socios-estrategicos",
+    popularity: 82,
+    keywords: ["gestion", "capital", "solicitud", "estado", "aprobacion"],
+  },
+  {
+    id: "faq-23",
+    question: "Que sucede despues de comprar?",
+    answer:
+      "Despues del pago confirmado, CARVIPIX registra la orden, actualiza acceso comercial y activa entregables del producto (por ejemplo, licencia y descarga del bot o estado de plan). Si hay fallo de proveedor, soporte lo corrige con trazabilidad de orden.",
+    category: "pagos",
+    popularity: 88,
+    keywords: ["despues", "comprar", "orden", "activacion", "entrega"],
+  },
+  {
+    id: "faq-24",
+    question: "Como se conecta la informacion entre motor, alertas y dashboard?",
+    answer:
+      "El flujo oficial es: evaluacion del motor, publicacion de senal/alerta segun reglas, y reflejo en dashboard e historial. Si detectas desalineacion entre modulos, se debe abrir ticket para auditoria de trazas.",
+    category: "alertas",
+    popularity: 73,
+    keywords: ["motor", "alertas", "dashboard", "historial", "sincronizacion"],
   },
 ];
 
@@ -629,7 +669,7 @@ function classifyKnowledgeQuery(input: {
     return "informacion-legal";
   }
 
-  if (["membresias", "pagos", "facturacion", "gestion-capital", "fondeo"].includes(category)) {
+  if (["membresias", "pagos", "facturacion", "socios-estrategicos", "fondeo"].includes(category)) {
     return "informacion-comercial";
   }
 
@@ -711,8 +751,8 @@ function segmentPostfix(input: ResolverInput): string {
     return "Perfil detectado: usuario Bot. Respuesta ajustada a soporte de licencia y conectividad del bot.";
   }
 
-  if (input.segment === "gestion-capital") {
-    return "Perfil detectado: gestion de capital. Respuesta ajustada al flujo de solicitudes y estado de gestion.";
+  if (input.segment === "socios-estrategicos") {
+    return "Perfil detectado: Socios Estrategicos CARVIPIX. Respuesta ajustada al flujo de solicitudes y estado de gestion.";
   }
 
   if (input.plan === "advanced") {

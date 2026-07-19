@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
-import { createSandboxSubscription } from "@/app/backend/paypal/sandbox";
+import { createPayPalSubscription } from "@/app/backend/paypal/sandbox";
 
 export async function POST(request: NextRequest) {
   const auth = await requireClientSession(request);
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const data = await createSandboxSubscription({
+    const data = await createPayPalSubscription({
       productId,
       user: auth.user,
     });

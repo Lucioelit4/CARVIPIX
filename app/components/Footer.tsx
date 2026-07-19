@@ -12,7 +12,7 @@ export default function Footer() {
               CARVIPIX
             </h3>
             <p className="text-sm text-zinc-400">
-              Plataforma de trading, automatización y educación financiera.
+              Plataforma tecnologica para traders con herramientas, automatizacion y contenido operativo.
             </p>
           </div>
 
@@ -22,6 +22,14 @@ export default function Footer() {
               Legal
             </h3>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Link
+                  href="/trust-center"
+                  className="text-[#B5B5B5] transition hover:text-[#F4C542]"
+                >
+                  CARVIPIX Transparency & Trust Center
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/legal"
@@ -101,13 +109,19 @@ export default function Footer() {
               <Mail size={16} />
               Soporte
             </Link>
+            <Link
+              href="/trust-center/contacto"
+              className="mt-2 inline-flex min-h-[44px] items-center gap-2 rounded-lg px-2 text-sm text-[#B5B5B5] transition duration-200 hover:text-[#F4C542]"
+            >
+              Canales oficiales
+            </Link>
           </div>
         </div>
 
         {/* Disclaimer */}
         <div className="border-t border-[#2A2A2A] pt-6">
           <p className="text-xs leading-relaxed text-[#B5B5B5]">
-            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo, incluida pérdida total de capital. CARVIPIX no garantiza rendimientos ni resultados específicos. Consulta asesores financieros autorizados antes de decisiones de inversión.
+            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo y CARVIPIX no garantiza resultados especificos. Si necesitas una evaluacion legal, fiscal o financiera individual, consulta a un profesional independiente.
           </p>
         </div>
 

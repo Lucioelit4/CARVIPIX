@@ -40,7 +40,7 @@ function validateForSafetyKeywords(text: string): { safe: boolean; reason?: stri
 
 // ─── Selectores de variante ──────────────────────────────────────────────────
 
-let variantRotation: Record<string, number> = {};
+const variantRotation: Record<string, number> = {};
 
 function getNextVariantIndex(templateId: string, count: number): number {
   if (!variantRotation[templateId]) {

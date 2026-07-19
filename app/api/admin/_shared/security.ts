@@ -19,9 +19,21 @@ function extractOrigin(request: NextRequest): string | null {
 }
 
 export function isSameOriginRequest(request: NextRequest): boolean {
+  const internalToken = request.headers.get("x-internal-token")?.trim();
+  const expectedInternalToken = process.env.INTERNAL_OBSERVER_TOKEN?.trim();
+  if (expectedInternalToken && internalToken && internalToken === expectedInternalToken) {
+    return true;
+  }
+
+  const ingestToken = request.headers.get("x-carvipix-ingest-token")?.trim();
+  const expectedIngestToken = process.env.CARVIPIX_INTERNAL_INGEST_TOKEN?.trim();
+  if (expectedIngestToken && ingestToken && ingestToken === expectedIngestToken) {
+    return true;
+  }
+
   const extracted = extractOrigin(request);
   if (!extracted) {
-    return true;
+    return process.env.NODE_ENV !== "production";
   }
 
   return extracted === request.nextUrl.origin;

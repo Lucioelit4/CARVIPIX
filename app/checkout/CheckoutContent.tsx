@@ -123,71 +123,13 @@ export default function CheckoutContent() {
   const [creatingButton, setCreatingButton] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [paypalClientId, setPaypalClientId] = useState("");
+  const [paypalEnv, setPaypalEnv] = useState<"sandbox" | "production" | string>("sandbox");
   const [requiredDocuments, setRequiredDocuments] = useState<LegalDocumentSummary[]>([]);
   const [missingDocuments, setMissingDocuments] = useState<LegalDocumentSummary[]>([]);
   const [legalChecked, setLegalChecked] = useState(false);
   const [legalSubmitting, setLegalSubmitting] = useState(false);
   const [legalError, setLegalError] = useState<string | null>(null);
   const buttonContainerRef = useRef<HTMLDivElement | null>(null);
-
-  // ── Código de Fundador ────────────────────────────────────────────────────
-  const [founderCode, setFounderCode] = useState("");
-  const [founderCodeStatus, setFounderCodeStatus] = useState<"idle" | "validating" | "valid" | "invalid">("idle");
-  const [founderCodeError, setFounderCodeError] = useState<string | null>(null);
-  const [applyingCode, setApplyingCode] = useState(false);
-
-  const validateFounderCode = async () => {
-    const code = founderCode.trim().toUpperCase();
-    if (!code) return;
-    setFounderCodeStatus("validating");
-    setFounderCodeError(null);
-    try {
-      const res = await fetch("/api/beta/validate-code", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-      const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; valid?: boolean; error?: string };
-      if (payload.ok && payload.valid) {
-        setFounderCodeStatus("valid");
-      } else {
-        setFounderCodeStatus("invalid");
-        setFounderCodeError(payload.error ?? "Código no válido");
-      }
-    } catch {
-      setFounderCodeStatus("invalid");
-      setFounderCodeError("Error de conexión");
-    }
-  };
-
-  const applyFounderCode = async () => {
-    setApplyingCode(true);
-    try {
-      const res = await fetch("/api/beta/apply-code", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: founderCode.trim().toUpperCase(),
-          product_id: product?.id,
-          user_id: session?.user?.id,
-          user_email: session?.user?.email,
-        }),
-      });
-      const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; order_id?: string; error?: string };
-      if (payload.ok && payload.order_id) {
-        router.push(`/checkout/success?kind=order&id=${encodeURIComponent(payload.order_id)}`);
-      } else {
-        setFounderCodeError(payload.error ?? "No se pudo aplicar el código");
-        setFounderCodeStatus("invalid");
-      }
-    } catch {
-      setFounderCodeError("Error de conexión");
-    } finally {
-      setApplyingCode(false);
-    }
-  };
 
   useEffect(() => {
     const load = async () => {
@@ -210,16 +152,19 @@ export default function CheckoutContent() {
       }
 
       if (statusResponse?.ok) {
-        const statusPayload = await parseJsonSafe<{ data?: { configured?: boolean; clientId?: string } }>(statusResponse);
+        const statusPayload = await parseJsonSafe<{ data?: { configured?: boolean; clientId?: string; env?: string } }>(statusResponse);
         if (statusPayload.data?.clientId) {
           setPaypalClientId(statusPayload.data.clientId);
         }
+        if (statusPayload.data?.env) {
+          setPaypalEnv(statusPayload.data.env);
+        }
 
         if (!statusPayload.data?.configured) {
-          setMessage("PayPal Sandbox no esta configurado todavia en el servidor.");
+          setMessage("PayPal no esta configurado todavia en el servidor.");
         }
       } else {
-        setMessage("No se pudo obtener estado de PayPal Sandbox.");
+        setMessage("No se pudo obtener estado de PayPal.");
       }
     };
 
@@ -298,6 +243,7 @@ export default function CheckoutContent() {
   };
 
   const summaryItems = useMemo(() => product?.features ?? [], [product]);
+  const checkoutLabel = paypalEnv === "production" ? "Checkout oficial PayPal Live" : "Checkout oficial PayPal Sandbox";
 
   useEffect(() => {
     const container = buttonContainerRef.current;
@@ -441,7 +387,7 @@ export default function CheckoutContent() {
     <main className="min-h-screen bg-[#030303] text-white px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-6">
         <section className="rounded-3xl border border-[#D4AF37]/25 bg-[linear-gradient(180deg,#121212_0%,#0B0B0B_100%)] p-6">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Checkout oficial PayPal Sandbox</p>
+          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">{checkoutLabel}</p>
           <h1 className="mt-2 text-3xl font-bold">{product.name}</h1>
           <p className="mt-2 text-white/65">{product.description}</p>
         </section>
@@ -512,65 +458,13 @@ export default function CheckoutContent() {
               {legalError && <p className="mt-2 text-xs text-red-300">{legalError}</p>}
             </div>
 
-            {/* ── Código de Fundador ──────────────────────────────────── */}
-            <div className="mt-4 rounded-xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-3 space-y-2">
-              <p className="text-xs font-semibold text-[#D4AF37]">🎟️ Código de Fundador</p>
-              <p className="text-xs text-white/50">Si tienes un código FOUNDER-XXXX, ingrésalo para acceder sin costo.</p>
-              {founderCodeStatus !== "valid" ? (
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm uppercase focus:border-[#D4AF37] outline-none placeholder-white/30"
-                    placeholder="FOUNDER-XXXX"
-                    value={founderCode}
-                    maxLength={15}
-                    onChange={(e) => {
-                      setFounderCode(e.target.value.toUpperCase());
-                      setFounderCodeStatus("idle");
-                      setFounderCodeError(null);
-                    }}
-                    onKeyDown={(e) => { if (e.key === "Enter") void validateFounderCode(); }}
-                  />
-                  <CARVIPIXButton
-                    size="sm"
-                    variant="secondary"
-                    disabled={!founderCode.trim() || founderCodeStatus === "validating"}
-                    isLoading={founderCodeStatus === "validating"}
-                    onClick={() => void validateFounderCode()}
-                  >
-                    Validar
-                  </CARVIPIXButton>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-xs text-green-400 font-semibold">✅ Código válido — 100% de descuento aplicado</p>
-                  <CARVIPIXButton
-                    variant="primary"
-                    fullWidth
-                    isLoading={applyingCode}
-                    onClick={() => void applyFounderCode()}
-                  >
-                    Completar como Fundador
-                  </CARVIPIXButton>
-                  <button
-                    className="text-xs text-white/40 hover:text-white/60 transition w-full text-center"
-                    onClick={() => { setFounderCodeStatus("idle"); setFounderCode(""); setFounderCodeError(null); }}
-                  >
-                    Usar otro método de pago
-                  </button>
-                </div>
-              )}
-              {founderCodeError && <p className="text-xs text-red-400">{founderCodeError}</p>}
-            </div>
-
             <div className="mt-6 space-y-3">
-              {founderCodeStatus !== "valid" && (
-                <>
-                  <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
-                  {(creatingButton || !sdkReady) && session?.authenticated && legalChecked && missingDocuments.length === 0 && (
-                    <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
-                  )}
-                </>
-              )}
+              <>
+                <div id="paypal-button-container" ref={buttonContainerRef} className="min-h-[50px]" />
+                {(creatingButton || !sdkReady) && session?.authenticated && legalChecked && missingDocuments.length === 0 && (
+                  <p className="text-xs text-white/60">Preparando boton oficial de PayPal...</p>
+                )}
+              </>
               <Link href="/dashboard">
                 <CARVIPIXButton variant="ghost" fullWidth>Ir al panel cliente</CARVIPIXButton>
               </Link>

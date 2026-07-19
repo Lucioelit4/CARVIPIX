@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s | CARVIPIX",
   },
   description:
-    "CARVIPIX es la plataforma profesional de trading con Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders. Opera con claridad y estructura.",
+    "CARVIPIX es una plataforma tecnologica para traders con Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad.",
   keywords: [
     "CARVIPIX",
     "trading profesional",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     siteName: "CARVIPIX",
     title: "CARVIPIX — Plataforma Profesional de Trading",
     description:
-      "Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders. Opera con claridad y estructura.",
+      "Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad de traders.",
     images: [
       {
         url: `${SITE_URL}/og-image.png`,
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "CARVIPIX — Plataforma Profesional de Trading",
     description:
-      "Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders.",
+      "Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad de traders.",
     images: [`${SITE_URL}/og-image.png`],
     creator: "@carvipix",
   },
@@ -109,7 +109,7 @@ export default function RootLayout({
               url: "https://carvipix.com",
               logo: "https://carvipix.com/og-image.png",
               description:
-                "Plataforma profesional de trading con Bot EA MT5, alertas en vivo, programa de fondeo y comunidad de traders.",
+                "Plataforma tecnologica para traders con Bot EA MT5, alertas en vivo, herramientas operativas, resultados y comunidad.",
               sameAs: [],
               contactPoint: {
                 "@type": "ContactPoint",

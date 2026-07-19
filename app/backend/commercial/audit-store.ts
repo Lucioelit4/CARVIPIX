@@ -48,13 +48,19 @@ export async function recordCommercialAuditEvent(input: Omit<CommercialAuditEven
     return;
   }
 
-  await backendDatabase.query(
-    `
-    INSERT INTO commercial_audit_events (id, user_id, actor_type, action, resource, result, metadata, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
-    `,
-    [event.id, event.userId ?? null, event.actorType, event.action, event.resource, event.result, JSON.stringify(event.metadata ?? {}), event.createdAt]
-  );
+  try {
+    await backendDatabase.query(
+      `
+      INSERT INTO commercial_audit_events (id, user_id, actor_type, action, resource, result, metadata, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8)
+      `,
+      [event.id, event.userId ?? null, event.actorType, event.action, event.resource, event.result, JSON.stringify(event.metadata ?? {}), event.createdAt]
+    );
+  } catch {
+    const events = await readLocalEvents();
+    events.unshift(event);
+    await writeLocalEvents(events.slice(0, 500));
+  }
 }
 
 export async function listCommercialAuditEvents(limit = 50): Promise<CommercialAuditEvent[]> {
@@ -64,33 +70,37 @@ export async function listCommercialAuditEvents(limit = 50): Promise<CommercialA
     return (await readLocalEvents()).slice(0, safeLimit);
   }
 
-  const { rows } = await backendDatabase.query<{
-    id: string;
-    user_id: string | null;
-    actor_type: "client" | "admin" | "system";
-    action: string;
-    resource: string;
-    result: "success" | "denied" | "error";
-    metadata: unknown;
-    created_at: Date;
-  }>(
-    `
-    SELECT id, user_id, actor_type, action, resource, result, metadata, created_at
-    FROM commercial_audit_events
-    ORDER BY created_at DESC
-    LIMIT $1
-    `,
-    [safeLimit]
-  );
+  try {
+    const { rows } = await backendDatabase.query<{
+      id: string;
+      user_id: string | null;
+      actor_type: "client" | "admin" | "system";
+      action: string;
+      resource: string;
+      result: "success" | "denied" | "error";
+      metadata: unknown;
+      created_at: Date;
+    }>(
+      `
+      SELECT id, user_id, actor_type, action, resource, result, metadata, created_at
+      FROM commercial_audit_events
+      ORDER BY created_at DESC
+      LIMIT $1
+      `,
+      [safeLimit]
+    );
 
-  return rows.map((row) => ({
-    id: row.id,
-    userId: row.user_id,
-    actorType: row.actor_type,
-    action: row.action,
-    resource: row.resource,
-    result: row.result,
-    metadata: typeof row.metadata === "object" && row.metadata ? (row.metadata as Record<string, unknown>) : {},
-    createdAt: new Date(row.created_at).toISOString(),
-  }));
+    return rows.map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      actorType: row.actor_type,
+      action: row.action,
+      resource: row.resource,
+      result: row.result,
+      metadata: typeof row.metadata === "object" && row.metadata ? (row.metadata as Record<string, unknown>) : {},
+      createdAt: new Date(row.created_at).toISOString(),
+    }));
+  } catch {
+    return (await readLocalEvents()).slice(0, safeLimit);
+  }
 }

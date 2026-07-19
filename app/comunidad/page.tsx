@@ -75,7 +75,7 @@ const MAIN_NAV = [
   { id: "mis-alertas", label: "Mis Alertas", icon: Sparkles },
   { id: "resultados", label: "Resultados", icon: TrendingUp },
   { id: "bot", label: "Bot", icon: Bot },
-  { id: "gestion-capital", label: "Gestion de Capital", icon: Gauge },
+  { id: "socios-estrategicos", label: "Socios Estrategicos", icon: Gauge },
   { id: "cuentas-fondeadas", label: "Cuentas Fondeadas", icon: Rocket },
   { id: "comunidad", label: "Comunidad", icon: Users },
   { id: "historial", label: "Historial", icon: FolderClock },

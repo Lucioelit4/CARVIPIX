@@ -85,9 +85,9 @@ export const COMMERCIAL_PLAN_ENTITLEMENTS: Record<CommercialSubscriptionPlan, Co
   },
 };
 
-const PRO_PRICE_CANDIDATES = [150, 99.5] as const;
+const PRO_PRICE_CANDIDATES = [150] as const;
 
-const PRO_SELECTED_PRICE = 99.5;
+const PRO_SELECTED_PRICE = 150;
 
 export const PRO_PRICE_DECISION = {
   selectedPriceUsd: PRO_SELECTED_PRICE,
@@ -184,25 +184,25 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     ],
   },
   {
-    id: "capital-gestionado",
-    checkoutId: "capital-gestionado",
-    name: "Gestion de Capital",
-    description: "Servicio por porcentaje sobre utilidades con flujo interno de solicitud y aprobacion.",
+    id: "socios-estrategicos",
+    checkoutId: "socios-estrategicos",
+    name: "Socios Estrategicos CARVIPIX",
+    description: "Programa privado de evaluacion comercial para posibles alianzas de marca, comunidad o distribucion.",
     status: "active",
-    billingType: "profit_share",
-    renewalType: "manual",
+    billingType: "none",
+    renewalType: "none",
     currency: "USD",
     priceUsd: null,
     requiresActiveMembership: false,
-    checkoutEnabled: true,
-    permissionKeys: ["capital.request", "capital.panel", "capital.tracking"],
-    features: ["Solicitud", "Evaluacion", "Aprobacion", "Panel", "Seguimiento", "Estado", "Administracion"],
+    checkoutEnabled: false,
+    permissionKeys: ["strategic_partner.apply", "strategic_partner.review"],
+    features: ["Evaluacion privada", "Cupos limitados", "Revision interna", "Aprobacion para contacto"],
   },
   {
     id: "cuenta-fondeada",
     checkoutId: "cuenta-fondeada",
     name: "Programa de Fondeo",
-    description: "Infraestructura preparada. Proximamente sin venta activa.",
+    description: "Servicio en preparacion. Proximamente y sin venta activa por ahora.",
     status: "coming_soon",
     billingType: "none",
     renewalType: "none",
@@ -241,7 +241,7 @@ export const CHECKOUT_PRODUCT_ALIASES: Record<string, string> = {
   bot: "bot-carvipix-999",
   "bot-carvipix-license": "bot-carvipix-999",
   "bot-carvipix-999": "bot-carvipix-999",
-  "capital-gestionado": "capital-gestionado",
+  "socios-estrategicos": "socios-estrategicos",
   "cuenta-fondeada": "cuenta-fondeada",
   academia: "academia",
 };
@@ -318,7 +318,7 @@ export function resolveCommercialPaymentProductType(product: CommercialProduct):
     return "bot";
   }
 
-  if (product.id === "capital-gestionado") {
+  if (product.id === "socios-estrategicos") {
     return "capital";
   }
 

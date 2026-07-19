@@ -5,7 +5,6 @@ import Sidebar from "./Sidebar";
 import Footer from "./Footer";
 import ProtectedDashboardGuard from "./ProtectedDashboardGuard";
 import WorkspaceHero from "./WorkspaceHero";
-import ReportarProblemaButton from "./beta/ReportarProblemaButton";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -32,6 +31,8 @@ export default function AppShell({ children }: AppShellProps) {
     pathname === "/cancelacion" ||
     pathname === "/reembolsos" ||
     pathname === "/pagos-recurrentes" ||
+    pathname === "/trust-center" ||
+    pathname.startsWith("/trust-center/") ||
     isAdminRoute;
 
   if (isStandaloneRoute) {
@@ -48,7 +49,6 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
         <Footer />
       </div>
-      <ReportarProblemaButton />
     </>
   );
 }

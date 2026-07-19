@@ -11,7 +11,7 @@ import {
 } from "@/app/lib/auth/server";
 
 function setMembershipCookies(response: NextResponse, membership: { active: boolean; estado: string; plan: string; fechaFin?: Date }) {
-  const expiresAt = membership.fechaFin && membership.active ? membership.fechaFin : new Date(Date.now() + 12 * 60 * 60 * 1000);
+  const expiresAt = membership.fechaFin && membership.active ? membership.fechaFin : new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   response.cookies.set({
     name: "carvipix_membership_status",
@@ -78,8 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 });
     }
 
-    // ⚠️ DEVELOPMENT ONLY: Skip email verification in dev
-    if (!user.verificado && process.env.NODE_ENV === "production") {
+    if (!user.verificado) {
       return NextResponse.json({ error: "Correo no verificado", requiresVerification: true }, { status: 403 });
     }
 

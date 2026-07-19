@@ -45,7 +45,7 @@ describe('Community Publisher V1 - Phase 1 Tests', () => {
     it('debería bloquearse si TELEGRAM_BOT_TOKEN es null', () => {
       expect(() => {
         new TelegramClientService({
-          botToken: null as any,
+          botToken: null as unknown as string,
           channelTest: '@carvipix_test',
           channelOfficial: '@carvipix_official',
           testOnly: true

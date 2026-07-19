@@ -243,6 +243,6 @@ export async function getQueueStats(): Promise<QueueStats> {
     last_error: lastError,
     auto_send: config.auto_send,
     paused: config.paused,
-    test_only: config.test_only || (process.env.TEST_ONLY !== 'false'),
+    test_only: config.test_only || (process.env.TEST_ONLY === 'true'),
   };
 }

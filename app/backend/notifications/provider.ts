@@ -74,6 +74,11 @@ export class ResendEmailProvider implements EmailProvider {
   constructor(private readonly config: EmailNotificationConfig) {}
 
   async send(message: EmailMessage): Promise<EmailSendResult> {
+    const actualFrom = formatAddress(message.from);
+    const configuredFrom = this.config.resend.fromEmail
+      ? `${this.config.resend.fromName} <${this.config.resend.fromEmail}>`
+      : null;
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -81,7 +86,7 @@ export class ResendEmailProvider implements EmailProvider {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `${this.config.resend.fromName} <${this.config.resend.fromEmail}>`,
+        from: actualFrom,
         to: Array.isArray(message.to) ? message.to.map((item) => formatAddress(item)) : [formatAddress(message.to)],
         subject: message.subject,
         html: message.html,
@@ -93,6 +98,14 @@ export class ResendEmailProvider implements EmailProvider {
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
+      console.error("[CARVIPIX][EMAIL][RESEND-FAILED]", {
+        status: response.status,
+        from: actualFrom,
+        configuredFrom,
+        usesResendDev: actualFrom.toLowerCase().includes("resend.dev"),
+        replyTo: message.replyTo ? formatAddress(message.replyTo) : null,
+        errorText: errorText || "REQUEST_FAILED",
+      });
       throw new Error(`RESEND_HTTP_${response.status}:${errorText || "REQUEST_FAILED"}`);
     }
 

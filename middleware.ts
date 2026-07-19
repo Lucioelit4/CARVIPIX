@@ -48,6 +48,12 @@ async function readSessionSnapshot(request: NextRequest): Promise<{
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const redirectToLogin = () => {
+    const target = new URL("/login", request.url);
+    target.searchParams.set("next", pathname);
+    return NextResponse.redirect(target);
+  };
+
   // ── Block all /api/dev/* endpoints in production ──────────────────────
   if (pathname.startsWith("/api/dev/") && process.env.NODE_ENV === "production") {
     return NextResponse.json({ error: "Not Found" }, { status: 404 });
@@ -107,7 +113,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!hasClientSession) {
-      return NextResponse.redirect(new URL("/servicios", request.url));
+      return redirectToLogin();
     }
   }
 
@@ -123,7 +129,7 @@ export async function middleware(request: NextRequest) {
 
     if (isMemberOnlyRoute) {
       if (!hasClientSession) {
-        return NextResponse.redirect(new URL("/servicios", request.url));
+        return redirectToLogin();
       }
 
       const hasExplicitInactiveMembership =
@@ -136,12 +142,16 @@ export async function middleware(request: NextRequest) {
     }
 
     if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad") || pathname.startsWith("/soporte")) && !hasClientSession) {
-      return NextResponse.redirect(new URL("/servicios", request.url));
+      return redirectToLogin();
     }
   }
 
   if (canAccessRoute(pathname, context)) {
     return NextResponse.next();
+  }
+
+  if (!hasClientSession) {
+    return redirectToLogin();
   }
 
   return NextResponse.redirect(new URL("/servicios", request.url));

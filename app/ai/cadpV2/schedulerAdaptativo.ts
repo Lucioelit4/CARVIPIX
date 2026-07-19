@@ -42,14 +42,14 @@ export class AdaptiveScheduler {
     this.analysisCallback = cb;
   }
 
-  /** Initialize schedules for all instruments (FAR by default until first analysis) */
+  /** Initialize schedules for all instruments (IMMEDIATE on first startup to trigger first analysis) */
   initialize(nowMs = Date.now()): void {
     for (const symbol of ALL_CANONICAL_SYMBOLS) {
       this.schedules.set(symbol, {
         canonical_symbol: symbol,
-        next_review_at_ms: nowMs + PROXIMITY_TO_MINUTES.FAR * 60000,
-        proximity: "FAR",
-        recheck_minutes: PROXIMITY_TO_MINUTES.FAR,
+        next_review_at_ms: nowMs, // ✅ FIXED: Schedule immediately for first analysis cycle
+        proximity: "IMMEDIATE",
+        recheck_minutes: 5,
         wake_up_triggers: [],
       });
     }

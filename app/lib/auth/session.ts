@@ -24,7 +24,7 @@ const AUTH_SESSION_KEY = "carvipix_auth_session";
 const ACCESS_LOGS_KEY = "carvipix_access_logs";
 const AUTH_COOKIE_NAME = "carvipix_auth_role";
 const ADMIN_SESSION_MS = 24 * 60 * 60 * 1000;
-const CLIENT_SESSION_MS = 12 * 60 * 60 * 1000;
+const CLIENT_SESSION_MS = 24 * 60 * 60 * 1000;
 const MAX_LOG_ENTRIES = 200;
 
 function isBrowser() {

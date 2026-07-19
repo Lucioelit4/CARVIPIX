@@ -12,10 +12,10 @@ export default function RegistroPage() {
   const [pais, setPais] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [verificationUrl, setVerificationUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
@@ -36,7 +36,6 @@ export default function RegistroPage() {
           pais,
           password,
           confirmPassword,
-          inviteCode,
           aceptaTerminos,
         }),
       });
@@ -45,6 +44,7 @@ export default function RegistroPage() {
         error?: string;
         errors?: Record<string, string>;
         warning?: string;
+        verificationUrl?: string;
       };
 
       if (!response.ok) {
@@ -54,6 +54,7 @@ export default function RegistroPage() {
       }
 
       setMessage(data.warning || 'Registro completado correctamente. Revisa tu correo para verificar tu cuenta y continuar.');
+      setVerificationUrl(data.verificationUrl || '');
       setNombre('');
       setApellido('');
       setCorreo('');
@@ -61,7 +62,6 @@ export default function RegistroPage() {
       setPais('');
       setPassword('');
       setConfirmPassword('');
-      setInviteCode('');
       setAceptaTerminos(false);
     } catch {
       setError('No se pudo completar el registro.');
@@ -82,7 +82,6 @@ export default function RegistroPage() {
             <input type="email" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Correo" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
             <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
             <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="País" value={pais} onChange={(e) => setPais(e.target.value)} required />
-            <input className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Código de invitación (FOUNDER-0XX)" value={inviteCode} onChange={(e) => setInviteCode(e.target.value.toUpperCase())} required />
             <input type="password" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Contraseña (mínimo 8)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             <input type="password" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} />
             <label className="flex items-center gap-2 text-xs text-white/80">
@@ -90,6 +89,11 @@ export default function RegistroPage() {
               Acepto términos y condiciones
             </label>
             {message ? <p className="text-xs text-emerald-400">{message}</p> : null}
+            {verificationUrl ? (
+              <p className="text-xs text-amber-300">
+                Enlace de verificación disponible: <a href={verificationUrl} className="underline">abrir verificación</a>
+              </p>
+            ) : null}
             {error ? <p className="text-xs text-red-400">{error}</p> : null}
             <CARVIPIXButton type="submit" variant="premium" fullWidth>{loading ? 'Registrando...' : 'Crear cuenta'}</CARVIPIXButton>
           </form>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
 import { listMissingRequiredPaymentAcceptances } from "@/app/backend/compliance/compliance-service";
-import { createSandboxOrder } from "@/app/backend/paypal/sandbox";
+import { createPayPalOrder } from "@/app/backend/paypal/sandbox";
 
 export async function POST(request: NextRequest) {
   const auth = await requireClientSession(request);
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const data = await createSandboxOrder({
+    const data = await createPayPalOrder({
       productId,
       user: auth.user,
     });

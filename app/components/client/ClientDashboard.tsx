@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 interface ClientLicense {
   license_id: string;
@@ -36,14 +36,9 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "installations" | "results">("overview");
   const [showDownload, setShowDownload] = useState(false);
+  const [nowTs] = useState(() => Date.now());
 
-  useEffect(() => {
-    fetchClientData();
-    const interval = setInterval(fetchClientData, 30000); // Actualizar cada 30 segundos
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchClientData = async () => {
+  const fetchClientData = useCallback(async () => {
     try {
       // Fetch license
       const licenseRes = await fetch("/api/client/bot/mt5/license");
@@ -71,7 +66,20 @@ export default function ClientDashboard() {
       console.error("Error fetching data:", error);
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const bootstrap = setTimeout(() => {
+      void fetchClientData();
+    }, 0);
+    const interval = setInterval(() => {
+      void fetchClientData();
+    }, 30000); // Actualizar cada 30 segundos
+    return () => {
+      clearTimeout(bootstrap);
+      clearInterval(interval);
+    };
+  }, [fetchClientData]);
 
   const downloadEA = async () => {
     try {
@@ -101,7 +109,7 @@ export default function ClientDashboard() {
 
   const isLicenseValid = license && license.status === "ACTIVE" && new Date(license.expires_at) > new Date();
   const daysUntilExpiration = license
-    ? Math.ceil((new Date(license.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(license.expires_at).getTime() - nowTs) / (1000 * 60 * 60 * 24))
     : 0;
 
   return (
@@ -259,7 +267,7 @@ export default function ClientDashboard() {
                 <h3 className="text-xl font-bold mb-4">📋 Instrucciones de Instalación</h3>
                 <ol className="space-y-3 text-gray-300">
                   <li>
-                    <strong>1. Descargar:</strong> Haz clic en "Descargar EA" en tu licencia
+                    <strong>1. Descargar:</strong> Haz clic en &quot;Descargar EA&quot; en tu licencia
                   </li>
                   <li>
                     <strong>2. Instalar:</strong> Copia el archivo .ex5 a tu carpeta de Experts en MT5

@@ -18,8 +18,8 @@ class PayPalService {
     this.clientId = process.env.PAYPAL_CLIENT_ID || "";
     this.clientSecret = process.env.PAYPAL_CLIENT_SECRET || "";
     this.baseUrl = process.env.PAYPAL_ENV === "production"
-      ? "https://api.paypal.com"
-      : "https://api.sandbox.paypal.com";
+      ? "https://api-m.paypal.com"
+      : "https://api-m.sandbox.paypal.com";
   }
 
   async getAccessToken(): Promise<string> {
@@ -53,9 +53,9 @@ class PayPalService {
     const token = await this.getAccessToken();
 
     const pricing = {
-      BASIC: { price: "49.99", description: "CARVIPIX EA - 1 Installation", installations: 1 },
-      PRO: { price: "149.99", description: "CARVIPIX EA - 5 Installations", installations: 5 },
-      ENTERPRISE: { price: "499.99", description: "CARVIPIX EA - Unlimited", installations: 999 },
+      BASIC: { price: "19.99", description: "CARVIPIX Plan BASIC - 1 mes", installations: 1 },
+      PRO: { price: "150", description: "CARVIPIX Plan PRO - 1 mes", installations: 5 },
+      ENTERPRISE: { price: "999", description: "CARVIPIX Bot EA MT5 - Licencia unica", installations: 999 },
     };
 
     const tierData = pricing[tier];

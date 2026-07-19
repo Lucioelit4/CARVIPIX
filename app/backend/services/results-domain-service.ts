@@ -128,7 +128,7 @@ export class ResultsDomainService implements IResultsDomainService {
             stopLoss: latestSignal.stopLoss,
             takeProfit: latestSignal.takeProfit,
             strategyId: latestSignal.strategyId,
-            status: "SHADOW",
+            status: latestSignal.status,
           }
         : null,
     };

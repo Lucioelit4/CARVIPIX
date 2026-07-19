@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { backendDatabase } from "@/app/backend/core/database";
+import { emailNotificationService } from "@/app/backend/notifications";
 import {
   getCommercialProductByCheckoutId,
   isBotLicenseCheckoutProduct,
@@ -66,6 +67,34 @@ type PayPalUser = {
   apellido: string;
 };
 
+type PayPalMode = "sandbox" | "production";
+
+type PayPalPaymentOrderRow = {
+  user_id: string;
+  paypal_order_id: string;
+  product_code: string;
+  amount: number;
+  currency: string;
+  status: string;
+  capture_id: string | null;
+  completed_at: Date | null;
+};
+
+type PayPalSubscriptionRow = {
+  user_id: string;
+  paypal_subscription_id: string;
+  paypal_plan_id: string;
+  internal_plan_code: string;
+  status: MembershipInternalStatus;
+  next_billing_date: Date | null;
+};
+
+type PayPalActivationResult = {
+  fulfillment: "none" | "membership" | "bot-license";
+  licenseKey?: string | null;
+  downloadUrl?: string | null;
+};
+
 type PayPalApiResponse<T> = {
   ok: boolean;
   status: number;
@@ -115,27 +144,58 @@ function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
-function resolvePayPalBaseUrl(): string {
-  return process.env.PAYPAL_API_BASE?.trim() || process.env.PAYPAL_SANDBOX_API_BASE?.trim() || "https://api-m.sandbox.paypal.com";
+function resolvePayPalMode(): PayPalMode {
+  const mode = String(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox").trim().toLowerCase();
+  return mode === "production" || mode === "live" ? "production" : "sandbox";
 }
 
-function assertSandboxMode(): void {
-  const mode = (process.env.PAYPAL_ENV || process.env.PAYPAL_MODE || "sandbox").toLowerCase();
-  if (mode !== "sandbox") {
-    throw new Error("PayPal esta configurado fuera de Sandbox. Esta integracion solo permite sandbox por ahora.");
+function resolvePayPalBaseUrl(): string {
+  const override = process.env.PAYPAL_API_BASE?.trim();
+  if (override) {
+    return override;
   }
+
+  if (resolvePayPalMode() === "production") {
+    return "https://api-m.paypal.com";
+  }
+
+  return process.env.PAYPAL_SANDBOX_API_BASE?.trim() || "https://api-m.sandbox.paypal.com";
 }
 
 function resolvePayPalClientId(): string {
-  return String(process.env.PAYPAL_CLIENT_ID || process.env.PAYPAL_SANDBOX_CLIENT_ID || "").trim();
+  if (resolvePayPalMode() === "production") {
+    return String(process.env.PAYPAL_CLIENT_ID || process.env.PAYPAL_LIVE_CLIENT_ID || "").trim();
+  }
+
+  return String(process.env.PAYPAL_SANDBOX_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || "").trim();
 }
 
 function resolvePayPalClientSecret(): string {
-  return String(process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_SANDBOX_CLIENT_SECRET || "").trim();
+  if (resolvePayPalMode() === "production") {
+    return String(process.env.PAYPAL_CLIENT_SECRET || process.env.PAYPAL_LIVE_CLIENT_SECRET || "").trim();
+  }
+
+  return String(process.env.PAYPAL_SANDBOX_CLIENT_SECRET || process.env.PAYPAL_CLIENT_SECRET || "").trim();
 }
 
 function resolvePayPalWebhookId(): string {
-  return String(process.env.PAYPAL_WEBHOOK_ID || process.env.PAYPAL_SANDBOX_WEBHOOK_ID || "").trim();
+  if (resolvePayPalMode() === "production") {
+    return String(process.env.PAYPAL_WEBHOOK_ID || process.env.PAYPAL_LIVE_WEBHOOK_ID || "").trim();
+  }
+
+  return String(process.env.PAYPAL_SANDBOX_WEBHOOK_ID || process.env.PAYPAL_WEBHOOK_ID || "").trim();
+}
+
+function resolvePayPalEnvironmentSource(): string {
+  return resolvePayPalMode() === "production" ? "paypal_live" : "paypal_sandbox";
+}
+
+function resolvePayPalProvisioningTag(): string {
+  return resolvePayPalMode() === "production" ? "paypal-live" : "paypal-sandbox";
+}
+
+function resolveAppPublicUrl(): string {
+  return String(process.env.APP_PUBLIC_URL || "https://carvipix.com").trim().replace(/\/$/, "");
 }
 
 function resolvePayPalRequestTimeoutMs(): number {
@@ -315,7 +375,6 @@ async function ensurePayPalTables(): Promise<void> {
 }
 
 async function getPayPalAccessToken(): Promise<string> {
-  assertSandboxMode();
   const now = Date.now();
   if (cachedAccessToken && cachedAccessToken.expiresAtMs - now > 45_000) {
     return cachedAccessToken.token;
@@ -325,7 +384,7 @@ async function getPayPalAccessToken(): Promise<string> {
   const clientSecret = resolvePayPalClientSecret();
 
   if (!clientId || !clientSecret) {
-    throw new Error("Faltan credenciales de PayPal Sandbox");
+    throw new Error(`Faltan credenciales de PayPal ${resolvePayPalMode()}`);
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
@@ -353,7 +412,7 @@ async function getPayPalAccessToken(): Promise<string> {
     error_description?: string;
   };
   if (!response.ok || !payload.access_token) {
-    throw new Error(payload.error_description || "No se pudo autenticar contra PayPal Sandbox");
+    throw new Error(payload.error_description || `No se pudo autenticar contra PayPal ${resolvePayPalMode()}`);
   }
 
   const ttlMs = Math.max(60_000, Number(payload.expires_in ?? 300) * 1000);
@@ -438,14 +497,15 @@ async function upsertPayPalProductCatalog(input: {
   await backendDatabase.query(
     `
     INSERT INTO paypal_products (id, internal_code, paypal_product_id, name, environment, status, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, 'sandbox', $5, NOW(), NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
     ON CONFLICT (internal_code) DO UPDATE
     SET paypal_product_id = EXCLUDED.paypal_product_id,
         name = EXCLUDED.name,
+      environment = EXCLUDED.environment,
         status = EXCLUDED.status,
         updated_at = NOW()
     `,
-    [createId("pprod"), input.internalCode, input.paypalProductId, input.name, input.status]
+    [createId("pprod"), input.internalCode, input.paypalProductId, input.name, resolvePayPalMode(), input.status]
   );
 }
 
@@ -466,7 +526,7 @@ async function upsertPayPalPlanCatalog(input: {
       id, internal_code, paypal_plan_id, paypal_product_id, name, price, currency,
       billing_interval, environment, status, created_at, updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'sandbox', $9, NOW(), NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
     ON CONFLICT (internal_code) DO UPDATE
     SET paypal_plan_id = EXCLUDED.paypal_plan_id,
         paypal_product_id = EXCLUDED.paypal_product_id,
@@ -474,6 +534,7 @@ async function upsertPayPalPlanCatalog(input: {
         price = EXCLUDED.price,
         currency = EXCLUDED.currency,
         billing_interval = EXCLUDED.billing_interval,
+        environment = EXCLUDED.environment,
         status = EXCLUDED.status,
         updated_at = NOW()
     `,
@@ -486,6 +547,7 @@ async function upsertPayPalPlanCatalog(input: {
       input.price,
       input.currency,
       input.billingInterval,
+      resolvePayPalMode(),
       input.status,
     ]
   );
@@ -546,11 +608,12 @@ async function upsertPayPalSubscription(input: {
       id, user_id, paypal_subscription_id, paypal_plan_id, internal_plan_code,
       status, environment, start_date, next_billing_date, cancelled_at, created_at, updated_at
     )
-    VALUES ($1, $2, $3, $4, $5, $6, 'sandbox', $7, $8, $9, NOW(), NOW())
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
     ON CONFLICT (paypal_subscription_id) DO UPDATE
     SET paypal_plan_id = EXCLUDED.paypal_plan_id,
         internal_plan_code = EXCLUDED.internal_plan_code,
         status = EXCLUDED.status,
+      environment = EXCLUDED.environment,
         start_date = COALESCE(EXCLUDED.start_date, paypal_subscriptions.start_date),
         next_billing_date = COALESCE(EXCLUDED.next_billing_date, paypal_subscriptions.next_billing_date),
         cancelled_at = COALESCE(EXCLUDED.cancelled_at, paypal_subscriptions.cancelled_at),
@@ -563,6 +626,7 @@ async function upsertPayPalSubscription(input: {
       input.paypalPlanId,
       input.internalPlanCode,
       input.status,
+      resolvePayPalMode(),
       input.startDate ?? null,
       input.nextBillingDate ?? null,
       input.cancelledAt ?? null,
@@ -689,47 +753,124 @@ async function findRecordBySubscriptionId(subscriptionId: string): Promise<PayPa
   return result.rows[0] ?? null;
 }
 
+async function findPaymentOrderByPayPalOrderId(orderId: string): Promise<PayPalPaymentOrderRow | null> {
+  await ensurePayPalTables();
+  const result = await backendDatabase.query<PayPalPaymentOrderRow>(
+    `
+    SELECT user_id, paypal_order_id, product_code, amount, currency, status, capture_id, completed_at
+    FROM paypal_payment_orders
+    WHERE paypal_order_id = $1
+    LIMIT 1
+    `,
+    [orderId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function findPayPalSubscriptionById(subscriptionId: string): Promise<PayPalSubscriptionRow | null> {
+  await ensurePayPalTables();
+  const result = await backendDatabase.query<PayPalSubscriptionRow>(
+    `
+    SELECT user_id, paypal_subscription_id, paypal_plan_id, internal_plan_code, status, next_billing_date
+    FROM paypal_subscriptions
+    WHERE paypal_subscription_id = $1
+    LIMIT 1
+    `,
+    [subscriptionId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+function extractOrderAmount(resource: Record<string, unknown>): { amount: number | null; currency: string | null } {
+  const purchaseUnit = Array.isArray(resource.purchase_units)
+    ? (resource.purchase_units[0] as { amount?: { value?: string | number; currency_code?: string } } | undefined)
+    : undefined;
+  const value = purchaseUnit?.amount?.value;
+  const amount = typeof value === "number" ? value : typeof value === "string" ? Number(value) : null;
+  const currency = purchaseUnit?.amount?.currency_code ? String(purchaseUnit.amount.currency_code).toUpperCase() : null;
+  return { amount: Number.isFinite(amount as number) ? (amount as number) : null, currency };
+}
+
+function extractCaptureAmount(resource: Record<string, unknown>): { amount: number | null; currency: string | null } {
+  const amountNode = resource.amount as { value?: string | number; currency_code?: string } | undefined;
+  const value = amountNode?.value;
+  const amount = typeof value === "number" ? value : typeof value === "string" ? Number(value) : null;
+  const currency = amountNode?.currency_code ? String(amountNode.currency_code).toUpperCase() : null;
+  return { amount: Number.isFinite(amount as number) ? (amount as number) : null, currency };
+}
+
+function assertAmountAndCurrencyMatch(
+  record: { amount: number; currency: string },
+  payload: { amount: number | null; currency: string | null },
+  context: string
+): void {
+  if (payload.amount === null || !payload.currency) {
+    throw new Error(`${context}: monto o moneda no disponibles en evento PayPal`);
+  }
+
+  if (Math.abs(Number(record.amount) - payload.amount) > 0.009) {
+    throw new Error(`${context}: monto PayPal no coincide con la orden interna`);
+  }
+
+  if (String(record.currency).toUpperCase() !== payload.currency.toUpperCase()) {
+    throw new Error(`${context}: moneda PayPal no coincide con la orden interna`);
+  }
+}
+
+async function resolveRecipientName(userId: string, fallbackEmail: string): Promise<string> {
+  const result = await backendDatabase.query<{ nombre: string | null; apellido: string | null }>(
+    `SELECT nombre, apellido FROM users WHERE id = $1 LIMIT 1`,
+    [userId]
+  );
+  const row = result.rows[0];
+  const fullName = `${row?.nombre ?? ""} ${row?.apellido ?? ""}`.trim();
+  return fullName || fallbackEmail;
+}
+
 async function activateAccessByProduct(input: {
   userId: string;
   productId: string;
   nextBillingTime?: Date | null;
   now: Date;
-}): Promise<void> {
+}): Promise<PayPalActivationResult> {
   const checkoutId = resolveCheckoutProductId(input.productId);
   const product = getCommercialProductByCheckoutId(checkoutId);
+  const source = resolvePayPalEnvironmentSource();
 
   if (product?.planCode === "basic") {
     await backendDatabase.query(
       `
       INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source)
-      VALUES ($1, 'basic', 'activo', $2, $3, true, 'paypal_sandbox')
+      VALUES ($1, 'basic', 'activo', $2, $3, true, $4)
       ON CONFLICT (user_id) DO UPDATE
       SET plan = 'basic', estado = 'activo', fecha_inicio = COALESCE(memberships.fecha_inicio, EXCLUDED.fecha_inicio),
-          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = 'paypal_sandbox'
+          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source
       `,
-      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30)]
+      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source]
     );
-    return;
+    return { fulfillment: "membership" };
   }
 
   if (product?.planCode === "pro") {
     await backendDatabase.query(
       `
       INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source)
-      VALUES ($1, 'advanced', 'activo', $2, $3, true, 'paypal_sandbox')
+      VALUES ($1, 'advanced', 'activo', $2, $3, true, $4)
       ON CONFLICT (user_id) DO UPDATE
       SET plan = 'advanced', estado = 'activo', fecha_inicio = COALESCE(memberships.fecha_inicio, EXCLUDED.fecha_inicio),
-          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = 'paypal_sandbox'
+          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source
       `,
-      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30)]
+      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source]
     );
-    return;
+    return { fulfillment: "membership" };
   }
 
   if (isBotLicenseCheckoutProduct(checkoutId)) {
-    const currentLicense = await backendDatabase.query<{ user_id: string }>(
+    const currentLicense = await backendDatabase.query<{ user_id: string; license_key: string | null }>(
       `
-      SELECT user_id
+      SELECT user_id, license_key
       FROM bot_licenses
       WHERE user_id = $1
       LIMIT 1
@@ -740,37 +881,84 @@ async function activateAccessByProduct(input: {
     const expiryDate = null;
 
     if (currentLicense.rows[0]) {
+      const licenseKey = currentLicense.rows[0].license_key || `CVPX-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
       await backendDatabase.query(
         `
         UPDATE bot_licenses
         SET active = true,
             purchase_date = COALESCE(purchase_date, $2),
-            expiry_date = $3
+            expiry_date = $3,
+            license_key = COALESCE(license_key, $4)
         WHERE user_id = $1
         `,
-        [input.userId, input.now, expiryDate]
+        [input.userId, input.now, expiryDate, licenseKey]
       );
+      return {
+        fulfillment: "bot-license",
+        licenseKey,
+        downloadUrl: `${resolveAppPublicUrl()}/api/bot/download?license=${encodeURIComponent(licenseKey)}`,
+      };
     } else {
+      const licenseKey = `CVPX-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
       await backendDatabase.query(
         `
         INSERT INTO bot_licenses (user_id, license_key, purchase_date, expiry_date, active, broker_connected)
-        VALUES ($1, $2, $3, $4, true, 'sandbox')
+        VALUES ($1, $2, $3, $4, true, $5)
         `,
-        [input.userId, `CVPX-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`, input.now, expiryDate]
+        [input.userId, licenseKey, input.now, expiryDate, resolvePayPalProvisioningTag()]
       );
+      return {
+        fulfillment: "bot-license",
+        licenseKey,
+        downloadUrl: `${resolveAppPublicUrl()}/api/bot/download?license=${encodeURIComponent(licenseKey)}`,
+      };
     }
   }
+
+  return { fulfillment: "none" };
 }
 
-export async function listOfferings(): Promise<PayPalOffering[]> {
+async function sendPaymentFulfillmentEmail(input: {
+  userId: string;
+  recipientEmail: string;
+  productId: string;
+  paymentOrderId: string;
+  amount: number;
+  currency: string;
+  activation: PayPalActivationResult;
+  providerEventId?: string;
+  templateId?: "membership-payment-confirmed" | "bot-license-delivery-ready" | "membership-renewal" | "payment-failed" | "payment-refunded";
+  failureReason?: string;
+}): Promise<void> {
+  const templateId = input.templateId || (input.activation.fulfillment === "bot-license" ? "bot-license-delivery-ready" : "membership-payment-confirmed");
+  const recipientName = await resolveRecipientName(input.userId, input.recipientEmail);
+
+  await emailNotificationService.sendPaymentTransactional({
+    templateId,
+    recipientEmail: input.recipientEmail,
+    recipientName,
+    paymentOrderId: input.paymentOrderId,
+    amount: input.amount,
+    currency: input.currency,
+    provider: "paypal",
+    providerEventId: input.providerEventId,
+    productId: input.productId,
+    productType: input.activation.fulfillment,
+    failureReason: input.failureReason,
+    licenseKey: input.activation.licenseKey ?? undefined,
+    downloadUrl: input.activation.downloadUrl ?? undefined,
+  });
+}
+
+export async function listPayPalOfferings(): Promise<PayPalOffering[]> {
   return Object.values(PAYPAL_OFFERINGS);
 }
 
-export function getPayPalSandboxStatus() {
+export function getPayPalStatus() {
   const clientId = resolvePayPalClientId();
   const webhookId = resolvePayPalWebhookId();
   return {
-    env: (process.env.PAYPAL_ENV || process.env.PAYPAL_MODE || "sandbox").toLowerCase(),
+    env: resolvePayPalMode(),
     configured: Boolean(clientId && resolvePayPalClientSecret()),
     webhookConfigured: Boolean(webhookId),
     clientId,
@@ -817,7 +1005,6 @@ export async function seedPayPalCatalog(): Promise<{
   products: Array<{ internalCode: string; paypalProductId: string; created: boolean }>;
   plans: Array<{ internalCode: string; paypalPlanId: string; created: boolean }>;
 }> {
-  assertSandboxMode();
   await ensurePayPalTables();
 
   const products: Array<{ internalCode: string; paypalProductId: string; created: boolean }> = [];
@@ -843,7 +1030,7 @@ export async function seedPayPalCatalog(): Promise<{
   }
 
   return {
-    environment: "sandbox",
+    environment: resolvePayPalMode(),
     products,
     plans,
   };
@@ -950,7 +1137,7 @@ export async function ensureSubscriptionPlanForOffering(productIdRaw: string): P
   };
 }
 
-export async function createSandboxOrder(input: {
+export async function createPayPalOrder(input: {
   productId: string;
   user: PayPalUser;
 }): Promise<{ orderId: string; status: string; approveUrl: string | null; offering: PayPalOffering }> {
@@ -1012,7 +1199,7 @@ export async function createSandboxOrder(input: {
   };
 }
 
-export async function captureSandboxOrder(input: {
+export async function capturePayPalOrder(input: {
   orderId: string;
   user: PayPalUser;
 }): Promise<{
@@ -1023,6 +1210,11 @@ export async function captureSandboxOrder(input: {
   const existing = await findRecordByOrderId(input.orderId);
   if (!existing) {
     throw new Error("Orden PayPal no encontrada en base de datos local");
+  }
+
+  const storedOrder = await findPaymentOrderByPayPalOrderId(input.orderId);
+  if (!storedOrder) {
+    throw new Error("Orden PayPal no encontrada en tabla interna de pagos");
   }
 
   if (existing.user_id !== input.user.id) {
@@ -1041,6 +1233,14 @@ export async function captureSandboxOrder(input: {
 
   const recordStatus = mapSubscriptionStatus(response.data.status);
   const now = new Date();
+  const purchaseUnits = response.data.purchase_units as unknown as Record<string, unknown>[] | undefined;
+  const eventAmount = purchaseUnits ? extractOrderAmount({ purchase_units: purchaseUnits }) : { amount: Number(existing.amount), currency: existing.currency };
+
+  assertAmountAndCurrencyMatch(
+    { amount: Number(existing.amount), currency: existing.currency },
+    eventAmount,
+    "capture_paypal_order"
+  );
 
   await upsertBillingRecordByOrder({
     userId: input.user.id,
@@ -1054,8 +1254,9 @@ export async function captureSandboxOrder(input: {
     lastPaymentAt: recordStatus === "active" ? now : null,
   });
 
-  if (recordStatus === "active") {
-    await activateAccessByProduct({
+  let activation: PayPalActivationResult = { fulfillment: "none" };
+  if (recordStatus === "active" && storedOrder.status !== "COMPLETED") {
+    activation = await activateAccessByProduct({
       userId: input.user.id,
       productId: existing.product_id,
       now,
@@ -1074,6 +1275,19 @@ export async function captureSandboxOrder(input: {
     completedAt: recordStatus === "active" ? now : null,
   });
 
+  if (recordStatus === "active" && storedOrder.status !== "COMPLETED") {
+    await sendPaymentFulfillmentEmail({
+      userId: input.user.id,
+      recipientEmail: response.data.payer?.email_address || input.user.email,
+      productId: existing.product_id,
+      paymentOrderId: response.data.id,
+      amount: Number(existing.amount),
+      currency: existing.currency,
+      activation,
+      providerEventId: response.data.purchase_units?.[0]?.payments?.captures?.[0]?.id ?? undefined,
+    });
+  }
+
   return {
     orderId: response.data.id,
     status: response.data.status,
@@ -1081,7 +1295,7 @@ export async function captureSandboxOrder(input: {
   };
 }
 
-export async function getOrderStatus(input: {
+export async function getPayPalOrderStatus(input: {
   orderId: string;
   userId: string;
 }): Promise<{
@@ -1118,7 +1332,7 @@ export async function getOrderStatus(input: {
   };
 }
 
-export async function createSandboxSubscription(input: {
+export async function createPayPalSubscription(input: {
   productId: string;
   user: PayPalUser;
 }): Promise<{
@@ -1176,7 +1390,7 @@ export async function createSandboxSubscription(input: {
   };
 }
 
-export async function getSandboxSubscriptionStatus(input: {
+export async function getPayPalSubscriptionStatus(input: {
   subscriptionId: string;
   userId: string;
 }): Promise<{
@@ -1253,7 +1467,7 @@ export async function getSandboxSubscriptionStatus(input: {
   };
 }
 
-export async function cancelSandboxSubscription(input: {
+export async function cancelPayPalSubscription(input: {
   subscriptionId: string;
   userId: string;
   reason?: string;
@@ -1327,7 +1541,6 @@ export async function verifyAndProcessPayPalWebhook(input: {
   eventType: string;
 }> {
   await ensurePayPalTables();
-  assertSandboxMode();
 
   const payload = JSON.parse(input.payloadRaw) as {
     id?: string;
@@ -1349,7 +1562,7 @@ export async function verifyAndProcessPayPalWebhook(input: {
   const webhookId = resolvePayPalWebhookId();
 
   if (!webhookId) {
-    throw new Error("Falta PAYPAL_WEBHOOK_ID en entorno sandbox");
+    throw new Error(`Falta PAYPAL_WEBHOOK_ID en entorno ${resolvePayPalMode()}`);
   }
 
   const verificationResponse = await callPayPal<{ verification_status?: string }>(
@@ -1414,33 +1627,35 @@ export async function verifyAndProcessPayPalWebhook(input: {
   try {
     if (eventType === "CHECKOUT.ORDER.APPROVED" || eventType === "CHECKOUT.ORDER.COMPLETED") {
       const orderId = String(resource.id || "").trim();
-      if (orderId) {
-        const record = await findRecordByOrderId(orderId);
-        if (record) {
-          const mapped = mapSubscriptionStatus(eventType === "CHECKOUT.ORDER.COMPLETED" ? "COMPLETED" : "APPROVED");
-          const now = new Date();
-
-          await upsertBillingRecordByOrder({
-            userId: record.user_id,
-            email: record.email,
-            productId: record.product_id,
-            orderId,
-            payerId: record.paypal_payer_id,
-            status: mapped,
-            currency: record.currency,
-            amount: Number(record.amount),
-            lastPaymentAt: mapped === "active" ? now : null,
-          });
-
-          if (mapped === "active") {
-            await activateAccessByProduct({
-              userId: record.user_id,
-              productId: record.product_id,
-              now,
-            });
-          }
-        }
+      if (!orderId) {
+        throw new Error("Webhook PayPal sin orderId");
       }
+
+      const record = await findRecordByOrderId(orderId);
+      if (!record) {
+        throw new Error("Orden PayPal inexistente para webhook de checkout");
+      }
+
+      assertAmountAndCurrencyMatch(
+        { amount: Number(record.amount), currency: record.currency },
+        extractOrderAmount(resource),
+        "paypal_checkout_order"
+      );
+
+      const mapped = mapSubscriptionStatus(eventType === "CHECKOUT.ORDER.COMPLETED" ? "COMPLETED" : "APPROVED");
+      const now = new Date();
+
+      await upsertBillingRecordByOrder({
+        userId: record.user_id,
+        email: record.email,
+        productId: record.product_id,
+        orderId,
+        payerId: record.paypal_payer_id,
+        status: mapped,
+        currency: record.currency,
+        amount: Number(record.amount),
+        lastPaymentAt: mapped === "active" ? now : null,
+      });
     }
 
     if (
@@ -1453,148 +1668,240 @@ export async function verifyAndProcessPayPalWebhook(input: {
       eventType === "BILLING.SUBSCRIPTION.PAYMENT.FAILED"
     ) {
       const subscriptionId = String(resource.id || "").trim();
-      if (subscriptionId) {
-        const record = await findRecordBySubscriptionId(subscriptionId);
-        if (record) {
-          const statusByEvent: Record<string, PayPalRecordStatus> = {
-            "BILLING.SUBSCRIPTION.CREATED": "pending",
-            "BILLING.SUBSCRIPTION.ACTIVATED": "active",
-            "BILLING.SUBSCRIPTION.UPDATED": "pending",
-            "BILLING.SUBSCRIPTION.CANCELLED": "cancelled",
-            "BILLING.SUBSCRIPTION.SUSPENDED": "suspended",
-            "BILLING.SUBSCRIPTION.EXPIRED": "expired",
-            "BILLING.SUBSCRIPTION.PAYMENT.FAILED": "payment_failed",
-          };
+      if (!subscriptionId) {
+        throw new Error("Webhook PayPal sin subscriptionId");
+      }
 
-          const mapped = statusByEvent[eventType] || "pending";
-          const nextBillingRaw = resource.next_billing_time;
-          const nextBillingTime = typeof nextBillingRaw === "string" ? new Date(nextBillingRaw) : null;
-          const now = new Date();
+      const record = await findRecordBySubscriptionId(subscriptionId);
+      if (!record) {
+        throw new Error("Suscripcion PayPal inexistente para webhook");
+      }
 
-          await upsertBillingRecordBySubscription({
-            userId: record.user_id,
-            email: record.email,
-            productId: record.product_id,
-            subscriptionId,
-            payerId: record.paypal_payer_id,
-            status: mapped,
-            currency: record.currency,
-            amount: Number(record.amount),
-            lastPaymentAt: mapped === "active" ? now : null,
-            nextBillingTime,
-          });
+      const existingSubscription = await findPayPalSubscriptionById(subscriptionId);
+      const statusByEvent: Record<string, PayPalRecordStatus> = {
+        "BILLING.SUBSCRIPTION.CREATED": "pending",
+        "BILLING.SUBSCRIPTION.ACTIVATED": "active",
+        "BILLING.SUBSCRIPTION.UPDATED": "pending",
+        "BILLING.SUBSCRIPTION.CANCELLED": "cancelled",
+        "BILLING.SUBSCRIPTION.SUSPENDED": "suspended",
+        "BILLING.SUBSCRIPTION.EXPIRED": "expired",
+        "BILLING.SUBSCRIPTION.PAYMENT.FAILED": "payment_failed",
+      };
 
-          await upsertPayPalSubscription({
-            userId: record.user_id,
-            paypalSubscriptionId: subscriptionId,
-            paypalPlanId: "unknown",
-            internalPlanCode: record.product_id,
-            status: mapPayPalToMembershipStatus(mapped),
-            nextBillingDate: nextBillingTime,
-            cancelledAt: mapped === "cancelled" ? now : null,
-          });
+      const mapped = statusByEvent[eventType] || "pending";
+      const nextBillingRaw = resource.next_billing_time;
+      const nextBillingTime = typeof nextBillingRaw === "string" ? new Date(nextBillingRaw) : null;
+      const now = new Date();
 
-          if (mapped === "active") {
-            await activateAccessByProduct({
-              userId: record.user_id,
-              productId: record.product_id,
-              nextBillingTime,
-              now,
-            });
-          }
-        }
+      await upsertBillingRecordBySubscription({
+        userId: record.user_id,
+        email: record.email,
+        productId: record.product_id,
+        subscriptionId,
+        payerId: record.paypal_payer_id,
+        status: mapped,
+        currency: record.currency,
+        amount: Number(record.amount),
+        lastPaymentAt: mapped === "active" ? now : null,
+        nextBillingTime,
+      });
+
+      await upsertPayPalSubscription({
+        userId: record.user_id,
+        paypalSubscriptionId: subscriptionId,
+        paypalPlanId: existingSubscription?.paypal_plan_id || "unknown",
+        internalPlanCode: record.product_id,
+        status: mapPayPalToMembershipStatus(mapped),
+        nextBillingDate: nextBillingTime,
+        cancelledAt: mapped === "cancelled" ? now : null,
+      });
+
+      if (mapped === "active" && existingSubscription?.status !== "ACTIVE") {
+        const activation = await activateAccessByProduct({
+          userId: record.user_id,
+          productId: record.product_id,
+          nextBillingTime,
+          now,
+        });
+
+        await sendPaymentFulfillmentEmail({
+          userId: record.user_id,
+          recipientEmail: record.email,
+          productId: record.product_id,
+          paymentOrderId: subscriptionId,
+          amount: Number(record.amount),
+          currency: record.currency,
+          activation,
+          providerEventId: eventId,
+          templateId: existingSubscription ? "membership-renewal" : "membership-payment-confirmed",
+        });
       }
     }
 
     if (eventType === "PAYMENT.CAPTURE.REFUNDED") {
       const relatedIds = resource.supplementary_data as { related_ids?: { order_id?: string } } | undefined;
       const orderId = String(relatedIds?.related_ids?.order_id || "").trim();
-      if (orderId) {
-        const record = await findRecordByOrderId(orderId);
-        if (record) {
-          await upsertBillingRecordByOrder({
-            userId: record.user_id,
-            email: record.email,
-            productId: record.product_id,
-            orderId,
-            payerId: record.paypal_payer_id,
-            status: "refunded",
-            currency: record.currency,
-            amount: Number(record.amount),
-          });
-
-          await upsertPayPalPaymentOrder({
-            userId: record.user_id,
-            paypalOrderId: orderId,
-            productCode: record.product_id,
-            amount: Number(record.amount),
-            currency: record.currency,
-            status: "REFUNDED",
-          });
-        }
+      if (!orderId) {
+        throw new Error("Webhook PayPal refund sin orderId");
       }
+
+      const record = await findRecordByOrderId(orderId);
+      if (!record) {
+        throw new Error("Orden PayPal inexistente para refund");
+      }
+
+      assertAmountAndCurrencyMatch(
+        { amount: Number(record.amount), currency: record.currency },
+        extractCaptureAmount(resource),
+        "paypal_capture_refunded"
+      );
+
+      await upsertBillingRecordByOrder({
+        userId: record.user_id,
+        email: record.email,
+        productId: record.product_id,
+        orderId,
+        payerId: record.paypal_payer_id,
+        status: "refunded",
+        currency: record.currency,
+        amount: Number(record.amount),
+      });
+
+      await upsertPayPalPaymentOrder({
+        userId: record.user_id,
+        paypalOrderId: orderId,
+        productCode: record.product_id,
+        amount: Number(record.amount),
+        currency: record.currency,
+        status: "REFUNDED",
+      });
+
+      await sendPaymentFulfillmentEmail({
+        userId: record.user_id,
+        recipientEmail: record.email,
+        productId: record.product_id,
+        paymentOrderId: orderId,
+        amount: Number(record.amount),
+        currency: record.currency,
+        activation: { fulfillment: "none" },
+        providerEventId: eventId,
+        templateId: "payment-refunded",
+      });
     }
 
     if (eventType === "PAYMENT.CAPTURE.COMPLETED" || eventType === "PAYMENT.SALE.COMPLETED") {
       const orderId = String((resource as { supplementary_data?: { related_ids?: { order_id?: string } } })?.supplementary_data?.related_ids?.order_id || "").trim();
-      if (orderId) {
-        const record = await findRecordByOrderId(orderId);
-        if (record) {
-          const now = new Date();
-          await upsertBillingRecordByOrder({
-            userId: record.user_id,
-            email: record.email,
-            productId: record.product_id,
-            orderId,
-            payerId: record.paypal_payer_id,
-            status: "active",
-            currency: record.currency,
-            amount: Number(record.amount),
-            lastPaymentAt: now,
-          });
-          await upsertPayPalPaymentOrder({
-            userId: record.user_id,
-            paypalOrderId: orderId,
-            productCode: record.product_id,
-            amount: Number(record.amount),
-            currency: record.currency,
-            status: "COMPLETED",
-            completedAt: now,
-          });
-          await activateAccessByProduct({
-            userId: record.user_id,
-            productId: record.product_id,
-            now,
-          });
-        }
+      if (!orderId) {
+        throw new Error("Webhook PayPal capture sin orderId");
+      }
+
+      const record = await findRecordByOrderId(orderId);
+      if (!record) {
+        throw new Error("Orden PayPal inexistente para capture");
+      }
+
+      const storedOrder = await findPaymentOrderByPayPalOrderId(orderId);
+      if (!storedOrder) {
+        throw new Error("Orden interna de pago inexistente para capture");
+      }
+
+      assertAmountAndCurrencyMatch(
+        { amount: Number(record.amount), currency: record.currency },
+        extractCaptureAmount(resource),
+        "paypal_capture_completed"
+      );
+
+      const now = new Date();
+      await upsertBillingRecordByOrder({
+        userId: record.user_id,
+        email: record.email,
+        productId: record.product_id,
+        orderId,
+        payerId: record.paypal_payer_id,
+        status: "active",
+        currency: record.currency,
+        amount: Number(record.amount),
+        lastPaymentAt: now,
+      });
+      await upsertPayPalPaymentOrder({
+        userId: record.user_id,
+        paypalOrderId: orderId,
+        productCode: record.product_id,
+        amount: Number(record.amount),
+        currency: record.currency,
+        status: "COMPLETED",
+        captureId: String(resource.id || "").trim() || null,
+        completedAt: now,
+      });
+
+      if (storedOrder.status !== "COMPLETED") {
+        const activation = await activateAccessByProduct({
+          userId: record.user_id,
+          productId: record.product_id,
+          now,
+        });
+
+        await sendPaymentFulfillmentEmail({
+          userId: record.user_id,
+          recipientEmail: record.email,
+          productId: record.product_id,
+          paymentOrderId: orderId,
+          amount: Number(record.amount),
+          currency: record.currency,
+          activation,
+          providerEventId: eventId,
+        });
       }
     }
 
     if (eventType === "PAYMENT.CAPTURE.DENIED" || eventType === "PAYMENT.SALE.DENIED") {
       const orderId = String((resource as { supplementary_data?: { related_ids?: { order_id?: string } } })?.supplementary_data?.related_ids?.order_id || "").trim();
-      if (orderId) {
-        const record = await findRecordByOrderId(orderId);
-        if (record) {
-          await upsertBillingRecordByOrder({
-            userId: record.user_id,
-            email: record.email,
-            productId: record.product_id,
-            orderId,
-            payerId: record.paypal_payer_id,
-            status: "payment_failed",
-            currency: record.currency,
-            amount: Number(record.amount),
-          });
-          await upsertPayPalPaymentOrder({
-            userId: record.user_id,
-            paypalOrderId: orderId,
-            productCode: record.product_id,
-            amount: Number(record.amount),
-            currency: record.currency,
-            status: "FAILED",
-          });
-        }
+      if (!orderId) {
+        throw new Error("Webhook PayPal denied sin orderId");
       }
+
+      const record = await findRecordByOrderId(orderId);
+      if (!record) {
+        throw new Error("Orden PayPal inexistente para denied");
+      }
+
+      assertAmountAndCurrencyMatch(
+        { amount: Number(record.amount), currency: record.currency },
+        extractCaptureAmount(resource),
+        "paypal_capture_denied"
+      );
+
+      await upsertBillingRecordByOrder({
+        userId: record.user_id,
+        email: record.email,
+        productId: record.product_id,
+        orderId,
+        payerId: record.paypal_payer_id,
+        status: "payment_failed",
+        currency: record.currency,
+        amount: Number(record.amount),
+      });
+      await upsertPayPalPaymentOrder({
+        userId: record.user_id,
+        paypalOrderId: orderId,
+        productCode: record.product_id,
+        amount: Number(record.amount),
+        currency: record.currency,
+        status: "FAILED",
+      });
+
+      await sendPaymentFulfillmentEmail({
+        userId: record.user_id,
+        recipientEmail: record.email,
+        productId: record.product_id,
+        paymentOrderId: orderId,
+        amount: Number(record.amount),
+        currency: record.currency,
+        activation: { fulfillment: "none" },
+        providerEventId: eventId,
+        templateId: "payment-failed",
+        failureReason: eventType,
+      });
     }
 
     await backendDatabase.query(

@@ -1,774 +1,263 @@
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  CheckCircle,
-  AlertCircle,
-  Clock,
-  TrendingUp,
-  Zap,
-  BarChart3,
-  GitBranch,
-  Code,
-  AlertTriangle,
-  Settings,
-  Shield,
-  Activity,
-  Send,
-  ChevronDown,
-  Battery,
-  Gauge,
-  Lock,
-} from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { generateMockDataHealth } from '../utils/mockDataHealth';
-import type { DataHealthResponse } from '../../engine/types/marketData';
+import { Activity, Bot, RefreshCw, ShieldCheck, Send, Gauge } from 'lucide-react';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
-interface Modulo {
-  id: string;
-  nombre: string;
-  estado: 'completado' | 'en-progreso' | 'pendiente' | 'en-revision';
-  progreso: number;
+type AdminSystemPayload = {
+  validation?: {
+    latest?: {
+      overallStatus?: string;
+      generatedAt?: string;
+      modules?: Array<{ module: string; status: string; message?: string }>;
+    } | null;
+  };
+  execution?: {
+    safeMode?: boolean;
+    brokerConnected?: boolean;
+    brokerProvider?: string | null;
+    brokerMode?: string | null;
+    orderQueue?: Array<unknown>;
+    positions?: Array<unknown>;
+    stats?: {
+      processedOrders?: number;
+      rejectedOrders?: number;
+    };
+    heartbeatAt?: string | null;
+  };
+  observability?: {
+    avgResponseMs?: number;
+    timings?: number;
+  };
+  dataSource?: {
+    origin?: string;
+    status?: string;
+    capturedAt?: string;
+  };
+};
+
+type ObserverStatus = {
+  success?: boolean;
+  total_analyses?: number;
+  total_cost_usd?: number;
+  paper_account?: {
+    open_trades?: Array<unknown>;
+    daily_pnl_usd?: number;
+    current_balance_usd?: number;
+  };
+};
+
+type TelegramValidation = {
+  ok?: boolean;
+  status?: string;
+  message?: string;
+  test_only?: boolean;
+  env?: {
+    TELEGRAM_BOT_TOKEN?: boolean;
+    TELEGRAM_CHANNEL_TEST?: boolean;
+    TELEGRAM_CHANNEL_OFFICIAL?: boolean;
+  };
+  bot?: {
+    connected?: boolean;
+    username?: string;
+  };
+};
+
+function formatDate(value: string | undefined | null): string {
+  if (!value) {
+    return 'Sin datos';
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return 'Sin datos';
+  }
+  return parsed.toLocaleString('es-ES');
 }
 
-interface ChecklistItem {
-  id: string;
-  titulo: string;
-  completado: boolean;
-  critico: boolean;
+function statusVariant(value: string | undefined): 'success' | 'warning' | 'danger' {
+  const normalized = String(value ?? '').toLowerCase();
+  if (['pass', 'healthy', 'ok', 'ready_to_test', 'success'].includes(normalized)) {
+    return 'success';
+  }
+  if (['warn', 'warning', 'pending', 'degraded'].includes(normalized)) {
+    return 'warning';
+  }
+  return 'danger';
 }
 
 export default function AdminBot() {
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [dataHealth, setDataHealth] = useState<DataHealthResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [system, setSystem] = useState<AdminSystemPayload | null>(null);
+  const [observer, setObserver] = useState<ObserverStatus | null>(null);
+  const [telegram, setTelegram] = useState<TelegramValidation | null>(null);
+  const [lastRefresh, setLastRefresh] = useState<string | null>(null);
 
-  // Cargar datos de salud de datos
-  useEffect(() => {
-    const loadDataHealth = () => {
-      const data = generateMockDataHealth();
-      setDataHealth(data);
-    };
-    loadDataHealth();
-    
-    // Actualizar cada 5 segundos para mantener datos frescos
-    const interval = setInterval(loadDataHealth, 5000);
-    return () => clearInterval(interval);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const [systemRes, observerRes, telegramRes] = await Promise.all([
+        fetch('/api/admin/system', { cache: 'no-store' }),
+        fetch('/api/internal/observer-v3/status', { cache: 'no-store' }),
+        fetch('/api/internal/community-publisher/validate', { cache: 'no-store' }),
+      ]);
+
+      const [systemBody, observerBody, telegramBody] = await Promise.all([
+        systemRes.json().catch(() => ({})),
+        observerRes.json().catch(() => ({})),
+        telegramRes.json().catch(() => ({})),
+      ]);
+
+      if (!systemRes.ok || !systemBody?.ok || !systemBody?.data) {
+        throw new Error(systemBody?.error || 'No se pudo leer el estado administrativo del bot.');
+      }
+
+      setSystem(systemBody.data as AdminSystemPayload);
+      setObserver((observerRes.ok ? observerBody : null) as ObserverStatus | null);
+      setTelegram((telegramRes.ok ? telegramBody : null) as TelegramValidation | null);
+      setLastRefresh(new Date().toISOString());
+    } catch (caught) {
+      setSystem(null);
+      setObserver(null);
+      setTelegram(null);
+      setError(caught instanceof Error ? caught.message : 'No se pudo cargar el panel del bot.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const modulos: Modulo[] = [
-    {
-      id: 'engine',
-      nombre: 'Trading Engine',
-      estado: 'completado',
-      progreso: 100,
-    },
-    {
-      id: 'alerts',
-      nombre: 'CARVIPIX Alerts',
-      estado: 'en-progreso',
-      progreso: 75,
-    },
-    {
-      id: 'consenso',
-      nombre: 'Sistema de Consenso',
-      estado: 'completado',
-      progreso: 100,
-    },
-    {
-      id: 'validacion',
-      nombre: 'Validación de Señales',
-      estado: 'completado',
-      progreso: 100,
-    },
-    {
-      id: 'data-real',
-      nombre: 'Integración Datos Reales',
-      estado: 'pendiente',
-      progreso: 0,
-    },
-    {
-      id: 'autobot',
-      nombre: 'Entregas automáticas',
-      estado: 'pendiente',
-      progreso: 0,
-    },
-    {
-      id: 'mt4-bridge',
-      nombre: 'Activación MT4/MT5 (siguiente proyecto)',
-      estado: 'pendiente',
-      progreso: 0,
-    },
-    {
-      id: 'backtesting',
-      nombre: 'Versionado y actualizaciones',
-      estado: 'pendiente',
-      progreso: 0,
-    },
-  ];
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
 
-  const checklistItems: ChecklistItem[] = [
-    {
-      id: 'no-sin-consenso',
-      titulo: 'No operar sin consenso de 9/11 agentes',
-      completado: true,
-      critico: true,
-    },
-    {
-      id: 'no-logica-interna',
-      titulo: 'Mostrar Bot como producto descargable',
-      completado: true,
-      critico: true,
-    },
-    {
-      id: 'no-mt4',
-      titulo: 'No implementar EA/bridge en esta fase',
-      completado: true,
-      critico: true,
-    },
-    {
-      id: 'no-ops-reales',
-      titulo: 'Mantener flujo comercial y de pagos actual',
-      completado: true,
-      critico: true,
-    },
-    {
-      id: 'no-autobot',
-      titulo: 'No alterar arquitectura ni módulos core',
-      completado: true,
-      critico: true,
-    },
-    {
-      id: 'validar-datos',
-      titulo: 'Validar datos antes de alertar',
-      completado: true,
-      critico: false,
-    },
-    {
-      id: 'registrar-decisiones',
-      titulo: 'Registrar todas las decisiones',
-      completado: true,
-      critico: false,
-    },
-    {
-      id: 'revisar-fallos',
-      titulo: 'Revisar fallos antes de avanzar',
-      completado: true,
-      critico: false,
-    },
-  ];
+    return () => window.clearTimeout(timeoutId);
+  }, [load]);
 
-  const estadoBot = {
-    operativo: true,
-    ultimaAlerta: '2026-07-02 14:32:45',
-    alertasHoy: 12,
-    progreso: 75,
-    fase: 'Fase 1: Licencias y entregas',
-    proximaFase: 'Fase 2: Descargas y actualizaciones',
-  };
+  const modules = useMemo(() => system?.validation?.latest?.modules ?? [], [system]);
+  const validationStatus = system?.validation?.latest?.overallStatus;
+  const execution = system?.execution ?? {};
+  const observability = system?.observability ?? {};
+  const dataSource = system?.dataSource ?? {};
 
-  const estadoMotor = {
-    agentesActivos: 11,
-    agentesEnAlerta: 8,
-    confianzaPromedio: 89,
-    ultimaDecision: '2026-07-02 14:32:45',
-    decisiones: {
-      aprobadas: 8,
-      rechazadas: 5,
-      pendientes: 2,
-    },
-  };
-
-  const distribucionAlertas = [
-    {
-      tipo: 'Alertas Premium',
-      destino: 'Miembros ELITE',
-      cantidad: 8,
-      icono: 'crown',
-      color: '[#D4AF37]',
-    },
-    {
-      tipo: 'Alertas Admin',
-      destino: 'Administradores',
-      cantidad: 15,
-      icono: 'lock',
-      color: 'red',
-    },
-    {
-      tipo: 'Alertas de Riesgo',
-      destino: 'Sistema de Monitoreo',
-      cantidad: 3,
-      icono: 'alert',
-      color: 'yellow',
-    },
-    {
-      tipo: 'Alertas de Sistema',
-      destino: 'Panel de Control',
-      cantidad: 5,
-      icono: 'info',
-      color: 'blue',
-    },
-    {
-      tipo: 'Alertas de Fallo',
-      destino: 'Equipo Técnico',
-      cantidad: 2,
-      icono: 'error',
-      color: 'red',
-    },
-    {
-      tipo: 'Señales Canceladas',
-      destino: 'Historial',
-      cantidad: 5,
-      icono: 'x',
-      color: 'slate',
-    },
-  ];
-
-  const erroresActuales = [
-    {
-      id: 1,
-      tipo: 'Advertencia',
-      titulo: 'Datos demo utilizados',
-      descripcion: 'El sistema está usando datos de demostración. Conectar datos reales en próxima fase.',
-      timestamp: '2026-07-02 14:00:00',
-      estado: 'activo',
-    },
-    {
-      id: 2,
-      tipo: 'Info',
-      titulo: 'Build exitoso',
-      descripcion: 'Última compilación completada sin errores TypeScript.',
-      timestamp: '2026-07-02 13:45:00',
-      estado: 'resuelto',
-    },
-  ];
-
-  const getEstadoColor = (estado: string) => {
-    switch (estado) {
-      case 'completado':
-        return 'from-green-500/20 to-green-500/5 border-green-500/30 text-green-400';
-      case 'en-progreso':
-        return 'from-[#D4AF37]/20 to-[#D4AF37]/5 border-[#D4AF37]/30 text-[#D4AF37]';
-      case 'en-revision':
-        return 'from-yellow-500/20 to-yellow-500/5 border-yellow-500/30 text-yellow-400';
-      default:
-        return 'from-slate-500/10 to-slate-500/5 border-slate-500/20 text-slate-400';
-    }
-  };
-
-  const getEstadoIcon = (estado: string) => {
-    switch (estado) {
-      case 'completado':
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
-      case 'en-progreso':
-        return <Activity className="w-5 h-5 text-[#D4AF37]" />;
-      case 'en-revision':
-        return <AlertCircle className="w-5 h-5 text-yellow-400" />;
-      default:
-        return <Clock className="w-5 h-5 text-slate-400" />;
-    }
-  };
+  if (loading) {
+    return <div className="text-white/70">Cargando modulo Bot...</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-white mb-1">Centro de Control - Bot Descargable CARVIPIX</h2>
-            <p className="text-white/60">Gestión centralizada de licencias, entregas, descargas, versiones y actualizaciones</p>
-          </div>
-          <div className="text-right">
-            <div className={`text-4xl font-bold ${estadoBot.operativo ? 'text-green-400' : 'text-red-400'}`}>
-              {estadoBot.progreso}%
-            </div>
-            <p className="text-white/60 text-sm mt-1">{estadoBot.fase}</p>
-          </div>
+    <div className="space-y-6">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Control operativo del Bot</h2>
+          <p className="text-white/60 text-sm mt-1">
+            Panel conectado a estado real de runtime, observer y publicador Telegram. Sin datos simulados.
+          </p>
+          <p className="text-xs text-white/50 mt-2">
+            Fuente: {dataSource.origin ?? 'UNKNOWN'} · Estado: {dataSource.status ?? 'unknown'} · Captura: {formatDate(dataSource.capturedAt)}
+          </p>
         </div>
+        <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void load()}>
+          Actualizar
+        </CARVIPIXButton>
       </motion.div>
 
-      {/* Estado General */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
-      >
+      {error && (
+        <CARVIPIXCard variant="info" padding="16" hover={false}>
+          <p className="text-sm text-red-300">{error}</p>
+        </CARVIPIXCard>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <div className="flex items-center gap-2 mb-3">
-            <Battery className="w-5 h-5 text-green-400" />
-            <span className="font-mono text-xs text-white/80">Estado</span>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-white/60">Validacion runtime</p>
+            <ShieldCheck className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <p className="text-white font-bold text-lg">Operativo</p>
-          <p className="text-white/60 text-xs mt-1">Sistema activo</p>
+          <p className="text-2xl font-bold text-white">{validationStatus ?? 'Sin datos'}</p>
+          <div className="mt-2">
+            <CARVIPIXBadge variant={statusVariant(validationStatus)}>{validationStatus ?? 'unknown'}</CARVIPIXBadge>
+          </div>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <div className="flex items-center gap-2 mb-3">
-            <Send className="w-5 h-5 text-[#D4AF37]" />
-            <span className="font-mono text-xs text-white/80">Entregas Hoy</span>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-white/60">Ejecucion bot</p>
+            <Bot className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <p className="text-[#D4AF37] font-bold text-lg">{estadoBot.alertasHoy}</p>
-          <p className="text-white/60 text-xs mt-1">Paquetes preparados</p>
+          <p className="text-2xl font-bold text-white">{execution.safeMode ? 'SAFE_MODE' : 'LIVE'}</p>
+          <p className="text-xs text-white/50 mt-2">
+            Broker {execution.brokerConnected ? 'conectado' : 'desconectado'} · {execution.brokerProvider ?? 'sin proveedor'}
+          </p>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <div className="flex items-center gap-2 mb-3">
-            <GitBranch className="w-5 h-5 text-blue-400" />
-            <span className="font-mono text-xs text-white/80">Último Commit</span>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-white/60">Observer</p>
+            <Activity className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <p className="text-white font-bold text-lg">7d2aea4</p>
-          <p className="text-white/60 text-xs mt-1">Protección de datos</p>
+          <p className="text-2xl font-bold text-white">{observer?.total_analyses ?? 0}</p>
+          <p className="text-xs text-white/50 mt-2">
+            Analisis · Open trades {(observer?.paper_account?.open_trades?.length ?? 0)} · PnL dia {observer?.paper_account?.daily_pnl_usd ?? 0}
+          </p>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <div className="flex items-center gap-2 mb-3">
-            <Gauge className="w-5 h-5 text-purple-400" />
-            <span className="font-mono text-xs text-white/80">Build</span>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-white/60">Telegram</p>
+            <Send className="w-4 h-4 text-[#D4AF37]" />
           </div>
-          <p className="text-white font-bold text-lg">✓ Exitoso</p>
-          <p className="text-white/60 text-xs mt-1">0 errores TypeScript</p>
+          <p className="text-2xl font-bold text-white">{telegram?.ok ? 'READY' : 'ERROR'}</p>
+          <p className="text-xs text-white/50 mt-2">
+            Bot {telegram?.bot?.connected ? 'conectado' : 'sin conexion'} · Test channel {telegram?.env?.TELEGRAM_CHANNEL_TEST ? 'ok' : 'faltante'}
+          </p>
         </CARVIPIXCard>
-      </motion.div>
+      </div>
 
-      {/* Progreso del Bot */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-        className="bg-gradient-to-br from-slate-900/50 to-slate-900/20 border border-white/10 rounded-lg p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white">Progreso General de Entrega del Bot</h3>
-          <span className="text-[#D4AF37] font-bold text-2xl">{estadoBot.progreso}%</span>
-        </div>
-        <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden border border-white/10">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${estadoBot.progreso}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-[#D4AF37] to-yellow-500 rounded-full"
-          />
-        </div>
-        <div className="mt-4 grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-white/60 text-xs mb-1">Fase Actual</p>
-            <p className="text-white font-semibold">{estadoBot.fase}</p>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
+          <h3 className="text-lg font-semibold mb-4">Operacion y latencia</h3>
+          <div className="space-y-3 text-sm text-white/70">
+            <div className="flex items-center justify-between"><span>Queue</span><span className="text-white">{execution.orderQueue?.length ?? 0}</span></div>
+            <div className="flex items-center justify-between"><span>Positions</span><span className="text-white">{execution.positions?.length ?? 0}</span></div>
+            <div className="flex items-center justify-between"><span>Processed orders</span><span className="text-white">{execution.stats?.processedOrders ?? 0}</span></div>
+            <div className="flex items-center justify-between"><span>Rejected orders</span><span className="text-white">{execution.stats?.rejectedOrders ?? 0}</span></div>
+            <div className="flex items-center justify-between"><span>Heartbeat</span><span className="text-white">{formatDate(execution.heartbeatAt)}</span></div>
+            <div className="flex items-center justify-between"><span>Avg response</span><span className="text-white">{Number(observability.avgResponseMs ?? 0).toFixed(2)} ms</span></div>
+            <div className="flex items-center justify-between"><span>Timings</span><span className="text-white">{observability.timings ?? 0}</span></div>
           </div>
-          <div>
-            <p className="text-white/60 text-xs mb-1">Próxima Fase</p>
-            <p className="text-white font-semibold">{estadoBot.proximaFase}</p>
-          </div>
-        </div>
-      </motion.div>
+        </CARVIPIXCard>
 
-      {/* Estado del Motor de Trading */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.14 }}
-        className="space-y-4"
-      >
-        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Zap className="w-6 h-6 text-[#D4AF37]" />
-          Estado del Trading Engine
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-green-400 mb-1">{estadoMotor.agentesActivos}</p>
-            <p className="text-white/80 text-sm">Agentes Activos</p>
-            <p className="text-white/60 text-xs mt-1">Especializados</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-[#D4AF37] mb-1">{estadoMotor.confianzaPromedio}%</p>
-            <p className="text-white/80 text-sm">Confianza Promedio</p>
-            <p className="text-white/60 text-xs mt-1">Umbral mín: 70%</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-blue-400 mb-1">{estadoMotor.decisiones.aprobadas}</p>
-            <p className="text-white/80 text-sm">Señales Aprobadas</p>
-            <p className="text-white/60 text-xs mt-1">Hoy</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-4 text-center">
-            <p className="text-3xl font-bold text-red-400 mb-1">{estadoMotor.decisiones.rechazadas}</p>
-            <p className="text-white/80 text-sm">Señales Rechazadas</p>
-            <p className="text-white/60 text-xs mt-1">Filtradas</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Salud de Datos - Widget Rápido */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-        className="bg-gradient-to-br from-slate-900/50 to-slate-900/20 border border-white/10 rounded-lg p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-blue-400" />
-            Salud de Datos en Tiempo Real
-          </h3>
-          <CARVIPIXButton
-            onClick={() => {
-              window.location.href = '?tab=datos';
-            }}
-            variant="secondary"
-            size="sm"
-          >
-            Ver panel completo
-          </CARVIPIXButton>
-        </div>
-
-        {dataHealth ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded p-3">
-                <p className="text-xs text-white/60 mb-1">Salud General</p>
-                <p className="text-2xl font-bold text-green-400">{Math.round(dataHealth.status.overallHealth)}%</p>
-                <p className="text-xs text-white/50 mt-1">
-                  {dataHealth.status.overallHealth >= 90 ? 'Óptima' : dataHealth.status.overallHealth >= 80 ? 'Buena' : 'Regular'}
-                </p>
-              </div>
-
-              <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded p-3">
-                <p className="text-xs text-white/60 mb-1">Activos Conectados</p>
-                <p className="text-2xl font-bold text-blue-400">{dataHealth.status.activeAssets}/4</p>
-                <p className="text-xs text-white/50 mt-1">{dataHealth.status.connectedAssets.join(', ')}</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded p-3">
-                <p className="text-xs text-white/60 mb-1">Latencia Promedio</p>
-                <p className="text-2xl font-bold text-purple-400">{Math.round(dataHealth.status.avgLatency)}ms</p>
-                <p className="text-xs text-white/50 mt-1">&lt;100ms (Bueno)</p>
-              </div>
-
-              <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded p-3">
-                <p className="text-xs text-white/60 mb-1">Proveedor</p>
-                <p className="text-2xl font-bold text-orange-400">{dataHealth.status.dataProvider.toUpperCase()}</p>
-                <p className="text-xs text-white/50 mt-1">Modo: Lectura</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 text-sm border-t border-white/10 pt-4">
-              <div>
-                <p className="text-white/60 text-xs">Uptime</p>
-                <p className="text-white font-semibold">{Math.round(dataHealth.status.uptime)}%</p>
-              </div>
-              <div>
-                <p className="text-white/60 text-xs">Errores Activos</p>
-                <p className="text-white font-semibold">{dataHealth.status.totalErrors}</p>
-              </div>
-              <div>
-                <p className="text-white/60 text-xs">Última Actualización</p>
-                <p className="text-white font-semibold text-xs">{new Date(dataHealth.status.lastUpdate).toLocaleTimeString()}</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-white/60 text-sm">Cargando datos de salud...</p>
-          </div>
-        )}
-
-        <p className="text-xs text-white/50 mt-4 p-3 bg-black/30 rounded">
-          ℹ️ Sistema de datos en modo lectura - Solo recepción de datos sin operaciones. Interfaz lista para conectar proveedor real cuando sea autorizado.
-        </p>
-      </motion.div>
-
-      {/* Módulos del Bot */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.16 }}
-        className="space-y-4"
-      >
-        <h3 className="text-2xl font-bold text-white">Módulos del Bot (8 Total)</h3>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {modulos.map((modulo, i) => (
-            <motion.div
-              key={modulo.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.18 + i * 0.03 }}
-              className={`bg-gradient-to-br ${getEstadoColor(modulo.estado)} border rounded-lg p-4 transition-all`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-start gap-3 flex-1">
-                  {getEstadoIcon(modulo.estado)}
+        <CARVIPIXCard variant="admin" padding="16" hover={false}>
+          <h3 className="text-lg font-semibold mb-4">Modulos validados por runtime</h3>
+          <div className="space-y-3">
+            {modules.length === 0 ? (
+              <p className="text-sm text-white/60">No hay modulos reportados por la validacion actual.</p>
+            ) : (
+              modules.map((item) => (
+                <div key={`${item.module}-${item.status}`} className="rounded-lg border border-white/10 bg-white/5 p-3 flex items-start justify-between gap-3">
                   <div>
-                    <h4 className="font-bold text-white">{modulo.nombre}</h4>
+                    <p className="font-medium text-white">{item.module}</p>
+                    <p className="text-xs text-white/60 mt-1">{item.message ?? 'Sin mensaje adicional'}</p>
                   </div>
+                  <CARVIPIXBadge variant={statusVariant(item.status)}>{item.status}</CARVIPIXBadge>
                 </div>
-              </div>
+              ))
+            )}
+          </div>
+        </CARVIPIXCard>
+      </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/60 text-xs">Progreso</span>
-                  <span className="text-[#D4AF37] font-bold text-sm">{modulo.progreso}%</span>
-                </div>
-                <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${modulo.progreso}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                    className="h-full bg-gradient-to-r from-[#D4AF37] to-yellow-500 rounded-full"
-                  />
-                </div>
-              </div>
-            </motion.div>
-          ))}
+      <CARVIPIXCard variant="info" padding="16" hover={false}>
+        <div className="flex items-start gap-3">
+          <Gauge className="w-5 h-5 text-[#D4AF37] mt-0.5" />
+          <p className="text-sm text-white/70">
+            Ultima actualizacion: {formatDate(lastRefresh)}. Este tab se alimenta de datos de sistema y observabilidad para evitar informacion fija o de relleno.
+          </p>
         </div>
-      </motion.div>
-
-      {/* Distribución de Alertas */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="space-y-4"
-      >
-        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Send className="w-6 h-6 text-[#D4AF37]" />
-          Distribución de Alertas
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {distribucionAlertas.map((alerta, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.22 + i * 0.04 }}
-              className="bg-gradient-to-br from-white/5 to-white/2 border border-white/10 rounded-lg p-4"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-bold text-white text-sm">{alerta.tipo}</p>
-                  <p className="text-white/60 text-xs mt-1">{alerta.destino}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-[#D4AF37]">{alerta.cantidad}</p>
-                </div>
-              </div>
-              <div className="h-1 bg-black/40 rounded-full overflow-hidden border border-white/10">
-                <div className="h-full w-2/3 bg-[#D4AF37]" />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Control de Calidad */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.24 }}
-        className="space-y-4"
-      >
-        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Shield className="w-6 h-6 text-green-400" />
-          Control de Calidad
-        </h3>
-
-        <div className="bg-gradient-to-br from-green-500/20 to-green-500/5 border border-green-500/30 rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {checklistItems.map((item, i) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.26 + i * 0.04 }}
-                className="flex items-start gap-3"
-              >
-                <div className="flex-shrink-0 mt-1">
-                  {item.completado ? (
-                    <CheckCircle className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-yellow-400" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className={`text-sm font-semibold ${item.completado ? 'text-green-200' : 'text-yellow-200'}`}>
-                    {item.titulo}
-                  </p>
-                  {item.critico && (
-                    <span className="inline-block mt-1"><CARVIPIXBadge variant="danger">CRÍTICO</CARVIPIXBadge></span>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Estado de Errores */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.28 }}
-        className="space-y-4"
-      >
-        <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-          <AlertTriangle className="w-6 h-6 text-yellow-400" />
-          Alertas y Advertencias
-        </h3>
-
-        <div className="space-y-2">
-          {erroresActuales.map((error, i) => (
-            <motion.div
-              key={error.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.05 }}
-              className={`border rounded-lg p-4 ${
-                error.tipo === 'Advertencia'
-                  ? 'border-yellow-500/30 bg-yellow-500/10'
-                  : 'border-green-500/30 bg-green-500/10'
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CARVIPIXBadge variant={error.tipo === 'Advertencia' ? 'warning' : 'success'}>
-                      {error.tipo}
-                    </CARVIPIXBadge>
-                  </div>
-                  <h4 className="font-bold text-white">{error.titulo}</h4>
-                  <p className="text-white/70 text-sm mt-1">{error.descripcion}</p>
-                  <p className="text-white/50 text-xs mt-2">{error.timestamp}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Próximas Acciones */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.32 }}
-        className="bg-gradient-to-br from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 rounded-lg p-6"
-      >
-        <h3 className="text-xl font-bold text-white mb-4">Próximas Acciones Prioritarias</h3>
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">1</div>
-            <div>
-              <p className="font-semibold text-white">Integrar datos reales en modo lectura</p>
-              <p className="text-white/60 text-sm">Conectar feeds de mercado sin ejecutar operaciones (solo análisis)</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">2</div>
-            <div>
-              <p className="font-semibold text-white">Validar calidad de datos</p>
-              <p className="text-white/60 text-sm">Verificar latencia, integridad y precisión de feeds en mercado real</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">3</div>
-            <div>
-              <p className="font-semibold text-white">Conectar datos reales al Trading Engine</p>
-              <p className="text-white/60 text-sm">Reemplazar datos demo con datos en vivo en análisis de agentes</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">4</div>
-            <div>
-              <p className="font-semibold text-white">Crear registro de fallos y latencia</p>
-              <p className="text-white/60 text-sm">Implementar logs avanzados para monitoreo de rendimiento del motor</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="flex items-center justify-center w-6 h-6 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37] text-[#D4AF37] font-bold text-sm flex-shrink-0 mt-0.5">5</div>
-            <div>
-              <p className="font-semibold text-white">Backtesting con datos históricos</p>
-              <p className="text-white/60 text-sm">Validar rendimiento del motor en mercados pasados antes de operaciones</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Bloqueos antes de AutoBot */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.36 }}
-        className="bg-gradient-to-br from-red-500/20 to-red-500/5 border border-red-500/30 rounded-lg p-6"
-      >
-        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <Lock className="w-6 h-6 text-red-400" />
-          Bloqueos Antes de AutoBot / MT4
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">Datos Reales No Conectados</p>
-              <p className="text-red-300/80 text-xs mt-1">El motor aún usa datos demo. Requerido: Integración de feeds reales</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">Backtesting No Completado</p>
-              <p className="text-red-300/80 text-xs mt-1">Sin historial de validación. Requerido: 500+ horas de backtesting</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">Validación Legal Pendiente</p>
-              <p className="text-red-300/80 text-xs mt-1">Cumplimiento regulatorio no completado. Requerido: Asesoramiento legal</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">Auditoría de Seguridad Pendiente</p>
-              <p className="text-red-300/80 text-xs mt-1">Sin validación de seguridad externa. Requerido: Auditoría de terceros</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">MT4/MT5 Bloqueado</p>
-              <p className="text-red-300/80 text-xs mt-1">Integración de brokers desactivada hasta nueva orden de administrador</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-3 bg-red-500/10 rounded-lg p-4 border border-red-500/20">
-            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-red-200">Operaciones Reales Bloqueadas</p>
-              <p className="text-red-300/80 text-xs mt-1">No se ejecutarán operaciones reales en cuenta hasta autorización explícita</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Nota Final */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.38 }}
-        className="bg-gradient-to-br from-blue-500/20 to-blue-500/5 border border-blue-500/30 rounded-lg p-4"
-      >
-        <p className="text-sm text-blue-200 font-semibold">ℹ️ Información Administrativa Privada</p>
-        <p className="mt-2 text-sm text-blue-300/80">
-          Este panel es de acceso restringido solo para administradores. El Bot CARVIPIX está en Fase 1 (análisis y validación). AutoBot y MT4 permanecen bloqueados hasta que se cumplan todos los requisitos de seguridad y validación.
-        </p>
-      </motion.div>
+      </CARVIPIXCard>
     </div>
   );
 }

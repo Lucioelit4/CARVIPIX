@@ -25,13 +25,13 @@ const routeTitles: Record<string, { title: string; subtitle: string }> = {
     title: "Bot CARVIPIX",
     subtitle: "Control y supervision de automatizacion bajo la identidad oficial.",
   },
-  "/gestion-capital": {
-    title: "Gestion de Capital",
-    subtitle: "Panel de capital con lectura clara, segura y profesional.",
+  "/socios-estrategicos": {
+    title: "Socios Estrategicos CARVIPIX",
+    subtitle: "Modulo privado para evaluacion de alianzas comerciales y de comunidad.",
   },
   "/fondeo": {
     title: "Cuentas Fondeadas",
-    subtitle: "Servicio en desarrollo. Proximamente sin flujo de venta activo.",
+    subtitle: "Servicio en desarrollo. Proximamente y sin flujo de venta activo por ahora.",
   },
   "/perfil": {
     title: "Perfil",

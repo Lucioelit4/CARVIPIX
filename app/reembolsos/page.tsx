@@ -20,35 +20,52 @@ export default function ReembolsosPage() {
           <div className="prose prose-invert max-w-none space-y-6 text-zinc-300">
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">1. Regla general</h2>
-              <p>CARVIPIX no garantiza reembolsos automáticos. Toda solicitud se evalúa según el tipo de producto, el estado de entrega del servicio, la evidencia operativa y las obligaciones legales aplicables.</p>
+              <p>
+                Una vez habilitado el acceso a contenido, alertas, herramientas, licencias o servicios digitales,
+                no existen reembolsos automaticos.
+              </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-white mb-4">2. Casos evaluables</h2>
+              <h2 className="text-2xl font-semibold text-white mb-4">2. Excepciones evaluables por error verificable</h2>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>Cobro duplicado confirmado.</li>
-                <li>Error técnico atribuible a CARVIPIX que impida la entrega del servicio contratado.</li>
-                <li>Cobro no reconocido que, tras revisión, resulte imputable a un fallo interno confirmado.</li>
+                <li>Fallo confirmado del sistema de pago atribuible al flujo de CARVIPIX.</li>
+                <li>Pago correcto sin acceso al servicio contratado por error tecnico verificable de la plataforma.</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">3. Casos normalmente no reembolsables</h2>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>Pérdidas de trading o expectativas de rentabilidad no cumplidas.</li>
-                <li>Servicios ya entregados o activados correctamente.</li>
-                <li>Licencias, accesos o procesos consumidos por decisión del cliente sin fallo atribuible a CARVIPIX.</li>
+                <li>Perdidas de trading o expectativas de resultado no cumplidas.</li>
+                <li>Servicios digitales entregados o activados correctamente.</li>
+                <li>Licencias, accesos o procesos consumidos sin error tecnico atribuible a CARVIPIX.</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">4. Plazo y canal</h2>
-              <p>Las solicitudes deben presentarse por soporte oficial, incluyendo identificador de orden, fecha, motivo y evidencia disponible. CARVIPIX podrá requerir información adicional antes de resolver.</p>
+              <p>
+                Las solicitudes deben presentarse por soporte oficial con identificador de orden, fecha, motivo y evidencia.
+                CARVIPIX puede requerir informacion adicional para validar el caso.
+              </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-white mb-4">5. Resolución</h2>
-              <p>Si un reembolso es aprobado, se procesará por el mismo proveedor o canal compatible, sujeto a tiempos de la pasarela, banco o procesador de pago.</p>
+              <p>
+                Si una excepcion es aprobada, el ajuste se procesara por el mismo proveedor o canal compatible,
+                sujeto a tiempos de pasarela, banco o procesador.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-white mb-4">6. Marco de consumidor</h2>
+              <p>
+                Esta politica se aplica de forma coherente con los derechos del consumidor y la normativa aplicable
+                en las jurisdicciones donde CARVIPIX opere.
+              </p>
             </section>
           </div>
         </motion.div>

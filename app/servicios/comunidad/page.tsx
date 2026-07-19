@@ -1,12 +1,6 @@
 import BackToDashboard from "../../components/BackToDashboard";
 import Link from "next/link";
 
-const messages = [
-  { user: "Analyst", text: "Nueva idea en EURUSD para seguimiento." },
-  { user: "Manager", text: "Recuerden confirmar el nivel de stop loss." },
-  { user: "Miembro", text: "Gracias, me ayuda a mantener mi plan." },
-];
-
 export default function ServiciosComunidadPage() {
   return (
     <main className="min-h-screen bg-[#030303] text-white">
@@ -49,14 +43,20 @@ export default function ServiciosComunidadPage() {
           </div>
 
           <div className="mt-10 rounded-3xl border border-white/10 bg-black/20 p-6">
-            <div className="mb-4 text-sm uppercase tracking-[0.2em] text-[#D4AF37]">Chat simulado</div>
+            <div className="mb-4 text-sm uppercase tracking-[0.2em] text-[#D4AF37]">Estado del canal</div>
             <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div key={index} className="rounded-3xl border border-white/5 bg-[#121212]/90 p-4">
-                  <p className="text-sm text-zinc-400">{message.user}</p>
-                  <p className="mt-2 text-white">{message.text}</p>
-                </div>
-              ))}
+              <div className="rounded-3xl border border-white/5 bg-[#121212]/90 p-4">
+                <p className="text-sm text-zinc-400">Publicaciones</p>
+                <p className="mt-2 text-white">El contenido se muestra en tiempo real dentro del módulo privado de comunidad.</p>
+              </div>
+              <div className="rounded-3xl border border-white/5 bg-[#121212]/90 p-4">
+                <p className="text-sm text-zinc-400">Moderación</p>
+                <p className="mt-2 text-white">Mensajes sujetos a reglas internas y control de permisos por membresía activa.</p>
+              </div>
+              <div className="rounded-3xl border border-white/5 bg-[#121212]/90 p-4">
+                <p className="text-sm text-zinc-400">Soporte</p>
+                <p className="mt-2 text-white">Si detectas retrasos o inconsistencias, utiliza el canal de soporte para auditoría.</p>
+              </div>
             </div>
           </div>
 

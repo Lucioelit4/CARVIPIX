@@ -36,7 +36,7 @@ export function canAccessRoute(pathname: string, context: RouteAccessContext): b
     return tier === "usuario_registrado" || tier === "miembro_activo" || tier === "administrador";
   }
 
-  const authenticatedRoutes = ["/capital", "/gestion", "/gestion-capital", "/perfil", "/comunidad", "/soporte"];
+  const authenticatedRoutes = ["/gestion", "/perfil", "/comunidad", "/soporte"];
   if (authenticatedRoutes.some((route) => pathname.startsWith(route))) {
     return tier === "usuario_registrado" || tier === "miembro_activo" || tier === "administrador";
   }

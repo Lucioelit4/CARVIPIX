@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
-import { getSandboxSubscriptionStatus } from "@/app/backend/paypal/sandbox";
+import { getPayPalSubscriptionStatus } from "@/app/backend/paypal/sandbox";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ subscriptionId: string }> }) {
   const auth = await requireClientSession(request);
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ sub
   const { subscriptionId } = await context.params;
 
   try {
-    const data = await getSandboxSubscriptionStatus({
+    const data = await getPayPalSubscriptionStatus({
       subscriptionId,
       userId: auth.user.id,
     });

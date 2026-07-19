@@ -458,13 +458,16 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
   const orderRef = input.paymentOrderId;
 
   if (input.templateId === "bot-license-delivery-ready") {
+    const licenseKey = input.licenseKey ? `<br/><strong>Licencia:</strong> ${input.licenseKey}` : "";
+    const downloadHtml = input.downloadUrl ? `<p><a href="${input.downloadUrl}">Descargar tu Bot CARVIPIX</a></p>` : "";
+    const downloadText = input.downloadUrl ? `Descarga: ${input.downloadUrl}` : "";
     return {
       subject: "CARVIPIX: licencia de Bot confirmada y entrega preparada",
       html: [
         "<div style=\"font-family: Arial, sans-serif; color: #111; line-height: 1.5;\">",
         `  <p>Hola ${recipientName},</p>`,
         "  <p>Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada correctamente.</p>",
-        `  <p><strong>Orden:</strong> ${orderRef}<br/><strong>Monto:</strong> ${amount}</p>`,
+        `  <p><strong>Orden:</strong> ${orderRef}<br/><strong>Monto:</strong> ${amount}${licenseKey}</p>`,
         "  <p>Tu flujo de entrega queda preparado con:</p>",
         "  <ul>",
         "    <li>Licencia oficial activa</li>",
@@ -473,6 +476,7 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         "    <li>Manual y recursos de video</li>",
         "    <li>Canal de soporte para activacion</li>",
         "  </ul>",
+        `  ${downloadHtml}`,
         "  <p>Equipo CARVIPIX</p>",
         "</div>",
       ].join("\n"),
@@ -482,6 +486,7 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         "Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada.",
         `Orden: ${orderRef}`,
         `Monto: ${amount}`,
+        input.licenseKey ? `Licencia: ${input.licenseKey}` : "",
         "",
         "Tu flujo de entrega queda preparado con:",
         "- Licencia oficial activa",
@@ -489,9 +494,10 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         "- Guia de instalacion",
         "- Manual y recursos de video",
         "- Soporte para activacion",
+        downloadText,
         "",
         "Equipo CARVIPIX",
-      ].join("\n"),
+      ].filter(Boolean).join("\n"),
     };
   }
 

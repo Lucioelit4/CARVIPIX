@@ -129,19 +129,19 @@ export default function BotPage() {
                   ))}
                 </div>
 
-                {/* Bottom metrics */}
+                {/* Bottom status */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
-                    <p className="text-white/50">Operaciones</p>
-                    <p className="font-bold text-[#D4AF37]">64</p>
+                    <p className="text-white/50">Señales públicas</p>
+                    <p className="font-bold text-[#D4AF37]">No publicadas</p>
                   </div>
                   <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
-                    <p className="text-white/50">Win Rate</p>
-                    <p className="font-bold text-green-400">71%</p>
+                    <p className="text-white/50">Rendimiento público</p>
+                    <p className="font-bold text-white">No disponible</p>
                   </div>
                   <div className="border border-white/10 rounded bg-[#0B0B0B]/60 px-2 py-1">
-                    <p className="text-white/50">Rendimiento</p>
-                    <p className="font-bold text-green-400">+12.8%</p>
+                    <p className="text-white/50">Estado</p>
+                    <p className="font-bold text-green-400">Operativo</p>
                   </div>
                 </div>
               </div>
@@ -251,7 +251,7 @@ export default function BotPage() {
                 opacity="0.5"
               />
             </svg>
-            <p className="absolute bottom-1 right-2 text-xs text-white/40">Datos ilustrativos de entrega y preparación</p>
+            <p className="absolute bottom-1 right-2 text-xs text-white/40">Vista informativa del estado comercial y de entrega</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">

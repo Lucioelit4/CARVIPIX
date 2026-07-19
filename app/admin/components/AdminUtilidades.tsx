@@ -10,7 +10,7 @@ type CommercialPayload = {
   overview: {
     users: number;
     activeMemberships: number;
-    pendingCapitalRequests: number;
+    pendingStrategicPartnerRequests: number;
     openTickets: number;
     blockedAttempts: number;
   };
@@ -106,7 +106,7 @@ export default function AdminUtilidades() {
           <h3 className="text-lg font-semibold mb-4">Resumen comercial</h3>
           <div className="space-y-3 text-sm text-white/70">
             <div className="flex items-center justify-between gap-3"><span>Usuarios totales</span><span className="text-white">{overview?.users ?? 0}</span></div>
-            <div className="flex items-center justify-between gap-3"><span>Solicitudes de capital pendientes</span><span className="text-white">{overview?.pendingCapitalRequests ?? 0}</span></div>
+            <div className="flex items-center justify-between gap-3"><span>Solicitudes nuevas de socios estrategicos</span><span className="text-white">{overview?.pendingStrategicPartnerRequests ?? 0}</span></div>
             <div className="flex items-center justify-between gap-3"><span>Tickets abiertos</span><span className="text-white">{overview?.openTickets ?? 0}</span></div>
             <div className="flex items-center justify-between gap-3"><span>Órdenes pendientes</span><span className="text-white">{metrics.pendingOrders}</span></div>
             <div className="flex items-center justify-between gap-3"><span>Intentos bloqueados</span><span className="text-white">{overview?.blockedAttempts ?? 0}</span></div>

@@ -78,9 +78,18 @@ export async function POST(request: NextRequest) {
 
     // Manually update email status (for testing/correction)
     if (body.action === "update-status" && body.emailHistoryId && body.status) {
+      const validStatuses = ["sent", "delivered", "failed", "bounced", "opened", "clicked"] as const;
+      const status = validStatuses.includes(body.status as (typeof validStatuses)[number])
+        ? (body.status as (typeof validStatuses)[number])
+        : null;
+
+      if (!status) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+      }
+
       await EmailHistoryService.updateEmailStatus(
         body.emailHistoryId,
-        body.status as any,
+        status,
         { manual_update: true, updated_at: new Date().toISOString() }
       );
 

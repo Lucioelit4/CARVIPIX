@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
-import { getOrderStatus } from "@/app/backend/paypal/sandbox";
+import { getPayPalOrderStatus } from "@/app/backend/paypal/sandbox";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ orderId: string }> }) {
   const auth = await requireClientSession(request);
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ ord
   const { orderId } = await context.params;
 
   try {
-    const data = await getOrderStatus({
+    const data = await getPayPalOrderStatus({
       orderId,
       userId: auth.user.id,
     });

@@ -109,4 +109,6 @@ export type PaymentTransactionalEmailInput = {
   failureReason?: string;
   productId?: string;
   productType?: string;
+  licenseKey?: string;
+  downloadUrl?: string;
 };

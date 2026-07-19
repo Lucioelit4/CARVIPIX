@@ -5,15 +5,30 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { analysisStore } from "@/app/ai/cadpV2/analysisStore";
+import { isSameOriginRequest } from "@/app/api/admin/_shared/security";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+type DispatchDestinationResult = {
+  module?: string;
+  status?: string;
+  timestamp_utc_ms?: number;
+  detail?: string;
+};
+
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ analysisId: string }> },
 ) {
   try {
+    if (!isSameOriginRequest(req)) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 403 },
+      );
+    }
+
     const { analysisId } = await params;
     const analysis = analysisStore.getById(analysisId);
 
@@ -26,8 +41,8 @@ export async function GET(
 
     // Build dispatch matrix (9 destinations)
     const dispatchMatrix = analysis.dispatch_result
-      ? Object.entries(analysis.dispatch_result.destinations).map(([dest, result]: [string, any]) => ({
-          destination: dest,
+      ? (analysis.dispatch_result.destinations as unknown as DispatchDestinationResult[]).map((result) => ({
+          destination: result.module ?? 'unknown',
           status: result.status,
           timestamp_utc_ms: result.timestamp_utc_ms,
           detail: result.detail,
@@ -77,8 +92,8 @@ export async function GET(
           },
           multi_timeframe: analysis.expediente?.multi_timeframe,
           volatility_and_session: {
-            market_session: (analysis.expediente?.volatility_and_session as any)?.market_session,
-            volatility_ratio: (analysis.expediente?.volatility_and_session as any)?.volatility_ratio,
+            market_session: (analysis.expediente?.volatility_and_session as { market_session?: string })?.market_session,
+            volatility_ratio: (analysis.expediente?.volatility_and_session as { volatility_ratio?: number })?.volatility_ratio,
           },
           news_and_risk: {
             news_status: analysis.expediente?.news_and_risk?.news_status,

@@ -25,7 +25,7 @@ import {
 export const AUTH_SESSION_COOKIE = "carvipix_auth_session";
 export const AUTH_ROLE_COOKIE = "carvipix_auth_role";
 
-const SESSION_HOURS = 12;
+const SESSION_HOURS = 24;
 const TOKEN_HOURS = 2;
 
 export type TokenIssueGuardInput = {

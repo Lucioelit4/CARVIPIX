@@ -77,7 +77,7 @@ export function createSupportIntelligenceHandlers(deps: SupportIntelligenceDepen
         | "membresias"
         | "pagos"
         | "facturacion"
-        | "gestion-capital"
+        | "socios-estrategicos"
         | "fondeo"
         | "resultados"
         | "comunidad"

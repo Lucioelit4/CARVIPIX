@@ -154,8 +154,8 @@ export const MULTIMEDIA_VIDEOS_BASE: MultimediaVideo[] = [
     title: "CARVIPIX: Plataforma Profesional",
     description:
       "Video profesional: que es CARVIPIX, como funcionan las alertas, beneficios, flujo general, riesgos del trading y proceso de contratacion.",
-    videoUrl: "/videos/carvipix-home-overview.mp4",
-    posterUrl: "/videos/carvipix-home-overview-poster.jpg",
+    videoUrl: "/training-videos/step-1-que-es-forex.mp4",
+    posterUrl: "/logo/logo carvipix.png",
     active: true,
     updatedAt: "2026-07-12T00:00:00.000Z",
   },
@@ -165,8 +165,8 @@ export const MULTIMEDIA_VIDEOS_BASE: MultimediaVideo[] = [
     title: "Guia del Panel del Miembro",
     description:
       "Video guiado: dashboard, alertas, resultados, membresias, soporte y herramientas operativas dentro de CARVIPIX.",
-    videoUrl: "/videos/carvipix-member-dashboard-guide.mp4",
-    posterUrl: "/videos/carvipix-member-dashboard-guide-poster.jpg",
+    videoUrl: "/training-videos/step-2-aplicaciones.mp4",
+    posterUrl: "/logo/logo carvipix.png",
     active: true,
     updatedAt: "2026-07-12T00:00:00.000Z",
   },

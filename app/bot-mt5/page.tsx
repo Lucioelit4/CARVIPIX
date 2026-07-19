@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Activity, AlertCircle, CheckCircle2, Download, Settings } from "lucide-react";
 import { CARVIPIXCard, CARVIPIXButton, colors } from "@/app/design-system";
@@ -31,55 +31,46 @@ interface MT5Trade {
 }
 
 export default function ClientMT5Page() {
-  const [status, setStatus] = useState<MT5Status | null>(null);
-  const [trades, setTrades] = useState<MT5Trade[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [now] = useState(() => Date.now());
+  const [status] = useState<MT5Status | null>({
+    connected: true,
+    licenseId: "CARVIPIX-user1-LICENSE",
+    accountNumber: 987654,
+    broker: "OANDA",
+    eaVersion: "1.0.0",
+    lastSignal: new Date(now - 120000).toISOString(),
+    openTrades: 2,
+    lastHeartbeat: new Date(now - 5000).toISOString(),
+    status: "ACTIVE",
+  });
+  const [trades] = useState<MT5Trade[]>([
+    {
+      id: "trade-1",
+      symbol: "XAUUSD",
+      direction: "BUY",
+      entry: 2338.45,
+      exit: 2345.20,
+      sl: 2332.00,
+      tp: 2345.00,
+      pnl: 340.0,
+      openedAt: new Date(now - 3600000).toISOString(),
+      closedAt: new Date(now - 1800000).toISOString(),
+    },
+    {
+      id: "trade-2",
+      symbol: "EURUSD",
+      direction: "BUY",
+      entry: 1.07153,
+      exit: null,
+      sl: 1.06900,
+      tp: 1.07900,
+      pnl: null,
+      openedAt: new Date(now - 600000).toISOString(),
+      closedAt: null,
+    },
+  ]);
 
-  useEffect(() => {
-    // Simulación - en producción obtener datos reales
-    setStatus({
-      connected: true,
-      licenseId: "CARVIPIX-user1-LICENSE",
-      accountNumber: 987654,
-      broker: "OANDA",
-      eaVersion: "1.0.0",
-      lastSignal: new Date(Date.now() - 120000).toISOString(),
-      openTrades: 2,
-      lastHeartbeat: new Date(Date.now() - 5000).toISOString(),
-      status: "ACTIVE",
-    });
-
-    setTrades([
-      {
-        id: "trade-1",
-        symbol: "XAUUSD",
-        direction: "BUY",
-        entry: 2338.45,
-        exit: 2345.20,
-        sl: 2332.00,
-        tp: 2345.00,
-        pnl: 340.0,
-        openedAt: new Date(Date.now() - 3600000).toISOString(),
-        closedAt: new Date(Date.now() - 1800000).toISOString(),
-      },
-      {
-        id: "trade-2",
-        symbol: "EURUSD",
-        direction: "BUY",
-        entry: 1.07153,
-        exit: null,
-        sl: 1.06900,
-        tp: 1.07900,
-        pnl: null,
-        openedAt: new Date(Date.now() - 600000).toISOString(),
-        closedAt: null,
-      },
-    ]);
-
-    setLoading(false);
-  }, []);
-
-  if (loading || !status) {
+  if (!status) {
     return <div className="p-6">Cargando...</div>;
   }
 

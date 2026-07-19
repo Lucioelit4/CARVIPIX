@@ -100,35 +100,15 @@ export async function POST(request: NextRequest) {
         await assertFeatureAccess("bot");
         return NextResponse.json({ data: await ecosystemServices.bot.getBotInstances(auth.user.id) });
       case "getCapitalAccount":
-        return NextResponse.json({ data: await ecosystemServices.capital.getCapitalAccount(auth.user.id) });
+        return NextResponse.json({ error: "Modulo reemplazado por Socios Estrategicos CARVIPIX" }, { status: 410 });
       case "getBalance": {
-        const account = await ecosystemServices.capital.getCapitalAccount(auth.user.id);
-        const data = account
-          ? {
-              currentBalance: Number(account.currentBalance ?? 0),
-              initialCapital: Number(account.initialCapital ?? 0),
-              profitLoss: Number(account.utilidad ?? 0),
-              monthlyReturn: Number(account.monthlyReturn ?? 0),
-              annualReturn: Number(account.annualReturn ?? 0),
-            }
-          : {
-              currentBalance: 0,
-              initialCapital: 0,
-              profitLoss: 0,
-              monthlyReturn: 0,
-              annualReturn: 0,
-            };
-        return NextResponse.json({ data });
+        return NextResponse.json({ error: "Modulo reemplazado por Socios Estrategicos CARVIPIX" }, { status: 410 });
       }
       case "getCapitalMovements": {
-        const account = await ecosystemServices.capital.getCapitalAccount(auth.user.id);
-        const data = account ? await ecosystemServices.capital.getCapitalMovements(account.accountId) : [];
-        return NextResponse.json({ data });
+        return NextResponse.json({ error: "Modulo reemplazado por Socios Estrategicos CARVIPIX" }, { status: 410 });
       }
       case "getCapitalMonthlyReports": {
-        const account = await ecosystemServices.capital.getCapitalAccount(auth.user.id);
-        const data = account ? await ecosystemServices.capital.getMonthlyReports(account.accountId) : [];
-        return NextResponse.json({ data });
+        return NextResponse.json({ error: "Modulo reemplazado por Socios Estrategicos CARVIPIX" }, { status: 410 });
       }
       case "getPlatformResults":
         return NextResponse.json({

@@ -22,7 +22,7 @@ interface SendMessageOptions {
   buttons?: Array<Array<{ text: string; url: string }>>;
 }
 
-interface TelegramApiResponse<T = any> {
+interface TelegramApiResponse<T = unknown> {
   ok: boolean;
   result?: T;
   error_code?: number;
@@ -50,9 +50,9 @@ export class TelegramClientService {
   /**
    * Hacer request a Telegram API con timeout
    */
-  private async apiCall<T = any>(
+  private async apiCall<T = unknown>(
     method: string,
-    data?: Record<string, any>
+    data?: Record<string, unknown>
   ): Promise<TelegramApiResponse<T>> {
     const url = `${TELEGRAM_API_BASE}${this.config.botToken}/${method}`;
 
@@ -101,7 +101,12 @@ export class TelegramClientService {
     error?: string;
   }> {
     try {
-      const result = await this.apiCall<any>('getMe');
+      const result = await this.apiCall<{
+        id: number;
+        first_name?: string;
+        username?: string;
+        is_bot?: boolean;
+      }>('getMe');
 
       if (!result.ok || !result.result) {
         this.isConnected = false;
@@ -156,7 +161,11 @@ export class TelegramClientService {
     };
   }> {
     try {
-      const result = await this.apiCall<any>('getChat', { chat_id: channelId });
+      const result = await this.apiCall<{
+        id: number;
+        title?: string;
+        type?: string;
+      }>('getChat', { chat_id: channelId });
       
       if (!result.ok || !result.result) {
         return {
@@ -177,7 +186,7 @@ export class TelegramClientService {
         info: {
           id: chat.id,
           title: chat.title || '',
-          type: chat.type
+          type: chat.type || ''
         }
       };
     } catch (error) {
@@ -207,7 +216,7 @@ export class TelegramClientService {
   }> {
     try {
       // Intentar enviar un mensaje de prueba para verificar permisos
-      const sendResult = await this.apiCall<any>('sendMessage', {
+      const sendResult = await this.apiCall<{ message_id?: number }>('sendMessage', {
         chat_id: channelId,
         text: '🔍 Verificando permisos del bot...',
         parse_mode: 'Markdown'
@@ -235,7 +244,7 @@ export class TelegramClientService {
       // Intentar editar para verificar ese permiso
       let canEdit = false;
       try {
-        const editResult = await this.apiCall<any>('editMessageText', {
+        const editResult = await this.apiCall<unknown>('editMessageText', {
           chat_id: channelId,
           message_id: messageId,
           text: '🔍 Verificando permisos del bot... ✓',
@@ -249,7 +258,7 @@ export class TelegramClientService {
       // Intentar eliminar para verificar ese permiso
       let canDelete = false;
       try {
-        const deleteResult = await this.apiCall<any>('deleteMessage', {
+        const deleteResult = await this.apiCall<unknown>('deleteMessage', {
           chat_id: channelId,
           message_id: messageId
         });
@@ -321,7 +330,10 @@ export class TelegramClientService {
     const targetChannel = this.config.testOnly ? this.config.channelTest : options.channelId;
 
     try {
-      const result = await this.apiCall<any>('sendMessage', {
+      const result = await this.apiCall<{
+        message_id?: number;
+        chat?: { id?: string | number };
+      }>('sendMessage', {
         chat_id: targetChannel,
         text: options.text,
         parse_mode: options.markdown ? 'Markdown' : 'HTML',
@@ -383,7 +395,7 @@ export class TelegramClientService {
     newText: string
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const result = await this.apiCall<any>('editMessageText', {
+      const result = await this.apiCall<unknown>('editMessageText', {
         chat_id: channelId,
         message_id: messageId,
         text: newText,

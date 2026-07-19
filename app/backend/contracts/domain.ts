@@ -87,7 +87,7 @@ export interface ServicePlatformResults {
     stopLoss: number | null;
     takeProfit: number | null;
     strategyId: string;
-    status: "SHADOW";
+    status: "SHADOW" | "CREATED" | "CONDITIONAL" | "ACTIVE" | "CANCELLED" | "EXPIRED" | "TP_HIT" | "SL_HIT" | "CLOSED";
   } | null;
 }
 
@@ -135,7 +135,7 @@ export interface ServiceAdminSnapshot {
     analysisId: string;
     decision: "BUY" | "SELL" | "NONE";
     strategyId: string;
-    status: "SHADOW";
+    status: "SHADOW" | "CREATED" | "CONDITIONAL" | "ACTIVE" | "CANCELLED" | "EXPIRED" | "TP_HIT" | "SL_HIT" | "CLOSED";
     source: "CADP_V2";
     validationStatus: "VALIDATED" | "PENDING";
     mode: "SHADOW" | "PRODUCTION";
@@ -183,7 +183,7 @@ export interface ServiceMasterSignal {
   grossRR: number | null;
   netRR: number | null;
   expiresAt: string | null;
-  status: "SHADOW";
+  status: "SHADOW" | "CREATED" | "CONDITIONAL" | "ACTIVE" | "CANCELLED" | "EXPIRED" | "TP_HIT" | "SL_HIT" | "CLOSED";
   humanReviewRequired: boolean;
   autoExecutionEligible: boolean;
   createdAt: string;

@@ -276,7 +276,7 @@ export default function AdminBeta() {
             <h3 className="font-bold mb-3 text-blue-300">📋 Reglas de la Beta</h3>
             <ul className="text-sm text-blue-200 space-y-1">
               <li>🔒 Solo MT5 DEMO — no se permite cuenta real</li>
-              <li>🔒 Telegram en TEST_ONLY=true — solo grupo de prueba</li>
+              <li>🔒 Telegram en canal controlado de beta antes de apertura total</li>
               <li>🔒 No prometer rentabilidad</li>
               <li>🔒 No modificar comportamiento para usuario específico</li>
               <li>🔒 Documentar cada incidencia</li>

@@ -35,7 +35,7 @@ type FaqItem = {
     | 'membresias'
     | 'pagos'
     | 'facturacion'
-    | 'gestion-capital'
+    | 'socios-estrategicos'
     | 'fondeo'
     | 'resultados'
     | 'comunidad'
@@ -50,7 +50,6 @@ type FaqItem = {
 
 type SessionPayload = {
   authenticated?: boolean;
-  user?: { id?: string; email?: string; nombre?: string };
 };
 
 export default function SoportePage() {
@@ -67,7 +66,7 @@ export default function SoportePage() {
     {
       role: 'assistant',
       content:
-        'Hola, soy el asistente CARVIPIX. Puedo ayudarte con alertas, membresía, bot, gestión de capital, fondeo o soporte técnico.',
+        'Hola, soy el asistente CARVIPIX. Puedo ayudarte con alertas, membresia, bot, socios estrategicos, fondeo o soporte tecnico.',
     },
   ]);
 
@@ -91,7 +90,7 @@ export default function SoportePage() {
     membresias: 'Membresias',
     pagos: 'Pagos',
     facturacion: 'Facturacion',
-    'gestion-capital': 'Gestion de Capital',
+    'socios-estrategicos': 'Socios Estrategicos',
     fondeo: 'Fondeo',
     resultados: 'Resultados',
     comunidad: 'Comunidad',
@@ -141,7 +140,7 @@ export default function SoportePage() {
             ...prev,
             {
               role: 'assistant',
-              content: `📋 Briefing del día:\n${briefing.content.substring(0, 200)}...`,
+              content: `Briefing del dia:\n${briefing.content.substring(0, 200)}...`,
             },
           ]);
         }
@@ -259,15 +258,15 @@ export default function SoportePage() {
     }
   };
 
-  // Cargar tema rápido
+  // Cargar tema rapido
   const handleQuickTopic = (topic: string) => {
     const questionMap: { [key: string]: string } = {
-      'Alertas en Vivo': '¿Cómo funcionan las alertas en vivo?',
-      'Membresía': '¿Qué incluye el plan CARVIPIX PRO?',
-      'Bot CARVIPIX': '¿Cómo funciona el Bot de automatización?',
-      'Gestión de Capital': '¿Dónde puedo ver mi balance?',
-      'Fondeo': '¿Cómo funciona el servicio de fondeo?',
-      'Problemas técnicos': '¿Qué hago si tengo un problema técnico?',
+      'Alertas en Vivo': 'Como funcionan las alertas en vivo?',
+      'Membresia': 'Que incluye el plan CARVIPIX PRO?',
+      'Bot CARVIPIX': 'Como funciona el Bot de automatizacion?',
+      'Socios Estrategicos': 'Como envio una solicitud de evaluacion para socios estrategicos?',
+      'Fondeo': 'Como funciona el servicio de fondeo?',
+      'Problemas tecnicos': 'Que hago si tengo un problema tecnico?',
     };
 
     const question = questionMap[topic] || topic;
@@ -291,7 +290,7 @@ export default function SoportePage() {
     }
 
     if (!session?.authenticated) {
-      setTicketMessage('Debes iniciar sesión para crear un ticket privado.');
+      setTicketMessage('Debes iniciar sesion para crear un ticket privado.');
       return;
     }
 
@@ -323,7 +322,7 @@ export default function SoportePage() {
         throw new Error(payload.error || 'No se pudo crear el ticket.');
       }
 
-      setTicketMessage(`✓ Ticket creado correctamente. ID: ${payload.id}`);
+      setTicketMessage(`Ticket creado correctamente. ID: ${payload.id}`);
       setTicketForm({ categoria: 'Alertas', prioridad: 'Normal', mensaje: '' });
       setTimeout(() => setTicketMessage(''), 4000);
     } catch (error) {
@@ -361,7 +360,7 @@ export default function SoportePage() {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="text-lg text-white/80 mb-8"
           >
-            Asistencia privada para miembros, dudas operativas, pagos, membresías y navegación dentro de la plataforma.
+            Asistencia privada para miembros, dudas operativas, pagos, membresias y navegacion dentro de la plataforma.
           </motion.p>
 
           <motion.div
@@ -405,7 +404,7 @@ export default function SoportePage() {
             <h3 className="text-2xl font-bold mb-2">Asistente CARVIPIX</h3>
             <p className="text-[#D4AF37] font-semibold mb-1">Disponible 24/7</p>
             <p className="text-sm text-white/60 mb-2">
-              {session?.authenticated ? 'Puedes abrir tickets privados con tu sesión activa.' : 'Puedes consultar información pública aquí. Para abrir tickets privados necesitas iniciar sesión.'}
+              {session?.authenticated ? 'Puedes abrir tickets privados con tu sesion activa.' : 'Puedes consultar informacion publica aqui. Para abrir tickets privados necesitas iniciar sesion.'}
             </p>
             <div className="mt-2">
               <DisclaimerNote variant="support" />
@@ -425,7 +424,7 @@ export default function SoportePage() {
             <div className="mb-6 pb-6 border-b border-white/10">
               <h2 className="text-2xl font-bold mb-1">Asistente CARVIPIX</h2>
               <p className="text-sm text-white/60">
-                Pregunta sobre tu cuenta, alertas, bot, membresía o servicios.
+                Pregunta sobre tu cuenta, alertas, bot, membresia o servicios.
               </p>
             </div>
 
@@ -478,7 +477,7 @@ export default function SoportePage() {
             {conversationId ? <p className="mt-1 text-[11px] text-white/50">Sesion de soporte: {conversationId}</p> : null}
           </motion.div>
 
-          {/* Sidebar - Temas Rápidos */}
+          {/* Sidebar - Temas Rapidos */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -488,17 +487,17 @@ export default function SoportePage() {
             <div className="bg-[#0B0B0B] border border-white/10 rounded-2xl p-6">
               <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-[#D4AF37]" />
-                Temas rápidos
+                Temas rapidos
               </h3>
 
               <div className="space-y-2">
                 {[
                   'Alertas en Vivo',
-                  'Membresía',
+                  'Membresia',
                   'Bot CARVIPIX',
-                  'Gestión de Capital',
+                  'Socios Estrategicos',
                   'Fondeo',
-                  'Problemas técnicos',
+                  'Problemas tecnicos',
                 ].map((topic) => (
                   <button
                     key={topic}
@@ -612,7 +611,7 @@ export default function SoportePage() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className={`rounded-lg p-3 mb-6 text-sm flex items-center gap-2 ${ticketMessage.startsWith('✓') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-300'}`}
+              className={`rounded-lg p-3 mb-6 text-sm flex items-center gap-2 ${ticketMessage.startsWith('Ticket creado correctamente') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-300'}`}
             >
               <CheckCircle2 size={16} />
               {ticketMessage}
@@ -621,17 +620,17 @@ export default function SoportePage() {
 
           {!session?.authenticated && (
             <div className="rounded-lg bg-white/5 border border-white/10 p-4 mb-6 text-sm text-white/70">
-              Para crear un ticket privado debes iniciar sesión con tu cuenta CARVIPIX. Si aún no tienes acceso, puedes escribir a <span className="text-[#D4AF37]">soporte@carvipix.com</span> o <Link href="/login" className="text-[#D4AF37] underline">ir a login</Link>.
+              Para crear un ticket privado debes iniciar sesion con tu cuenta CARVIPIX. Si aun no tienes acceso, puedes escribir a <span className="text-[#D4AF37]">soporte@carvipix.com</span> o <Link href="/login" className="text-[#D4AF37] underline">ir a login</Link>.
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Categoría */}
+            {/* Categoria */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
                 ticketErrors.categoria ? "text-red-400" : "text-white/70"
               }`}>
-                Categoría
+                Categoria
               </label>
               <select
                 value={ticketForm.categoria}
@@ -650,9 +649,9 @@ export default function SoportePage() {
               >
                 <option>Alertas</option>
                 <option>Bot</option>
-                <option>Membresía</option>
+                <option>Membresia</option>
                 <option>Pagos</option>
-                <option>Técnico</option>
+                <option>Tecnico</option>
                 <option>Otros</option>
               </select>
               {ticketErrors.categoria && (
@@ -823,7 +822,7 @@ export default function SoportePage() {
         >
           <p>
             El asistente y los tickets operan en entorno controlado y muestran
-            información según la disponibilidad de cada servicio.
+            informacion segun la disponibilidad de cada servicio.
           </p>
         </motion.div>
       </div>

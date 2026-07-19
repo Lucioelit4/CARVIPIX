@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Origen no permitido' }, { status: 403 });
   }
 
+  const body = (await request.json().catch(() => ({}))) as { code?: unknown };
+
+  if (!isValidAdminCode(body.code)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+
   const rateLimit = rateLimiter.check({
     scope: 'auth.admin.login',
     key: getClientIp(request),
@@ -47,12 +53,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 429 }
     );
-  }
-
-  const body = (await request.json().catch(() => ({}))) as { code?: unknown };
-
-  if (!isValidAdminCode(body.code)) {
-    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   rateLimiter.reset('auth.admin.login', getClientIp(request));

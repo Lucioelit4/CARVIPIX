@@ -65,7 +65,7 @@ export async function GET_Signals(request: NextRequest) {
 
     let query = `SELECT id, signal_id, symbol, decision, entry, stop_loss, take_profit, status, created_at
                  FROM bot_mt5_signals`;
-    const params: any[] = [];
+    const params: Array<string | number | Date> = [];
 
     if (status) {
       query += ` WHERE status = $1`;
@@ -137,9 +137,9 @@ export async function POST_CreateLicense(request: NextRequest) {
 // SUSPEND LICENSE
 //+------------------------------------------------------------------+
 
-export async function POST_SuspendLicense(request: NextRequest, { params }: any) {
+export async function POST_SuspendLicense(request: NextRequest) {
   try {
-    const license_id = params.license_id;
+    const license_id = request.nextUrl.searchParams.get("license_id");
 
     if (!license_id) {
       return NextResponse.json({ error: "license_id required" }, { status: 400 });
@@ -164,9 +164,9 @@ export async function POST_SuspendLicense(request: NextRequest, { params }: any)
 // REVOKE LICENSE
 //+------------------------------------------------------------------+
 
-export async function POST_RevokeLicense(request: NextRequest, { params }: any) {
+export async function POST_RevokeLicense(request: NextRequest) {
   try {
-    const license_id = params.license_id;
+    const license_id = request.nextUrl.searchParams.get("license_id");
 
     if (!license_id) {
       return NextResponse.json({ error: "license_id required" }, { status: 400 });
@@ -232,7 +232,7 @@ export async function GET_Stats(request: NextRequest) {
 // Route Handlers
 //+------------------------------------------------------------------+
 
-export async function GET(request: NextRequest, context: any) {
+export async function GET(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (pathname.includes("/licenses")) return GET_Licenses(request);
@@ -243,12 +243,12 @@ export async function GET(request: NextRequest, context: any) {
   return NextResponse.json({ error: "Not found" }, { status: 404 });
 }
 
-export async function POST(request: NextRequest, context: any) {
+export async function POST(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   if (pathname.includes("/licenses/create")) return POST_CreateLicense(request);
-  if (pathname.includes("/suspend")) return POST_SuspendLicense(request, context);
-  if (pathname.includes("/revoke")) return POST_RevokeLicense(request, context);
+  if (pathname.includes("/suspend")) return POST_SuspendLicense(request);
+  if (pathname.includes("/revoke")) return POST_RevokeLicense(request);
 
   return NextResponse.json({ error: "Not found" }, { status: 404 });
 }

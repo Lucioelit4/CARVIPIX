@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ArrowRight, BarChart3, Bot, ShieldCheck, Wallet, Users, CheckCircle2 } from "lucide-react";
+import { ArrowRight, BarChart3, Bot, ShieldCheck, Crown, Users, CheckCircle2 } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
 import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
 
@@ -45,14 +45,14 @@ const services = [
     icon: ShieldCheck,
   },
   {
-    title: "Gestión de Capital",
-    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "capital-gestionado")?.description ?? "",
-    price: "Porcentaje sobre utilidades",
-    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "capital-gestionado")?.features ?? [],
-    href: "/servicios/capital",
-    checkout: "/servicios/capital",
-    ctaLabel: "Solicitar ingreso",
-    icon: Wallet,
+    title: "Socios Estratégicos",
+    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "socios-estrategicos")?.description ?? "",
+    price: "Evaluación privada",
+    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "socios-estrategicos")?.features ?? [],
+    href: "/socios-estrategicos",
+    checkout: "/socios-estrategicos/solicitud",
+    ctaLabel: "Solicitar evaluación",
+    icon: Crown,
   },
   {
     title: "Cuentas Fondeadas",

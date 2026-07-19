@@ -7,6 +7,7 @@ const ADMIN_SESSION_TTL_SECONDS = 60 * 60 * 12;
 type AdminSessionPayload = {
   exp: number;
   fp: string;
+  sv: string;
 };
 
 function base64UrlEncode(value: string): string {
@@ -37,10 +38,15 @@ function signPayload(payload: string): string {
   return createHmac("sha256", getAdminSessionSecret()).update(payload).digest("base64url");
 }
 
+function getAdminSessionVersion(): string {
+  return process.env.ADMIN_SESSION_VERSION?.trim() || "2";
+}
+
 export function createAdminSessionToken(request: NextRequest): string {
   const payload: AdminSessionPayload = {
     exp: Date.now() + ADMIN_SESSION_TTL_SECONDS * 1000,
     fp: buildFingerprint(request),
+    sv: getAdminSessionVersion(),
   };
 
   const encoded = base64UrlEncode(JSON.stringify(payload));
@@ -71,7 +77,14 @@ export function isValidAdminSession(request: NextRequest): boolean {
 
   try {
     const payload = JSON.parse(base64UrlDecode(encoded)) as AdminSessionPayload;
-    return Boolean(payload?.exp && payload?.fp && Date.now() < payload.exp && payload.fp === buildFingerprint(request));
+    return Boolean(
+      payload?.exp &&
+      payload?.fp &&
+      payload?.sv &&
+      Date.now() < payload.exp &&
+      payload.fp === buildFingerprint(request) &&
+      payload.sv === getAdminSessionVersion()
+    );
   } catch {
     return false;
   }

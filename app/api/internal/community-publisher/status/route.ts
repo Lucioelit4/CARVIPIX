@@ -10,6 +10,20 @@ import CommunityPublisherInitService from '@/app/lib/services/cpInitService';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
+type PublicationSummary = {
+  publication_id?: string;
+  type?: string;
+  status?: string;
+  telegram?: {
+    sent_at?: string;
+    message_id?: number;
+  };
+  sent_at?: string;
+  message_id?: number;
+  priority?: number;
+  enqueued_at?: string;
+};
+
 async function getAlertCountToday(): Promise<number> {
   try {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -21,9 +35,8 @@ async function getAlertCountToday(): Promise<number> {
     const content = await fs.readFile(publicationsFile, 'utf-8');
     const data = JSON.parse(content);
     
-    const freeAlerts = data.publications?.filter(
-      (p: any) => p.type === 'FREE_ALERT' && p.status === 'DELIVERED'
-    ) || [];
+    const publications = Array.isArray(data.publications) ? (data.publications as PublicationSummary[]) : [];
+    const freeAlerts = publications.filter((publication) => publication.type === 'FREE_ALERT' && publication.status === 'DELIVERED');
     
     return freeAlerts.length;
   } catch (error) {
@@ -43,7 +56,7 @@ async function getQueueLength(): Promise<number> {
   }
 }
 
-async function getLastPublished(): Promise<any> {
+async function getLastPublished(): Promise<PublicationSummary | null> {
   try {
     const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
     const publicationsFile = path.join(
@@ -54,9 +67,8 @@ async function getLastPublished(): Promise<any> {
     const content = await fs.readFile(publicationsFile, 'utf-8');
     const data = JSON.parse(content);
     
-    const delivered = data.publications?.filter(
-      (p: any) => p.status === 'DELIVERED'
-    ) || [];
+    const publications = Array.isArray(data.publications) ? (data.publications as PublicationSummary[]) : [];
+    const delivered = publications.filter((publication) => publication.status === 'DELIVERED');
     
     if (delivered.length === 0) return null;
     
@@ -72,7 +84,7 @@ async function getLastPublished(): Promise<any> {
   }
 }
 
-async function getNextInQueue(): Promise<any> {
+async function getNextInQueue(): Promise<PublicationSummary | null> {
   try {
     const queueFile = path.join(process.cwd(), 'data/community-publisher/queue.json');
     const content = await fs.readFile(queueFile, 'utf-8');
@@ -81,7 +93,7 @@ async function getNextInQueue(): Promise<any> {
     const items = data.items || [];
     if (items.length === 0) return null;
     
-    const next = items[0];
+    const next = items[0] as PublicationSummary;
     return {
       publication_id: next.publication_id,
       type: next.type,
@@ -108,7 +120,7 @@ export async function GET(request: NextRequest) {
 
     const initService = CommunityPublisherInitService.getInstance();
     const telegramClient = initService.getTelegramClient();
-    const testOnly = process.env.TEST_ONLY !== 'false';
+    const testOnly = process.env.TEST_ONLY === 'true';
 
     const [alertsToday, queueLength, lastPublished, nextInQueue] = await Promise.all([
       getAlertCountToday(),
@@ -132,7 +144,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString()
     }, { status: 200 });
   } catch (error) {
-    const errorMsg = (error as Error).message;
+    const errorMsg = error instanceof Error ? error.message : String(error);
     console.error('[STATUS ENDPOINT] Error:', errorMsg);
 
     return NextResponse.json({

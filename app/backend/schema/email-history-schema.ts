@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS email_retries (
 CREATE INDEX IF NOT EXISTS idx_email_retries_next_retry ON email_retries(next_retry_at);
 `;
 
-export async function initializeEmailSchema(client: any) {
+export async function initializeEmailSchema(client: { query: (sql: string) => Promise<unknown> }) {
   try {
     await client.query(EMAIL_HISTORY_SCHEMA);
     console.log("✅ Email history schema initialized");

@@ -41,21 +41,21 @@ export default function AdminProyecto() {
       subtareas: [
         { titulo: 'Landing page', completado: true },
         { titulo: 'Rutas de servicios', completado: true },
-        { titulo: 'Sección de academia', completado: true },
-        { titulo: 'Optimización de UX', completado: false },
+        { titulo: 'Seccion de academia', completado: true },
+        { titulo: 'Optimizacion de UX', completado: false },
       ],
     },
     {
       id: 'panel_admin',
       nombre: 'Panel Administrativo',
-      descripcion: 'Dashboard, gestión de usuarios, pagos, alertas',
+      descripcion: 'Dashboard, gestion de usuarios, pagos, alertas',
       progreso: 80,
       estado: 'progreso',
       prioridad: 'alta',
       subtareas: [
         { titulo: 'Dashboard resumen', completado: true },
-        { titulo: 'Gestión de usuarios', completado: true },
-        { titulo: 'Gestión de pagos', completado: true },
+        { titulo: 'Gestion de usuarios', completado: true },
+        { titulo: 'Gestion de pagos', completado: true },
         { titulo: 'Sistema de alertas', completado: true },
         { titulo: 'Reportes avanzados', completado: false },
       ],
@@ -63,16 +63,16 @@ export default function AdminProyecto() {
     {
       id: 'trading_engine',
       nombre: 'Trading Engine',
-      descripcion: '11 agentes de consenso, decisiones automáticas',
+      descripcion: '11 agentes de consenso, decisiones automaticas',
       progreso: 95,
       estado: 'revision',
       prioridad: 'alta',
       subtareas: [
         { titulo: '11 agentes implementados', completado: true },
         { titulo: 'Consenso de 9/11 agentes', completado: true },
-        { titulo: 'Agentes críticos validados', completado: true },
+        { titulo: 'Agentes criticos validados', completado: true },
         { titulo: 'Demo scenarios funcionales', completado: true },
-        { titulo: 'Pruebas de integración', completado: false },
+        { titulo: 'Pruebas de integracion', completado: false },
       ],
     },
     {
@@ -91,111 +91,111 @@ export default function AdminProyecto() {
     },
     {
       id: 'pagos_membresias',
-      nombre: 'Pagos & Membresías',
-      descripcion: 'Sistema de suscripción y gestión de planes',
+      nombre: 'Pagos & Membresias',
+      descripcion: 'Sistema de suscripcion y gestion de planes',
       progreso: 70,
       estado: 'progreso',
       prioridad: 'alta',
       subtareas: [
-        { titulo: 'Planes de membresía', completado: true },
-        { titulo: 'Integración de pagos', completado: true },
-        { titulo: 'Gestión de facturación', completado: false },
-        { titulo: 'Renovación automática', completado: false },
+        { titulo: 'Planes de membresia', completado: true },
+        { titulo: 'Integracion de pagos', completado: true },
+        { titulo: 'Gestion de facturacion', completado: false },
+        { titulo: 'Renovacion automatica', completado: false },
       ],
     },
     {
       id: 'usuarios_perfiles',
       nombre: 'Usuarios & Perfiles',
-      descripcion: 'Gestión de cuentas, autenticación, perfiles',
+      descripcion: 'Gestion de cuentas, autenticacion, perfiles',
       progreso: 80,
       estado: 'progreso',
       prioridad: 'alta',
       subtareas: [
-        { titulo: 'Sistema de autenticación', completado: true },
+        { titulo: 'Sistema de autenticacion', completado: true },
         { titulo: 'Perfiles de usuario', completado: true },
-        { titulo: 'Verificación 2FA', completado: false },
+        { titulo: 'Verificacion 2FA', completado: false },
         { titulo: 'Historial de actividad', completado: false },
       ],
     },
     {
       id: 'legal_riesgo',
       nombre: 'Legal & Riesgo',
-      descripcion: 'Términos, privacidad, disclaimers, cumplimiento',
+      descripcion: 'Terminos, privacidad, disclaimers, cumplimiento',
       progreso: 60,
       estado: 'revision',
       prioridad: 'alta',
       subtareas: [
-        { titulo: 'Términos de servicio', completado: true },
-        { titulo: 'Política de privacidad', completado: true },
+        { titulo: 'Terminos de servicio', completado: true },
+        { titulo: 'Politica de privacidad', completado: true },
         { titulo: 'Risk disclosure', completado: true },
         { titulo: 'Cumplimiento regulatorio', completado: false },
-        { titulo: 'Auditoría legal', completado: false },
+        { titulo: 'Auditoria legal', completado: false },
       ],
     },
     {
       id: 'datos_reales',
       nombre: 'Datos en Tiempo Real',
-      descripcion: 'Integración con fuentes de datos de mercado',
+      descripcion: 'Integracion con fuentes de datos de mercado',
       progreso: 10,
       estado: 'pendiente',
       prioridad: 'alta',
       subtareas: [
         { titulo: 'API de datos', completado: false },
         { titulo: 'WebSocket stream', completado: false },
-        { titulo: 'Caché de datos', completado: false },
+        { titulo: 'Cache de datos', completado: false },
         { titulo: 'Monitoreo de latencia', completado: false },
       ],
     },
     {
       id: 'backtesting',
       nombre: 'Backtesting',
-      descripcion: 'Motor de pruebas históricas con análisis de performance',
+      descripcion: 'Motor de pruebas historicas con analisis de performance',
       progreso: 5,
       estado: 'pendiente',
       prioridad: 'media',
       subtareas: [
         { titulo: 'Motor de backtesting', completado: false },
-        { titulo: 'Análisis de resultados', completado: false },
+        { titulo: 'Analisis de resultados', completado: false },
         { titulo: 'Reportes de performance', completado: false },
       ],
     },
     {
       id: 'autobot',
       nombre: 'AutoBot',
-      descripcion: 'Bot automático de ejecución de operaciones',
+      descripcion: 'Bot automatico de ejecucion de operaciones',
       progreso: 0,
       estado: 'pendiente',
       prioridad: 'media',
       subtareas: [
-        { titulo: 'Lógica de ejecución', completado: false },
-        { titulo: 'Gestión de posiciones', completado: false },
+        { titulo: 'Logica de ejecucion', completado: false },
+        { titulo: 'Gestion de posiciones', completado: false },
         { titulo: 'Seguridad y controles', completado: false },
       ],
     },
     {
       id: 'mt4_mt5_bridge',
       nombre: 'MT4/MT5 Bridge',
-      descripcion: 'Integración con MetaTrader 4 y 5',
+      descripcion: 'Integracion con MetaTrader 4 y 5',
       progreso: 0,
       estado: 'pendiente',
       prioridad: 'media',
       subtareas: [
-        { titulo: 'Conexión a MT4', completado: false },
-        { titulo: 'Conexión a MT5', completado: false },
-        { titulo: 'Sincronización de órdenes', completado: false },
+        { titulo: 'Conexion a MT4', completado: false },
+        { titulo: 'Conexion a MT5', completado: false },
+        { titulo: 'Sincronizacion de ordenes', completado: false },
       ],
     },
     {
       id: 'gestion_capital',
-      nombre: 'Gestión de Capital',
-      descripcion: 'Sistema de gestión de riesgo y portafolio',
+      nombre: 'Socios Estrategicos CARVIPIX',
+      descripcion: 'Programa institucional de evaluacion y gestion de solicitudes',
       progreso: 20,
       estado: 'pendiente',
       prioridad: 'media',
       subtareas: [
-        { titulo: 'Modelo de riesgo', completado: true },
-        { titulo: 'Asignación de capital', completado: false },
-        { titulo: 'Reporte de portafolio', completado: false },
+        { titulo: 'Formulario de evaluacion', completado: true },
+        { titulo: 'Flujo de revision administrativa', completado: false },
+        { titulo: 'Estados y trazabilidad', completado: false },
       ],
     },
   ];
@@ -204,19 +204,19 @@ export default function AdminProyecto() {
     {
       titulo: 'Cumplimiento Regulatorio',
       severidad: 'alta',
-      descripcion: 'Requiere validación legal antes de operaciones reales',
+      descripcion: 'Requiere validacion legal antes de operaciones reales',
       estado: 'pendiente',
     },
     {
       titulo: 'Seguridad de Datos',
       severidad: 'alta',
-      descripcion: 'Implementar encriptación y auditoría de seguridad',
+      descripcion: 'Implementar encriptacion y auditoria de seguridad',
       estado: 'en-proceso',
     },
     {
       titulo: 'Pruebas de MT4/MT5',
       severidad: 'media',
-      descripcion: 'Compatibilidad y sincronización con brokers',
+      descripcion: 'Compatibilidad y sincronizacion con brokers',
       estado: 'no-iniciado',
     },
     {
@@ -226,9 +226,9 @@ export default function AdminProyecto() {
       estado: 'en-proceso',
     },
     {
-      titulo: 'Gestión de Capital',
+      titulo: 'Socios Estrategicos',
       severidad: 'media',
-      descripcion: 'Modelo de riesgo necesita backtesting extenso',
+      descripcion: 'Validar cobertura operativa completa del flujo de evaluacion',
       estado: 'pendiente',
     },
   ];
@@ -290,7 +290,7 @@ export default function AdminProyecto() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold text-white mb-1">Progreso General del Proyecto</h2>
-            <p className="text-white/60">Estado integral de todas las fases y módulos de CARVIPIX</p>
+            <p className="text-white/60">Estado integral de todas las fases y modulos de CARVIPIX</p>
           </div>
           <div className="text-right">
             <div className="text-5xl font-bold text-[#D4AF37]">{totalProgress}%</div>
@@ -327,7 +327,7 @@ export default function AdminProyecto() {
             <CheckCircle className="w-5 h-5 text-green-400" />
             <span className="font-mono text-xs text-white/80">Build Status</span>
           </div>
-          <p className="text-white font-bold text-lg">✓ Exitoso</p>
+          <p className="text-white font-bold text-lg">Exitoso</p>
           <p className="text-white/60 text-xs mt-1">37/37 rutas precompiladas</p>
         </div>
 
@@ -346,13 +346,13 @@ export default function AdminProyecto() {
             <span className="font-mono text-xs text-white/80">TypeScript</span>
           </div>
           <p className="text-white font-bold text-lg">0 Errores</p>
-          <p className="text-white/60 text-xs mt-1">Compilación limpia</p>
+          <p className="text-white/60 text-xs mt-1">Compilacion limpia</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/5 border border-purple-500/30 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-purple-400" />
-            <span className="font-mono text-xs text-white/80">Versión</span>
+            <span className="font-mono text-xs text-white/80">Version</span>
           </div>
           <p className="text-white font-bold text-lg">0.1.0</p>
           <p className="text-white/60 text-xs mt-1">Fase 1 en desarrollo</p>
@@ -368,14 +368,14 @@ export default function AdminProyecto() {
       >
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-green-400 mb-2">{completedModulos}</p>
-          <p className="text-white/80 text-sm">Módulos Completados</p>
-          <p className="text-white/60 text-xs mt-1">Listos para producción</p>
+          <p className="text-white/80 text-sm">Modulos Completados</p>
+          <p className="text-white/60 text-xs mt-1">Listos para produccion</p>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-yellow-400 mb-2">{revisionModulos}</p>
-          <p className="text-white/80 text-sm">En Revisión</p>
-          <p className="text-white/60 text-xs mt-1">Optimización técnica</p>
+          <p className="text-white/80 text-sm">En Revision</p>
+          <p className="text-white/60 text-xs mt-1">Optimizacion tecnica</p>
         </CARVIPIXCard>
 
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
@@ -387,7 +387,7 @@ export default function AdminProyecto() {
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
           <p className="text-4xl font-bold text-slate-400 mb-2">{pendienteModulos}</p>
           <p className="text-white/80 text-sm">Pendientes</p>
-          <p className="text-white/60 text-xs mt-1">Próximas fases</p>
+          <p className="text-white/60 text-xs mt-1">Proximas fases</p>
         </CARVIPIXCard>
       </motion.div>
 
@@ -398,7 +398,7 @@ export default function AdminProyecto() {
         transition={{ delay: 0.2 }}
         className="space-y-4"
       >
-        <h3 className="text-2xl font-bold text-white">Módulos del Proyecto (12 Total)</h3>
+        <h3 className="text-2xl font-bold text-white">Modulos del Proyecto (12 Total)</h3>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {modulos.map((modulo, index) => (
@@ -520,7 +520,7 @@ export default function AdminProyecto() {
       >
         <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
           <Flag className="w-6 h-6 text-[#D4AF37]" />
-          Próximas Prioridades
+          Proximas Prioridades
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="bg-white/5 rounded p-4 border border-white/10">
@@ -529,9 +529,9 @@ export default function AdminProyecto() {
               <p className="font-bold text-white text-sm">Fase Inmediata (1-2 semanas)</p>
             </div>
             <ul className="text-white/70 text-sm space-y-1">
-              <li>• Pruebas de Trading Engine</li>
-              <li>• Validación de Legal</li>
-              <li>• Optimización de Panel Admin</li>
+              <li>- Pruebas de Trading Engine</li>
+              <li>- Validacion de Legal</li>
+              <li>- Optimizacion de Panel Admin</li>
             </ul>
           </div>
 
@@ -541,9 +541,9 @@ export default function AdminProyecto() {
               <p className="font-bold text-white text-sm">Fase Corto Plazo (3-4 semanas)</p>
             </div>
             <ul className="text-white/70 text-sm space-y-1">
-              <li>• Integrar datos en tiempo real</li>
-              <li>• Desarrollar motor backtesting</li>
-              <li>• Expandir alertas</li>
+              <li>- Integrar datos en tiempo real</li>
+              <li>- Desarrollar motor backtesting</li>
+              <li>- Expandir alertas</li>
             </ul>
           </div>
 
@@ -553,9 +553,9 @@ export default function AdminProyecto() {
               <p className="font-bold text-white text-sm">Fase Mediano Plazo (5-8 semanas)</p>
             </div>
             <ul className="text-white/70 text-sm space-y-1">
-              <li>• AutoBot automático</li>
-              <li>• Bridge MT4/MT5</li>
-              <li>• Gestión de capital avanzada</li>
+              <li>- AutoBot automatico</li>
+              <li>- Bridge MT4/MT5</li>
+              <li>- Socios estrategicos avanzados</li>
             </ul>
           </div>
         </div>

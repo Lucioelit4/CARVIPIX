@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
+
+function isAdminRequest(request: NextRequest): boolean {
+  return isValidAdminSession(request);
+}
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ action: string[] }> }
 ) {
+  if (!isAdminRequest(request)) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const { action: actionArray } = await params;
   const action = actionArray?.[0];
   

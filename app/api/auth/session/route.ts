@@ -5,6 +5,10 @@ import {
   readSessionUser,
 } from "@/app/lib/auth/server";
 
+function normalizeClientPlan(plan: string | undefined): string {
+  return String(plan ?? "free").trim().toLowerCase() === "demo" ? "free" : String(plan ?? "free");
+}
+
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(AUTH_SESSION_COOKIE)?.value;
   if (!token) {
@@ -24,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     authenticated: true,
-    membership,
-    user: { id: user.id, email: user.email, nombre: user.nombre, apellido: user.apellido, plan: user.plan },
+    membership: membership ? { ...membership, plan: normalizeClientPlan(membership.plan) } : membership,
+    user: { id: user.id, email: user.email, nombre: user.nombre, apellido: user.apellido, plan: normalizeClientPlan(user.plan) },
   });
 }

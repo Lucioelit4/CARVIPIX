@@ -172,6 +172,8 @@ export class ShadowFlowV3 {
         this.consecutiveErrors = 0; // Reset on success
       } catch (err) {
         this.consecutiveErrors++;
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error(`[ShadowFlowV3] OpenAI ERROR for ${canonical_symbol}: ${errorMsg}`);
         if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
           this.circuitOpen = true;
           this.circuitResetAt = Date.now() + this.circuitCooldownMs;
@@ -179,7 +181,7 @@ export class ShadowFlowV3 {
         const record = observerV3.recordError({
           analysis_id, signal_id, canonical_symbol,
           expediente, prompt_sent: prompt_text,
-          error_message: err instanceof Error ? err.message : String(err),
+          error_message: errorMsg,
           idempotency_key: idempotency_key.full_key,
           latency_ms: Date.now() - aiStarted,
         });
@@ -409,21 +411,19 @@ export class ShadowFlowV3 {
   }
 
   private buildResponseSchema(): Record<string, unknown> {
+    // Simplified schema that OpenAI accepts
     return {
       type: "object",
-      additionalProperties: false,
-      required: [
-        "master_decision", "analysis_private", "analysis_public",
-        "order_plan", "adaptive_state", "analyst_observations",
-      ],
       properties: {
-        master_decision: { type: "object" },
-        analysis_private: { type: "object" },
-        analysis_public: { type: "object" },
-        order_plan: { type: ["object", "null"] },
-        adaptive_state: { type: "object" },
-        analyst_observations: { type: "object" },
+        master_decision: { type: "object", additionalProperties: false },
+        analysis_private: { type: "object", additionalProperties: false },
+        analysis_public: { type: "object", additionalProperties: false },
+        order_plan: { type: ["object", "null"], additionalProperties: false },
+        adaptive_state: { type: "object", additionalProperties: false },
+        analyst_observations: { type: "object", additionalProperties: false },
       },
+      required: ["master_decision", "analysis_private", "analysis_public", "adaptive_state", "analyst_observations"],
+      additionalProperties: false,
     };
   }
 }

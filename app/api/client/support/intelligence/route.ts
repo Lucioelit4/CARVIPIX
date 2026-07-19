@@ -20,7 +20,7 @@ const handlers = createSupportIntelligenceHandlers({
       };
     }
 
-    const [access, botLicenseResult, capitalResult, userRoleResult] = await Promise.all([
+    const [access, botLicenseResult, strategicPartnerResult, userRoleResult] = await Promise.all([
       resolveUserCommercialAccess(userId),
       backendDatabase.query<{ active: boolean }>(
         `
@@ -35,8 +35,10 @@ const handlers = createSupportIntelligenceHandlers({
       backendDatabase.query<{ status: string }>(
         `
         SELECT status
-        FROM capital_requests
-        WHERE user_id = $1
+        FROM strategic_partner_applications
+        WHERE email = (
+          SELECT email FROM users WHERE id = $1 LIMIT 1
+        )
         ORDER BY created_at DESC
         LIMIT 1
         `,
@@ -56,14 +58,14 @@ const handlers = createSupportIntelligenceHandlers({
     const plan = access.subscriptionPlan;
     const hasMembership = access.membershipActive;
     const hasBot = Boolean(botLicenseResult.rows[0]?.active);
-    const capitalStatus = String(capitalResult.rows[0]?.status ?? "").toLowerCase();
-    const hasCapital = ["accepted", "contract_sent", "contract_signed", "active"].includes(capitalStatus);
+    const strategicPartnerStatus = String(strategicPartnerResult.rows[0]?.status ?? "").toLowerCase();
+    const hasCapital = ["approved_for_contact"].includes(strategicPartnerStatus);
     const roleValue = String(userRoleResult.rows[0]?.user_role ?? authUser?.user_role ?? "CLIENT").toUpperCase();
 
     const segment = roleValue === "ADMIN"
       ? "administrador"
       : hasCapital
-        ? "gestion-capital"
+        ? "socios-estrategicos"
         : hasBot
           ? "usuario-bot"
           : plan === "advanced"

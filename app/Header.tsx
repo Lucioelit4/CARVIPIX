@@ -23,6 +23,7 @@ export default function Header() {
           <Link href="/bot" className="transition hover:text-[#D4AF37]">Bot</Link>
           <Link href="/fondeo" className="transition hover:text-[#D4AF37]">Cuentas Fondeadas</Link>
           <Link href="/resultados" className="transition hover:text-[#D4AF37]">Resultados</Link>
+          <Link href="/trust-center" className="transition hover:text-[#D4AF37]">Transparency & Trust</Link>
         </nav>
 
         <div className="flex items-center gap-3">
