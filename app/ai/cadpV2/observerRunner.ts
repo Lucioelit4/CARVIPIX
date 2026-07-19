@@ -185,6 +185,22 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
     }
   });
 
+  // Kick off the first due analyses immediately so lifecycle/history data appears without waiting for the first ticker interval.
+  (async () => {
+    const due = adaptiveScheduler.getInstrumentsDue(Date.now());
+    for (const { symbol, reason } of due) {
+      if (!shadowFlowInstance || !runnerActive) {
+        break;
+      }
+      await runAnalysisCycle(shadowFlowInstance, symbol, reason);
+    }
+  })().catch((err) => {
+    console.error(
+      "[ObserverRunner] Initial due-analysis execution failed:",
+      err instanceof Error ? err.message : String(err)
+    );
+  });
+
   // ── Paper trade price tracking (every 30 seconds)
   const priceTracker = setInterval(async () => {
     if (!runnerActive) {

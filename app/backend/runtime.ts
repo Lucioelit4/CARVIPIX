@@ -38,6 +38,7 @@ import {
 } from "./services/system-domain-services";
 import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 import { realSignalLifecycleService } from "./services/real-signal-lifecycle-service";
+import { initializeMaestroV3Observer, isMaestroV3ObserverReady } from "@/app/ai/cadpV2/observerInitializer";
 
 function instrumentService<TService extends object>(
   serviceName: string,
@@ -155,6 +156,31 @@ const executionEngine = new CarvipixExecutionEngine(
     transitions: executionEngineTransitions,
   })
 );
+
+let observerInitializationInFlight: Promise<void> | null = null;
+
+function ensureObserverRuntimeInitialization(): void {
+  if (process.env.DISABLE_MAESTRO_V3_OBSERVER === "1") {
+    return;
+  }
+
+  if (isMaestroV3ObserverReady() || observerInitializationInFlight) {
+    return;
+  }
+
+  observerInitializationInFlight = initializeMaestroV3Observer()
+    .catch((error) => {
+      logger.error("observer.init", "Maestro V3 observer auto-initialization failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    })
+    .finally(() => {
+      observerInitializationInFlight = null;
+    });
+}
+
+// Keep Maestro V3 running in production without depending on manual admin triggers.
+ensureObserverRuntimeInitialization();
 
 masterSignalStore.setPublishHandler(async (record) => {
   await realSignalLifecycleService.upsertFromMasterSignalRecord(record);
