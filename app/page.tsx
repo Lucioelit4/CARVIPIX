@@ -160,7 +160,7 @@ export default function Home() {
               </div>
               <div className="rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-4">
                 <p className="text-xs text-[#d4af37]">Plan PRO</p>
-                <p className="mt-1 text-xl font-bold">$150 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
+                <p className="mt-1 text-xl font-bold">$99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
                 <p className="mt-1 text-xs text-[#c7c0b4]">Acceso completo + herramientas</p>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function Home() {
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             { label: "Instrumentos activos", value: "4", sub: "XAUUSD, EURUSD, GBPUSD, BTCUSD" },
-            { label: "Sistema de análisis", value: "V3", sub: "Maestro con IA y multi-temporalidad" },
+            { label: "Sistema de análisis", value: "V3", sub: "Entorno con IA aplicada y multi-temporalidad" },
             { label: "Gestión de riesgo", value: "Siempre", sub: "Stop loss en cada operación" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
@@ -272,7 +272,7 @@ export default function Home() {
             },
             {
               name: "PRO",
-              price: "$150",
+              price: "$99",
               period: "/ mes",
               desc: "Acceso completo a todos los módulos.",
               features: ["Todo BASIC incluido", "Más activos y alertas", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],
