@@ -1,5 +1,7 @@
 import "server-only";
 
+import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
+
 export type EmailTransportMode = "smtp" | "resend" | "noop";
 
 export type EmailNotificationConfig = {
@@ -71,7 +73,7 @@ function resolveTransportMode(value: string | undefined): EmailTransportMode {
 export function getEmailNotificationConfig(): EmailNotificationConfig {
   const config: EmailNotificationConfig = {
     transport: resolveTransportMode(process.env.EMAIL_TRANSPORT),
-    appPublicUrl: process.env.APP_PUBLIC_URL?.trim() || "http://localhost:3000",
+    appPublicUrl: resolvePublicAppUrl(),
     fromName: process.env.EMAIL_FROM_NAME?.trim() || "CARVIPIX",
     resend: {
       apiKey: process.env.RESEND_API_KEY?.trim() || "",

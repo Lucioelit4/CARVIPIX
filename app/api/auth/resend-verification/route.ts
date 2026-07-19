@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailNotificationService } from "@/app/backend/notifications";
 import { checkTokenIssueGuard, createVerificationToken, findUserByEmail } from "@/app/lib/auth/server";
+import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
 
 function buildVerificationUrl(request: NextRequest, verificationToken: string): string {
-  const verificationUrl = new URL("/verificar-correo", request.url);
+  const verificationUrl = new URL("/verificar-correo", resolvePublicAppUrl({ requestUrl: request.url }));
   verificationUrl.searchParams.set("token", verificationToken);
   return verificationUrl.toString();
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import { emailNotificationService } from "@/app/backend/notifications";
+import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
 import { checkTokenIssueGuard, createVerificationToken, findUserByEmail, hashPassword } from "@/app/lib/auth/server";
 import { createUser as createLocalUser, seedDemoStore } from "@/app/backend/core/local-auth-store";
 
@@ -83,7 +84,7 @@ function createUserId(): string {
 }
 
 function buildVerificationUrl(request: NextRequest, verificationToken: string): string {
-  const verificationUrl = new URL("/verificar-correo", request.url);
+  const verificationUrl = new URL("/verificar-correo", resolvePublicAppUrl({ requestUrl: request.url }));
   verificationUrl.searchParams.set("token", verificationToken);
   return verificationUrl.toString();
 }

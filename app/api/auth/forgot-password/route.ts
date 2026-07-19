@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailNotificationService } from "@/app/backend/notifications";
 import { checkTokenIssueGuard, createPasswordResetToken, findUserByEmail } from "@/app/lib/auth/server";
+import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
 
 function buildResetUrl(request: NextRequest, resetToken: string): string {
-  const resetUrl = new URL("/recuperar-password", request.url);
+  const resetUrl = new URL("/recuperar-password", resolvePublicAppUrl({ requestUrl: request.url }));
   resetUrl.searchParams.set("token", resetToken);
   return resetUrl.toString();
 }
