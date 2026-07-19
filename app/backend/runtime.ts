@@ -159,7 +159,20 @@ const executionEngine = new CarvipixExecutionEngine(
 
 let observerInitializationInFlight: Promise<void> | null = null;
 
+function isBuildPhase(): boolean {
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return true;
+  }
+
+  const processArgs = process.argv.join(" ").toLowerCase();
+  return processArgs.includes("next build");
+}
+
 function ensureObserverRuntimeInitialization(): void {
+  if (isBuildPhase()) {
+    return;
+  }
+
   if (process.env.DISABLE_MAESTRO_V3_OBSERVER === "1") {
     return;
   }
