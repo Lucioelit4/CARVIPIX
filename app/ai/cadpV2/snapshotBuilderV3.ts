@@ -39,6 +39,17 @@ import type {
 } from "./typesMaestroV3";
 
 const CADP_VERSION = "maestro-v3" as const;
+const H1_MS = 60 * 60 * 1000;
+const M30_MS = 30 * 60 * 1000;
+const M5_MS = 5 * 60 * 1000;
+
+function isClosedCandle(candle: Candle, timeframeMs: number, nowUtc: number): boolean {
+  if (candle.complete) {
+    return true;
+  }
+
+  return candle.timestamp <= nowUtc - timeframeMs;
+}
 
 function clamp<T>(arr: T[], max: number): T[] {
   return arr.slice(-max);
@@ -155,9 +166,9 @@ export class MaestroV3SnapshotBuilder {
     const m30Candles = clamp(m30Raw, 32);
     const m5Candles = clamp(m5Raw, 48);
 
-    const h1Closed = h1Candles.filter(c => c.complete);
-    const m30Closed = m30Candles.filter(c => c.complete);
-    const m5Closed = m5Candles.filter(c => c.complete);
+    const h1Closed = h1Candles.filter(c => isClosedCandle(c, H1_MS, nowUtc));
+    const m30Closed = m30Candles.filter(c => isClosedCandle(c, M30_MS, nowUtc));
+    const m5Closed = m5Candles.filter(c => isClosedCandle(c, M5_MS, nowUtc));
 
     const h1Open = [...h1Candles].reverse().find(c => !c.complete) ?? null;
     const m30Open = [...m30Candles].reverse().find(c => !c.complete) ?? null;
