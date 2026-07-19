@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailNotificationService } from "@/app/backend/notifications";
 import { checkTokenIssueGuard, createVerificationToken, findUserByEmail } from "@/app/lib/auth/server";
-import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
-
-function buildVerificationUrl(request: NextRequest, verificationToken: string): string {
-  const verificationUrl = new URL("/verificar-correo", resolvePublicAppUrl({ requestUrl: request.url }));
-  verificationUrl.searchParams.set("token", verificationToken);
-  return verificationUrl.toString();
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +29,6 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await createVerificationToken(user.id);
-    const verificationUrl = buildVerificationUrl(request, token);
-
     try {
       const result = await emailNotificationService.sendWelcomeRegistration({
         recipientEmail: user.email,
@@ -62,7 +53,6 @@ export async function POST(request: NextRequest) {
       {
         ok: true,
         message: "Si la cuenta existe y no esta verificada, enviaremos instrucciones.",
-        verificationUrl,
       },
       { status: 200 }
     );

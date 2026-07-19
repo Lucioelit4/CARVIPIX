@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { emailNotificationService } from "@/app/backend/notifications";
 import { checkTokenIssueGuard, createPasswordResetToken, findUserByEmail } from "@/app/lib/auth/server";
-import { resolvePublicAppUrl } from "@/app/lib/url/public-app-url";
-
-function buildResetUrl(request: NextRequest, resetToken: string): string {
-  const resetUrl = new URL("/recuperar-password", resolvePublicAppUrl({ requestUrl: request.url }));
-  resetUrl.searchParams.set("token", resetToken);
-  return resetUrl.toString();
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,8 +29,6 @@ export async function POST(request: NextRequest) {
     }
 
     const resetToken = await createPasswordResetToken(user.id);
-    const resetUrl = buildResetUrl(request, resetToken);
-
     try {
       const result = await emailNotificationService.sendPasswordReset({
         recipientEmail: user.email,
@@ -62,7 +53,6 @@ export async function POST(request: NextRequest) {
       {
         ok: true,
         message: "Si el correo existe, enviaremos instrucciones.",
-        resetUrl,
       },
       { status: 200 }
     );

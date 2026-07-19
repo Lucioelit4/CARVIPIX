@@ -14,7 +14,6 @@ export default function RecuperarPasswordPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [resetUrl, setResetUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
@@ -30,7 +29,7 @@ export default function RecuperarPasswordPage() {
         body: JSON.stringify(isResetMode ? { token, password } : { email }),
       });
 
-      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string; resetUrl?: string };
+      const data = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
 
       if (!response.ok) {
         setError(data.error || 'No se pudo procesar la solicitud.');
@@ -42,7 +41,6 @@ export default function RecuperarPasswordPage() {
         setPassword('');
       } else {
         setMessage(data.message || 'Solicitud procesada.');
-        setResetUrl(data.resetUrl || '');
       }
     } catch {
       setError('No se pudo procesar la solicitud.');
@@ -64,11 +62,6 @@ export default function RecuperarPasswordPage() {
               <input type="email" className="w-full rounded-lg border border-white/10 bg-[#101010] px-3 py-2 text-sm" placeholder="Correo" value={email} onChange={(e) => setEmail(e.target.value)} required />
             )}
             {message ? <p className="text-xs text-emerald-400">{message}</p> : null}
-            {resetUrl ? (
-              <p className="text-xs text-amber-300">
-                Enlace de recuperación disponible: <a href={resetUrl} className="underline">abrir recuperación</a>
-              </p>
-            ) : null}
             {error ? <p className="text-xs text-red-400">{error}</p> : null}
             <CARVIPIXButton type="submit" variant="premium" fullWidth>{loading ? 'Procesando...' : (isResetMode ? 'Actualizar contraseña' : 'Enviar enlace')}</CARVIPIXButton>
           </form>

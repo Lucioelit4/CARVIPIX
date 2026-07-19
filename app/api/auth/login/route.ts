@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rateLimiter } from "@/app/backend";
+import { InMemoryRateLimiter } from "@/app/backend/core/rate-limiter";
 import {
   AUTH_ROLE_COOKIE,
   AUTH_SESSION_COOKIE,
@@ -9,6 +9,8 @@ import {
   findMembershipByUserId,
   verifyPassword,
 } from "@/app/lib/auth/server";
+
+const loginRateLimiterStore = new InMemoryRateLimiter();
 
 function setMembershipCookies(response: NextResponse, membership: { active: boolean; estado: string; plan: string; fechaFin?: Date }) {
   const expiresAt = membership.fechaFin && membership.active ? membership.fechaFin : new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -56,7 +58,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 400 });
     }
 
-    const loginRateLimit = rateLimiter.check({
+    const loginRateLimit = loginRateLimiterStore.check({
       scope: "auth.login",
       key: `${getClientIp(request)}:${email}`,
       limit: 5,
@@ -117,7 +119,7 @@ export async function POST(request: NextRequest) {
     });
 
     setMembershipCookies(response, membership);
-    rateLimiter.reset("auth.login", `${getClientIp(request)}:${email}`);
+    loginRateLimiterStore.reset("auth.login", `${getClientIp(request)}:${email}`);
 
     return response;
   } catch {

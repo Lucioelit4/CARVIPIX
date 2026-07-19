@@ -15,7 +15,6 @@ export default function RegistroPage() {
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [verificationUrl, setVerificationUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (event: FormEvent) => {
@@ -44,7 +43,6 @@ export default function RegistroPage() {
         error?: string;
         errors?: Record<string, string>;
         warning?: string;
-        verificationUrl?: string;
       };
 
       if (!response.ok) {
@@ -54,7 +52,6 @@ export default function RegistroPage() {
       }
 
       setMessage(data.warning || 'Registro completado correctamente. Revisa tu correo para verificar tu cuenta y continuar.');
-      setVerificationUrl(data.verificationUrl || '');
       setNombre('');
       setApellido('');
       setCorreo('');
@@ -89,11 +86,6 @@ export default function RegistroPage() {
               Acepto términos y condiciones
             </label>
             {message ? <p className="text-xs text-emerald-400">{message}</p> : null}
-            {verificationUrl ? (
-              <p className="text-xs text-amber-300">
-                Enlace de verificación disponible: <a href={verificationUrl} className="underline">abrir verificación</a>
-              </p>
-            ) : null}
             {error ? <p className="text-xs text-red-400">{error}</p> : null}
             <CARVIPIXButton type="submit" variant="premium" fullWidth>{loading ? 'Registrando...' : 'Crear cuenta'}</CARVIPIXButton>
           </form>
