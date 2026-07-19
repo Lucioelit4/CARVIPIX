@@ -457,6 +457,11 @@ async function callPayPal<T>(path: string, init: RequestInit): Promise<PayPalApi
   return { ok: true, status: response.status, data };
 }
 
+function isPayPalMissingResourceError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return /specified resource does not exist/i.test(message);
+}
+
 async function findCatalogCache(localProductId: string): Promise<PayPalCacheRow | null> {
   await ensurePayPalTables();
   const result = await backendDatabase.query<PayPalCacheRow>(
@@ -969,8 +974,11 @@ export function getPayPalStatus() {
   };
 }
 
-async function ensureCatalogProductForOffering(offering: PayPalOffering): Promise<{ paypalProductId: string; created: boolean }> {
-  const cache = await findCatalogCache(offering.id);
+async function ensureCatalogProductForOffering(
+  offering: PayPalOffering,
+  options?: { ignoreCache?: boolean }
+): Promise<{ paypalProductId: string; created: boolean }> {
+  const cache = options?.ignoreCache ? null : await findCatalogCache(offering.id);
   if (cache?.paypal_product_id) {
     return { paypalProductId: cache.paypal_product_id, created: false };
   }
@@ -1051,29 +1059,39 @@ export async function ensureSubscriptionPlanForOffering(productIdRaw: string): P
 
   const cache = await findCatalogCache(offering.id);
   if (cache?.paypal_product_id && cache.paypal_plan_id) {
-    await upsertPayPalProductCatalog({
-      internalCode: offering.id,
-      paypalProductId: cache.paypal_product_id,
-      name: offering.name,
-      status: "ACTIVE",
-    });
-    await upsertPayPalPlanCatalog({
-      internalCode: offering.id,
-      paypalPlanId: cache.paypal_plan_id,
-      paypalProductId: cache.paypal_product_id,
-      name: `${offering.name} mensual`,
-      price: offering.amount,
-      currency: offering.currency,
-      billingInterval: "MONTH:1",
-      status: "ACTIVE",
-    });
-    return {
-      offering,
-      paypalProductId: cache.paypal_product_id,
-      paypalPlanId: cache.paypal_plan_id,
-    };
+    try {
+      await callPayPal(`/v1/catalogs/products/${encodeURIComponent(cache.paypal_product_id)}`, { method: "GET" });
+      await callPayPal(`/v1/billing/plans/${encodeURIComponent(cache.paypal_plan_id)}`, { method: "GET" });
+
+      await upsertPayPalProductCatalog({
+        internalCode: offering.id,
+        paypalProductId: cache.paypal_product_id,
+        name: offering.name,
+        status: "ACTIVE",
+      });
+      await upsertPayPalPlanCatalog({
+        internalCode: offering.id,
+        paypalPlanId: cache.paypal_plan_id,
+        paypalProductId: cache.paypal_product_id,
+        name: `${offering.name} mensual`,
+        price: offering.amount,
+        currency: offering.currency,
+        billingInterval: "MONTH:1",
+        status: "ACTIVE",
+      });
+      return {
+        offering,
+        paypalProductId: cache.paypal_product_id,
+        paypalPlanId: cache.paypal_plan_id,
+      };
+    } catch (error) {
+      if (!isPayPalMissingResourceError(error)) {
+        throw error;
+      }
+    }
   }
-  const { paypalProductId } = await ensureCatalogProductForOffering(offering);
+
+  const { paypalProductId } = await ensureCatalogProductForOffering(offering, { ignoreCache: true });
 
   const planPayload = {
     product_id: paypalProductId,
