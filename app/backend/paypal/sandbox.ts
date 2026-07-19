@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { backendDatabase } from "@/app/backend/core/database";
 import { emailNotificationService } from "@/app/backend/notifications";
+import { getRuntimeStage } from "@/app/backend/core/config";
 import {
   getCommercialProductByCheckoutId,
   isBotLicenseCheckoutProduct,
@@ -118,7 +119,7 @@ const PAYPAL_OFFERINGS_LIST: PayPalOffering[] = [
     name: "CARVIPIX Pro",
     description: "Suscripcion mensual CARVIPIX Pro.",
     type: "subscription",
-    amount: 150.0,
+    amount: 99.0,
     currency: "USD",
   },
   {
@@ -145,7 +146,9 @@ function addDays(date: Date, days: number): Date {
 }
 
 function resolvePayPalMode(): PayPalMode {
-  const mode = String(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || "sandbox").trim().toLowerCase();
+  const runtimeStage = getRuntimeStage();
+  const defaultMode = runtimeStage === "production" ? "production" : "sandbox";
+  const mode = String(process.env.PAYPAL_MODE || process.env.PAYPAL_ENV || defaultMode).trim().toLowerCase();
   return mode === "production" || mode === "live" ? "production" : "sandbox";
 }
 

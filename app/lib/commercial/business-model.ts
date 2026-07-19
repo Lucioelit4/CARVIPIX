@@ -85,9 +85,9 @@ export const COMMERCIAL_PLAN_ENTITLEMENTS: Record<CommercialSubscriptionPlan, Co
   },
 };
 
-const PRO_PRICE_CANDIDATES = [150] as const;
+const PRO_PRICE_CANDIDATES = [99] as const;
 
-const PRO_SELECTED_PRICE = 150;
+const PRO_SELECTED_PRICE = 99;
 
 export const PRO_PRICE_DECISION = {
   selectedPriceUsd: PRO_SELECTED_PRICE,

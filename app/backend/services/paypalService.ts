@@ -6,6 +6,7 @@
 import { backendDatabase } from "@/app/backend/core/database";
 import { sendLicenseEmail } from "./emailService";
 import { randomUUID } from "crypto";
+import { getRuntimeStage } from "@/app/backend/core/config";
 
 class PayPalService {
   private clientId: string;
@@ -17,7 +18,9 @@ class PayPalService {
   constructor() {
     this.clientId = process.env.PAYPAL_CLIENT_ID || "";
     this.clientSecret = process.env.PAYPAL_CLIENT_SECRET || "";
-    this.baseUrl = process.env.PAYPAL_ENV === "production"
+    const runtimeStage = getRuntimeStage();
+    const paypalMode = String(process.env.PAYPAL_ENV || process.env.PAYPAL_MODE || (runtimeStage === "production" ? "production" : "sandbox")).toLowerCase();
+    this.baseUrl = paypalMode === "production" || paypalMode === "live"
       ? "https://api-m.paypal.com"
       : "https://api-m.sandbox.paypal.com";
   }
@@ -54,7 +57,7 @@ class PayPalService {
 
     const pricing = {
       BASIC: { price: "19.99", description: "CARVIPIX Plan BASIC - 1 mes", installations: 1 },
-      PRO: { price: "150", description: "CARVIPIX Plan PRO - 1 mes", installations: 5 },
+      PRO: { price: "99", description: "CARVIPIX Plan PRO - 1 mes", installations: 5 },
       ENTERPRISE: { price: "999", description: "CARVIPIX Bot EA MT5 - Licencia unica", installations: 999 },
     };
 
