@@ -180,7 +180,7 @@ export default function Home() {
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             { label: "Instrumentos activos", value: "4", sub: "XAUUSD, EURUSD, GBPUSD, BTCUSD" },
-            { label: "Sistema de análisis", value: "V3", sub: "Entorno con IA aplicada y multi-temporalidad" },
+            { label: "Sistema de análisis", value: "V3", sub: "Analisis estructural y multi-temporalidad" },
             { label: "Gestión de riesgo", value: "Siempre", sub: "Stop loss en cada operación" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
