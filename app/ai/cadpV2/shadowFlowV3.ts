@@ -306,7 +306,6 @@ export class ShadowFlowV3 {
             dispatchResult.output.telegram,
             canonical_symbol,
             response.master_decision.decision,
-            dispatchResult.output.alerta_premium,
           );
           
           if (!telegramResult.success) {
