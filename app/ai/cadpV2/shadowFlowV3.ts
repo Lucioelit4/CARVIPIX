@@ -306,6 +306,7 @@ export class ShadowFlowV3 {
             dispatchResult.output.telegram,
             canonical_symbol,
             response.master_decision.decision,
+            dispatchResult.output.alerta_premium,
           );
           
           if (!telegramResult.success) {
@@ -422,7 +423,7 @@ export class ShadowFlowV3 {
         adaptive_state: { type: "object", additionalProperties: false },
         analyst_observations: { type: "object", additionalProperties: false },
       },
-      required: ["master_decision", "analysis_private", "analysis_public", "adaptive_state", "analyst_observations"],
+      required: ["master_decision", "analysis_private", "analysis_public", "order_plan", "adaptive_state", "analyst_observations"],
       additionalProperties: false,
     };
   }
