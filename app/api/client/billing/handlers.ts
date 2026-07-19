@@ -186,6 +186,7 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
     fecha_fin: Date | null;
     renovacion_automatica: boolean | null;
     payment_subscription_id: string | null;
+    paypal_subscription_id: string | null;
     subscription_status: string | null;
     next_billing_date: Date | null;
     subscription_updated_at: Date | null;
@@ -199,13 +200,14 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
       m.fecha_fin,
       m.renovacion_automatica,
       m.payment_subscription_id,
+      ps.paypal_subscription_id,
       ps.status AS subscription_status,
       ps.next_billing_date,
       ps.updated_at AS subscription_updated_at
     FROM users u
     LEFT JOIN memberships m ON m.user_id = u.id
     LEFT JOIN LATERAL (
-      SELECT status, next_billing_date, updated_at
+      SELECT paypal_subscription_id, status, next_billing_date, updated_at
       FROM paypal_subscriptions
       WHERE user_id = u.id
       ORDER BY updated_at DESC
@@ -428,7 +430,7 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
         `Bots permitidos: ${access.entitlements.maxBots}`,
         `Historial operativo: ${access.entitlements.historyLimit}`,
       ],
-      subscriptionId: membershipRow?.payment_subscription_id ?? null,
+      subscriptionId: membershipRow?.payment_subscription_id ?? membershipRow?.paypal_subscription_id ?? null,
     },
     paymentHistory: dedupedPayments,
     billingProfile: fiscal,

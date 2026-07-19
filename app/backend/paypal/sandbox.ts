@@ -852,6 +852,7 @@ async function resolveRecipientName(userId: string, fallbackEmail: string): Prom
 async function activateAccessByProduct(input: {
   userId: string;
   productId: string;
+  subscriptionId?: string;
   nextBillingTime?: Date | null;
   now: Date;
 }): Promise<PayPalActivationResult> {
@@ -862,13 +863,14 @@ async function activateAccessByProduct(input: {
   if (product?.planCode === "basic") {
     await backendDatabase.query(
       `
-      INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source)
-      VALUES ($1, 'basic', 'activo', $2, $3, true, $4)
+      INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source, payment_subscription_id)
+      VALUES ($1, 'basic', 'activo', $2, $3, true, $4, $5)
       ON CONFLICT (user_id) DO UPDATE
       SET plan = 'basic', estado = 'activo', fecha_inicio = COALESCE(memberships.fecha_inicio, EXCLUDED.fecha_inicio),
-          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source
+          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source,
+          payment_subscription_id = COALESCE(EXCLUDED.payment_subscription_id, memberships.payment_subscription_id)
       `,
-      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source]
+      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source, input.subscriptionId ?? null]
     );
     return { fulfillment: "membership" };
   }
@@ -876,13 +878,14 @@ async function activateAccessByProduct(input: {
   if (product?.planCode === "pro") {
     await backendDatabase.query(
       `
-      INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source)
-      VALUES ($1, 'advanced', 'activo', $2, $3, true, $4)
+      INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source, payment_subscription_id)
+      VALUES ($1, 'advanced', 'activo', $2, $3, true, $4, $5)
       ON CONFLICT (user_id) DO UPDATE
       SET plan = 'advanced', estado = 'activo', fecha_inicio = COALESCE(memberships.fecha_inicio, EXCLUDED.fecha_inicio),
-          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source
+          fecha_fin = EXCLUDED.fecha_fin, renovacion_automatica = true, source = EXCLUDED.source,
+          payment_subscription_id = COALESCE(EXCLUDED.payment_subscription_id, memberships.payment_subscription_id)
       `,
-      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source]
+      [input.userId, input.now, input.nextBillingTime ?? addDays(input.now, 30), source, input.subscriptionId ?? null]
     );
     return { fulfillment: "membership" };
   }
@@ -1418,6 +1421,20 @@ export async function createPayPalSubscription(input: {
     startDate: new Date(),
   });
 
+  const pendingPlan = offering.id === "plan-pro-monthly" ? "advanced" : "basic";
+  await backendDatabase.query(
+    `
+    INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source, payment_subscription_id)
+    VALUES ($1, $2, 'inactivo', NOW(), NULL, true, $3, $4)
+    ON CONFLICT (user_id) DO UPDATE
+    SET payment_subscription_id = EXCLUDED.payment_subscription_id,
+        renovacion_automatica = true,
+        source = EXCLUDED.source,
+        updated_at = NOW()
+    `,
+    [input.user.id, pendingPlan, resolvePayPalEnvironmentSource(), response.data.id]
+  );
+
   return {
     subscriptionId: response.data.id,
     status: response.data.status,
@@ -1491,6 +1508,7 @@ export async function getPayPalSubscriptionStatus(input: {
     await activateAccessByProduct({
       userId: existing.user_id,
       productId: existing.product_id,
+      subscriptionId: response.data.id,
       nextBillingTime,
       now: new Date(),
     });
@@ -1757,6 +1775,7 @@ export async function verifyAndProcessPayPalWebhook(input: {
         const activation = await activateAccessByProduct({
           userId: record.user_id,
           productId: record.product_id,
+          subscriptionId,
           nextBillingTime,
           now,
         });
