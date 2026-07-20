@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import type { CadpDecisionV3, PayloadAlertaPremium, PayloadTelegram } from "./typesMaestroV3";
 
 type ChannelKind = "alerts" | "notes";
-type CommunicationCategory = "OFFICIAL_ALERT" | "NO_TRADE_NOTE" | "WATCH_NOTE";
+type CommunicationCategory = "OFFICIAL_ALERT" | "GLOBAL_SUMMARY";
 const MAX_CONTEXT_MESSAGES_PER_DAY = 3;
 
 interface CommunicationEventMemory {
@@ -197,18 +197,22 @@ export class CommunicationEngine {
     communityContext?: CommunityContextSnapshot;
   }): CommunicationPlan {
     const normalizedSummary = `${normalizeText(input.payload.public_summary)}|${normalizeText(input.payload.public_warning)}|${input.payload.market_status}|${input.payload.action_taken}`;
-    const summaryBase = input.decision === "NO_TRADE"
-      ? `GLOBAL|${input.decision}|${normalizedSummary}`
-      : `${input.symbol}|${input.decision}|${normalizedSummary}|${input.payload.recheck_minutes ?? "na"}`;
+    const premiumPayload = input.premiumPayload;
+    const isOfficialAlert = !!premiumPayload
+      && (premiumPayload.action === "BUY" || premiumPayload.action === "SELL")
+      && premiumPayload.entry !== null;
+    const summaryBase = isOfficialAlert
+      ? `${input.symbol}|${input.decision}|official|${normalizedSummary}`
+      : `GLOBAL|WAITING_MARKET|${normalizedSummary}`;
     const summaryHash = hashText(summaryBase);
 
-    if (input.premiumPayload?.action && (input.premiumPayload.action === "BUY" || input.premiumPayload.action === "SELL") && input.premiumPayload.entry !== null) {
+    if (isOfficialAlert) {
       return {
         shouldSend: true,
         channel: "alerts",
         category: "OFFICIAL_ALERT",
-        reason: "official-alert-priority",
-        message: this.buildOfficialAlertMessage(input.symbol, input.premiumPayload),
+        reason: "ALERTA",
+        message: this.buildOfficialAlertMessage(input.symbol, premiumPayload),
         fingerprint: `${input.symbol}:${input.decision}:official:${summaryHash}`,
         summaryHash,
         symbol: input.symbol,
@@ -216,29 +220,26 @@ export class CommunicationEngine {
       };
     }
 
-    const category = input.decision === "NO_TRADE" ? "NO_TRADE_NOTE" : "WATCH_NOTE";
+    const category: CommunicationCategory = "GLOBAL_SUMMARY";
     const memory = this.store.load();
-    const contextSentToday = memory.events.filter((event) => event.category !== "OFFICIAL_ALERT").length;
+    const contextSentToday = memory.events.filter((event) => event.category === "GLOBAL_SUMMARY").length;
     if (contextSentToday >= MAX_CONTEXT_MESSAGES_PER_DAY) {
       return {
         shouldSend: false,
         channel: "notes",
         category,
-        reason: "daily-context-limit-reached",
+        reason: "SILENCIO",
         fingerprint: `${category}:${summaryHash}`,
         summaryHash,
-        symbol: input.decision === "NO_TRADE" ? "GLOBAL" : input.symbol,
+        symbol: "GLOBAL",
         decision: input.decision,
       };
     }
 
-    const fingerprint = input.decision === "NO_TRADE"
-      ? `GLOBAL:${input.decision}:${category}:${summaryHash}`
-      : `${input.symbol}:${input.decision}:${category}:${summaryHash}`;
-    const recentForSymbol = memory.events.filter((event) => event.symbol === input.symbol).slice(-8);
+    const fingerprint = `GLOBAL:WAITING_MARKET:${summaryHash}`;
     const allRecent = memory.events.slice(-30);
     const sameFingerprint = allRecent.find((event) => event.fingerprint === fingerprint);
-    const lastSameCategory = [...allRecent].reverse().find((event) => event.category === category);
+    const lastGlobal = [...allRecent].reverse().find((event) => event.category === "GLOBAL_SUMMARY");
     const nowMs = Date.now();
     const tone = this.deriveTone(input.communityContext, allRecent, nowMs);
 
@@ -247,20 +248,7 @@ export class CommunicationEngine {
         shouldSend: false,
         channel: "notes",
         category,
-        reason: "duplicate-message-suppressed",
-        fingerprint,
-        summaryHash,
-        symbol: input.symbol,
-        decision: input.decision,
-      };
-    }
-
-    if (category === "NO_TRADE_NOTE" && lastSameCategory && nowMs - lastSameCategory.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)) {
-      return {
-        shouldSend: false,
-        channel: "notes",
-        category,
-        reason: "global-no-trade-suppressed",
+        reason: "SILENCIO",
         fingerprint,
         summaryHash,
         symbol: "GLOBAL",
@@ -268,19 +256,30 @@ export class CommunicationEngine {
       };
     }
 
-    const message = category === "NO_TRADE_NOTE"
-      ? this.buildNoTradeNote(input.payload, summaryHash, tone)
-      : this.buildWatchNote(input.symbol, input.payload, input.decision, summaryHash, tone);
+    if (lastGlobal && nowMs - lastGlobal.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)) {
+      return {
+        shouldSend: false,
+        channel: "notes",
+        category,
+        reason: "SILENCIO",
+        fingerprint,
+        summaryHash,
+        symbol: "GLOBAL",
+        decision: input.decision,
+      };
+    }
+
+    const message = this.buildGlobalSummary(input.payload, summaryHash, tone);
 
     return {
       shouldSend: true,
       channel: "notes",
       category,
-      reason: "contextual-note-allowed",
+      reason: "RESUMEN_GLOBAL",
       message,
       fingerprint,
       summaryHash,
-      symbol: input.decision === "NO_TRADE" ? "GLOBAL" : input.symbol,
+      symbol: "GLOBAL",
       decision: input.decision,
     };
   }
@@ -311,10 +310,10 @@ export class CommunicationEngine {
 
   private getCooldownMs(category: CommunicationCategory, recheckMinutes: number | null | undefined): number {
     const reviewMs = Math.max(5, recheckMinutes ?? 15) * 60_000;
-    if (category === "NO_TRADE_NOTE") {
-      return Math.max(reviewMs, 4 * 60 * 60_000);
+    if (category === "GLOBAL_SUMMARY") {
+      return Math.max(reviewMs, 2 * 60 * 60_000);
     }
-    return Math.max(reviewMs, 60 * 60_000);
+    return reviewMs;
   }
 
   private deriveTone(
@@ -356,69 +355,16 @@ export class CommunicationEngine {
     return message;
   }
 
-  private buildNoTradeNote(payload: PayloadTelegram, seed: string, tone: CommunityTone): string {
-    const openersByTone: Record<CommunityTone, string[]> = {
-      CALM: [
-        "🟡 Mercado en espera",
-        "🟡 Seguimos en espera disciplinada",
-      ],
-      MEASURED_POSITIVE: [
-        "🟡 Mercado en espera",
-        "🟡 Seguimos selectivos",
-      ],
-      PATIENT: [
-        "🟡 Mercado en espera",
-        "🟡 Seguimos monitoreando con paciencia",
-      ],
-      NEUTRAL: [
-        "🟡 Mercado en espera",
-        "🟡 Sin entrada por ahora",
-      ],
+  private buildGlobalSummary(payload: PayloadTelegram, seed: string, tone: CommunityTone): string {
+    const titles: Record<CommunityTone, string[]> = {
+      CALM: ["🟡 Mercado en espera", "🟡 Seguimos en espera disciplinada"],
+      MEASURED_POSITIVE: ["🟡 Mercado en espera", "🟡 Seguimos selectivos"],
+      PATIENT: ["🟡 Mercado en espera", "🟡 Seguimos monitoreando con paciencia"],
+      NEUTRAL: ["🟡 Mercado en espera", "🟡 Sin entrada por ahora"],
     };
-    const opener = pickVariant(`${seed}:opener:${tone}`, openersByTone[tone]);
-    const globalContext = this.buildGlobalNoTradeContext(payload, tone, seed);
-
-    return [opener, "", globalContext].join("\n");
-  }
-
-  private buildWatchNote(
-    symbol: string,
-    payload: PayloadTelegram,
-    decision: CadpDecisionV3,
-    seed: string,
-    tone: CommunityTone,
-  ): string {
-    const headlinesByTone: Record<CommunityTone, string[]> = {
-      CALM: [
-        "🧭 Seguimiento sereno",
-        "👀 Vigilancia disciplinada",
-        "📍 Esperando confirmación real",
-      ],
-      MEASURED_POSITIVE: [
-        "📍 Seguimiento con calma",
-        "👀 Mercado en vigilancia profesional",
-        "🧭 Cuidando el siguiente contexto",
-      ],
-      PATIENT: [
-        "👀 Seguimiento activo",
-        "🧭 Mercado en observación",
-        "📍 Escenario en vigilancia",
-      ],
-      NEUTRAL: [
-        "👀 Seguimiento activo",
-        "📍 Escenario en vigilancia",
-        "🧭 Mercado en observación",
-      ],
-    };
-    const context = truncate(payload.public_summary || payload.public_warning || "Seguimiento profesional sin entrada inmediata.", 110);
-    const action = this.buildActionLine(decision, tone);
-
-    return [
-      `${pickVariant(`${seed}:headline:${tone}`, headlinesByTone[tone])} ${symbol}`,
-      "",
-      context,
-      action,
-    ].join("\n");
+    const title = pickVariant(`${seed}:title:${tone}`, titles[tone]);
+    const body = this.buildGlobalNoTradeContext(payload, tone, seed);
+    return `${title}\n\n${body}`;
   }
 
   private buildGlobalNoTradeContext(payload: PayloadTelegram, tone: CommunityTone, seed: string): string {
@@ -449,20 +395,6 @@ export class CommunicationEngine {
     }
 
     return `${base} Contexto actual: ${fromPayload}.`;
-  }
-
-  private buildActionLine(decision: CadpDecisionV3, tone: CommunityTone): string {
-    if (decision === "WAIT") {
-      if (tone === "CALM") return "Esperar confirmación también protege el plan.";
-      if (tone === "MEASURED_POSITIVE") return "Seguimos selectivos para conservar la ventaja del día.";
-      if (tone === "PATIENT") return "Sin prisa: esperamos validación real antes de actuar.";
-      return "Esperar confirmación.";
-    }
-
-    if (tone === "CALM") return "Aún no hay condiciones para actuar con disciplina.";
-    if (tone === "MEASURED_POSITIVE") return "Preferimos conservar calidad antes que acelerar.";
-    if (tone === "PATIENT") return "La paciencia sigue siendo la mejor decisión ahora mismo.";
-    return "Aún falta confirmación operativa.";
   }
 }
 
