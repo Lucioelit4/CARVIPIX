@@ -10,6 +10,8 @@ import type { PayloadTelegram, CadpDecisionV3, PayloadAlertaPremium } from "./ty
 import { communicationEngine } from "./communicationEngine";
 import { paperTradeMonitor } from "./paperTradeMonitor";
 
+type TelegramTargetChannel = "alerts" | "notes";
+
 export interface TelegramNotificationResult {
   success: boolean;
   message_id?: string;
@@ -144,7 +146,7 @@ export class TelegramNotificationService {
     }
   }
 
-  private resolveTargetChannel(channel: ChannelKind | CadpDecisionV3): string {
+  private resolveTargetChannel(channel: TelegramTargetChannel | CadpDecisionV3): string {
     if (channel === "alerts" || channel === "ENTER_BUY" || channel === "ENTER_SELL") {
       return this.freeAlertsChannelId;
     }
