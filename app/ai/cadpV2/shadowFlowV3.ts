@@ -307,10 +307,14 @@ export class ShadowFlowV3 {
             canonical_symbol,
             response.master_decision.decision,
           );
-          
+
           if (!telegramResult.success) {
             console.warn(
               `[ShadowFlow] Telegram send failed for ${canonical_symbol}: ${telegramResult.error}`,
+            );
+          } else if (telegramResult.skipped) {
+            console.log(
+              `[CommunicationEngine] Telegram skipped for ${canonical_symbol}`,
             );
           } else {
             console.log(
