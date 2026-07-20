@@ -1,37 +1,102 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { CertificationLogEntry, CertificationSummary } from "@/app/lib/types/certificationTypes";
 import crypto from "crypto";
 
-const CERT_LOG_DIR = path.join(process.cwd(), "data", "certification");
-const CERT_LOG_FILE = path.join(CERT_LOG_DIR, "logs.json");
+const PRIMARY_CERT_LOG_DIR = path.join(process.cwd(), "data", "certification");
+const FALLBACK_CERT_LOG_DIR = path.join(os.tmpdir(), "carvipix", "certification");
+
+let certLogDir = PRIMARY_CERT_LOG_DIR;
+let certLogFile = path.join(certLogDir, "logs.json");
+let diskStorageUnavailable = false;
+let fallbackStorageSelected = false;
+let warnedMemoryFallback = false;
+let inMemoryLogs: CertificationLogEntry[] = [];
 
 // Asegurar que existe el directorio
-function ensureDirectory() {
-  if (!fs.existsSync(CERT_LOG_DIR)) {
-    fs.mkdirSync(CERT_LOG_DIR, { recursive: true });
+function selectStorageDirectory(dir: string): boolean {
+  try {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    const probeFile = path.join(dir, ".write-test");
+    fs.writeFileSync(probeFile, "ok", "utf-8");
+    fs.unlinkSync(probeFile);
+
+    certLogDir = dir;
+    certLogFile = path.join(dir, "logs.json");
+    diskStorageUnavailable = false;
+    return true;
+  } catch {
+    return false;
   }
+}
+
+function ensureDirectory(): boolean {
+  if (diskStorageUnavailable) {
+    return false;
+  }
+
+  if (selectStorageDirectory(PRIMARY_CERT_LOG_DIR)) {
+    return true;
+  }
+
+  if (selectStorageDirectory(FALLBACK_CERT_LOG_DIR)) {
+    if (!fallbackStorageSelected) {
+      fallbackStorageSelected = true;
+      console.warn(`[CertificationLog] Primary storage unavailable. Falling back to ${FALLBACK_CERT_LOG_DIR}.`);
+    }
+    return true;
+  }
+
+  diskStorageUnavailable = true;
+  if (!warnedMemoryFallback) {
+    warnedMemoryFallback = true;
+    console.warn("[CertificationLog] Disk storage unavailable. Using in-memory certification logs.");
+  }
+
+  return false;
 }
 
 // Cargar todos los logs
 export function loadCertificationLogs(): CertificationLogEntry[] {
-  ensureDirectory();
-  if (!fs.existsSync(CERT_LOG_FILE)) {
-    return [];
+  if (!ensureDirectory()) {
+    return [...inMemoryLogs];
   }
+
+  if (!fs.existsSync(certLogFile)) {
+    return [...inMemoryLogs];
+  }
+
   try {
-    const data = fs.readFileSync(CERT_LOG_FILE, "utf-8");
+    const data = fs.readFileSync(certLogFile, "utf-8");
     return JSON.parse(data);
   } catch (error) {
     console.error("[CertificationLog] Error loading logs:", error);
-    return [];
+    return [...inMemoryLogs];
   }
 }
 
 // Guardar logs
 function saveCertificationLogs(logs: CertificationLogEntry[]): void {
-  ensureDirectory();
-  fs.writeFileSync(CERT_LOG_FILE, JSON.stringify(logs, null, 2), "utf-8");
+  inMemoryLogs = [...logs];
+
+  if (!ensureDirectory()) {
+    return;
+  }
+
+  try {
+    fs.writeFileSync(certLogFile, JSON.stringify(logs, null, 2), "utf-8");
+  } catch (error) {
+    diskStorageUnavailable = true;
+    if (!warnedMemoryFallback) {
+      warnedMemoryFallback = true;
+      console.warn("[CertificationLog] Write failed. Continuing with in-memory certification logs.");
+    }
+    console.error("[CertificationLog] Error saving logs:", error);
+  }
 }
 
 // Registrar nuevo ciclo
