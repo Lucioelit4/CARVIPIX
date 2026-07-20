@@ -108,7 +108,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/dashboard")) {
-    if (context.isAdminSession && hasAdminDashboardAccess) {
+    if (context.isAdminSession) {
       return NextResponse.next();
     }
 
@@ -128,8 +128,12 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith("/academia");
 
     if (isMemberOnlyRoute) {
-      if (!hasClientSession) {
+      if (!hasClientSession && !hasAdminSession) {
         return redirectToLogin();
+      }
+
+      if (hasAdminSession) {
+        return NextResponse.next();
       }
 
       const hasExplicitInactiveMembership =
@@ -141,7 +145,7 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad") || pathname.startsWith("/soporte")) && !hasClientSession) {
+    if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad") || pathname.startsWith("/soporte")) && !hasClientSession && !hasAdminSession) {
       return redirectToLogin();
     }
   }

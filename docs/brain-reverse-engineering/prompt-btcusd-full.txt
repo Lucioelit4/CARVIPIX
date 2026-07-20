@@ -1,0 +1,1787 @@
+# EXPEDIENTE MAESTRO CARVIPIX V3
+# Instrumento: BTCUSD | Análisis: audit-btcusd-1784496274540
+# Versión: MAESTRO_V3 | Modelo: unknown
+
+
+### 1. Identidad y trazabilidad
+{
+  "analysis_id": "audit-btcusd-1784496274540",
+  "signal_id": "sig-btcusd-1784496274540",
+  "canonical_symbol": "BTCUSD",
+  "provider_symbol": "BTC/USD",
+  "broker_symbol": null,
+  "timestamp_utc_ms": 1784496274540,
+  "timestamp_iso": "2026-07-19T21:24:34.540Z",
+  "session_primary": "CRYPTO_24H",
+  "version_expediente": "MAESTRO_V3",
+  "version_prompt": "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+  "version_strategy": "1.0.0",
+  "model_openai": "unknown",
+  "version_engine": "CARVIPIX_AI_ENGINE_v1",
+  "version_cadp": "maestro-v3",
+  "data_sources": {
+    "candles": "TWELVE_DATA",
+    "indicators": "CARVIPIX_INTERNAL",
+    "news": "FINNHUB",
+    "sessions": "CARVIPIX_INTERNAL"
+  },
+  "snapshot_hash": "fedfe59b8cc0f98cac313e1ce61dfdf9a1bc222eff8657303096474b8e6e9da0"
+}
+
+### 2. Calidad del expediente
+{
+  "data_complete": true,
+  "candles_closed": {
+    "H1": true,
+    "M30": true,
+    "M5": true
+  },
+  "candle_freshness_seconds": {
+    "H1": 3600,
+    "M30": 1800,
+    "M5": 300
+  },
+  "data_fresh": true,
+  "gap_detected": {
+    "H1": false,
+    "M30": false,
+    "M5": false
+  },
+  "indicators_available": {
+    "ema20": true,
+    "ema50": true,
+    "ema200": true,
+    "atr": true,
+    "adx": true
+  },
+  "market_open": true,
+  "market_status": "OPEN",
+  "spread_available": false,
+  "spread_source": "NOT_AVAILABLE",
+  "paper_mode_note": "NOT_BROKER_VERIFIED",
+  "news_available": false,
+  "news_empty": true,
+  "visual_context_enabled": false,
+  "skip_before_ai": null
+}
+
+### 3. Pre-análisis (hechos de cambio)
+{
+  "trigger_reason": "SCHEDULED_RECHECK",
+  "change_detected": false,
+  "change_description": "Scheduled recheck. Trigger: SCHEDULED_RECHECK.",
+  "previous_condition_met": {
+    "met": false,
+    "original_condition_text": null,
+    "evidence": null
+  }
+}
+
+### 4. Contexto anterior (memoria del escenario)
+{
+  "exists": false,
+  "previous_analysis_id": null,
+  "previous_timestamp_iso": null,
+  "minutes_since_previous": null,
+  "previous_decision": null,
+  "previous_scenario_state": null,
+  "previous_order_plan": null,
+  "previous_vigilance": null,
+  "condition_met_since_previous": {
+    "met": false,
+    "description": null
+  },
+  "last_paper_trade": null,
+  "scenario_lifetime": {
+    "scenario_active_since_iso": null,
+    "lifetime_minutes": null,
+    "lifetime_label": "Nuevo escenario",
+    "is_extended": false
+  }
+}
+
+### 5. Cambios desde análisis anterior (delta objetivo)
+{
+  "new_closed_candle": {
+    "H1": false,
+    "M30": false,
+    "M5": false
+  },
+  "new_high_detected": {
+    "detected": false,
+    "timeframe": null,
+    "level": null
+  },
+  "new_low_detected": {
+    "detected": false,
+    "timeframe": null,
+    "level": null
+  },
+  "break_detected": {
+    "detected": false,
+    "direction": null,
+    "broken_level": null,
+    "timeframe": null,
+    "candle_that_broke_timestamp": null
+  },
+  "zone_reached": {
+    "detected": false,
+    "zone_type": null,
+    "zone_level": null,
+    "proximity_pips": null,
+    "timeframe": null
+  },
+  "atr_change": {
+    "previous": null,
+    "current": 2.901428571428466,
+    "change_pct": null
+  },
+  "session_changed": false,
+  "session_previous": null,
+  "session_current": "UNKNOWN",
+  "new_news_event": {
+    "detected": false,
+    "event_name": null,
+    "impact": null,
+    "minutes_to": null
+  },
+  "previous_condition_met": {
+    "met": false,
+    "original_condition": null,
+    "evidence": null
+  },
+  "paper_trade_closed": {
+    "occurred": false,
+    "result": null,
+    "paper_trade_id": null
+  }
+}
+
+### 6. Mercado H1 — datos objetivos
+{
+  "ema20": 2466.673711421342,
+  "ema50": 2465.5820680239076,
+  "ema200": 2455.171784570852,
+  "atr": 4.5528571428570945,
+  "adx": 21.72323145799191,
+  "volatility_percentile": 50,
+  "ema_order": {
+    "ema20_above_ema50": true,
+    "ema50_above_ema200": true,
+    "price_above_ema200": true,
+    "price_above_ema50": false,
+    "price_above_ema20": false
+  },
+  "last_5_highs": [
+    2476.7,
+    2476.44,
+    2473.68,
+    2472.3,
+    2470.16
+  ],
+  "last_5_lows": [
+    2471.96,
+    2471.76,
+    2468.96,
+    2466.5,
+    2465.23
+  ],
+  "consecutive_higher_highs": 0,
+  "consecutive_lower_lows": 4,
+  "closed_candles": [
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784381074534,
+      "open": 2471.05,
+      "high": 2472.83,
+      "low": 2467.27,
+      "close": 2467.49,
+      "volume": 266,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784384674534,
+      "open": 2467.49,
+      "high": 2469.59,
+      "low": 2466.27,
+      "close": 2467.44,
+      "volume": 740,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784388274534,
+      "open": 2467.44,
+      "high": 2468.1,
+      "low": 2465.63,
+      "close": 2466.79,
+      "volume": 547,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784391874534,
+      "open": 2466.79,
+      "high": 2469.17,
+      "low": 2464.13,
+      "close": 2465.58,
+      "volume": 595,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784395474534,
+      "open": 2465.58,
+      "high": 2466.96,
+      "low": 2459.67,
+      "close": 2461.4,
+      "volume": 407,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784399074534,
+      "open": 2461.4,
+      "high": 2466.69,
+      "low": 2460.02,
+      "close": 2465.32,
+      "volume": 961,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784402674534,
+      "open": 2465.32,
+      "high": 2467.89,
+      "low": 2464.59,
+      "close": 2466.57,
+      "volume": 713,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784406274534,
+      "open": 2466.57,
+      "high": 2467.96,
+      "low": 2462.68,
+      "close": 2464.84,
+      "volume": 273,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784409874534,
+      "open": 2464.84,
+      "high": 2466.19,
+      "low": 2458.32,
+      "close": 2460.46,
+      "volume": 762,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784413474534,
+      "open": 2460.46,
+      "high": 2461.79,
+      "low": 2458.47,
+      "close": 2461.73,
+      "volume": 638,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784417074534,
+      "open": 2461.73,
+      "high": 2463.61,
+      "low": 2458.73,
+      "close": 2460.34,
+      "volume": 243,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784420674534,
+      "open": 2460.34,
+      "high": 2462.97,
+      "low": 2458.08,
+      "close": 2460.71,
+      "volume": 229,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784424274534,
+      "open": 2460.71,
+      "high": 2461.13,
+      "low": 2458.34,
+      "close": 2458.41,
+      "volume": 970,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784427874534,
+      "open": 2458.41,
+      "high": 2461.43,
+      "low": 2458.1,
+      "close": 2459.92,
+      "volume": 541,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784431474534,
+      "open": 2459.92,
+      "high": 2462.81,
+      "low": 2459.12,
+      "close": 2462.19,
+      "volume": 516,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784435074534,
+      "open": 2462.19,
+      "high": 2463.44,
+      "low": 2457.4,
+      "close": 2457.95,
+      "volume": 1051,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784438674534,
+      "open": 2457.95,
+      "high": 2458.13,
+      "low": 2453.69,
+      "close": 2454.08,
+      "volume": 543,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784442274534,
+      "open": 2454.08,
+      "high": 2457.68,
+      "low": 2451.74,
+      "close": 2457.16,
+      "volume": 134,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784445874534,
+      "open": 2457.16,
+      "high": 2462.42,
+      "low": 2454.98,
+      "close": 2461.58,
+      "volume": 277,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784449474534,
+      "open": 2461.58,
+      "high": 2464.54,
+      "low": 2460.62,
+      "close": 2462.81,
+      "volume": 435,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784453074534,
+      "open": 2462.81,
+      "high": 2463.69,
+      "low": 2460,
+      "close": 2461.24,
+      "volume": 323,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784456674534,
+      "open": 2461.24,
+      "high": 2461.43,
+      "low": 2461.21,
+      "close": 2461.24,
+      "volume": 1012,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784460274534,
+      "open": 2461.24,
+      "high": 2461.25,
+      "low": 2459.14,
+      "close": 2461.05,
+      "volume": 333,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784463874534,
+      "open": 2461.05,
+      "high": 2465.03,
+      "low": 2460.09,
+      "close": 2463.82,
+      "volume": 955,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784467474534,
+      "open": 2463.82,
+      "high": 2468.45,
+      "low": 2462.5,
+      "close": 2466.12,
+      "volume": 636,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784471074534,
+      "open": 2466.12,
+      "high": 2470.88,
+      "low": 2464.3,
+      "close": 2469.47,
+      "volume": 434,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784474674534,
+      "open": 2469.47,
+      "high": 2472.93,
+      "low": 2468.91,
+      "close": 2472.74,
+      "volume": 393,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784478274534,
+      "open": 2472.74,
+      "high": 2476.7,
+      "low": 2471.96,
+      "close": 2475.67,
+      "volume": 310,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784481874534,
+      "open": 2475.67,
+      "high": 2476.44,
+      "low": 2471.76,
+      "close": 2472.01,
+      "volume": 823,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784485474534,
+      "open": 2472.01,
+      "high": 2473.68,
+      "low": 2468.96,
+      "close": 2471.29,
+      "volume": 1086,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784489074534,
+      "open": 2471.29,
+      "high": 2472.3,
+      "low": 2466.5,
+      "close": 2468.93,
+      "volume": 525,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "1H",
+      "timestamp": 1784492674534,
+      "open": 2468.93,
+      "high": 2470.16,
+      "low": 2465.23,
+      "close": 2467.49,
+      "volume": 940,
+      "complete": true
+    }
+  ],
+  "open_candle": null,
+  "structural_highs": [
+    2476.7,
+    2476.44,
+    2473.68,
+    2472.3,
+    2470.16
+  ],
+  "structural_lows": [
+    2471.96,
+    2471.76,
+    2468.96,
+    2466.5,
+    2465.23
+  ],
+  "support_zones": [
+    2468.96,
+    2466.5,
+    2465.23
+  ],
+  "resistance_zones": [
+    2473.68,
+    2472.3,
+    2470.16
+  ],
+  "atr_vs_resistance_pips": 6.559999999999945,
+  "atr_vs_support_pips": 5.360000000000127,
+  "anomalies": []
+}
+
+### 7. Mercado M30 — datos objetivos
+{
+  "ema20": 2460.1071458979686,
+  "ema50": 2462.047931626263,
+  "ema200": 2454.5585017150906,
+  "atr": 3.5642857142857856,
+  "adx": 23.558274491196205,
+  "ema_order": {
+    "ema20_above_ema50": false,
+    "ema50_above_ema200": true,
+    "price_above_ema20": true
+  },
+  "closed_candles": [
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784438674534,
+      "open": 2462.52,
+      "high": 2464.62,
+      "low": 2461.2,
+      "close": 2463.96,
+      "volume": 118,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784440474534,
+      "open": 2463.96,
+      "high": 2464.98,
+      "low": 2460.84,
+      "close": 2461.87,
+      "volume": 233,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784442274534,
+      "open": 2461.87,
+      "high": 2466.37,
+      "low": 2459.68,
+      "close": 2463.99,
+      "volume": 607,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784444074534,
+      "open": 2463.99,
+      "high": 2465.22,
+      "low": 2461.36,
+      "close": 2463.07,
+      "volume": 139,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784445874534,
+      "open": 2463.07,
+      "high": 2464.97,
+      "low": 2460.29,
+      "close": 2461.46,
+      "volume": 634,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784447674534,
+      "open": 2461.46,
+      "high": 2463.2,
+      "low": 2459.52,
+      "close": 2462.47,
+      "volume": 621,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784449474534,
+      "open": 2462.47,
+      "high": 2464.3,
+      "low": 2460.65,
+      "close": 2463.44,
+      "volume": 834,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784451274534,
+      "open": 2463.44,
+      "high": 2463.69,
+      "low": 2461.16,
+      "close": 2463.37,
+      "volume": 448,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784453074534,
+      "open": 2463.37,
+      "high": 2465.16,
+      "low": 2461.23,
+      "close": 2464.09,
+      "volume": 1033,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784454874534,
+      "open": 2464.09,
+      "high": 2465.44,
+      "low": 2462.84,
+      "close": 2463.17,
+      "volume": 536,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784456674534,
+      "open": 2463.17,
+      "high": 2466.19,
+      "low": 2461.89,
+      "close": 2464.26,
+      "volume": 819,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784458474534,
+      "open": 2464.26,
+      "high": 2465.54,
+      "low": 2462.76,
+      "close": 2463.24,
+      "volume": 612,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784460274534,
+      "open": 2463.24,
+      "high": 2466.1,
+      "low": 2462.76,
+      "close": 2463.7,
+      "volume": 222,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784462074534,
+      "open": 2463.7,
+      "high": 2464.6,
+      "low": 2461.23,
+      "close": 2461.58,
+      "volume": 1043,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784463874534,
+      "open": 2461.58,
+      "high": 2463.03,
+      "low": 2458.88,
+      "close": 2460.46,
+      "volume": 272,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784465674534,
+      "open": 2460.46,
+      "high": 2462.81,
+      "low": 2458.23,
+      "close": 2460.87,
+      "volume": 1096,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784467474534,
+      "open": 2460.87,
+      "high": 2462.4,
+      "low": 2460.37,
+      "close": 2460.63,
+      "volume": 748,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784469274534,
+      "open": 2460.63,
+      "high": 2462.91,
+      "low": 2458.4,
+      "close": 2460.67,
+      "volume": 158,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784471074534,
+      "open": 2460.67,
+      "high": 2461.09,
+      "low": 2460.13,
+      "close": 2460.19,
+      "volume": 657,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784472874534,
+      "open": 2460.19,
+      "high": 2462.48,
+      "low": 2459.7,
+      "close": 2461.85,
+      "volume": 549,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784474674534,
+      "open": 2461.85,
+      "high": 2463.82,
+      "low": 2460.12,
+      "close": 2462.83,
+      "volume": 843,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784476474534,
+      "open": 2462.83,
+      "high": 2463.63,
+      "low": 2459.33,
+      "close": 2460.75,
+      "volume": 767,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784478274534,
+      "open": 2460.75,
+      "high": 2462.55,
+      "low": 2458.87,
+      "close": 2460.81,
+      "volume": 745,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784480074534,
+      "open": 2460.81,
+      "high": 2462.59,
+      "low": 2459.05,
+      "close": 2459.8,
+      "volume": 254,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784481874534,
+      "open": 2459.8,
+      "high": 2460.86,
+      "low": 2457.19,
+      "close": 2459.53,
+      "volume": 179,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784483674534,
+      "open": 2459.53,
+      "high": 2460.86,
+      "low": 2457.23,
+      "close": 2460.38,
+      "volume": 924,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784485474534,
+      "open": 2460.38,
+      "high": 2462.1,
+      "low": 2457.57,
+      "close": 2459.11,
+      "volume": 575,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784487274534,
+      "open": 2459.11,
+      "high": 2459.67,
+      "low": 2456.95,
+      "close": 2457.13,
+      "volume": 952,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784489074534,
+      "open": 2457.13,
+      "high": 2459.85,
+      "low": 2454.72,
+      "close": 2458.87,
+      "volume": 130,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784490874534,
+      "open": 2458.87,
+      "high": 2459.95,
+      "low": 2455.32,
+      "close": 2457.26,
+      "volume": 817,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784492674534,
+      "open": 2457.26,
+      "high": 2458.91,
+      "low": 2455.81,
+      "close": 2458.83,
+      "volume": 199,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "30M",
+      "timestamp": 1784494474534,
+      "open": 2458.83,
+      "high": 2460.21,
+      "low": 2456.68,
+      "close": 2458.23,
+      "volume": 932,
+      "complete": true
+    }
+  ],
+  "open_candle": null,
+  "structural_highs": [
+    2459.67,
+    2459.85,
+    2459.95,
+    2458.91,
+    2460.21
+  ],
+  "structural_lows": [
+    2456.95,
+    2454.72,
+    2455.32,
+    2455.81,
+    2456.68
+  ],
+  "support_zones": [
+    2455.32,
+    2455.81,
+    2456.68
+  ],
+  "resistance_zones": [
+    2459.95,
+    2458.91,
+    2460.21
+  ],
+  "consecutive_compressed_candles": 0,
+  "last_impulse_candles": 0,
+  "retrace_from_impulse": {
+    "impulse_start": null,
+    "impulse_end": null,
+    "current_retrace_pct": null,
+    "candles_in_retrace": 0
+  },
+  "distance_to_nearest_support_pips": 6.920000000000073,
+  "distance_to_nearest_resistance_pips": 3.3899999999998727
+}
+
+### 8. Mercado M5 — datos objetivos (gatillo)
+{
+  "ema20": 2465.158774286175,
+  "ema50": 2465.810757412824,
+  "ema200": 2456.1946957520595,
+  "atr": 2.901428571428466,
+  "adx": 18.3921484905244,
+  "ema_order": {
+    "ema20_above_ema50": false,
+    "price_above_ema20": false
+  },
+  "closed_candles": [
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784481874534,
+      "open": 2469.31,
+      "high": 2470.07,
+      "low": 2467.9,
+      "close": 2468.87,
+      "volume": 544,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784482174534,
+      "open": 2468.87,
+      "high": 2469.95,
+      "low": 2468.32,
+      "close": 2468.41,
+      "volume": 639,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784482474534,
+      "open": 2468.41,
+      "high": 2468.55,
+      "low": 2466.08,
+      "close": 2467.7,
+      "volume": 846,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784482774534,
+      "open": 2467.7,
+      "high": 2468.6,
+      "low": 2465.83,
+      "close": 2466.66,
+      "volume": 510,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784483074534,
+      "open": 2466.66,
+      "high": 2469.16,
+      "low": 2465.46,
+      "close": 2467.13,
+      "volume": 387,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784483374534,
+      "open": 2467.13,
+      "high": 2470,
+      "low": 2464.85,
+      "close": 2467.7,
+      "volume": 535,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784483674534,
+      "open": 2467.7,
+      "high": 2469.99,
+      "low": 2466.73,
+      "close": 2466.82,
+      "volume": 514,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784483974534,
+      "open": 2466.82,
+      "high": 2467.28,
+      "low": 2465.91,
+      "close": 2467.07,
+      "volume": 571,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784484274534,
+      "open": 2467.07,
+      "high": 2467.73,
+      "low": 2466.15,
+      "close": 2467.54,
+      "volume": 1038,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784484574534,
+      "open": 2467.54,
+      "high": 2467.93,
+      "low": 2465.24,
+      "close": 2467.49,
+      "volume": 1025,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784484874534,
+      "open": 2467.49,
+      "high": 2469.34,
+      "low": 2465.37,
+      "close": 2467.63,
+      "volume": 386,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784485174534,
+      "open": 2467.63,
+      "high": 2469.58,
+      "low": 2466.8,
+      "close": 2467.04,
+      "volume": 167,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784485474534,
+      "open": 2467.04,
+      "high": 2467.64,
+      "low": 2465.86,
+      "close": 2466.73,
+      "volume": 566,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784485774534,
+      "open": 2466.73,
+      "high": 2468.64,
+      "low": 2464.13,
+      "close": 2466.39,
+      "volume": 621,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784486074534,
+      "open": 2466.39,
+      "high": 2468.26,
+      "low": 2465.1,
+      "close": 2466.47,
+      "volume": 262,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784486374534,
+      "open": 2466.47,
+      "high": 2466.87,
+      "low": 2466.33,
+      "close": 2466.4,
+      "volume": 891,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784486674534,
+      "open": 2466.4,
+      "high": 2467.2,
+      "low": 2465.51,
+      "close": 2466.26,
+      "volume": 257,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784486974534,
+      "open": 2466.26,
+      "high": 2466.52,
+      "low": 2465.47,
+      "close": 2466.43,
+      "volume": 317,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784487274534,
+      "open": 2466.43,
+      "high": 2467.46,
+      "low": 2465.76,
+      "close": 2466.79,
+      "volume": 414,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784487574534,
+      "open": 2466.79,
+      "high": 2467.26,
+      "low": 2464.9,
+      "close": 2467.21,
+      "volume": 328,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784487874534,
+      "open": 2467.21,
+      "high": 2468.44,
+      "low": 2466.89,
+      "close": 2467.28,
+      "volume": 769,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784488174534,
+      "open": 2467.28,
+      "high": 2467.97,
+      "low": 2466.5,
+      "close": 2467.88,
+      "volume": 570,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784488474534,
+      "open": 2467.88,
+      "high": 2469.72,
+      "low": 2467.59,
+      "close": 2468.29,
+      "volume": 359,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784488774534,
+      "open": 2468.29,
+      "high": 2469.33,
+      "low": 2467.67,
+      "close": 2468.84,
+      "volume": 751,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784489074534,
+      "open": 2468.84,
+      "high": 2470.92,
+      "low": 2466.47,
+      "close": 2469.47,
+      "volume": 748,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784489374534,
+      "open": 2469.47,
+      "high": 2470.33,
+      "low": 2468.09,
+      "close": 2469.23,
+      "volume": 629,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784489674534,
+      "open": 2469.23,
+      "high": 2471.69,
+      "low": 2466.67,
+      "close": 2468,
+      "volume": 215,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784489974534,
+      "open": 2468,
+      "high": 2468.34,
+      "low": 2466.95,
+      "close": 2468.31,
+      "volume": 474,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784490274534,
+      "open": 2468.31,
+      "high": 2470.2,
+      "low": 2465.94,
+      "close": 2467.39,
+      "volume": 356,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784490574534,
+      "open": 2467.39,
+      "high": 2469.19,
+      "low": 2466.18,
+      "close": 2466.81,
+      "volume": 430,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784490874534,
+      "open": 2466.81,
+      "high": 2466.89,
+      "low": 2464.43,
+      "close": 2466.57,
+      "volume": 562,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784491174534,
+      "open": 2466.57,
+      "high": 2468.64,
+      "low": 2465.82,
+      "close": 2466.07,
+      "volume": 210,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784491474534,
+      "open": 2466.07,
+      "high": 2467.95,
+      "low": 2464.22,
+      "close": 2464.95,
+      "volume": 1035,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784491774534,
+      "open": 2464.95,
+      "high": 2466.29,
+      "low": 2463.55,
+      "close": 2465.25,
+      "volume": 1023,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784492074534,
+      "open": 2465.25,
+      "high": 2466.61,
+      "low": 2464.69,
+      "close": 2465.4,
+      "volume": 960,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784492374534,
+      "open": 2465.4,
+      "high": 2466.8,
+      "low": 2462.18,
+      "close": 2464.63,
+      "volume": 745,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784492674534,
+      "open": 2464.63,
+      "high": 2465.45,
+      "low": 2463.26,
+      "close": 2464.92,
+      "volume": 366,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784492974534,
+      "open": 2464.92,
+      "high": 2466.64,
+      "low": 2464.76,
+      "close": 2465.49,
+      "volume": 1026,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784493274534,
+      "open": 2465.49,
+      "high": 2467.18,
+      "low": 2462.65,
+      "close": 2464.46,
+      "volume": 783,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784493574534,
+      "open": 2464.46,
+      "high": 2465.69,
+      "low": 2461.82,
+      "close": 2463.99,
+      "volume": 809,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784493874534,
+      "open": 2463.99,
+      "high": 2464.65,
+      "low": 2462.47,
+      "close": 2464.62,
+      "volume": 1018,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784494174534,
+      "open": 2464.62,
+      "high": 2466.54,
+      "low": 2463.33,
+      "close": 2465.2,
+      "volume": 256,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784494474534,
+      "open": 2465.2,
+      "high": 2465.46,
+      "low": 2464.35,
+      "close": 2464.48,
+      "volume": 693,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784494774534,
+      "open": 2464.48,
+      "high": 2466.14,
+      "low": 2461.86,
+      "close": 2464.1,
+      "volume": 890,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784495074534,
+      "open": 2464.1,
+      "high": 2465.95,
+      "low": 2464.09,
+      "close": 2464.42,
+      "volume": 1052,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784495374534,
+      "open": 2464.42,
+      "high": 2465.82,
+      "low": 2463.88,
+      "close": 2465.11,
+      "volume": 852,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784495674534,
+      "open": 2465.11,
+      "high": 2466.93,
+      "low": 2464.09,
+      "close": 2464.41,
+      "volume": 864,
+      "complete": true
+    },
+    {
+      "asset": "BTCUSD",
+      "timeframe": "5M",
+      "timestamp": 1784495974534,
+      "open": 2464.41,
+      "high": 2466.7,
+      "low": 2462.51,
+      "close": 2463.6,
+      "volume": 685,
+      "complete": true
+    }
+  ],
+  "open_candle": null,
+  "structural_highs": [
+    2466.14,
+    2465.95,
+    2465.82,
+    2466.93,
+    2466.7
+  ],
+  "structural_lows": [
+    2461.86,
+    2464.09,
+    2463.88,
+    2464.09,
+    2462.51
+  ],
+  "support_zones": [
+    2463.88,
+    2464.09,
+    2462.51
+  ],
+  "resistance_zones": [
+    2465.82,
+    2466.93,
+    2466.7
+  ],
+  "last_closed_candle": {
+    "open": 2464.41,
+    "high": 2466.7,
+    "low": 2462.51,
+    "close": 2463.6,
+    "body_pips": 0.8099999999999454,
+    "upper_wick_pips": 2.2899999999999636,
+    "lower_wick_pips": 1.0899999999996908,
+    "direction": "BEARISH"
+  },
+  "current_bid": null,
+  "current_ask": null,
+  "mid_price": 2463.6,
+  "spread_pips": null,
+  "spread_vs_atr_pct": null,
+  "price_vs_m30_support_pips": 6.920000000000073,
+  "price_vs_m30_resistance_pips": 3.3899999999998727,
+  "price_vs_h1_support_pips": 5.360000000000127,
+  "price_vs_h1_resistance_pips": 6.559999999999945
+}
+
+### 9. Coherencia multi-temporalidad
+{
+  "ema_alignment_score": {
+    "h1": 3,
+    "m30": 2,
+    "m5": 1
+  },
+  "adx_values": {
+    "h1": 21.72323145799191,
+    "m30": 23.558274491196205,
+    "m5": 18.3921484905244
+  },
+  "price_vs_ema200": {
+    "h1": "ABOVE",
+    "m30": "ABOVE",
+    "m5": "ABOVE"
+  },
+  "structure_direction": {
+    "h1": "BEARISH",
+    "m30": "MIXED",
+    "m5": "MIXED"
+  },
+  "conflicts_detected": []
+}
+
+### 10. Volatilidad y sesión
+{
+  "atr_h1_pips": 4.5528571428570945,
+  "atr_m30_pips": 3.5642857142857856,
+  "atr_m5_pips": 2.901428571428466,
+  "atr_h1_percentile": 50,
+  "session_current": "CRYPTO_24H",
+  "session_overlap": false,
+  "minutes_to_session_end": 36,
+  "is_transition_period": false,
+  "time_to_next_high_impact_event": null,
+  "spread_pips": null,
+  "spread_pct_of_atr_m5": null,
+  "minutes_to_daily_maintenance": 0,
+  "minutes_to_weekly_close": 0,
+  "paper_spread_note": "NOT_BROKER_VERIFIED"
+}
+
+### 11. Noticias y riesgo fundamental
+{
+  "news_status": "CURRENT",
+  "last_refresh_iso": "2026-07-19T21:24:34.540Z",
+  "source": "FINNHUB",
+  "events": [],
+  "events_within_operation_window": [],
+  "no_events_note": "No events found for next 4h from Finnhub (polled at 2026-07-19T21:24:34.540Z)."
+}
+
+### 12. Contexto histórico (referencia estadística)
+{
+  "statistical_reference_only": true,
+  "eligible": false,
+  "eligibility_conditions": {
+    "same_canonical_symbol": true,
+    "same_strategy_version": true,
+    "same_prompt_version": true,
+    "sample_size": 0,
+    "minimum_sample_met": false
+  },
+  "data": null
+}
+
+### 13. Contexto visual
+{
+  "enabled": false,
+  "images": []
+}
+
+### 14. Estrategias autorizadas
+[
+  {
+    "strategy_id": "CARVIPIX_NO_TRADE_V1",
+    "strategy_version": "1.0.0",
+    "status": "ACTIVE",
+    "short_description": "Explicit no trade — no valid setup, or risk/news block.",
+    "critical_requirements": [
+      "NO_SETUP",
+      "RISK_OR_NEWS_BLOCK"
+    ],
+    "canonical_symbol": "BTCUSD"
+  }
+]
+
+### 15. Contexto narrativo objetivo
+El precio de BTCUSD en el snapshot 2026-07-19T21:24:34.540Z es 2463.60. Última vela M5 cerrada: open 2464.41 | close 2463.60 | cuerpo 0.81 pips | dirección BEARISH. Última vela H1 cerrada: close 2467.49 (timestamp 2026-07-19T20:24:34.534Z). Última vela M30 cerrada: close 2458.23 (timestamp 2026-07-19T20:54:34.534Z).
+
+En H1: EMA20=2466.67 | EMA50=2465.58 | EMA200=2455.17. EMA20 > EMA50, EMA50 > EMA200, precio por encima de EMA200. ADX H1=21.7. ATR H1=4.55 (percentil 50). Últimos 5 máximos: 2476.70 / 2476.44 / 2473.68 / 2472.30 / 2470.16. Últimos 5 mínimos: 2471.96 / 2471.76 / 2468.96 / 2466.50 / 2465.23. 4 mínimos consecutivos descendentes
+
+En M30: EMA20=2460.11 | EMA50=2462.05 | EMA200=2454.56. Precio por encima de EMA20 M30. ADX M30=23.6. ATR M30=3.56. Distancia a soporte M30 más cercano (2456.68): 6.9 pips. Distancia a resistencia M30 más cercana (2460.21): 3.4 pips.
+
+En M5: EMA20=2465.16 | EMA50=2465.81 | EMA200=2456.19. ADX M5=18.4. ATR M5=2.90. Spread no disponible (NOT_BROKER_VERIFIED). Precio vs soporte M30: 6.9 pips. Precio vs resistencia H1 más cercana (2470.16): 6.6 pips.
+
+Sesión actual: CRYPTO_24H. Tiempo restante en sesión: 36 minutos. ATR M5 percentil 50 vs. histórico H1. Spread del broker no disponible (NOT_BROKER_VERIFIED). Mantenimiento diario en 0 minutos.
+
+No events found for next 4h from Finnhub (polled at 2026-07-19T21:24:34.540Z).
+
+Sin análisis anterior previo: Sin cambios relevantes detectados.
+
+### 16. Resumen ejecutivo del expediente
+BTCUSD | 2026-07-19T21:24:34.540Z | CRYPTO_24H | Nuevo escenario
+
+Datos disponibles: H1 (32 velas), M30 (32 velas), M5 (48 velas), indicadores completos, 0 eventos de noticias, análisis anterior no disponible. Contexto visual desactivado. Muestra histórica: 0 análisis.
+
+
+No disponible: Spread real del broker no disponible (NOT_BROKER_VERIFIED). / Contexto visual desactivado (AI_VISUAL_CONTEXT_ENABLED=false). / Historial estadístico insuficiente (muestra: 0, mínimo: 10). / Sin eventos de noticias disponibles de Finnhub.
+
+---
+
+### Esquema JSON oficial de respuesta
+{
+  "master_decision": {
+    "decision": "ENTER_BUY | ENTER_SELL | WAIT | CONDITIONAL_ENTRY | NO_TRADE | ENTRY_MISSED | DATA_INSUFFICIENT | NEWS_VERIFICATION_REQUIRED",
+    "direction": "BUY | SELL | NEUTRAL | null",
+    "strategy_selected": "string | null",
+    "conviction": "LOW | MEDIUM | HIGH",
+    "probability_estimated": "number 0-100 | null",
+    "probability_basis": "string | null"
+  },
+  "analysis_private": {
+    "analysis_summary": "string (2-4 sentences, objective market description)",
+    "decisive_evidence": [
+      "string (verifiable facts that determined the decision)"
+    ],
+    "opposing_evidence": [
+      "string (verifiable facts against the decision)"
+    ],
+    "primary_risk": "string",
+    "missing_condition": "string | null (what is missing to enter, null if NO_TRADE or ENTER)",
+    "market_context_observed": "string",
+    "what_must_change": "string (what would need to change to modify the decision)",
+    "probability_detail": {
+      "estimated": "number 0-100 | null",
+      "basis": "string | null",
+      "confidence_in_estimate": "LOW | MEDIUM | HIGH | null",
+      "disclaimer": "ANALYTICAL_ESTIMATE_NOT_MATHEMATICAL_PROBABILITY"
+    }
+  },
+  "analysis_public": {
+    "market_visual_state": "MUY_FAVORABLE | FAVORABLE | NEUTRAL | COMPLICADO | ALTO_RIESGO | SIN_MERCADO",
+    "supporting_facts": [
+      "string (objective facts that justify the visual state, no rules revealed)"
+    ],
+    "public_summary": "string (safe for clients, no proprietary strategy revealed)",
+    "action_taken": "ENTRY_SIGNALED | WATCHING | NO_ACTION | RISK_BLOCK",
+    "public_warning": "string | null"
+  },
+  "order_plan": {
+    "_note": "null if decision is not ENTER_BUY, ENTER_SELL, or CONDITIONAL_ENTRY",
+    "entry_type": "MARKET | LIMIT | STOP",
+    "entry_price": "number | null",
+    "entry_zone_min": "number | null",
+    "entry_zone_max": "number | null",
+    "stop_loss": "number",
+    "stop_loss_anchor": "string (structural reference for SL)",
+    "take_profit": "number",
+    "take_profit_anchor": "string (structural reference for TP)",
+    "risk_reward_ratio": "number",
+    "validity_minutes": "number",
+    "cancellation_condition": "string"
+  },
+  "adaptive_state": {
+    "proximity_to_entry": "IMMEDIATE | NEAR | DEVELOPING | FAR | INVALID",
+    "recheck_minutes": "5 | 10 | 15 | 30 | 60",
+    "watch_conditions": [
+      {
+        "condition": "string",
+        "level": "number | null",
+        "timeframe": "H1 | M30 | M5 | null"
+      }
+    ],
+    "wake_up_triggers": [
+      {
+        "trigger": "NEW_H1_CLOSE | NEW_M30_CLOSE | PRICE_REACHES_LEVEL | NEW_HIGH_IMPACT_NEWS_DETECTED | ATR_SPIKE | PAPER_TRADE_CLOSED",
+        "level": "number | null",
+        "description": "string"
+      }
+    ],
+    "missing_for_entry": "string | null",
+    "scenario_classification": "NEW | DEVELOPING | NEAR_ENTRY | READY | ACTIVE | INVALIDATED | EXPIRED | NO_SETUP"
+  },
+  "analyst_observations": {
+    "summary": "string (2-5 sentences, natural professional language, no proprietary strategy revealed)",
+    "scenario_narrative": "string (one sentence describing the current scenario moment)",
+    "key_observation": "string | null (single most important observation, null if none)"
+  }
+}
+
+---
+
+### Pregunta Maestra
+Eres el Analista Principal de CARVIPIX. Analiza exclusivamente el instrumento incluido en este expediente.
+
+Cada afirmación debe basarse en la información comprobada proporcionada. Nunca inventes datos, precios, noticias ni niveles que no estén en el expediente.
+
+Usa conjuntamente:
+• Contexto actual + delta desde análisis anterior
+• Mercado general (H1) 
+• Estructura intermedia (M30)
+• Gatillo (M5)
+• Coherencia multi-temporalidad
+• Volatilidad, liquidez, sesión
+• Noticias y riesgos
+• Validez temporal del escenario
+• Resumen ejecutivo
+
+Integra todo esto como UN ÚNICO análisis coherente. No evalúes cada elemento por separado.
+
+Tu pregunta: ¿Existe una entrada válida AHORA? ¿El escenario se aproxima? ¿Continúa desarrollándose? ¿Debe rechazarse?
+
+Si existe entrada: Entrega una señal vigente, defendible y completa.
+Si falta una condición: Indica exactamente cuál.
+Si el escenario es inválido o datos insuficientes: Recházalo claramente.
+
+Explica brevemente qué factores fueron decisivos, cuál es el riesgo principal y qué tendría que cambiar para modificar tu decisión.
+
+probability_estimated representa tu evaluación analítica de qué tan sólida es la confluencia de factores observados. No es una garantía de resultado. Basa el número en la evidencia del expediente, no en tu entrenamiento previo de otros mercados.
+
+Responde ÚNICAMENTE en el formato JSON solicitado por CARVIPIX. No incluyas texto fuera del esquema.

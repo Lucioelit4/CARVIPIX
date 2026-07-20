@@ -90,7 +90,7 @@ export async function initializePipelineWithRealData(
         for (const row of h1Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: providerSymbol, // CRITICAL: pipeline needs symbol/asset to normalize
+            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
             timestamp,
             open: row.open,
             high: row.high,
@@ -117,7 +117,7 @@ export async function initializePipelineWithRealData(
         for (const row of m30Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: providerSymbol, // CRITICAL: pipeline needs symbol/asset to normalize
+            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
             timestamp,
             open: row.open,
             high: row.high,
@@ -143,7 +143,7 @@ export async function initializePipelineWithRealData(
         for (const row of m5Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: providerSymbol, // CRITICAL: pipeline needs symbol/asset to normalize
+            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
             timestamp,
             open: row.open,
             high: row.high,

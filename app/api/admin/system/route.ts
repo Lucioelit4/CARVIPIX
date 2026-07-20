@@ -184,14 +184,20 @@ export async function POST(request: NextRequest) {
     } else if (command === "connect-sandbox") {
       const connector = body.connector ?? {};
       const password = String(connector.password ?? "").trim();
+      const server = String(connector.server ?? "").trim();
+      const login = String(connector.login ?? "").trim();
       if (!password) {
         return NextResponse.json({ ok: false, error: "connector.password is required" }, { status: 400 });
       }
 
+      if (!server || !login) {
+        return NextResponse.json({ ok: false, error: "connector.server and connector.login are required" }, { status: 400 });
+      }
+
       await configureSandboxConnector({
         provider: connector.provider ?? "MT5_SANDBOX",
-        server: String(connector.server ?? "demo.carvipix.local"),
-        login: String(connector.login ?? "demo_user"),
+        server,
+        login,
         password,
       });
     } else if (command === "sync-account") {

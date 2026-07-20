@@ -81,6 +81,8 @@
     "dr:drill:prod": "powershell -ExecutionPolicy Bypass -File scripts/dr-drill.ps1 -Environment prod"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.2",
     "framer-motion": "^12.42.2",
     "jszip": "^3.10.1",
     "lucide-react": "^1.23.0",

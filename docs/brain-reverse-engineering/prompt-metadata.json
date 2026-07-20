@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-07-19T21:24:34.541Z",
+  "xau": {
+    "analysis_id": "audit-xauusd-1784496274520",
+    "estimated_tokens": 10683,
+    "prompt_hash": "08b6c363ba4b5a931a4ebc97ec5b3b101b277da2f8e41add2e2f757ec12ac98b",
+    "prompt_cache_key": "adf7f98e9ab9973127994fa84ef24d77757a8fa809854ee4b42391f40b6d5e86"
+  },
+  "btc": {
+    "analysis_id": "audit-btcusd-1784496274540",
+    "estimated_tokens": 10461,
+    "prompt_hash": "5b87999c98873a3d229afbf4a713769ffb68bf61b3b58b1abbeaa91831be44a0",
+    "prompt_cache_key": "8c9e8fa48a26d362dda3bf5240344faed45375e907549794ec3a33191ca4b4bb"
+  }
+}

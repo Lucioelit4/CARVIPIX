@@ -5,7 +5,7 @@
  * Laboratorio de validación cuantitativa para históricos reales
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { BacktestPanelExpanded } from '../../alertas/components/BacktestPanelExpanded';
 import { CacheAndBatchPanel } from '../../alertas/components/CacheAndBatchPanel';
 import { OptimizerPanel } from '../../alertas/components/OptimizerPanel';
@@ -18,6 +18,38 @@ type BacktestTabType = 'backtest' | 'cache_batch' | 'optimizer';
 export default function AdminBacktesting() {
   const [activeTab, setActiveTab] = useState<BacktestTabType>('backtest');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [runtime, setRuntime] = useState<{ validation?: { latest?: { overallStatus?: string } }; execution?: { brokerConnected?: boolean; orderQueue?: unknown[]; openPositions?: unknown[]; safeMode?: boolean } } | null>(null);
+
+  useEffect(() => {
+    const loadRuntime = async () => {
+      try {
+        const response = await fetch('/api/admin/system', { cache: 'no-store' });
+        const json = (await response.json().catch(() => ({}))) as { data?: { validation?: { latest?: { overallStatus?: string } }; execution?: { brokerConnected?: boolean; orderQueue?: unknown[]; openPositions?: unknown[]; safeMode?: boolean } } };
+        if (!response.ok) {
+          setRuntime(null);
+          return;
+        }
+        setRuntime(json.data ?? null);
+      } catch {
+        setRuntime(null);
+      }
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      void loadRuntime();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  const runtimeStatus = useMemo(() => {
+    const latest = runtime?.validation?.latest?.overallStatus ?? 'unknown';
+    const queueCount = runtime?.execution?.orderQueue?.length ?? 0;
+    const positionsCount = runtime?.execution?.openPositions?.length ?? 0;
+    const broker = runtime?.execution?.brokerConnected ? 'Conectado' : 'Desconectado';
+    const safeMode = runtime?.execution?.safeMode ? 'ON' : 'OFF';
+    return { latest, queueCount, positionsCount, broker, safeMode };
+  }, [runtime]);
 
   const tabs = [
     { id: 'backtest' as BacktestTabType, label: '📊 Backtesting Avanzado' },
@@ -48,24 +80,24 @@ export default function AdminBacktesting() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <p className="text-xs text-slate-400 mb-2">Cache Status</p>
-          <p className="text-2xl font-bold text-green-400">✓ Ready</p>
-          <p className="text-xs text-slate-400 mt-1">Importación histórica habilitada</p>
+          <p className="text-xs text-slate-400 mb-2">Validación sistema</p>
+          <p className="text-2xl font-bold text-green-400">{String(runtimeStatus.latest).toUpperCase()}</p>
+          <p className="text-xs text-slate-400 mt-1">Estado real reportado por /api/admin/system</p>
         </CARVIPIXCard>
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <p className="text-xs text-slate-400 mb-2">Batch Processing</p>
-          <p className="text-2xl font-bold text-blue-400">⚙️ Ready</p>
-          <p className="text-xs text-slate-400 mt-1">Procesamiento por lotes disponible</p>
+          <p className="text-xs text-slate-400 mb-2">Broker</p>
+          <p className="text-2xl font-bold text-blue-400">{runtimeStatus.broker}</p>
+          <p className="text-xs text-slate-400 mt-1">Conector de ejecución</p>
         </CARVIPIXCard>
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <p className="text-xs text-slate-400 mb-2">Optimization</p>
-          <p className="text-2xl font-bold text-yellow-400">⚡ Ready</p>
-          <p className="text-xs text-slate-400 mt-1">Monte Carlo + Walk Forward</p>
+          <p className="text-xs text-slate-400 mb-2">Queue / Posiciones</p>
+          <p className="text-2xl font-bold text-yellow-400">{runtimeStatus.queueCount}/{runtimeStatus.positionsCount}</p>
+          <p className="text-xs text-slate-400 mt-1">Órdenes y posiciones del runtime</p>
         </CARVIPIXCard>
         <CARVIPIXCard variant="statistics" padding="16" hover={false}>
-          <p className="text-xs text-slate-400 mb-2">Last Build</p>
-          <p className="text-2xl font-bold text-purple-400">✓ Build</p>
-          <p className="text-xs text-slate-400 mt-1">Validación en curso</p>
+          <p className="text-xs text-slate-400 mb-2">SAFE_MODE</p>
+          <p className="text-2xl font-bold text-purple-400">{runtimeStatus.safeMode}</p>
+          <p className="text-xs text-slate-400 mt-1">Control operativo actual</p>
         </CARVIPIXCard>
       </div>
 

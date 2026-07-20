@@ -68,7 +68,7 @@ export default function AdminSistema() {
   const [runningCommand, setRunningCommand] = useState<string | null>(null);
   const [payload, setPayload] = useState<DashboardPayload>(initialPayload);
   const [error, setError] = useState<string | null>(null);
-  const [connector, setConnector] = useState({ provider: 'MT5_SANDBOX', server: 'demo.carvipix.local', login: 'demo_user', password: '' });
+  const [connector, setConnector] = useState({ provider: 'MT5_SANDBOX', server: '', login: '', password: '' });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,7 +153,7 @@ export default function AdminSistema() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold mb-2">Sistema Operativo Final</h2>
-        <p className="text-white/60">Validacion sistemica, ejecucion SAFE_MODE, observabilidad y auditoria en un solo tablero.</p>
+        <p className="text-white/60">Validación sistémica, ejecución SAFE_MODE, observabilidad y auditoría en un solo tablero.</p>
       </div>
 
       {error && (
@@ -206,8 +206,8 @@ export default function AdminSistema() {
             <option value="MT5_SANDBOX">MT5_SANDBOX</option>
             <option value="SIMULATED_BROKER">SIMULATED_BROKER</option>
           </select>
-          <input value={connector.server} onChange={(event) => setConnector((current) => ({ ...current, server: event.target.value }))} placeholder="sandbox server" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-          <input value={connector.login} onChange={(event) => setConnector((current) => ({ ...current, login: event.target.value }))} placeholder="login" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+          <input value={connector.server} onChange={(event) => setConnector((current) => ({ ...current, server: event.target.value }))} placeholder="broker server" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
+          <input value={connector.login} onChange={(event) => setConnector((current) => ({ ...current, login: event.target.value }))} placeholder="broker login" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
           <input type="password" value={connector.password} onChange={(event) => setConnector((current) => ({ ...current, password: event.target.value }))} placeholder="password" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
         </div>
         <div className="mt-4 flex flex-wrap gap-3">

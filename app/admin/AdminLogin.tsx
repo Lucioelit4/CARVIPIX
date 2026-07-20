@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, Lock, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, KeyRound, Lock, XCircle } from 'lucide-react';
 import { logAccessEvent, writeAuthSession } from '@/app/lib/auth/session';
 import { CARVIPIXButton, CARVIPIXCard, CARVIPIXFormField } from '../design-system';
 
@@ -11,11 +11,27 @@ interface AdminLoginProps {
 }
 
 type LoginStatus = 'idle' | 'loading' | 'success' | 'denied' | 'error';
+type PasskeyOptionsResponse = {
+  ok?: boolean;
+  options?: {
+    challenge?: string;
+  } & Record<string, unknown>;
+};
 
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<LoginStatus>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+
+  const handleAdminLoginSuccess = () => {
+    writeAuthSession('admin');
+    logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
+    setStatus('success');
+    setStatusMessage('Acceso correcto. Ingresando al panel administrativo...');
+    setTimeout(() => {
+      onLogin();
+    }, 250);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +46,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
       });
 
       if (response.ok) {
-        writeAuthSession('admin');
-        logAccessEvent('admin_login', 'Inicio de sesión administrativo exitoso.');
-        setStatus('success');
-        setStatusMessage('Acceso correcto. Ingresando al panel administrativo...');
-        setTimeout(() => {
-          onLogin();
-        }, 250);
+        handleAdminLoginSuccess();
         return;
       }
 
@@ -46,6 +56,72 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     } catch {
       setStatus('error');
       setStatusMessage('Ocurrió un error al validar el acceso. Intenta de nuevo.');
+    }
+  };
+
+  const handlePasskeyLogin = async () => {
+    setStatus('loading');
+    setStatusMessage('Abriendo acceso con passkey...');
+
+    try {
+      const optionsResponse = await fetch('/api/auth/admin/passkey/options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!optionsResponse.ok) {
+        setStatus('denied');
+        setStatusMessage('Passkey no disponible para este entorno.');
+        return;
+      }
+
+      const payload = (await optionsResponse.json().catch(() => ({}))) as PasskeyOptionsResponse;
+
+      if (!payload.ok || !payload.options || typeof payload.options.challenge !== 'string') {
+        setStatus('error');
+        setStatusMessage('No se pudo iniciar passkey. Intenta nuevamente.');
+        return;
+      }
+
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+      const webauthnResponse = await startAuthentication({
+        optionsJSON: payload.options as Parameters<typeof startAuthentication>[0]['optionsJSON'],
+      });
+
+      const verifyResponse = await fetch('/api/auth/admin/passkey/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response: webauthnResponse }),
+      });
+
+      if (verifyResponse.ok) {
+        handleAdminLoginSuccess();
+        return;
+      }
+
+      setStatus('denied');
+      setStatusMessage('Passkey rechazada. Intenta de nuevo con tu teléfono o llave.');
+    } catch {
+      setStatus('error');
+      setStatusMessage('No fue posible completar el acceso passkey.');
+    }
+  };
+
+  const handleEmailRecovery = async () => {
+    setStatus('loading');
+    setStatusMessage('Enviando enlace de recuperación al correo del administrador...');
+
+    try {
+      await fetch('/api/auth/admin/recovery/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      setStatus('success');
+      setStatusMessage('Si la recuperación está configurada, te enviamos un enlace al correo administrador.');
+    } catch {
+      setStatus('error');
+      setStatusMessage('No se pudo iniciar la recuperación por correo.');
     }
   };
 
@@ -151,6 +227,27 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
               ) : (
                 'Acceder al Panel'
               )}
+            </CARVIPIXButton>
+
+            <CARVIPIXButton
+              type="button"
+              onClick={() => void handlePasskeyLogin()}
+              disabled={status === 'loading' || status === 'success'}
+              variant={status === 'loading' || status === 'success' ? 'disabled' : 'secondary'}
+              fullWidth
+              leftIcon={<KeyRound className="w-4 h-4" />}
+            >
+              Entrar con Passkey (QR o llave)
+            </CARVIPIXButton>
+
+            <CARVIPIXButton
+              type="button"
+              onClick={() => void handleEmailRecovery()}
+              disabled={status === 'loading'}
+              variant={status === 'loading' ? 'disabled' : 'secondary'}
+              fullWidth
+            >
+              Recuperar acceso por correo
             </CARVIPIXButton>
           </form>
 

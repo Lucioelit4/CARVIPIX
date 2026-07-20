@@ -1,0 +1,61 @@
+﻿{
+  "generated_at": "2026-07-19T22:08:44.074Z",
+  "results": [
+    {
+      "file": "C:\\Users\\user1\\carvipix-evidence\\20260719-p0-final-audit\\prompt-xauusd-full.txt",
+      "total_chars": 42730,
+      "total_tokens_est": 10683,
+      "method": "Sections by exact markers: data=before schema, rules=schema block, question split by keyword into instructions vs reasoning incentive",
+      "buckets": {
+        "data": {
+          "chars": 38012,
+          "tokens_est": 9503,
+          "pct_chars": 88.96
+        },
+        "rules": {
+          "chars": 3272,
+          "tokens_est": 818,
+          "pct_chars": 7.66
+        },
+        "instructions": {
+          "chars": 646,
+          "tokens_est": 162,
+          "pct_chars": 1.51
+        },
+        "reasoning_incentive": {
+          "chars": 801,
+          "tokens_est": 201,
+          "pct_chars": 1.87
+        }
+      }
+    },
+    {
+      "file": "C:\\Users\\user1\\carvipix-evidence\\20260719-p0-final-audit\\prompt-btcusd-full.txt",
+      "total_chars": 41843,
+      "total_tokens_est": 10461,
+      "method": "Sections by exact markers: data=before schema, rules=schema block, question split by keyword into instructions vs reasoning incentive",
+      "buckets": {
+        "data": {
+          "chars": 37125,
+          "tokens_est": 9282,
+          "pct_chars": 88.72
+        },
+        "rules": {
+          "chars": 3272,
+          "tokens_est": 818,
+          "pct_chars": 7.82
+        },
+        "instructions": {
+          "chars": 646,
+          "tokens_est": 162,
+          "pct_chars": 1.54
+        },
+        "reasoning_incentive": {
+          "chars": 801,
+          "tokens_est": 201,
+          "pct_chars": 1.91
+        }
+      }
+    }
+  ]
+}

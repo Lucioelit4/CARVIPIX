@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/app/backend';
 import { getClientIp, isSameOriginRequest } from '@/app/api/admin/_shared/security';
+import { verifyAdminAccessCode } from '@/app/lib/auth/admin-access-code';
 import { clearAdminSessionCookie, isValidAdminSession, setAdminSessionCookie } from '@/app/lib/auth/admin-server';
 
 const ADMIN_DASHBOARD_ACCESS_COOKIE = 'carvipix_admin_dashboard_access';
 
-function isValidAdminCode(code: unknown): boolean {
+async function isValidAdminCode(code: unknown): Promise<boolean> {
   if (typeof code !== 'string' || !code.trim()) {
     return false;
+  }
+
+  const normalizedCode = code.trim();
+
+  // Prefer persisted admin code (changeable from recovery flow) when available.
+  const isPersistedCodeValid = await verifyAdminAccessCode(normalizedCode).catch(() => false);
+  if (isPersistedCodeValid) {
+    return true;
   }
 
   const configuredCode = process.env.ADMIN_ACCESS_CODE;
@@ -15,7 +24,7 @@ function isValidAdminCode(code: unknown): boolean {
     return false;
   }
 
-  return code.trim() === configuredCode;
+  return normalizedCode === configuredCode;
 }
 
 export async function GET(request: NextRequest) {
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json().catch(() => ({}))) as { code?: unknown };
 
-  if (!isValidAdminCode(body.code)) {
+  if (!(await isValidAdminCode(body.code))) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 

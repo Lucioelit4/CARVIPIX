@@ -139,7 +139,9 @@ export async function POST(request: NextRequest) {
       const license = await ecosystemServices.bot.getLicense(auth.user.id);
       if (nextStatus === "running") {
         new BotAccessGuard().assertCanProvisionBot(context, 0);
-        new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
+        if (!auth.isAdminSession) {
+          new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
+        }
       }
       await backendDatabase.query(
         `
@@ -163,7 +165,9 @@ export async function POST(request: NextRequest) {
       const password = String(body.password ?? "").trim();
       const mode = String(body.mode ?? "demo").trim();
       const license = await ecosystemServices.bot.getLicense(auth.user.id);
-      new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
+      if (!auth.isAdminSession) {
+        new LicenseGuard().assertActive(license ? { active: license.active, expiryDate: license.expiryDate } : null);
+      }
 
       await ecosystemServices.bot.connectBroker(botId, brokerType, { server, login, password });
       if (!backendDatabase.enabled) {

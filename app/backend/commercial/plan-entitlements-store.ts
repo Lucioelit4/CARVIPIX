@@ -257,6 +257,16 @@ export async function updatePlanEntitlements(
 }
 
 export async function resolveUserCommercialAccess(userId: string): Promise<ResolvedUserCommercialAccess> {
+  if (userId === "admin-session") {
+    const subscriptionPlan: SubscriptionPlan = "advanced";
+    return {
+      userId,
+      subscriptionPlan,
+      membershipActive: true,
+      entitlements: await getPlanEntitlements(subscriptionPlan),
+    };
+  }
+
   if (!hasDatabaseConfigured()) {
     const { findMembershipByUserId, listUsers } = await import("../core/local-auth-store");
     const users = await listUsers();

@@ -41,7 +41,12 @@ export default function AdminResultados() {
         color: 'text-green-400',
         icon: TrendingUp,
       },
-      { label: 'Mayor drawdown', value: '0%', color: 'text-red-400', icon: TrendingUp },
+      {
+        label: 'Mayor drawdown',
+        value: Number((results?.combinedStats as Record<string, unknown> | undefined)?.maxDrawdown ?? 0).toFixed(2) + '%',
+        color: 'text-red-400',
+        icon: TrendingUp,
+      },
     ],
     [results]
   );

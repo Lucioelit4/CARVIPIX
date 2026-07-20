@@ -43,7 +43,7 @@ export function canAccessRoute(pathname: string, context: RouteAccessContext): b
 
   const memberOnlyRoutes = ["/alertas", "/bot", "/fondeo", "/resultados", "/analisis", "/herramientas", "/academia"];
   if (memberOnlyRoutes.some((route) => pathname.startsWith(route))) {
-    return tier === "miembro_activo";
+    return tier === "miembro_activo" || tier === "administrador";
   }
 
   return true;
