@@ -8,6 +8,7 @@
 
 import type { PayloadTelegram, CadpDecisionV3, PayloadAlertaPremium } from "./typesMaestroV3";
 import { communicationEngine } from "./communicationEngine";
+import { paperTradeMonitor } from "./paperTradeMonitor";
 
 export interface TelegramNotificationResult {
   success: boolean;
@@ -63,11 +64,18 @@ export class TelegramNotificationService {
     }
 
     try {
+      const paperAccount = paperTradeMonitor.getAccountState();
       const plan = communicationEngine.prepareTelegramPlan({
         symbol,
         decision,
         payload,
         premiumPayload,
+        communityContext: {
+          dailyPnlUsd: paperAccount.daily_pnl_usd,
+          winCount: paperAccount.win_count,
+          lossCount: paperAccount.loss_count,
+          closedTrades: paperAccount.closed_trades.length,
+        },
       });
 
       if (!plan.shouldSend || !plan.message) {

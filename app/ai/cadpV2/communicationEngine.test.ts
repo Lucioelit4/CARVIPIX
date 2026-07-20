@@ -48,9 +48,10 @@ test("official alerts always pass through immediately", () => {
 test("repeated no-trade notes are suppressed after first send", () => {
   const engine = new CommunicationEngine();
   const payload = buildPayload();
+  const symbol = `BTCUSD-${Date.now()}`;
 
   const first = engine.prepareTelegramPlan({
-    symbol: "BTCUSD",
+    symbol,
     decision: "NO_TRADE",
     payload,
   });
@@ -59,13 +60,49 @@ test("repeated no-trade notes are suppressed after first send", () => {
   engine.registerSent(first);
 
   const second = engine.prepareTelegramPlan({
-    symbol: "BTCUSD",
+    symbol,
     decision: "NO_TRADE",
     payload,
   });
 
   assert.equal(second.shouldSend, false);
   assert.equal(second.reason, "duplicate-message-suppressed");
+});
+
+test("tone becomes calmer after negative session context", () => {
+  const engine = new CommunicationEngine();
+  const plan = engine.prepareTelegramPlan({
+    symbol: "XAUUSD",
+    decision: "NO_TRADE",
+    payload: buildPayload(),
+    communityContext: {
+      dailyPnlUsd: -120,
+      winCount: 0,
+      lossCount: 2,
+      closedTrades: 2,
+    },
+  });
+
+  assert.equal(plan.shouldSend, true);
+  assert.match(plan.message ?? "", /disciplina|protegiendo capital|forzar/);
+});
+
+test("tone stays measured after positive session context", () => {
+  const engine = new CommunicationEngine();
+  const plan = engine.prepareTelegramPlan({
+    symbol: "GBPUSD",
+    decision: "WAIT",
+    payload: buildPayload({ recheck_minutes: 20 }),
+    communityContext: {
+      dailyPnlUsd: 180,
+      winCount: 2,
+      lossCount: 0,
+      closedTrades: 2,
+    },
+  });
+
+  assert.equal(plan.shouldSend, true);
+  assert.match(plan.message ?? "", /selectivos|ventaja del día|calma/);
 });
 
 test("watch notes stay concise and include next review guidance", () => {

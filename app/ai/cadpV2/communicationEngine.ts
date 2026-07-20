@@ -22,6 +22,13 @@ interface CommunicationDayMemory {
   events: CommunicationEventMemory[];
 }
 
+export interface CommunityContextSnapshot {
+  dailyPnlUsd: number;
+  winCount: number;
+  lossCount: number;
+  closedTrades: number;
+}
+
 export interface CommunicationPlan {
   shouldSend: boolean;
   channel: ChannelKind;
@@ -33,6 +40,8 @@ export interface CommunicationPlan {
   symbol: string;
   decision: CadpDecisionV3;
 }
+
+type CommunityTone = "CALM" | "MEASURED_POSITIVE" | "PATIENT" | "NEUTRAL";
 
 function getMemoryDate(now = new Date()): string {
   return now.toISOString().slice(0, 10);
@@ -179,6 +188,7 @@ export class CommunicationEngine {
     decision: CadpDecisionV3;
     payload: PayloadTelegram;
     premiumPayload?: PayloadAlertaPremium;
+    communityContext?: CommunityContextSnapshot;
   }): CommunicationPlan {
     const summaryBase = `${input.symbol}|${input.decision}|${normalizeText(input.payload.public_summary)}|${normalizeText(input.payload.public_warning)}|${input.payload.market_status}|${input.payload.action_taken}|${input.payload.recheck_minutes ?? "na"}`;
     const summaryHash = hashText(summaryBase);
@@ -201,9 +211,11 @@ export class CommunicationEngine {
     const fingerprint = `${input.symbol}:${input.decision}:${category}:${summaryHash}`;
     const memory = this.store.load();
     const recentForSymbol = memory.events.filter((event) => event.symbol === input.symbol).slice(-8);
+    const allRecent = memory.events.slice(-30);
     const sameFingerprint = recentForSymbol.find((event) => event.fingerprint === fingerprint);
     const lastSameCategory = [...recentForSymbol].reverse().find((event) => event.category === category);
     const nowMs = Date.now();
+    const tone = this.deriveTone(input.communityContext, allRecent, nowMs);
 
     if (sameFingerprint && nowMs - sameFingerprint.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)) {
       return {
@@ -237,8 +249,8 @@ export class CommunicationEngine {
     }
 
     const message = category === "NO_TRADE_NOTE"
-      ? this.buildNoTradeNote(input.symbol, input.payload, summaryHash)
-      : this.buildWatchNote(input.symbol, input.payload, input.decision, summaryHash);
+      ? this.buildNoTradeNote(input.symbol, input.payload, summaryHash, tone)
+      : this.buildWatchNote(input.symbol, input.payload, input.decision, summaryHash, tone);
 
     return {
       shouldSend: true,
@@ -285,6 +297,31 @@ export class CommunicationEngine {
     return Math.max(reviewMs, 15 * 60_000);
   }
 
+  private deriveTone(
+    context: CommunityContextSnapshot | undefined,
+    recentEvents: CommunicationEventMemory[],
+    nowMs: number,
+  ): CommunityTone {
+    const lastSent = recentEvents.at(-1)?.sent_at_ms ?? null;
+    const silenceMs = lastSent ? nowMs - lastSent : Number.POSITIVE_INFINITY;
+
+    if (context) {
+      if (context.lossCount > context.winCount && context.dailyPnlUsd < 0) {
+        return "CALM";
+      }
+
+      if (context.winCount > 0 && context.dailyPnlUsd > 0) {
+        return "MEASURED_POSITIVE";
+      }
+    }
+
+    if (silenceMs >= 2 * 60 * 60_000) {
+      return "PATIENT";
+    }
+
+    return "NEUTRAL";
+  }
+
   private buildOfficialAlertMessage(symbol: string, premiumPayload: PayloadAlertaPremium): string {
     const directionLabel = premiumPayload.action === "BUY" ? "🟢 COMPRA" : "🔴 VENTA";
     const stateLabel = premiumPayload.action === "BUY" ? "Lista para ejecutar" : "Lista para ejecutar";
@@ -299,19 +336,36 @@ export class CommunicationEngine {
     return message;
   }
 
-  private buildNoTradeNote(symbol: string, payload: PayloadTelegram, seed: string): string {
-    const openers = [
-      "⛔ Sin entrada",
-      "⛔ Aún sin señal válida",
-      "⛔ Mercado sin ventaja clara",
-    ];
+  private buildNoTradeNote(symbol: string, payload: PayloadTelegram, seed: string, tone: CommunityTone): string {
+    const openersByTone: Record<CommunityTone, string[]> = {
+      CALM: [
+        "⛔ Sin entrada, mantenemos disciplina",
+        "⛔ Sin señal, seguimos protegiendo capital",
+        "⛔ Nada que forzar por ahora",
+      ],
+      MEASURED_POSITIVE: [
+        "⛔ Sin entrada, seguimos selectivos",
+        "⛔ No hace falta forzar después de una buena jornada",
+        "⛔ Esperamos otra ventaja real",
+      ],
+      PATIENT: [
+        "⛔ Sin entrada, esperar también es operar bien",
+        "⛔ Mercado quieto, disciplina primero",
+        "⛔ Nada limpio todavía, seguimos atentos",
+      ],
+      NEUTRAL: [
+        "⛔ Sin entrada",
+        "⛔ Aún sin señal válida",
+        "⛔ Mercado sin ventaja clara",
+      ],
+    };
     const reasonLabels = [
       "Motivo",
       "Clave",
       "Contexto",
     ];
 
-    const opener = pickVariant(`${seed}:opener`, openers);
+    const opener = pickVariant(`${seed}:opener:${tone}`, openersByTone[tone]);
     const reasonLabel = pickVariant(`${seed}:reason`, reasonLabels);
     const reason = compactReason(payload);
 
@@ -329,22 +383,54 @@ export class CommunicationEngine {
     payload: PayloadTelegram,
     decision: CadpDecisionV3,
     seed: string,
+    tone: CommunityTone,
   ): string {
-    const headlines = [
-      "👀 Seguimiento activo",
-      "📍 Escenario en vigilancia",
-      "🧭 Mercado en observación",
-    ];
+    const headlinesByTone: Record<CommunityTone, string[]> = {
+      CALM: [
+        "🧭 Seguimiento sereno",
+        "👀 Vigilancia disciplinada",
+        "📍 Esperando confirmación real",
+      ],
+      MEASURED_POSITIVE: [
+        "📍 Seguimiento con calma",
+        "👀 Mercado en vigilancia profesional",
+        "🧭 Cuidando el siguiente contexto",
+      ],
+      PATIENT: [
+        "👀 Seguimiento activo",
+        "🧭 Mercado en observación",
+        "📍 Escenario en vigilancia",
+      ],
+      NEUTRAL: [
+        "👀 Seguimiento activo",
+        "📍 Escenario en vigilancia",
+        "🧭 Mercado en observación",
+      ],
+    };
     const context = truncate(payload.public_summary || payload.public_warning || "Seguimiento profesional sin entrada inmediata.", 110);
-    const action = decision === "WAIT" ? "Esperar confirmación." : "Aún falta confirmación operativa.";
+    const action = this.buildActionLine(decision, tone);
 
     return [
-      `${pickVariant(`${seed}:headline`, headlines)} ${symbol}`,
+      `${pickVariant(`${seed}:headline:${tone}`, headlinesByTone[tone])} ${symbol}`,
       "",
       context,
       action,
       buildReviewLine(payload),
     ].join("\n");
+  }
+
+  private buildActionLine(decision: CadpDecisionV3, tone: CommunityTone): string {
+    if (decision === "WAIT") {
+      if (tone === "CALM") return "Esperar confirmación también protege el plan.";
+      if (tone === "MEASURED_POSITIVE") return "Seguimos selectivos para conservar la ventaja del día.";
+      if (tone === "PATIENT") return "Sin prisa: esperamos validación real antes de actuar.";
+      return "Esperar confirmación.";
+    }
+
+    if (tone === "CALM") return "Aún no hay condiciones para actuar con disciplina.";
+    if (tone === "MEASURED_POSITIVE") return "Preferimos conservar calidad antes que acelerar.";
+    if (tone === "PATIENT") return "La paciencia sigue siendo la mejor decisión ahora mismo.";
+    return "Aún falta confirmación operativa.";
   }
 }
 
