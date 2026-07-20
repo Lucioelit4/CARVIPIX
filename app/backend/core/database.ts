@@ -1091,6 +1091,18 @@ class BackendDatabase {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS bot_mt5_licenses (
+        id TEXT PRIMARY KEY,
+        license_id TEXT NOT NULL UNIQUE,
+        user_id TEXT,
+        status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'SUSPENDED', 'EXPIRED', 'REVOKED')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        activated_at TIMESTAMPTZ,
+        expires_at TIMESTAMPTZ NOT NULL,
+        max_installations INT NOT NULL DEFAULT 1,
+        subscription_tier TEXT NOT NULL DEFAULT 'BASIC' CHECK (subscription_tier IN ('BASIC', 'PRO', 'ENTERPRISE'))
+      );
+
       CREATE TABLE IF NOT EXISTS bot_mt5_installations (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -1339,6 +1351,12 @@ class BackendDatabase {
 
       CREATE INDEX IF NOT EXISTS idx_ie_results_symbol_exec
         ON ie_operation_results(symbol, executed_at DESC);
+
+      CREATE INDEX IF NOT EXISTS idx_bot_mt5_licenses_license_id
+        ON bot_mt5_licenses(license_id);
+
+      CREATE INDEX IF NOT EXISTS idx_bot_mt5_licenses_status
+        ON bot_mt5_licenses(status);
 
       CREATE UNIQUE INDEX IF NOT EXISTS ux_ie_versions_component_version
         ON ie_system_versions(component, version);
