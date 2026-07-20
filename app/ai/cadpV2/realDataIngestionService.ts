@@ -90,7 +90,7 @@ export async function initializePipelineWithRealData(
         for (const row of h1Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
+            symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
             open: row.open,
             high: row.high,
@@ -98,6 +98,7 @@ export async function initializePipelineWithRealData(
             close: row.close,
             volume: row.volume,
             timeframe: "1H" as const,
+            complete: true, // CRITICAL FIX: Mark historical candles as complete (closed)
           };
           const result = pipeline.ingestCandle(candle, "1H");
           if (result) {
@@ -117,7 +118,7 @@ export async function initializePipelineWithRealData(
         for (const row of m30Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
+            symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
             open: row.open,
             high: row.high,
@@ -125,6 +126,7 @@ export async function initializePipelineWithRealData(
             close: row.close,
             volume: row.volume,
             timeframe: "30M" as const,
+            complete: true, // CRITICAL FIX: Mark historical candles as complete (closed)
           };
           const result = pipeline.ingestCandle(candle, "30M");
           if (result) {
@@ -143,7 +145,7 @@ export async function initializePipelineWithRealData(
         for (const row of m5Data.rows) {
           const timestamp = new Date(row.datetime).getTime();
           const candle = {
-            symbol: symbol, // FIX: Use canonical symbol (XAUUSD), NOT provider symbol (XAU/USD)
+            symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
             open: row.open,
             high: row.high,
@@ -151,6 +153,7 @@ export async function initializePipelineWithRealData(
             close: row.close,
             volume: row.volume,
             timeframe: "5M" as const,
+            complete: true, // CRITICAL FIX: Mark historical candles as complete (closed)
           };
           const result = pipeline.ingestCandle(candle, "5M");
           if (result) {
