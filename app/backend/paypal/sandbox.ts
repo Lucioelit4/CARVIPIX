@@ -916,10 +916,44 @@ async function activateAccessByProduct(input: {
         `,
         [input.userId, input.now, expiryDate, licenseKey]
       );
+
+      await backendDatabase.query(
+        `
+        INSERT INTO bot_mt5_licenses (id, license_id, user_id, status, created_at, expires_at, max_installations, subscription_tier, activated_at)
+        VALUES ($1, $2, $3, 'ACTIVE', NOW(), $4, 1, 'ENTERPRISE', NOW())
+        ON CONFLICT (license_id) DO UPDATE
+        SET user_id = EXCLUDED.user_id,
+            status = 'ACTIVE',
+            expires_at = EXCLUDED.expires_at,
+            activated_at = NOW()
+        `,
+        [createId("mt5lic"), licenseKey, input.userId, addDays(input.now, 365)]
+      );
+
+      const downloadToken = createHash("sha256")
+        .update(`${licenseKey}:${input.userId}:${input.now.toISOString()}`)
+        .digest("hex");
+
+      await backendDatabase.query(
+        `
+        INSERT INTO bot_mt5_downloads (id, user_id, license_id, file_hash, download_token, expires_at, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        ON CONFLICT (download_token) DO NOTHING
+        `,
+        [
+          createId("mt5dl"),
+          input.userId,
+          licenseKey,
+          "CARVIPIX_EA_MT5_V1.ex5",
+          downloadToken,
+          addDays(input.now, 1),
+        ]
+      );
+
       return {
         fulfillment: "bot-license",
         licenseKey,
-        downloadUrl: `${resolveAppPublicUrl()}/api/bot/download?license=${encodeURIComponent(licenseKey)}`,
+        downloadUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}`,
       };
     } else {
       const licenseKey = `CVPX-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -930,10 +964,44 @@ async function activateAccessByProduct(input: {
         `,
         [input.userId, licenseKey, input.now, expiryDate, resolvePayPalProvisioningTag()]
       );
+
+      await backendDatabase.query(
+        `
+        INSERT INTO bot_mt5_licenses (id, license_id, user_id, status, created_at, expires_at, max_installations, subscription_tier, activated_at)
+        VALUES ($1, $2, $3, 'ACTIVE', NOW(), $4, 1, 'ENTERPRISE', NOW())
+        ON CONFLICT (license_id) DO UPDATE
+        SET user_id = EXCLUDED.user_id,
+            status = 'ACTIVE',
+            expires_at = EXCLUDED.expires_at,
+            activated_at = NOW()
+        `,
+        [createId("mt5lic"), licenseKey, input.userId, addDays(input.now, 365)]
+      );
+
+      const downloadToken = createHash("sha256")
+        .update(`${licenseKey}:${input.userId}:${input.now.toISOString()}`)
+        .digest("hex");
+
+      await backendDatabase.query(
+        `
+        INSERT INTO bot_mt5_downloads (id, user_id, license_id, file_hash, download_token, expires_at, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        ON CONFLICT (download_token) DO NOTHING
+        `,
+        [
+          createId("mt5dl"),
+          input.userId,
+          licenseKey,
+          "CARVIPIX_EA_MT5_V1.ex5",
+          downloadToken,
+          addDays(input.now, 1),
+        ]
+      );
+
       return {
         fulfillment: "bot-license",
         licenseKey,
-        downloadUrl: `${resolveAppPublicUrl()}/api/bot/download?license=${encodeURIComponent(licenseKey)}`,
+        downloadUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}`,
       };
     }
   }

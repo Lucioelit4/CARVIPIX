@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ecosystemServices } from "@/app/backend";
 import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
 import { backendDatabase } from "@/app/backend/core/database";
-import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
 
 // ============================================================================
 // POST /api/bot/mt5/handshake
@@ -43,16 +41,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar licencia existe y activa
-    const license = await ecosystemServices.bot.getLicense(licenseId.split("-")[1] || "");
-    if (!license || !license.active) {
+    // Validar licencia unificada: primero bot_mt5_licenses; fallback bot_licenses
+    const mt5License = await backendDatabase.query<{ user_id: string }>(
+      `
+      SELECT user_id
+      FROM bot_mt5_licenses
+      WHERE license_id = $1 AND status = 'ACTIVE'
+      LIMIT 1
+      `,
+      [licenseId]
+    );
+
+    let licenseUserId = mt5License.rows[0]?.user_id ?? null;
+
+    if (!licenseUserId) {
+      const legacyLicense = await backendDatabase.query<{ user_id: string }>(
+        `
+        SELECT user_id
+        FROM bot_licenses
+        WHERE license_key = $1 AND active = true
+        LIMIT 1
+        `,
+        [licenseId]
+      );
+      licenseUserId = legacyLicense.rows[0]?.user_id ?? null;
+    }
+
+    if (!licenseUserId) {
       return NextResponse.json({ error: "Licencia inválida o inactiva", valid: false }, { status: 401 });
     }
 
     // Registrar instalación
     try {
       const installation = await botMT5Service.registerInstallation(
-        license.userId,
+        licenseUserId,
         licenseId,
         installationId,
         accountHash,

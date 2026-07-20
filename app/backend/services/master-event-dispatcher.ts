@@ -883,17 +883,29 @@ export class MasterEventDispatcher {
       
       // 6. CREAR SIGNAL PARA MT5
       try {
-        await botMT5Service.createSignal({
-          signalId: signal.signal_id,
-          analysisId: signal.analysis_id,
-          licenseId: process.env.DEFAULT_BOT_LICENSE_ID || "DEFAULT_LICENSE",
-          symbol: signal.symbol,
-          direction: signal.direction,
-          entry: signal.entry,
-          stopLoss: signal.stop_loss,
-          takeProfit: signal.take_profit,
-          riskReward: signal.risk_reward
-        });
+        const licenses = await backendDatabase.query<{ license_id: string }>(
+          `
+          SELECT license_id
+          FROM bot_mt5_licenses
+          WHERE status = 'ACTIVE'
+          `
+        );
+
+        const activeLicenseIds = licenses.rows.map((row) => row.license_id).filter(Boolean);
+
+        for (const licenseId of activeLicenseIds) {
+          await botMT5Service.createSignal({
+            signalId: signal.signal_id,
+            analysisId: signal.analysis_id,
+            licenseId,
+            symbol: signal.symbol,
+            direction: signal.direction,
+            entry: signal.entry,
+            stopLoss: signal.stop_loss,
+            takeProfit: signal.take_profit,
+            riskReward: signal.risk_reward
+          });
+        }
       } catch (error) {
         console.error(`[DISPATCHER-BRAIN] Error creando signal para MT5:`, error);
       }
