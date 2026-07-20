@@ -6,6 +6,7 @@ import type { CadpDecisionV3, PayloadAlertaPremium, PayloadTelegram } from "./ty
 
 type ChannelKind = "alerts" | "notes";
 type CommunicationCategory = "OFFICIAL_ALERT" | "NO_TRADE_NOTE" | "WATCH_NOTE";
+const MAX_CONTEXT_MESSAGES_PER_DAY = 3;
 
 interface CommunicationEventMemory {
   symbol: string;
@@ -180,8 +181,13 @@ class CommunicationMemoryStore {
   }
 }
 
+export interface CommunicationMemoryBackend {
+  load(): CommunicationDayMemory;
+  save(memory: CommunicationDayMemory): void;
+}
+
 export class CommunicationEngine {
-  private readonly store = new CommunicationMemoryStore();
+  constructor(private readonly store: CommunicationMemoryBackend = new CommunicationMemoryStore()) {}
 
   prepareTelegramPlan(input: {
     symbol: string;
@@ -190,7 +196,10 @@ export class CommunicationEngine {
     premiumPayload?: PayloadAlertaPremium;
     communityContext?: CommunityContextSnapshot;
   }): CommunicationPlan {
-    const summaryBase = `${input.symbol}|${input.decision}|${normalizeText(input.payload.public_summary)}|${normalizeText(input.payload.public_warning)}|${input.payload.market_status}|${input.payload.action_taken}|${input.payload.recheck_minutes ?? "na"}`;
+    const normalizedSummary = `${normalizeText(input.payload.public_summary)}|${normalizeText(input.payload.public_warning)}|${input.payload.market_status}|${input.payload.action_taken}`;
+    const summaryBase = input.decision === "NO_TRADE"
+      ? `GLOBAL|${input.decision}|${normalizedSummary}`
+      : `${input.symbol}|${input.decision}|${normalizedSummary}|${input.payload.recheck_minutes ?? "na"}`;
     const summaryHash = hashText(summaryBase);
 
     if (input.premiumPayload?.action && (input.premiumPayload.action === "BUY" || input.premiumPayload.action === "SELL") && input.premiumPayload.entry !== null) {
@@ -208,12 +217,28 @@ export class CommunicationEngine {
     }
 
     const category = input.decision === "NO_TRADE" ? "NO_TRADE_NOTE" : "WATCH_NOTE";
-    const fingerprint = `${input.symbol}:${input.decision}:${category}:${summaryHash}`;
     const memory = this.store.load();
+    const contextSentToday = memory.events.filter((event) => event.category !== "OFFICIAL_ALERT").length;
+    if (contextSentToday >= MAX_CONTEXT_MESSAGES_PER_DAY) {
+      return {
+        shouldSend: false,
+        channel: "notes",
+        category,
+        reason: "daily-context-limit-reached",
+        fingerprint: `${category}:${summaryHash}`,
+        summaryHash,
+        symbol: input.decision === "NO_TRADE" ? "GLOBAL" : input.symbol,
+        decision: input.decision,
+      };
+    }
+
+    const fingerprint = input.decision === "NO_TRADE"
+      ? `GLOBAL:${input.decision}:${category}:${summaryHash}`
+      : `${input.symbol}:${input.decision}:${category}:${summaryHash}`;
     const recentForSymbol = memory.events.filter((event) => event.symbol === input.symbol).slice(-8);
     const allRecent = memory.events.slice(-30);
-    const sameFingerprint = recentForSymbol.find((event) => event.fingerprint === fingerprint);
-    const lastSameCategory = [...recentForSymbol].reverse().find((event) => event.category === category);
+    const sameFingerprint = allRecent.find((event) => event.fingerprint === fingerprint);
+    const lastSameCategory = [...allRecent].reverse().find((event) => event.category === category);
     const nowMs = Date.now();
     const tone = this.deriveTone(input.communityContext, allRecent, nowMs);
 
@@ -230,26 +255,21 @@ export class CommunicationEngine {
       };
     }
 
-    if (
-      category === "NO_TRADE_NOTE" &&
-      lastSameCategory &&
-      lastSameCategory.summary_hash === summaryHash &&
-      nowMs - lastSameCategory.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)
-    ) {
+    if (category === "NO_TRADE_NOTE" && lastSameCategory && nowMs - lastSameCategory.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)) {
       return {
         shouldSend: false,
         channel: "notes",
         category,
-        reason: "consecutive-no-trade-suppressed",
+        reason: "global-no-trade-suppressed",
         fingerprint,
         summaryHash,
-        symbol: input.symbol,
+        symbol: "GLOBAL",
         decision: input.decision,
       };
     }
 
     const message = category === "NO_TRADE_NOTE"
-      ? this.buildNoTradeNote(input.symbol, input.payload, summaryHash, tone)
+      ? this.buildNoTradeNote(input.payload, summaryHash, tone)
       : this.buildWatchNote(input.symbol, input.payload, input.decision, summaryHash, tone);
 
     return {
@@ -260,7 +280,7 @@ export class CommunicationEngine {
       message,
       fingerprint,
       summaryHash,
-      symbol: input.symbol,
+      symbol: input.decision === "NO_TRADE" ? "GLOBAL" : input.symbol,
       decision: input.decision,
     };
   }
@@ -292,9 +312,9 @@ export class CommunicationEngine {
   private getCooldownMs(category: CommunicationCategory, recheckMinutes: number | null | undefined): number {
     const reviewMs = Math.max(5, recheckMinutes ?? 15) * 60_000;
     if (category === "NO_TRADE_NOTE") {
-      return Math.max(reviewMs, 30 * 60_000);
+      return Math.max(reviewMs, 4 * 60 * 60_000);
     }
-    return Math.max(reviewMs, 15 * 60_000);
+    return Math.max(reviewMs, 60 * 60_000);
   }
 
   private deriveTone(
@@ -336,46 +356,29 @@ export class CommunicationEngine {
     return message;
   }
 
-  private buildNoTradeNote(symbol: string, payload: PayloadTelegram, seed: string, tone: CommunityTone): string {
+  private buildNoTradeNote(payload: PayloadTelegram, seed: string, tone: CommunityTone): string {
     const openersByTone: Record<CommunityTone, string[]> = {
       CALM: [
-        "⛔ Sin entrada, mantenemos disciplina",
-        "⛔ Sin señal, seguimos protegiendo capital",
-        "⛔ Nada que forzar por ahora",
+        "🟡 Mercado en espera",
+        "🟡 Seguimos en espera disciplinada",
       ],
       MEASURED_POSITIVE: [
-        "⛔ Sin entrada, seguimos selectivos",
-        "⛔ No hace falta forzar después de una buena jornada",
-        "⛔ Esperamos otra ventaja real",
+        "🟡 Mercado en espera",
+        "🟡 Seguimos selectivos",
       ],
       PATIENT: [
-        "⛔ Sin entrada, esperar también es operar bien",
-        "⛔ Mercado quieto, disciplina primero",
-        "⛔ Nada limpio todavía, seguimos atentos",
+        "🟡 Mercado en espera",
+        "🟡 Seguimos monitoreando con paciencia",
       ],
       NEUTRAL: [
-        "⛔ Sin entrada",
-        "⛔ Aún sin señal válida",
-        "⛔ Mercado sin ventaja clara",
+        "🟡 Mercado en espera",
+        "🟡 Sin entrada por ahora",
       ],
     };
-    const reasonLabels = [
-      "Motivo",
-      "Clave",
-      "Contexto",
-    ];
-
     const opener = pickVariant(`${seed}:opener:${tone}`, openersByTone[tone]);
-    const reasonLabel = pickVariant(`${seed}:reason`, reasonLabels);
-    const reason = compactReason(payload);
+    const globalContext = this.buildGlobalNoTradeContext(payload, tone, seed);
 
-    return [
-      `🟡 ${symbol}`,
-      "",
-      opener,
-      `${reasonLabel}: ${reason}`,
-      buildReviewLine(payload),
-    ].join("\n");
+    return [opener, "", globalContext].join("\n");
   }
 
   private buildWatchNote(
@@ -415,8 +418,37 @@ export class CommunicationEngine {
       "",
       context,
       action,
-      buildReviewLine(payload),
     ].join("\n");
+  }
+
+  private buildGlobalNoTradeContext(payload: PayloadTelegram, tone: CommunityTone, seed: string): string {
+    const baseByTone: Record<CommunityTone, string[]> = {
+      CALM: [
+        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando con disciplina y avisaremos solo cuando aparezca una oportunidad clara.",
+        "El mercado sigue sin ofrecer una ventaja clara en los instrumentos principales. Mantenemos la calma y solo avisaremos si aparece una entrada realmente limpia.",
+      ],
+      MEASURED_POSITIVE: [
+        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Preferimos conservar calidad y avisar solo cuando aparezca una oportunidad clara.",
+        "Después del movimiento reciente seguimos selectivos: todavía no vemos una entrada con ventaja suficiente en los instrumentos principales. Avisaremos solo si el contexto mejora de verdad.",
+      ],
+      PATIENT: [
+        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando y avisaremos únicamente cuando aparezca una oportunidad clara.",
+        "El mercado sigue en espera en los principales instrumentos. Seguimos atentos y solo interrumpiremos al grupo cuando exista una oportunidad clara.",
+      ],
+      NEUTRAL: [
+        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando y avisaremos únicamente cuando aparezca una oportunidad clara.",
+        "De momento no vemos una entrada con ventaja suficiente en los instrumentos principales. Seguimos observando y avisaremos solo si aparece una oportunidad clara.",
+      ],
+    };
+
+    const fromPayload = truncate(compactReason(payload), 70);
+    const base = pickVariant(`${seed}:global:${tone}`, baseByTone[tone]);
+
+    if (!fromPayload || fromPayload.length < 18) {
+      return base;
+    }
+
+    return `${base} Contexto actual: ${fromPayload}.`;
   }
 
   private buildActionLine(decision: CadpDecisionV3, tone: CommunityTone): string {
