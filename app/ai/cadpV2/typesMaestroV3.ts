@@ -693,6 +693,9 @@ export interface PayloadTelegram {
   market_status: MarketVisualState;
   action_taken: string;
   public_warning: string | null;
+  recheck_minutes?: number | null;
+  scenario_classification?: ScenarioClassification;
+  proximity_to_entry?: ProximityToEntry;
 }
 
 export interface PayloadDashboard {

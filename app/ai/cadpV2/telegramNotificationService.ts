@@ -6,7 +6,8 @@
  * SEGURIDAD: Solo envía analysis_public (sin datos privados)
  */
 
-import type { PayloadTelegram, CadpDecisionV3 } from "./typesMaestroV3";
+import type { PayloadTelegram, CadpDecisionV3, PayloadAlertaPremium } from "./typesMaestroV3";
+import { communicationEngine } from "./communicationEngine";
 
 export interface TelegramNotificationResult {
   success: boolean;
@@ -14,25 +15,33 @@ export interface TelegramNotificationResult {
   channel_id?: string;
   error?: string;
   latency_ms: number;
+  skipped?: boolean;
 }
 
 export class TelegramNotificationService {
   private readonly botToken: string;
-  private readonly channelId: string;
+  private readonly freeAlertsChannelId: string;
+  private readonly freeNotesChannelId: string;
   private readonly apiBaseUrl = "https://api.telegram.org";
 
   constructor() {
     this.botToken = process.env.TELEGRAM_BOT_TOKEN || "";
-    // Usar TELEGRAM_CHANNEL_TEST en desarrollo, TELEGRAM_CHANNEL_OFFICIAL en producción
-    this.channelId = process.env.TELEGRAM_CHANNEL_OFFICIAL || 
-                     process.env.TELEGRAM_CHANNEL_TEST || 
-                     "";
+    // Canal del grupo gratuito para alertas operativas.
+    this.freeAlertsChannelId = process.env.TELEGRAM_CHANNEL_FREE ||
+      process.env.TELEGRAM_CHANNEL_OFFICIAL ||
+      process.env.TELEGRAM_CHANNEL_TEST ||
+      "";
+
+    // Canal para notas de actividad (mantener grupo vivo). Si no se define, usa el mismo del grupo gratuito.
+    this.freeNotesChannelId = process.env.TELEGRAM_CHANNEL_FREE_NOTES ||
+      this.freeAlertsChannelId;
     
-    if (!this.botToken || !this.channelId) {
+    if (!this.botToken || !this.freeAlertsChannelId || !this.freeNotesChannelId) {
       console.warn(
         "[Telegram] Missing configuration: " +
         `TOKEN=${!!this.botToken ? "✓" : "✗"}, ` +
-        `CHANNEL=${!!this.channelId ? "✓" : "✗"}`,
+        `FREE_ALERTS_CHANNEL=${!!this.freeAlertsChannelId ? "✓" : "✗"}, ` +
+        `FREE_NOTES_CHANNEL=${!!this.freeNotesChannelId ? "✓" : "✗"}`,
       );
     }
   }
@@ -41,10 +50,11 @@ export class TelegramNotificationService {
     payload: PayloadTelegram,
     symbol: string,
     decision: CadpDecisionV3,
+    premiumPayload?: PayloadAlertaPremium,
   ): Promise<TelegramNotificationResult> {
     const started = Date.now();
 
-    if (!this.botToken || !this.channelId) {
+    if (!this.botToken || !this.freeAlertsChannelId || !this.freeNotesChannelId) {
       return {
         success: false,
         error: "Telegram credentials not configured",
@@ -53,19 +63,24 @@ export class TelegramNotificationService {
     }
 
     try {
-      // Determinar acción y emoji
-      const actionMap: Record<string, { action: string; emoji: string }> = {
-        "ENTER_BUY": { action: "🟢 BUY SIGNAL", emoji: "📈" },
-        "ENTER_SELL": { action: "🔴 SELL SIGNAL", emoji: "📉" },
-        "WAIT": { action: "⏳ WAIT", emoji: "⏸️" },
-        "CONDITIONAL_ENTRY": { action: "⚠️ CONDITIONAL", emoji: "🔔" },
-        "NO_TRADE": { action: "❌ NO TRADE", emoji: "⛔" },
-      };
+      const plan = communicationEngine.prepareTelegramPlan({
+        symbol,
+        decision,
+        payload,
+        premiumPayload,
+      });
 
-      const decisionInfo = actionMap[decision] || { action: "❓ UNKNOWN", emoji: "❓" };
+      if (!plan.shouldSend || !plan.message) {
+        console.log(`[CommunicationEngine] Skipped ${symbol} ${decision}: ${plan.reason}`);
+        return {
+          success: true,
+          skipped: true,
+          channel_id: this.resolveTargetChannel(plan.channel),
+          latency_ms: Date.now() - started,
+        };
+      }
 
-      // Construir mensaje
-      const message = this.buildMessage(symbol, payload, decisionInfo);
+      const targetChannelId = this.resolveTargetChannel(plan.channel);
 
       // Enviar a Telegram
       const response = await fetch(
@@ -76,8 +91,8 @@ export class TelegramNotificationService {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            chat_id: this.channelId,
-            text: message,
+            chat_id: targetChannelId,
+            text: plan.message,
             parse_mode: "HTML",
             disable_web_page_preview: true,
           }),
@@ -92,17 +107,20 @@ export class TelegramNotificationService {
         return {
           success: false,
           error: errorData.description || `HTTP ${response.status}`,
-          channel_id: this.channelId,
+          channel_id: targetChannelId,
           latency_ms: latency,
         };
       }
 
       const result = await response.json();
+      if (result.ok === true) {
+        communicationEngine.registerSent(plan);
+      }
 
       return {
         success: result.ok === true,
         message_id: result.result?.message_id?.toString(),
-        channel_id: this.channelId,
+        channel_id: targetChannelId,
         latency_ms: latency,
       };
 
@@ -112,51 +130,18 @@ export class TelegramNotificationService {
       return {
         success: false,
         error: err instanceof Error ? err.message : String(err),
-        channel_id: this.channelId,
+        channel_id: this.resolveTargetChannel(decision === "ENTER_BUY" || decision === "ENTER_SELL" ? "alerts" : "notes"),
         latency_ms: latency,
       };
     }
   }
 
-  private buildMessage(
-    symbol: string,
-    payload: PayloadTelegram,
-    decision: { action: string; emoji: string },
-  ): string {
-    const { public_summary, market_status, public_warning } = payload;
-
-    let message = `${decision.emoji} <b>${symbol} — ${decision.action}</b>\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `\n`;
-
-    // Market status
-    if (market_status) {
-      message += `📊 <b>Market:</b> ${market_status}\n`;
+  private resolveTargetChannel(channel: ChannelKind | CadpDecisionV3): string {
+    if (channel === "alerts" || channel === "ENTER_BUY" || channel === "ENTER_SELL") {
+      return this.freeAlertsChannelId;
     }
 
-    // Public summary
-    if (public_summary) {
-      message += `\n📈 <b>Analysis:</b>\n`;
-      message += `${public_summary}\n`;
-    }
-
-    // Warning if exists
-    if (public_warning) {
-      message += `\n⚠️ <b>Warning:</b>\n`;
-      message += `${public_warning}\n`;
-    }
-
-    // Action taken
-    if (payload.action_taken) {
-      message += `\n✅ <b>Action:</b>\n`;
-      message += `${payload.action_taken}\n`;
-    }
-
-    message += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-    message += `🔔 CARVIPIX Trading Engine\n`;
-    message += `⏰ ${new Date().toLocaleString("es-ES")}\n`;
-
-    return message;
+    return this.freeNotesChannelId;
   }
 }
 

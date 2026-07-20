@@ -133,6 +133,9 @@ export class DisparadorModulos {
       market_status: analysis_public.market_visual_state,
       action_taken: analysis_public.action_taken,
       public_warning: analysis_public.public_warning,
+      recheck_minutes: adaptive_state.recheck_minutes,
+      scenario_classification: adaptive_state.scenario_classification,
+      proximity_to_entry: adaptive_state.proximity_to_entry,
       // ❌ analysis_private: NOT INCLUDED — confirmed by design
       // ❌ order_plan levels: NOT INCLUDED for channels without permission
     }), destinations);
