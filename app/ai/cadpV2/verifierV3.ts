@@ -104,6 +104,9 @@ export class MaestroV3Verifier {
         const op = raw["order_plan"] as Record<string, unknown>;
         if (!isNumberOrNull(op["stop_loss"])) errors.push("MISSING_FIELD:order_plan.stop_loss");
         if (!isNumberOrNull(op["take_profit"])) errors.push("MISSING_FIELD:order_plan.take_profit");
+        const hasEntryPrice = typeof op["entry_price"] === "number";
+        const hasEntryZone = typeof op["entry_zone_min"] === "number" && typeof op["entry_zone_max"] === "number";
+        if (!hasEntryPrice && !hasEntryZone) errors.push("ENTRY_PRICE_OR_ZONE_REQUIRED");
         if (isObject(raw["master_decision"])) {
           const dir = (raw["master_decision"] as Record<string, unknown>)["direction"];
           if (dir === "BUY" || dir === "SELL") {

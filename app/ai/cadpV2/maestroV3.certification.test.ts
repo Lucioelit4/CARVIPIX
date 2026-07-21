@@ -380,6 +380,16 @@ async function runAllTests(): Promise<void> {
     assert.ok(result.errors.includes("UNAUTHORIZED_STRATEGY:ESTRATEGIA_INVENTADA"));
   });
 
+  await test("4.8 Verifier rechaza entrada sin precio ni zona", () => {
+    const response = buildMockResponse("ENTER_BUY");
+    response.order_plan!.entry_price = null;
+    response.order_plan!.entry_zone_min = null;
+    response.order_plan!.entry_zone_max = null;
+    const result = verifier.verify(response);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.includes("ENTRY_PRICE_OR_ZONE_REQUIRED"));
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   console.log("\n§5 — DISPARADOR: Distribución a 9 módulos");
   // ═══════════════════════════════════════════════════════════════════

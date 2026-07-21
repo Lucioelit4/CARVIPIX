@@ -8,6 +8,7 @@
 import "server-only";
 import type { IndicatorFramework } from "../../engine/data/indicatorFramework";
 import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
+import type { Asset } from "../../engine/types/marketData";
 import { getOpenAIRuntimeConfig } from "../openAIConfig";
 import { OpenAIAdapterV2 } from "./openAIAdapterV2";
 import { CadpCostManager } from "./costManager";
@@ -24,6 +25,8 @@ import { paperTradeMonitor } from "./paperTradeMonitor";
 import { observerV3 } from "./observerV3";
 import { analysisStore } from "./analysisStore";
 import { telegramNotificationService } from "./telegramNotificationService";
+import { CadpMasterSignalBuilder } from "./masterSignalBuilder";
+import { masterSignalStore } from "./masterSignalStore";
 import type {
   CanonicalSymbol,
   PreAnalysisTriggerReason,
@@ -40,12 +43,17 @@ interface ShadowFlowV3Result {
   latency_ms: number;
 }
 
+function isClientAlertAsset(symbol: CanonicalSymbol): symbol is Asset {
+  return symbol === "XAUUSD" || symbol === "EURUSD" || symbol === "GBPUSD" || symbol === "BTCUSD";
+}
+
 export class ShadowFlowV3 {
   private readonly snapshotBuilder: MaestroV3SnapshotBuilder;
   private readonly narrativeBuilder = new NarrativeContextBuilder();
   private readonly summaryBuilder = new ExecutiveSummaryBuilder();
   private readonly promptBuilder = new MaestroV3PromptBuilder();
   private readonly verifier = new MaestroV3Verifier();
+  private readonly masterSignalBuilder = new CadpMasterSignalBuilder();
   private readonly openAI = new OpenAIAdapterV2();
   private readonly costManager = new CadpCostManager();
 
@@ -256,6 +264,22 @@ export class ShadowFlowV3 {
         human_review_required: true,
         auto_execution_eligible: false,
       };
+
+      if (
+        response.master_decision.decision === "ENTER_BUY"
+        || response.master_decision.decision === "ENTER_SELL"
+      ) {
+        if (!isClientAlertAsset(canonical_symbol)) {
+          throw new Error(`CLIENT_ALERT_ASSET_NOT_SUPPORTED:${canonical_symbol}`);
+        }
+        const masterSignal = this.masterSignalBuilder.buildV3({
+          signalId: signal_id,
+          analysisId: analysis_id,
+          symbol: canonical_symbol,
+          response,
+        });
+        masterSignalStore.save(masterSignal);
+      }
 
       // ── PASO 9: Save to idempotency store
       idempotencyStore.register(idempotency_key.full_key, analysis_id);

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import { CadpMasterSignalBuilder } from "./masterSignalBuilder";
 import type { CadpAnalysisResponseV2 } from "./types";
+import type { RespuestaMaestraV3 } from "./typesMaestroV3";
 
 function response(decision: CadpAnalysisResponseV2["analyst_decision"]): CadpAnalysisResponseV2 {
   return {
@@ -70,4 +71,40 @@ test("master signal builder maps ENTER_BUY into BUY without mutating levels", ()
   assert.equal(signal.entry, 100);
   assert.equal(signal.stop_loss, 90);
   assert.equal(signal.take_profit, 120);
+});
+
+test("master signal builder maps Maestro V3 entry into a client-visible shadow signal", () => {
+  const builder = new CadpMasterSignalBuilder();
+  const snapshotUtc = "2026-07-21T07:00:00.000Z";
+  const responseV3 = {
+    master_decision: {
+      decision: "ENTER_SELL",
+      strategy_selected: "CARVIPIX_MAESTRO_DISCRETIONARY_V1",
+    },
+    order_plan: {
+      entry_price: null,
+      entry_zone_min: 1.2840,
+      entry_zone_max: 1.2860,
+      stop_loss: 1.2910,
+      take_profit: 1.2730,
+      risk_reward_ratio: 2,
+      validity_minutes: 30,
+    },
+    _meta: { snapshot_utc: snapshotUtc },
+  } as RespuestaMaestraV3;
+
+  const signal = builder.buildV3({
+    signalId: "sig-v3-1",
+    analysisId: "ana-v3-1",
+    symbol: "GBPUSD",
+    response: responseV3,
+  });
+
+  assert.equal(signal.direction, "SELL");
+  assert.equal(signal.entry, 1.285);
+  assert.equal(signal.stop_loss, 1.2910);
+  assert.equal(signal.take_profit, 1.2730);
+  assert.equal(signal.selected_strategy_id, "CARVIPIX_MAESTRO_DISCRETIONARY_V1");
+  assert.equal(signal.expires_at, "2026-07-21T07:30:00.000Z");
+  assert.equal(signal.auto_execution_eligible, false);
 });
