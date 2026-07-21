@@ -65,10 +65,18 @@ test("buildPaymentTransactionalEmailTemplate renders bot downloadable delivery t
     currency: "USD",
     productId: "bot-carvipix-license",
     productType: "bot",
+    licenseKey: "CVPX-TEST-LICENSE",
+    downloadUrl: "https://carvipix.com/api/bot/mt5/download?token=test-token",
   });
 
   assert.match(rendered.subject, /licencia/i);
-  assert.match(rendered.text, /Descarga del paquete EA/i);
+  assert.match(rendered.text, /CARVIPIX_EA_MT5_V1\.ex5/);
+  assert.match(rendered.text, /MQL5 > Experts/);
+  assert.match(rendered.text, /Permite WebRequest/);
+  assert.match(rendered.text, /CARVIPIX_LICENSE_KEY/);
+  assert.match(rendered.text, /PRODUCTION/);
+  assert.match(rendered.text, /cuenta demo/i);
+  assert.match(rendered.text, /vence en 24 horas/i);
 });
 
 test("buildWelcomeActivatedEmailTemplate renders activation copy", () => {

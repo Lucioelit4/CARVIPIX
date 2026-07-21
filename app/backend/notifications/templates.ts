@@ -459,8 +459,12 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
 
   if (input.templateId === "bot-license-delivery-ready") {
     const licenseKey = input.licenseKey ? `<br/><strong>Licencia:</strong> ${input.licenseKey}` : "";
-    const downloadHtml = input.downloadUrl ? `<p><a href="${input.downloadUrl}">Descargar tu Bot CARVIPIX</a></p>` : "";
-    const downloadText = input.downloadUrl ? `Descarga: ${input.downloadUrl}` : "";
+    const downloadHtml = input.downloadUrl
+      ? `<p><a href="${input.downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:4px;">Descargar Bot CARVIPIX para MT5</a></p><p style="font-size:13px;color:#555;">Por seguridad, inicia sesion con la cuenta usada en la compra. El enlace vence en 24 horas.</p>`
+      : "";
+    const downloadText = input.downloadUrl
+      ? `Descarga: ${input.downloadUrl}\nPor seguridad, inicia sesion con la cuenta usada en la compra. El enlace vence en 24 horas.`
+      : "";
     return {
       subject: "CARVIPIX: licencia de Bot confirmada y entrega preparada",
       html: [
@@ -468,15 +472,19 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         `  <p>Hola ${recipientName},</p>`,
         "  <p>Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada correctamente.</p>",
         `  <p><strong>Orden:</strong> ${orderRef}<br/><strong>Monto:</strong> ${amount}${licenseKey}</p>`,
-        "  <p>Tu flujo de entrega queda preparado con:</p>",
-        "  <ul>",
-        "    <li>Licencia oficial activa</li>",
-        "    <li>Descarga del paquete EA</li>",
-        "    <li>Guia de instalacion</li>",
-        "    <li>Manual y recursos de video</li>",
-        "    <li>Canal de soporte para activacion</li>",
-        "  </ul>",
         `  ${downloadHtml}`,
+        "  <h2 style=\"font-size:18px;margin-top:24px;\">Instalacion facil en MetaTrader 5</h2>",
+        "  <ol style=\"padding-left:22px;\">",
+        "    <li><strong>Descarga el archivo:</strong> pulsa el boton anterior. Recibiras el archivo <code>CARVIPIX_EA_MT5_V1.ex5</code>.</li>",
+        "    <li><strong>Abre la carpeta correcta:</strong> en MetaTrader 5 entra a <em>Archivo &gt; Abrir carpeta de datos</em>. Luego abre <em>MQL5 &gt; Experts</em> y copia ahi el archivo descargado.</li>",
+        "    <li><strong>Actualiza MetaTrader 5:</strong> vuelve a MT5. En el panel <em>Navegador</em>, haz clic derecho sobre <em>Asesores Expertos</em> y selecciona <em>Actualizar</em>. Si el bot no aparece, cierra y abre MT5.</li>",
+        "    <li><strong>Permite la conexion:</strong> entra a <em>Herramientas &gt; Opciones &gt; Asesores Expertos</em>. Activa <em>Permitir WebRequest para las URL indicadas</em> y agrega <code>https://carvipix.com</code>.</li>",
+        "    <li><strong>Coloca el bot en un grafico:</strong> arrastra <em>CARVIPIX_EA_MT5_V1</em> desde el Navegador hacia un grafico. Activa <em>Permitir trading algoritmico</em>.</li>",
+        "    <li><strong>Escribe tu licencia:</strong> en la ventana de propiedades busca <code>CARVIPIX_LICENSE_KEY</code>, pega el codigo mostrado en este correo y deja <code>CARVIPIX_API_ENVIRONMENT</code> en <code>PRODUCTION</code>.</li>",
+        "    <li><strong>Enciende el bot:</strong> pulsa <em>Aceptar</em> y verifica que el boton <em>Trading algoritmico</em> de MT5 este activado. El bot quedara conectado y esperando señales.</li>",
+        "  </ol>",
+        "  <p><strong>Importante:</strong> empieza en una cuenta demo y revisa el tamano de lote antes de permitir operaciones reales. No compartas tu licencia.</p>",
+        "  <p>Si necesitas ayuda, responde a este correo indicando tu numero de orden. No envies contrasenas ni accesos de tu cuenta MT5.</p>",
         "  <p>Equipo CARVIPIX</p>",
         "</div>",
       ].join("\n"),
@@ -488,13 +496,19 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         `Monto: ${amount}`,
         input.licenseKey ? `Licencia: ${input.licenseKey}` : "",
         "",
-        "Tu flujo de entrega queda preparado con:",
-        "- Licencia oficial activa",
-        "- Descarga del paquete EA",
-        "- Guia de instalacion",
-        "- Manual y recursos de video",
-        "- Soporte para activacion",
         downloadText,
+        "",
+        "INSTALACION FACIL EN METATRADER 5",
+        "1. Descarga CARVIPIX_EA_MT5_V1.ex5 con el enlace anterior.",
+        "2. En MT5 abre Archivo > Abrir carpeta de datos > MQL5 > Experts y copia ahi el archivo.",
+        "3. Vuelve a MT5. En Navegador, haz clic derecho en Asesores Expertos y selecciona Actualizar. Si no aparece, reinicia MT5.",
+        "4. Abre Herramientas > Opciones > Asesores Expertos. Permite WebRequest y agrega https://carvipix.com.",
+        "5. Arrastra CARVIPIX_EA_MT5_V1 a un grafico y activa Permitir trading algoritmico.",
+        "6. En CARVIPIX_LICENSE_KEY pega la licencia de este correo. Deja CARVIPIX_API_ENVIRONMENT en PRODUCTION.",
+        "7. Pulsa Aceptar y activa el boton Trading algoritmico de MT5. El bot quedara esperando senales.",
+        "",
+        "Importante: empieza en una cuenta demo y revisa el tamano de lote antes de operar en real. No compartas tu licencia.",
+        "Si necesitas ayuda, responde a este correo con tu numero de orden. No envies contrasenas ni accesos de MT5.",
         "",
         "Equipo CARVIPIX",
       ].filter(Boolean).join("\n"),
