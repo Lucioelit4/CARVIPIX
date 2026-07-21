@@ -24,31 +24,30 @@ import { backendDatabase } from "@/app/backend/core/database";
 import { emailService } from "@/app/backend/email/email-service";
 import { randomUUID } from "crypto";
 import { initializeBetaSchema } from "@/app/backend/schema/beta-schema";
+import { requireClientSession } from "@/app/api/client/_auth";
 
 async function ensureSchema() {
   await initializeBetaSchema();
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireClientSession(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   const body = await request.json().catch(() => ({})) as {
     code?: string;
-    product_id?: string;
-    user_id?: string;
-    user_email?: string;
   };
 
   const code = String(body.code ?? "").trim().toUpperCase();
-  const product_id = String(body.product_id ?? "").trim() || "bot-carvipix-license";
-  const user_id = String(body.user_id ?? "").trim() || null;
-  const user_email = String(body.user_email ?? "").trim().toLowerCase() || null;
+  const product_id = "bot-carvipix-license";
+  const user_id = auth.user.id;
+  const user_email = auth.user.email.trim().toLowerCase();
 
   // ── Validación de entrada ────────────────────────────────────────────
   if (!code) {
     return NextResponse.json({ ok: false, error: "Código requerido" }, { status: 400 });
-  }
-
-  if (!user_id) {
-    return NextResponse.json({ ok: false, error: "Usuario requerido" }, { status: 400 });
   }
 
   // ── Fallback para desarrollo sin BD ──────────────────────────────────
@@ -71,7 +70,7 @@ export async function POST(request: NextRequest) {
       // ── 1. VALIDAR CÓDIGO ────────────────────────────────────────────────
       const codeValidation = await client.query(
         `SELECT code, max_uses, used_count, is_active, expires_at
-         FROM beta_invitation_codes WHERE code = $1 LIMIT 1`,
+         FROM beta_invitation_codes WHERE code = $1 LIMIT 1 FOR UPDATE`,
         [code]
       );
 
@@ -118,7 +117,9 @@ export async function POST(request: NextRequest) {
 
       // ── 4. UPDATE used_count ─────────────────────────────────────────────
       const updateResult = await client.query(
-        `UPDATE beta_invitation_codes SET used_count = used_count + 1 WHERE code = $1
+        `UPDATE beta_invitation_codes SET used_count = used_count + 1
+         WHERE code = $1 AND is_active = true AND used_count < max_uses
+           AND (expires_at IS NULL OR expires_at > NOW())
          RETURNING used_count, max_uses`,
         [code]
       );

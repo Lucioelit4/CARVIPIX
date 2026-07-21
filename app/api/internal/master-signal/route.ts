@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ecosystemServices } from "@/app/backend";
 import { backendDatabase } from "@/app/backend/core/database";
 import { realSignalLifecycleService } from "@/app/backend/services/real-signal-lifecycle-service";
+import { isInternalIngestRequest } from "@/app/api/admin/_shared/security";
 
 type IngestBody = {
   signal: {
@@ -27,18 +28,6 @@ type IngestBody = {
   signalTimestamp?: string;
 };
 
-function isAllowed(request: NextRequest): boolean {
-  const expected = String(process.env.CARVIPIX_INTERNAL_INGEST_TOKEN ?? "").trim();
-  const provided = String(request.headers.get("x-carvipix-ingest-token") ?? "").trim();
-
-  if (expected) {
-    return provided === expected;
-  }
-
-  const host = String(request.headers.get("host") ?? "").toLowerCase();
-  return host.includes("localhost") || host.includes("127.0.0.1");
-}
-
 function toDecision(direction: "BUY" | "SELL" | "NONE") {
   if (direction === "BUY") return "ENTER_BUY" as const;
   if (direction === "SELL") return "ENTER_SELL" as const;
@@ -51,7 +40,7 @@ function toStatus(direction: "BUY" | "SELL" | "NONE") {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAllowed(request)) {
+  if (!isInternalIngestRequest(request)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

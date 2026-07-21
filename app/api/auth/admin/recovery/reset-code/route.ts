@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getClientIp, isSameOriginRequest } from "@/app/api/admin/_shared/security";
 import { rateLimiter } from "@/app/backend";
 import { setAdminAccessCode } from "@/app/lib/auth/admin-access-code";
-import { verifyAdminRecoveryToken } from "@/app/lib/auth/admin-recovery";
+import { consumeAdminRecoveryToken } from "@/app/lib/auth/admin-recovery";
 import { setAdminSessionCookie } from "@/app/lib/auth/admin-server";
 
 type ResetCodeBody = {
@@ -42,12 +42,12 @@ export async function POST(request: NextRequest) {
   const token = String(body.token ?? "").trim();
   const newCode = String(body.newCode ?? "").trim();
 
-  if (!verifyAdminRecoveryToken(token)) {
-    return NextResponse.json({ ok: false, error: "Token inválido o expirado" }, { status: 401 });
-  }
-
   if (!isValidNewCode(newCode)) {
     return NextResponse.json({ ok: false, error: "La nueva contraseña debe tener entre 8 y 64 caracteres" }, { status: 400 });
+  }
+
+  if (!(await consumeAdminRecoveryToken(token))) {
+    return NextResponse.json({ ok: false, error: "Token inválido, expirado o utilizado" }, { status: 401 });
   }
 
   await setAdminAccessCode(newCode);

@@ -1710,7 +1710,15 @@ export async function verifyAndProcessPayPalWebhook(input: {
     `
     INSERT INTO paypal_webhook_events (event_id, event_type, verification_status, process_status, payload, created_at)
     VALUES ($1, $2, $3, $4, $5::jsonb, NOW())
-    ON CONFLICT (event_id) DO NOTHING
+    ON CONFLICT (event_id) DO UPDATE
+    SET event_type = EXCLUDED.event_type,
+      verification_status = EXCLUDED.verification_status,
+      process_status = EXCLUDED.process_status,
+      payload = EXCLUDED.payload,
+      error_message = NULL,
+      processed_at = NULL
+    WHERE paypal_webhook_events.verification_status <> 'SUCCESS'
+       OR paypal_webhook_events.process_status = 'failed'
     RETURNING event_id
     `,
     [eventId, eventType, verificationStatus, "received", input.payloadRaw]

@@ -24,6 +24,42 @@ test("isSameOriginRequest rejects cross origin", () => {
   assert.equal(isSameOriginRequest(request), false);
 });
 
+test("isSameOriginRequest rejects forged same origin in production", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  process.env.NODE_ENV = "production";
+
+  try {
+    const request = new NextRequest("https://carvipix.com/api/internal/observer-v3/analyses", {
+      headers: { origin: "https://carvipix.com" },
+    });
+
+    assert.equal(isSameOriginRequest(request), false);
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+  }
+});
+
+test("isSameOriginRequest accepts configured internal token in production", () => {
+  const previousNodeEnv = process.env.NODE_ENV;
+  const previousToken = process.env.INTERNAL_OBSERVER_TOKEN;
+  process.env.NODE_ENV = "production";
+  process.env.INTERNAL_OBSERVER_TOKEN = "test-internal-token";
+
+  try {
+    const request = new NextRequest("https://carvipix.com/api/internal/observer-v3/analyses", {
+      headers: { "x-internal-token": "test-internal-token" },
+    });
+
+    assert.equal(isSameOriginRequest(request), true);
+  } finally {
+    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = previousNodeEnv;
+    if (previousToken === undefined) delete process.env.INTERNAL_OBSERVER_TOKEN;
+    else process.env.INTERNAL_OBSERVER_TOKEN = previousToken;
+  }
+});
+
 test("getClientIp resolves forwarded header first", () => {
   const request = new NextRequest("https://carvipix.local/api/admin/payments/orders", {
     headers: {

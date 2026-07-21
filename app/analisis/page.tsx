@@ -5,6 +5,7 @@ import { useState, useMemo } from "react";
 import { Search, X, TrendingUp, TrendingDown, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import DisclaimerNote from "@/app/components/DisclaimerNote";
+import { CommunityAnalysisFeed } from "./CommunityAnalysisFeed";
 
 export default function AnalisisPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -274,6 +275,8 @@ export default function AnalisisPage() {
           Biblioteca de análisis técnicos — {filteredAnalyses.length} operaciones disponibles
         </p>
       </div>
+
+      <CommunityAnalysisFeed />
 
       {/* Buscador */}
       <div className="mb-6 relative">

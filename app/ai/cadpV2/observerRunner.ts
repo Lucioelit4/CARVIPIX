@@ -10,7 +10,11 @@ import { adaptiveScheduler } from "./schedulerAdaptativo";
 import { observerV3 } from "./observerV3";
 import { paperTradeMonitor } from "./paperTradeMonitor";
 import { ALL_CANONICAL_SYMBOLS } from "./instrumentRegistry";
-import { initializePipelineWithRealData, getIngestionState } from "./realDataIngestionService";
+import {
+  initializePipelineWithRealData,
+  OFFICIAL_MARKET_DATA_SYMBOLS,
+  refreshPipelineWithRealData,
+} from "./realDataIngestionService";
 import { logCertificationCycle } from "@/app/lib/services/certificationLogService";
 import type { CanonicalSymbol, PreAnalysisTriggerReason } from "./typesMaestroV3";
 
@@ -19,6 +23,8 @@ let runnerActive = false;
 
 /** Cost daily limit — stops new analyses if exceeded */
 const DAILY_COST_LIMIT_USD = 15;
+const MARKET_DATA_REFRESH_MS = 4 * 60 * 1000;
+const officialMarketDataSymbols = new Set<CanonicalSymbol>(OFFICIAL_MARKET_DATA_SYMBOLS);
 
 function isDailyBudgetExceeded(): boolean {
   const state = observerV3.getObserverState();
@@ -128,37 +134,15 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
 
   console.log("[ObserverRunner] Starting Maestro V3 with REAL DATA from Twelve Data.");
 
-  // ── Phase 1: Load real data from Twelve Data into pipeline
+  // Load real data before enabling any analysis cycle.
   (async () => {
     try {
-      const ingestionResult = await initializePipelineWithRealData(options.pipeline);
+      const ingestionResult = await initializePipelineWithRealData(options.pipeline, options.indicators);
 
       if (ingestionResult.success) {
         console.log(
           `[ObserverRunner] ✅ Pipeline initialized with ${ingestionResult.loaded_count} real candles.`
         );
-
-        // Update indicators based on loaded candles
-        // Note: Only 4 symbols are supported by the pipeline (Asset type)
-        const supportedAssets: CanonicalSymbol[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
-
-        for (const symbol of supportedAssets) {
-          const h1Candles = options.pipeline.getRecentCandles(symbol as any, "1H", 120);
-          const m30Candles = options.pipeline.getRecentCandles(symbol as any, "30M", 120);
-          const m5Candles = options.pipeline.getRecentCandles(symbol as any, "5M", 144);
-
-          // Compute indicators from loaded candles
-          for (const candle of h1Candles ?? []) {
-            options.indicators.update(symbol as any, "1H", candle);
-          }
-          for (const candle of m30Candles ?? []) {
-            options.indicators.update(symbol as any, "30M", candle);
-          }
-          for (const candle of m5Candles ?? []) {
-            options.indicators.update(symbol as any, "5M", candle);
-          }
-        }
-
         console.log("[ObserverRunner] ✅ Indicators computed from real data.");
       } else {
         console.warn(
@@ -167,9 +151,44 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
         console.warn("[ObserverRunner] Proceeding with available data.");
       }
 
-      // ── Phase 2: Start scheduler to determine when to analyze
-      // (Not forcing analyses - let scheduler decide based on market data)
-      console.log("[ObserverRunner] ✅ Scheduler ready to monitor. Awaiting first trigger...");
+      adaptiveScheduler.startTicker(async (symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason) => {
+        if (shadowFlowInstance && officialMarketDataSymbols.has(symbol)) {
+          await runAnalysisCycle(shadowFlowInstance, symbol, reason);
+        }
+      });
+
+      const due = adaptiveScheduler
+        .getInstrumentsDue(Date.now())
+        .filter(({ symbol }) => officialMarketDataSymbols.has(symbol));
+      for (const { symbol, reason } of due) {
+        if (!shadowFlowInstance || !runnerActive) {
+          break;
+        }
+        await runAnalysisCycle(shadowFlowInstance, symbol, reason);
+      }
+
+      let refreshActive = false;
+      const refreshTimer = setInterval(async () => {
+        if (!runnerActive) {
+          clearInterval(refreshTimer);
+          return;
+        }
+        if (refreshActive) {
+          return;
+        }
+
+        refreshActive = true;
+        try {
+          const refresh = await refreshPipelineWithRealData(options.pipeline, options.indicators);
+          if (!refresh.success) {
+            console.warn(`[ObserverRunner] Market data refresh incomplete: ${refresh.error ?? "unknown error"}`);
+          }
+        } finally {
+          refreshActive = false;
+        }
+      }, MARKET_DATA_REFRESH_MS);
+
+      console.log("[ObserverRunner] Active. Real data refresh and scheduler monitoring enabled.");
     } catch (err) {
       console.error(
         "[ObserverRunner] Initialization error:",
@@ -177,29 +196,6 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
       );
     }
   })();
-
-  // ── Adaptive scheduler tick (main execution loop)
-  adaptiveScheduler.startTicker(async (symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason) => {
-    if (shadowFlowInstance) {
-      await runAnalysisCycle(shadowFlowInstance, symbol, reason);
-    }
-  });
-
-  // Kick off the first due analyses immediately so lifecycle/history data appears without waiting for the first ticker interval.
-  (async () => {
-    const due = adaptiveScheduler.getInstrumentsDue(Date.now());
-    for (const { symbol, reason } of due) {
-      if (!shadowFlowInstance || !runnerActive) {
-        break;
-      }
-      await runAnalysisCycle(shadowFlowInstance, symbol, reason);
-    }
-  })().catch((err) => {
-    console.error(
-      "[ObserverRunner] Initial due-analysis execution failed:",
-      err instanceof Error ? err.message : String(err)
-    );
-  });
 
   // ── Paper trade price tracking (every 30 seconds)
   const priceTracker = setInterval(async () => {
@@ -210,9 +206,7 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
 
     // Get real prices from pipeline if available (only Asset types)
     const prices: Partial<Record<CanonicalSymbol, number>> = {};
-    const supportedAssets: CanonicalSymbol[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
-
-    for (const symbol of supportedAssets) {
+    for (const symbol of OFFICIAL_MARKET_DATA_SYMBOLS) {
       const m5Candles = options.pipeline.getRecentCandles(symbol as any, "5M", 1);
       if (m5Candles && m5Candles.length > 0) {
         prices[symbol] = m5Candles[0].close;
@@ -222,8 +216,6 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
     paperTradeMonitor.tick(prices, 0);
     observerV3.updatePaperAccount(paperTradeMonitor.getAccountState());
   }, 30_000);
-
-  console.log("[ObserverRunner] Active. Real data ingestion complete. Scheduler monitoring active.");
 }
 
 export function stopObserverRunner(): void {

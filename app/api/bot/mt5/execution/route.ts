@@ -18,12 +18,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
 import { backendDatabase } from "@/app/backend/core/database";
+import { requireActiveMt5License } from "../_auth";
 
 /**
  * POST /api/bot/mt5/execution
  * Retorno de ejecución desde MT5
  */
 export async function POST(request: NextRequest) {
+  const auth = await requireActiveMt5License(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const body = await request.json();
     
@@ -33,6 +39,18 @@ export async function POST(request: NextRequest) {
         success: false,
         error: "event_id y status son requeridos"
       }, { status: 400 });
+    }
+
+    if (!body.signal_id) {
+      return NextResponse.json({ success: false, error: "signal_id es requerido" }, { status: 400 });
+    }
+
+    const ownedSignal = await backendDatabase.query<{ id: string }>(
+      `SELECT id FROM bot_mt5_signals WHERE signal_id = $1 AND license_id = $2 LIMIT 1`,
+      [body.signal_id, auth.licenseKey],
+    );
+    if (!ownedSignal.rows[0]) {
+      return NextResponse.json({ success: false, error: "Signal not found" }, { status: 404 });
     }
     
     // Validar status
@@ -48,8 +66,8 @@ export async function POST(request: NextRequest) {
       const new_status = body.status === "EXECUTED" ? "EXECUTED" : "REJECTED";
       try {
         await backendDatabase.query(
-          `UPDATE bot_mt5_signals SET status = $1 WHERE signal_id = $2`,
-          [new_status, body.signal_id]
+          `UPDATE bot_mt5_signals SET status = $1 WHERE signal_id = $2 AND license_id = $3`,
+          [new_status, body.signal_id, auth.licenseKey]
         );
         console.log(`[EXECUTION] bot_mt5_signals.status → ${new_status} para ${body.signal_id}`);
       } catch (err) {
@@ -82,7 +100,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({
       success: false,
-      error: (error as Error).message
+      error: "No se pudo procesar la ejecución"
     }, { status: 500 });
   }
 }

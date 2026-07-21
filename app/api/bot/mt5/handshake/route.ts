@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
-import { backendDatabase } from "@/app/backend/core/database";
+import { findActiveMt5License, requireActiveMt5License } from "../_auth";
 
 // ============================================================================
 // POST /api/bot/mt5/handshake
@@ -41,40 +41,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validar licencia unificada: primero bot_mt5_licenses; fallback bot_licenses
-    const mt5License = await backendDatabase.query<{ user_id: string }>(
-      `
-      SELECT user_id
-      FROM bot_mt5_licenses
-      WHERE license_id = $1 AND status = 'ACTIVE'
-      LIMIT 1
-      `,
-      [licenseId]
-    );
-
-    let licenseUserId = mt5License.rows[0]?.user_id ?? null;
-
-    if (!licenseUserId) {
-      const legacyLicense = await backendDatabase.query<{ user_id: string }>(
-        `
-        SELECT user_id
-        FROM bot_licenses
-        WHERE license_key = $1 AND active = true
-        LIMIT 1
-        `,
-        [licenseId]
-      );
-      licenseUserId = legacyLicense.rows[0]?.user_id ?? null;
-    }
-
-    if (!licenseUserId) {
+    const license = await findActiveMt5License(licenseId);
+    if (!license) {
       return NextResponse.json({ error: "Licencia inválida o inactiva", valid: false }, { status: 401 });
     }
 
     // Registrar instalación
     try {
       const installation = await botMT5Service.registerInstallation(
-        licenseUserId,
+        license.userId,
         licenseId,
         installationId,
         accountHash,
@@ -105,17 +80,13 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const auth = await requireActiveMt5License(request);
+  if (!auth.ok) return auth.response;
+
   const licenseId = request.nextUrl.searchParams.get("license_id") || "";
   const installationId = request.nextUrl.searchParams.get("installation_id") || "";
 
-  // Validar auth
-  const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Sin autorización" }, { status: 401 });
-  }
-
-  const token = authHeader.slice(7);
-  if (token !== licenseId) {
+  if (auth.licenseKey !== licenseId) {
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 

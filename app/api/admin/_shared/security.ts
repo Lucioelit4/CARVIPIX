@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
 function extractOrigin(request: NextRequest): string | null {
   const origin = request.headers.get("origin");
@@ -19,6 +20,10 @@ function extractOrigin(request: NextRequest): string | null {
 }
 
 export function isSameOriginRequest(request: NextRequest): boolean {
+  if (isValidAdminSession(request)) {
+    return true;
+  }
+
   const internalToken = request.headers.get("x-internal-token")?.trim();
   const expectedInternalToken = process.env.INTERNAL_OBSERVER_TOKEN?.trim();
   if (expectedInternalToken && internalToken && internalToken === expectedInternalToken) {
@@ -36,7 +41,13 @@ export function isSameOriginRequest(request: NextRequest): boolean {
     return process.env.NODE_ENV !== "production";
   }
 
-  return extracted === request.nextUrl.origin;
+  return process.env.NODE_ENV !== "production" && extracted === request.nextUrl.origin;
+}
+
+export function isInternalIngestRequest(request: NextRequest): boolean {
+  const expectedToken = process.env.CARVIPIX_INTERNAL_INGEST_TOKEN?.trim();
+  const providedToken = request.headers.get("x-carvipix-ingest-token")?.trim();
+  return Boolean(expectedToken && providedToken && providedToken === expectedToken);
 }
 
 export function getClientIp(request: NextRequest): string {

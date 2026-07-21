@@ -9,6 +9,7 @@
  */
 
 import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
+import type { IndicatorFramework } from "../../engine/data/indicatorFramework";
 import type { CanonicalSymbol } from "./typesMaestroV3";
 import { TwelveDataTimeSeriesService } from "../../backend/data-platform/providers/twelve-data/timeSeries";
 import { getTwelveDataRuntimeConfig, isTwelveDataOfficialEnabled } from "../../backend/data-platform/providers/twelve-data/config";
@@ -26,6 +27,15 @@ const SYMBOL_MAPPING: Record<CanonicalSymbol, string> = {
   AUDUSD: "AUD/USD",
   USDCHF: "USD/CHF",
 };
+
+export const OFFICIAL_MARKET_DATA_SYMBOLS: CanonicalSymbol[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
+
+interface IngestionOptions {
+  h1OutputSize?: number;
+  m30OutputSize?: number;
+  m5OutputSize?: number;
+  operation?: "initialization" | "refresh";
+}
 
 interface IngestionMetadata {
   lastIngestionMs: number;
@@ -51,7 +61,9 @@ const ingestionState: IngestionMetadata = {
  * Called once at startup before scheduler begins
  */
 export async function initializePipelineWithRealData(
-  pipeline: MarketDataPipeline
+  pipeline: MarketDataPipeline,
+  indicators?: IndicatorFramework,
+  options: IngestionOptions = {},
 ): Promise<{ success: boolean; loaded_count: number; error?: string }> {
   try {
     if (!isTwelveDataOfficialEnabled()) {
@@ -62,10 +74,14 @@ export async function initializePipelineWithRealData(
     const config = getTwelveDataRuntimeConfig();
     const timeSeriesService = new TwelveDataTimeSeriesService(config);
 
-    const symbols: CanonicalSymbol[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
+    const symbols = OFFICIAL_MARKET_DATA_SYMBOLS;
+    const h1OutputSize = options.h1OutputSize ?? 120;
+    const m30OutputSize = options.m30OutputSize ?? 120;
+    const m5OutputSize = options.m5OutputSize ?? 144;
+    const operation = options.operation ?? "initialization";
     let totalLoaded = 0;
 
-    console.log("[RealDataIngestion] Loading historical candles from Twelve Data...");
+    console.log(`[RealDataIngestion] Starting ${operation} from Twelve Data...`);
 
     for (const symbol of symbols) {
       try {
@@ -77,11 +93,11 @@ export async function initializePipelineWithRealData(
 
         console.log(`[RealDataIngestion] Fetching ${symbol} (provider: ${providerSymbol})...`);
 
-        // Fetch H1 candles (120 bars)
+        // Fetch H1 candles
         const h1Data = await timeSeriesService.getSeries({
           symbol: providerSymbol,
           interval: "1h",
-          outputsize: 120,
+          outputsize: h1OutputSize,
         });
 
         console.log(`[RealDataIngestion] H1 response for ${symbol}: ${h1Data.rows.length} rows, latency: ${h1Data.latencyMs}ms`);
@@ -103,15 +119,16 @@ export async function initializePipelineWithRealData(
           const result = pipeline.ingestCandle(candle, "1H");
           if (result) {
             h1Count++;
+            indicators?.update(result.asset, "1H", result);
             ingestionState.last_price[symbol] = row.close;
           }
         }
 
-        // Fetch M30 candles (120 bars)
+        // Fetch M30 candles
         const m30Data = await timeSeriesService.getSeries({
           symbol: providerSymbol,
           interval: "30min",
-          outputsize: 120,
+          outputsize: m30OutputSize,
         });
 
         let m30Count = 0;
@@ -131,14 +148,15 @@ export async function initializePipelineWithRealData(
           const result = pipeline.ingestCandle(candle, "30M");
           if (result) {
             m30Count++;
+            indicators?.update(result.asset, "30M", result);
           }
         }
 
-        // Fetch M5 candles (144 bars)
+        // Fetch M5 candles
         const m5Data = await timeSeriesService.getSeries({
           symbol: providerSymbol,
           interval: "5min",
-          outputsize: 144,
+          outputsize: m5OutputSize,
         });
 
         let m5Count = 0;
@@ -158,6 +176,7 @@ export async function initializePipelineWithRealData(
           const result = pipeline.ingestCandle(candle, "5M");
           if (result) {
             m5Count++;
+            indicators?.update(result.asset, "5M", result);
           }
         }
 
@@ -188,6 +207,18 @@ export async function initializePipelineWithRealData(
     ingestionState.errors.push(error);
     return { success: false, loaded_count: 0, error };
   }
+}
+
+export async function refreshPipelineWithRealData(
+  pipeline: MarketDataPipeline,
+  indicators: IndicatorFramework,
+): Promise<{ success: boolean; loaded_count: number; error?: string }> {
+  return initializePipelineWithRealData(pipeline, indicators, {
+    h1OutputSize: 2,
+    m30OutputSize: 2,
+    m5OutputSize: 2,
+    operation: "refresh",
+  });
 }
 
 /**

@@ -41,11 +41,6 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json().catch(() => ({}))) as { code?: unknown };
-
-  if (!(await isValidAdminCode(body.code))) {
-    return NextResponse.json({ ok: false }, { status: 401 });
-  }
-
   const rateLimit = rateLimiter.check({
     scope: 'auth.admin.login',
     key: getClientIp(request),
@@ -62,6 +57,10 @@ export async function POST(request: NextRequest) {
       },
       { status: 429 }
     );
+  }
+
+  if (!(await isValidAdminCode(body.code))) {
+    return NextResponse.json({ ok: false }, { status: 401 });
   }
 
   rateLimiter.reset('auth.admin.login', getClientIp(request));

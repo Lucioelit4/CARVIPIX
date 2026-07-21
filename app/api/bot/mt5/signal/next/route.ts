@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
+import { requireActiveMt5License } from "../../_auth";
 
 type DbQueryResult<T> = {
   rows: T[];
@@ -12,16 +13,12 @@ type DbQueryResult<T> = {
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireActiveMt5License(request);
+    if (!auth.ok) return auth.response;
+
     const licenseId = request.nextUrl.searchParams.get("license_id") || "";
 
-    // Enforce the same auth pattern used by other MT5 endpoints.
-    const authHeader = request.headers.get("authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Sin autorización" }, { status: 401 });
-    }
-
-    const token = authHeader.slice(7);
-    if (!licenseId || token !== licenseId) {
+    if (!licenseId || auth.licenseKey !== licenseId) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 

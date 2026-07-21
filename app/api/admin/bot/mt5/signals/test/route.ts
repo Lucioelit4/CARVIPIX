@@ -1,7 +1,13 @@
 import { backendDatabase } from "@/app/backend/core/database";
 import { randomUUID } from "crypto";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
+import { NextRequest } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!isValidAdminSession(request)) {
+    return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     
@@ -56,12 +62,10 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorStack = error instanceof Error ? error.stack : undefined;
     console.error("[TEST-SIGNAL]", errorMessage);
     return Response.json({
       success: false,
-      error: errorMessage,
-      stack: errorStack
+      error: "No se pudo crear la señal de prueba"
     }, { status: 500 });
   }
 }

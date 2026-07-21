@@ -1,11 +1,15 @@
-import { createHmac, timingSafeEqual } from "crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "crypto";
+import { backendDatabase } from "@/app/backend/core/database";
 
 const ADMIN_RECOVERY_TOKEN_TTL_SECONDS = 60 * 10;
 
 type AdminRecoveryPayload = {
   exp: number;
+  jti: string;
   purpose: "admin-recovery";
 };
+
+const consumedLocalTokens = new Set<string>();
 
 function base64UrlEncode(value: string): string {
   return Buffer.from(value, "utf8").toString("base64url");
@@ -39,6 +43,7 @@ export function getAdminRecoveryEmail(): string | null {
 export function createAdminRecoveryToken(): string {
   const payload: AdminRecoveryPayload = {
     exp: Date.now() + ADMIN_RECOVERY_TOKEN_TTL_SECONDS * 1000,
+    jti: randomBytes(16).toString("hex"),
     purpose: "admin-recovery",
   };
 
@@ -72,8 +77,41 @@ export function verifyAdminRecoveryToken(token: string): boolean {
 
   try {
     const payload = JSON.parse(base64UrlDecode(encodedPayload)) as AdminRecoveryPayload;
-    return Boolean(payload?.purpose === "admin-recovery" && payload?.exp && Date.now() < payload.exp);
+    return Boolean(payload?.purpose === "admin-recovery" && payload?.exp && payload?.jti && Date.now() < payload.exp);
   } catch {
     return false;
   }
+}
+
+export async function consumeAdminRecoveryToken(token: string): Promise<boolean> {
+  if (!verifyAdminRecoveryToken(token)) {
+    return false;
+  }
+
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  if (!backendDatabase.enabled) {
+    if (consumedLocalTokens.has(tokenHash)) {
+      return false;
+    }
+    consumedLocalTokens.add(tokenHash);
+    return true;
+  }
+
+  await backendDatabase.query(`
+    CREATE TABLE IF NOT EXISTS admin_recovery_token_uses (
+      token_hash TEXT PRIMARY KEY,
+      consumed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  const result = await backendDatabase.query<{ token_hash: string }>(
+    `
+    INSERT INTO admin_recovery_token_uses (token_hash)
+    VALUES ($1)
+    ON CONFLICT (token_hash) DO NOTHING
+    RETURNING token_hash
+    `,
+    [tokenHash]
+  );
+
+  return Boolean(result.rows[0]);
 }

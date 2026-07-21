@@ -6,6 +6,11 @@ import {
   type MassiveLabConfig,
 } from '../../../engine/backtesting/massiveLab';
 import type { Asset, Timeframe } from '../../../engine/types/marketData';
+import { isSameOriginRequest } from '@/app/api/admin/_shared/security';
+
+function isAuthorized(request: NextRequest): boolean {
+  return isSameOriginRequest(request);
+}
 
 function parseCsvList<T extends string>(value: string | null): T[] | undefined {
   if (!value) return undefined;
@@ -52,6 +57,10 @@ function buildExternalDependencyBlock() {
 }
 
 export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
   const searchParams = request.nextUrl.searchParams;
   const action = searchParams.get('action') || 'inventory';
 
@@ -123,6 +132,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!isLocalDatasetModeEnabled()) {
     return NextResponse.json(buildExternalDependencyBlock(), { status: 503 });
   }
@@ -149,6 +162,10 @@ export async function POST(request: NextRequest) {
  * /api/backtesting/massive?action=plan
  */
 export async function PATCH(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!isLocalDatasetModeEnabled()) {
     return NextResponse.json(buildExternalDependencyBlock(), { status: 503 });
   }

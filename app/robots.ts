@@ -12,9 +12,7 @@ export default function robots(): MetadataRoute.Robots {
           "/",
           "/servicios",
           "/socios-estrategicos",
-          "/resultados",
           "/fondeo",
-          "/comunidad",
           "/registro",
           "/login",
           "/legal",
@@ -42,6 +40,8 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           // Private/authenticated areas — no SEO value, protect from indexing
           "/dashboard",
+          "/resultados",
+          "/comunidad",
           "/admin",
           "/alertas",
           "/bot",

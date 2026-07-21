@@ -52,7 +52,6 @@ type ChannelItem = {
   id: string;
   label: string;
   description: string;
-  messageCount: number;
 };
 
 type ModerationLog = {
@@ -83,138 +82,13 @@ const MAIN_NAV = [
 ] as const;
 
 const CHANNELS: ChannelItem[] = [
-  { id: "chat-principal", label: "chat-principal", description: "Canal principal para comunicacion general del equipo.", messageCount: 87 },
-  { id: "alertas-en-vivo", label: "alertas-en-vivo", description: "Senales y alertas en tiempo real", messageCount: 56 },
-  { id: "gestion-de-senales", label: "gestion-de-senales", description: "Analisis y gestion de operaciones", messageCount: 42 },
-  { id: "dudas-de-miembros", label: "dudas-de-miembros", description: "Resolucion de dudas tacticas", messageCount: 23 },
-  { id: "noticias-importantes", label: "noticias-importantes", description: "Comunicados clave", messageCount: 19 },
-  { id: "resultados-operativos", label: "resultados-operativos", description: "Resumen de rendimiento", messageCount: 34 },
+  { id: "chat-principal", label: "chat-principal", description: "Canal principal para comunicacion general del equipo." },
+  { id: "alertas-en-vivo", label: "alertas-en-vivo", description: "Senales y alertas en tiempo real" },
+  { id: "gestion-de-senales", label: "gestion-de-senales", description: "Analisis y gestion de operaciones" },
+  { id: "dudas-de-miembros", label: "dudas-de-miembros", description: "Resolucion de dudas tacticas" },
+  { id: "noticias-importantes", label: "noticias-importantes", description: "Comunicados clave" },
+  { id: "resultados-operativos", label: "resultados-operativos", description: "Resumen de rendimiento" },
 ];
-
-const CHANNEL_MESSAGES: Record<string, ChatMessage[]> = {
-  "chat-principal": [
-    {
-      id: "cp-1",
-      user: "Equipo CARVIPIX",
-      role: "Equipo CARVIPIX",
-      avatar: "EC",
-      time: "09:02",
-      content: "Buenos dias equipo, hoy estaremos atentos a XAUUSD y EURUSD durante sesion NY.",
-      reactions: { like: 12, love: 4, fire: 5, check: 9, eyes: 6 },
-      reactedByMe: [],
-    },
-    {
-      id: "cp-2",
-      user: "Maria",
-      role: "Miembro PRO",
-      avatar: "MA",
-      time: "09:04",
-      content: "La entrada de oro sigue valida?",
-      reactions: { like: 8, love: 2, fire: 1, check: 0, eyes: 3 },
-      reactedByMe: [],
-    },
-    {
-      id: "cp-3",
-      user: "Equipo CARVIPIX",
-      role: "Equipo CARVIPIX",
-      avatar: "EC",
-      time: "09:05",
-      content: "Si, mientras respete la zona de proteccion marcada.",
-      reactions: { like: 8, love: 0, fire: 0, check: 4, eyes: 0 },
-      reactedByMe: [],
-    },
-    {
-      id: "cp-4",
-      user: "Diego",
-      role: "Miembro",
-      avatar: "DI",
-      time: "09:08",
-      content: "Gracias, ya marque gestion parcial.",
-      reactions: { like: 3, love: 0, fire: 0, check: 0, eyes: 0 },
-      reactedByMe: [],
-    },
-    {
-      id: "cp-5",
-      user: "Lucio",
-      role: "Miembro PRO",
-      avatar: "LU",
-      time: "09:12",
-      content: "Reducire el tamano de lote para XAUUSD, mejor gestion de riesgo.",
-      reactions: { like: 5, love: 0, fire: 2, check: 0, eyes: 1 },
-      reactedByMe: [],
-    },
-    {
-      id: "cp-6",
-      user: "Sofia",
-      role: "Miembro",
-      avatar: "SO",
-      time: "09:14",
-      content: "He compartido una captura en #gestion-de-senales para revisar niveles.",
-      reactions: { like: 4, love: 0, fire: 0, check: 2, eyes: 2 },
-      reactedByMe: [],
-    },
-  ],
-  "alertas-en-vivo": [
-    {
-      id: "al-1",
-      user: "Moderador Alex",
-      role: "Moderador",
-      avatar: "AL",
-      time: "10:03",
-      content: "Alerta activa: EURUSD venta con confirmacion en M15.",
-      reactions: { like: 7, love: 1, fire: 4, check: 5, eyes: 8 },
-      reactedByMe: [],
-    },
-  ],
-  "gestion-de-senales": [
-    {
-      id: "gs-1",
-      user: "Equipo CARVIPIX",
-      role: "Equipo CARVIPIX",
-      avatar: "EC",
-      time: "11:18",
-      content: "Recordatorio: proteger parcial en +1R y mover SL a BE segun plan.",
-      reactions: { like: 9, love: 0, fire: 3, check: 7, eyes: 4 },
-      reactedByMe: [],
-    },
-  ],
-  "dudas-de-miembros": [
-    {
-      id: "dm-1",
-      user: "Carla",
-      role: "Miembro",
-      avatar: "CA",
-      time: "12:01",
-      content: "Que riesgo maximo diario recomiendan para cuenta de 10k?",
-      reactions: { like: 2, love: 0, fire: 0, check: 0, eyes: 5 },
-      reactedByMe: [],
-    },
-  ],
-  "noticias-importantes": [
-    {
-      id: "ni-1",
-      user: "Moderador Alex",
-      role: "Moderador",
-      avatar: "AL",
-      time: "08:20",
-      content: "Actualizacion de politicas internas de la comunidad disponible en anclados.",
-      reactions: { like: 11, love: 0, fire: 1, check: 13, eyes: 7 },
-      reactedByMe: [],
-    },
-  ],
-  "resultados-operativos": [
-    {
-      id: "ro-1",
-      user: "Equipo CARVIPIX",
-      role: "Equipo CARVIPIX",
-      avatar: "EC",
-      time: "17:45",
-      content: "Cierre del dia: win rate 68%, drawdown controlado y sesion cerrada en verde.",
-      reactions: { like: 14, love: 6, fire: 9, check: 12, eyes: 4 },
-      reactedByMe: [],
-    },
-  ],
-};
 
 const REACTION_META: Array<{ key: ReactionKey; emoji: string }> = [
   { key: "like", emoji: "👍" },
@@ -238,11 +112,10 @@ function nowTime(): string {
 
 export default function ComunidadPage() {
   const [activeChannel, setActiveChannel] = useState<string>("chat-principal");
-  const [messagesByChannel, setMessagesByChannel] = useState<Record<string, ChatMessage[]>>(CHANNEL_MESSAGES);
+  const [messagesByChannel, setMessagesByChannel] = useState<Record<string, ChatMessage[]>>({});
   const [availableChannels, setAvailableChannels] = useState<string[]>(CHANNELS.map((channel) => channel.id));
   const [userName, setUserName] = useState("Miembro CARVIPIX");
   const [inputValue, setInputValue] = useState("");
-  const [typingName, setTypingName] = useState("Andrea");
   const [helperNotice, setHelperNotice] = useState("");
   const [moderationNotice, setModerationNotice] = useState("");
   const [moderationLogs, setModerationLogs] = useState<ModerationLog[]>([]);
@@ -329,12 +202,10 @@ export default function ComunidadPage() {
           reactedByMe: [],
         }));
 
-        if (messages.length > 0) {
-          setMessagesByChannel((prev) => ({
-            ...prev,
-            [activeChannel]: messages,
-          }));
-        }
+        setMessagesByChannel((prev) => ({
+          ...prev,
+          [activeChannel]: messages,
+        }));
 
         setModerationLogs(payload.data?.moderationLogs ?? []);
         setQuickReplies(payload.data?.quickReplies ?? []);
@@ -519,7 +390,6 @@ export default function ComunidadPage() {
       }));
       setInputValue("");
       setReplyTo(null);
-      setTypingName("Marco");
     } catch {
       setModerationNotice("No se pudo enviar el mensaje en este momento.");
       setTimeout(() => setModerationNotice(""), 3000);
@@ -692,7 +562,7 @@ export default function ComunidadPage() {
                           <Hash size={12} />
                           {channel.label}
                         </span>
-                        <small className="text-[10px] text-white/60">{channel.messageCount}</small>
+                        <small className="text-[10px] text-white/60">{(messagesByChannel[channel.id] ?? []).length}</small>
                       </div>
                       <p className="mt-1 text-[11px] text-white/60">{channel.description}</p>
                     </button>
@@ -829,11 +699,11 @@ export default function ComunidadPage() {
                 ))}
               </div>
 
-              <p className="mt-2 text-[11px] md:text-xs text-white/55">
-                {typingUsers.length > 0
-                  ? `${typingUsers.map((user) => user.userName).slice(0, 2).join(", ")} esta escribiendo...`
-                  : `${typingName} esta escribiendo...`}
-              </p>
+              {typingUsers.length > 0 ? (
+                <p className="mt-2 text-[11px] md:text-xs text-white/55">
+                  {`${typingUsers.map((user) => user.userName).slice(0, 2).join(", ")} esta escribiendo...`}
+                </p>
+              ) : null}
 
               {quickReplies.length > 0 ? (
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -919,7 +789,7 @@ export default function ComunidadPage() {
                       <strong className="text-xs md:text-[13px] block truncate">#{channel.label}</strong>
                       <p className="mt-1 text-[11px] text-white/60 line-clamp-2">{channel.description}</p>
                     </div>
-                    <span className="text-[11px] text-white/60 shrink-0">{channel.messageCount}</span>
+                    <span className="text-[11px] text-white/60 shrink-0">{(messagesByChannel[channel.id] ?? []).length}</span>
                   </div>
                 ))}
               </div>

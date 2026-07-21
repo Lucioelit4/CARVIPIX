@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
+import { requireActiveMt5License } from "../_auth";
 
 // ============================================================================
 // GET /api/bot/mt5/signals
@@ -7,18 +8,14 @@ import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
 // ============================================================================
 
 export async function GET(request: NextRequest) {
+  const auth = await requireActiveMt5License(request);
+  if (!auth.ok) return auth.response;
+
   const licenseId = request.nextUrl.searchParams.get("license_id") || "";
   const installationId = request.nextUrl.searchParams.get("installation_id") || "";
   const accountHash = request.nextUrl.searchParams.get("account_hash") || "";
 
-  // Validar auth
-  const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Sin autorización" }, { status: 401 });
-  }
-
-  const token = authHeader.slice(7);
-  if (token !== licenseId) {
+  if (auth.licenseKey !== licenseId) {
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 
@@ -33,6 +30,10 @@ export async function GET(request: NextRequest) {
   const installation = await botMT5Service.getInstallation(licenseId, installationId);
   if (!installation) {
     return NextResponse.json({ error: "Instalación no encontrada" }, { status: 404 });
+  }
+
+  if (installation.accountHash !== accountHash) {
+    return NextResponse.json({ error: "Instalación no válida" }, { status: 403 });
   }
 
   if (installation.isRevoked || installation.status === "SUSPENDED" || installation.status === "ERROR") {

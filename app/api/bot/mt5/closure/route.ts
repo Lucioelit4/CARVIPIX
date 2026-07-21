@@ -17,18 +17,26 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
+import { requireActiveMt5License } from "../_auth";
+import { backendDatabase } from "@/app/backend/core/database";
 
 /**
  * POST /api/bot/mt5/closure
  * Retorno de cierre desde MT5
  */
 export async function POST(request: NextRequest) {
+  const auth = await requireActiveMt5License(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const body = await request.json();
     
     // Validar campos
     const required = [
       "event_id",
+      "signal_id",
       "status",
       "close_type",
       "close_price",
@@ -43,6 +51,14 @@ export async function POST(request: NextRequest) {
           error: `Campo requerido: ${field}`
         }, { status: 400 });
       }
+    }
+
+    const ownedSignal = await backendDatabase.query<{ id: string }>(
+      `SELECT id FROM bot_mt5_signals WHERE signal_id = $1 AND license_id = $2 LIMIT 1`,
+      [body.signal_id, auth.licenseKey],
+    );
+    if (!ownedSignal.rows[0]) {
+      return NextResponse.json({ success: false, error: "Signal not found" }, { status: 404 });
     }
     
     // Validar status
@@ -80,7 +96,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json({
       success: false,
-      error: (error as Error).message
+      error: "No se pudo procesar el cierre"
     }, { status: 500 });
   }
 }

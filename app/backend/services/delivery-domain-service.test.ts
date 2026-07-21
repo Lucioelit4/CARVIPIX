@@ -1,40 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
 import { InMemoryQueueLayer } from "../core/queue";
 import { DeliveryDomainService } from "./delivery-domain-service";
 
-test("delivery enqueues reference from latest master signal with idempotency", async () => {
-  masterSignalStore.save({
-    signal_id: "sig-del-1",
-    analysis_id: "ana-del-1",
-    symbol: "XAUUSD",
-    analysis_profile: "XAUUSD_INTRADAY_H1_M30_M5_V1",
-    selected_strategy_id: "CARVIPIX_NO_TRADE_V1",
-    direction: "NONE",
-    entry: 0,
-    stop_loss: 0,
-    take_profit: 0,
-    calculated_gross_rr: 0,
-    calculated_net_rr: 0,
-    expires_at: null,
-    status: "SHADOW",
-    human_review_required: true,
-    auto_execution_eligible: false,
-  });
-
+test("delivery enqueues references with idempotency", async () => {
   const queue = new InMemoryQueueLayer(2);
   const delivery = new DeliveryDomainService(queue);
+  const reference = {
+    signalId: "sig-del-1",
+    analysisId: "ana-del-1",
+    signalVersion: "cadp-v2",
+  };
 
-  const first = await delivery.enqueueFromLatestSignal("cadp-v2");
-  const second = await delivery.enqueueFromLatestSignal("cadp-v2");
+  const first = await delivery.enqueueReference(reference);
+  const second = await delivery.enqueueReference(reference);
   const pending = await delivery.peek();
 
-  assert.ok(first);
-  assert.ok(second);
-  assert.equal(first?.reference.signalId, "sig-del-1");
-  assert.equal(first?.reference.analysisId, "ana-del-1");
+  assert.equal(first.reference.signalId, "sig-del-1");
+  assert.equal(first.reference.analysisId, "ana-del-1");
+  assert.equal(second.id, first.id);
   assert.equal(pending.length, 1);
 });
 

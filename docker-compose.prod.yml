@@ -11,6 +11,18 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       NEXT_PUBLIC_APP_ENV: production
+      INTERNAL_OBSERVER_TOKEN: ${INTERNAL_OBSERVER_TOKEN}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      COMMUNITY_TEXT_MODEL: ${COMMUNITY_TEXT_MODEL:-}
+      COMMUNITY_IMAGE_MODEL: ${COMMUNITY_IMAGE_MODEL:-gpt-image-1}
+      COMMUNITY_INTELLIGENCE_ENABLED: ${COMMUNITY_INTELLIGENCE_ENABLED:-false}
+      COMMUNITY_INTELLIGENCE_TEST_ONLY: ${COMMUNITY_INTELLIGENCE_TEST_ONLY:-true}
+      COMMUNITY_INTELLIGENCE_OFFICIAL_ENABLED: ${COMMUNITY_INTELLIGENCE_OFFICIAL_ENABLED:-false}
+      COMMUNITY_TELEGRAM_BOT_TOKEN: ${COMMUNITY_TELEGRAM_BOT_TOKEN:-}
+      COMMUNITY_TELEGRAM_CHANNEL_TEST: ${COMMUNITY_TELEGRAM_CHANNEL_TEST:-}
+      COMMUNITY_TELEGRAM_CHANNEL_OFFICIAL: ${COMMUNITY_TELEGRAM_CHANNEL_OFFICIAL:-}
     expose:
       - "3000"
     healthcheck:
@@ -19,6 +31,26 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    restart: unless-stopped
+
+  community-worker:
+    image: alpine:3.21
+    container_name: carvipix-community-worker-prod
+    environment:
+      INTERNAL_OBSERVER_TOKEN: ${INTERNAL_OBSERVER_TOKEN}
+      COMMUNITY_WORKER_INTERVAL_SECONDS: ${COMMUNITY_WORKER_INTERVAL_SECONDS:-300}
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        while true; do
+          wget -q -O /dev/null --header="x-internal-token: $${INTERNAL_OBSERVER_TOKEN}"
+          --post-data="" http://app:3000/api/internal/community-intelligence/run || true;
+          sleep "$${COMMUNITY_WORKER_INTERVAL_SECONDS}";
+        done
+    depends_on:
+      app:
+        condition: service_healthy
     restart: unless-stopped
 
   nginx:

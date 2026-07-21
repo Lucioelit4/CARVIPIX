@@ -15,8 +15,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import fs from "fs";
 import path from "path";
+import { requireClientSession } from "@/app/api/client/_auth";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireClientSession(request);
+  if (!auth.ok) {
+    return auth.response;
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const licenseKey = searchParams.get("license")?.trim();
@@ -53,13 +59,15 @@ export async function GET(request: NextRequest) {
 
     // ── Buscar y validar licencia en BD ──────────────────────────────────
     const licenseResult = await backendDatabase.query(
-      `SELECT license_key, user_id, active, expiry_date FROM bot_licenses 
-       WHERE license_key = $1 LIMIT 1`,
-      [licenseKey]
+      `SELECT bl.license_key, bl.user_id, bl.active, bl.expiry_date
+       FROM bot_licenses bl
+       INNER JOIN orders o ON o.id = $2 AND o.user_id = bl.user_id AND o.status = 'completed'
+       WHERE bl.license_key = $1 AND bl.user_id = $3
+       LIMIT 1`,
+      [licenseKey, expectedOrderId, auth.user.id]
     );
 
     if (licenseResult.rows.length === 0) {
-      console.warn("[DOWNLOAD] License not found:", { licenseKey });
       return NextResponse.json(
         { ok: false, error: "Licencia no encontrada" },
         { status: 404 }
@@ -70,7 +78,6 @@ export async function GET(request: NextRequest) {
 
     // ── Validar que licencia esté activa
     if (!license.active) {
-      console.warn("[DOWNLOAD] License not active:", { licenseKey });
       return NextResponse.json(
         { ok: false, error: "Licencia inactiva" },
         { status: 403 }
@@ -80,7 +87,6 @@ export async function GET(request: NextRequest) {
     // ── Validar que no esté expirada
     const expiryDate = new Date(license.expiry_date);
     if (expiryDate < new Date()) {
-      console.warn("[DOWNLOAD] License expired:", { licenseKey });
       return NextResponse.json(
         { ok: false, error: "Licencia expirada" },
         { status: 403 }
@@ -105,7 +111,6 @@ export async function GET(request: NextRequest) {
 
     console.log("[DOWNLOAD] Download recorded:", {
       downloadId: downloadRecord.rows[0]?.id,
-      licenseKey,
       userId: license.user_id,
     });
 

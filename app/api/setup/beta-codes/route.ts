@@ -9,17 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import { randomUUID } from "crypto";
 import { initializeBetaSchema } from "@/app/backend/schema/beta-schema";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
+import { isSameOriginRequest } from "@/app/api/admin/_shared/security";
 
 const INITIAL_CODES = ["FOUNDER-001", "FOUNDER-002", "FOUNDER-003", "FOUNDER-004", "FOUNDER-005"];
 
 export async function POST(request: NextRequest) {
-  // ── Validación simple (en produc ción, esto será más estricto)
-  const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.includes("Bearer")) {
-    // Para desarrollo local, permitir sin token
-    if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
+  if (!isValidAdminSession(request) || !isSameOriginRequest(request)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
   if (!backendDatabase.enabled) {

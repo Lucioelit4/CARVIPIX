@@ -1,7 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
+import { isValidAdminSession } from "@/app/lib/auth/admin-server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isValidAdminSession(request)) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     // Verificar conexión a BD
     const result = await backendDatabase.query(
@@ -18,8 +23,7 @@ export async function GET() {
   } catch (error) {
     return NextResponse.json({
       success: false,
-      error: (error as Error).message,
-      envAvailable: !!process.env.DATABASE_URL
+      error: "Database check failed"
     }, { status: 500 });
   }
 }

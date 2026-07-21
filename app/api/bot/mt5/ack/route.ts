@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
+import { requireActiveMt5License } from "../_auth";
 
 // ============================================================================
 // POST /api/bot/mt5/ack
@@ -7,19 +8,15 @@ import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  const auth = await requireActiveMt5License(request);
+  if (!auth.ok) return auth.response;
+
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const licenseId = String(body.license_id ?? "").trim();
   const signalId = String(body.signal_id ?? "").trim();
   const status = String(body.status ?? "").trim();
 
-  // Validar auth
-  const authHeader = request.headers.get("authorization") || "";
-  if (!authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "Sin autorización" }, { status: 401 });
-  }
-
-  const token = authHeader.slice(7);
-  if (token !== licenseId) {
+  if (auth.licenseKey !== licenseId) {
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 

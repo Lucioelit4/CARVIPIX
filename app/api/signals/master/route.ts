@@ -21,12 +21,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
+import { isInternalIngestRequest } from "@/app/api/admin/_shared/security";
 
 export async function POST(request: NextRequest) {
+  if (!isInternalIngestRequest(request)) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
-    
-    console.log('[SIGNALS-MASTER] Cuerpo recibido:', JSON.stringify(body));
     
     // Validar campos
     const required = [
@@ -83,8 +86,7 @@ export async function POST(request: NextRequest) {
     console.error('[SIGNALS-MASTER] Error capturado:', error);
     return NextResponse.json({
       success: false,
-      error: (error as Error).message,
-      stack: (error as Error).stack
+      error: "No se pudo procesar la señal"
     }, { status: 500 });
   }
 }
