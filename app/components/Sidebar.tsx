@@ -28,18 +28,32 @@ const menuItems = [
 
 const BRAND_PREVIEW_VIDEO_SRC = "/media/carvipix-premium-opening-mobile.mp4";
 
+function handleSeamlessLoop(event: React.SyntheticEvent<HTMLVideoElement>) {
+  const video = event.currentTarget;
+  if (!Number.isFinite(video.duration) || video.duration <= 0) {
+    return;
+  }
+
+  const safeLoopEnd = Math.max(video.duration - 0.08, 0);
+  if (video.currentTime >= safeLoopEnd) {
+    // Skip the final frame to avoid visible flash on some mobile decoders.
+    video.currentTime = 0.05;
+  }
+}
+
 function BrandMotionPreview({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`mt-4 overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-black/30 ${compact ? "h-[94px]" : "h-[112px]"}`}>
       <div className="relative h-full w-full">
+        <div className="pointer-events-none absolute inset-0 bg-black/35" />
         <video
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
-          poster="/logo/logo carvipix.png"
-          className="h-full w-full object-cover"
+          preload="auto"
+          onTimeUpdate={handleSeamlessLoop}
+          className="h-full w-full object-cover brightness-[0.78] contrast-110 saturate-90"
           aria-label="Portada premium animada CARVIPIX"
         >
           <source src={BRAND_PREVIEW_VIDEO_SRC} type="video/mp4" />
