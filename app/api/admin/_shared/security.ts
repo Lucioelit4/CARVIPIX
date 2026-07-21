@@ -41,7 +41,19 @@ export function isSameOriginRequest(request: NextRequest): boolean {
     return process.env.NODE_ENV !== "production";
   }
 
-  return process.env.NODE_ENV !== "production" && extracted === request.nextUrl.origin;
+  const allowedOrigins = new Set<string>();
+  allowedOrigins.add(request.nextUrl.origin);
+
+  const publicUrl = process.env.APP_PUBLIC_URL?.trim();
+  if (publicUrl) {
+    try {
+      allowedOrigins.add(new URL(publicUrl).origin);
+    } catch {
+      // Ignore malformed APP_PUBLIC_URL and fallback to request origin only.
+    }
+  }
+
+  return allowedOrigins.has(extracted);
 }
 
 export function isInternalIngestRequest(request: NextRequest): boolean {
