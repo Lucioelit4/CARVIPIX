@@ -73,7 +73,7 @@ export default function Home() {
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#d4af37]">Qué es CARVIPIX</p>
           <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Un ecosistema completo para el trader profesional</h2>
           <p className="mt-4 mx-auto max-w-2xl text-[#c7c0b4]">
-            No es solo un bot ni solo senales. CARVIPIX integra analisis, automatizacion, comunidad y herramientas operativas en una sola experiencia.
+            No es solo un bot ni solo señales. CARVIPIX integra análisis, automatización, comunidad y herramientas operativas en una sola experiencia.
           </p>
         </div>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -81,7 +81,7 @@ export default function Home() {
             { icon: Zap, label: "Alertas en Vivo", desc: "Señales en tiempo real sobre XAUUSD, EURUSD, GBPUSD y BTCUSD con análisis estructural." },
             { icon: Bot, label: "Bot EA MT5", desc: "Expert Advisor descargable e instalable en MetaTrader 5. Opera automáticamente según tu configuración." },
             { icon: TrendingUp, label: "Resultados", desc: "Historial verificado de actividad operativa, win rate y seguimiento descriptivo del sistema." },
-            { icon: Users, label: "Comunidad", desc: "Acceso a canales privados, analisis en grupo y actualizaciones directas del equipo CARVIPIX." },
+            { icon: Users, label: "Comunidad", desc: "Acceso a canales privados, análisis en grupo y actualizaciones directas del equipo CARVIPIX." },
             { icon: Wallet, label: "Programa de Fondeo", desc: "Proximamente: informacion oficial sobre un programa en preparacion, sin venta activa por ahora." },
             { icon: BarChart3, label: "Herramientas", desc: "Calculadoras de riesgo, gestión de posición, análisis de sesión y utilidades profesionales." },
           ].map(({ icon: Icon, label, desc }) => (
