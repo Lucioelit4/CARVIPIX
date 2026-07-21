@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
 import { clearAuthSession } from "@/app/lib/auth/session";
@@ -28,31 +28,47 @@ const menuItems = [
 
 const BRAND_PREVIEW_VIDEO_SRC = "/media/carvipix-premium-opening-mobile.mp4";
 
-function handleSeamlessLoop(event: React.SyntheticEvent<HTMLVideoElement>) {
-  const video = event.currentTarget;
-  if (!Number.isFinite(video.duration) || video.duration <= 0) {
-    return;
-  }
-
-  const safeLoopEnd = Math.max(video.duration - 0.08, 0);
-  if (video.currentTime >= safeLoopEnd) {
-    // Skip the final frame to avoid visible flash on some mobile decoders.
-    video.currentTime = 0.05;
-  }
-}
-
 function BrandMotionPreview({ compact = false }: { compact?: boolean }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [loopPoint, setLoopPoint] = useState<number>(0);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !Number.isFinite(loopPoint) || loopPoint <= 0) {
+      return;
+    }
+
+    let rafId = 0;
+    const tick = () => {
+      const current = video.currentTime;
+      if (Number.isFinite(current) && current >= loopPoint) {
+        // Manual seamless loop to avoid white flash on some mobile decoders.
+        video.currentTime = 0.06;
+        void video.play().catch(() => undefined);
+      }
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [loopPoint]);
+
   return (
     <div className={`mt-4 overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-black/30 ${compact ? "h-[94px]" : "h-[112px]"}`}>
       <div className="relative h-full w-full">
         <div className="pointer-events-none absolute inset-0 bg-black/35" />
         <video
+          ref={videoRef}
           autoPlay
           muted
-          loop
           playsInline
           preload="auto"
-          onTimeUpdate={handleSeamlessLoop}
+          onLoadedMetadata={(event) => {
+            const duration = event.currentTarget.duration;
+            if (Number.isFinite(duration) && duration > 0) {
+              setLoopPoint(Math.max(duration - 0.18, 0.12));
+            }
+          }}
           className="h-full w-full object-cover brightness-[0.78] contrast-110 saturate-90"
           aria-label="Portada premium animada CARVIPIX"
         >
