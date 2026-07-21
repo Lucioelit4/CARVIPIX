@@ -26,6 +26,33 @@ const menuItems = [
   { name: "Trust Center", href: "/trust-center" },
 ];
 
+const BRAND_PREVIEW_VIDEO_SRC = "/media/carvipix-premium-opening-mobile.mp4";
+
+function BrandMotionPreview({ compact = false }: { compact?: boolean }) {
+  return (
+    <div className={`mt-4 overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-black/30 ${compact ? "h-[94px]" : "h-[112px]"}`}>
+      <div className="relative h-full w-full">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          poster="/logo/logo carvipix.png"
+          className="h-full w-full object-cover"
+          aria-label="Portada premium animada CARVIPIX"
+        >
+          <source src={BRAND_PREVIEW_VIDEO_SRC} type="video/mp4" />
+        </video>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-[#D4AF37] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-black">
+          Premium Motion
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -100,6 +127,7 @@ export default function Sidebar() {
                 className="mx-auto w-[168px] xl:w-[190px]"
                 style={{ height: "auto" }}
               />
+              <BrandMotionPreview />
               <div className="mx-auto mt-5 h-px w-16 bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent" />
               <p className="mt-3 whitespace-nowrap text-[11px] uppercase tracking-[0.18em] text-[#C7C0B4]">
                 Plataforma Premium
@@ -181,6 +209,7 @@ export default function Sidebar() {
                 <X size={20} />
               </button>
               </div>
+              <BrandMotionPreview compact />
               <div className="mx-auto mt-4 h-px w-14 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
               <p className="mt-3 text-center whitespace-nowrap text-[10px] uppercase tracking-[0.17em] text-[#C7C0B4]">
                 Plataforma Premium
