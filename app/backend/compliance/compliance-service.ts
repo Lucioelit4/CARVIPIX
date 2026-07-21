@@ -16,7 +16,6 @@ import {
 } from "@/app/backend/core/local-compliance-store";
 import {
   latestActiveLegalDocuments,
-  activeVideos,
   LEGAL_DOCUMENTS_BASE,
   MULTIMEDIA_VIDEOS_BASE,
   type LegalDocument,
@@ -138,24 +137,14 @@ function mapLegalDocumentRow(row: LegalDocumentRow): LegalDocument {
 }
 
 function mapVideoRow(row: ComplianceVideoRow): MultimediaVideo {
-  const normalizedVideoUrl = row.id === "video-home-corporate"
-    ? "/training-videos/step-1-que-es-forex.mp4"
-    : row.id === "video-member-dashboard-guide"
-      ? "/training-videos/step-2-aplicaciones.mp4"
-      : row.video_url;
-
-  const normalizedPosterUrl = row.id === "video-home-corporate" || row.id === "video-member-dashboard-guide"
-    ? "/logo/logo carvipix.png"
-    : row.poster_url;
-
   return {
     id: row.id,
     scope: row.scope,
     title: row.title,
     description: row.description,
-    videoUrl: normalizedVideoUrl,
-    posterUrl: normalizedPosterUrl,
-    active: Boolean(row.active),
+    videoUrl: "",
+    posterUrl: "",
+    active: false,
     updatedAt: toDateString(row.updated_at),
   };
 }
@@ -255,17 +244,9 @@ export async function saveVideos(videos: MultimediaVideo[]): Promise<MultimediaV
     scope: video.scope,
     title: String(video.title).trim(),
     description: String(video.description).trim(),
-    videoUrl:
-      video.id === "video-home-corporate"
-        ? "/training-videos/step-1-que-es-forex.mp4"
-        : video.id === "video-member-dashboard-guide"
-          ? "/training-videos/step-2-aplicaciones.mp4"
-          : String(video.videoUrl).trim(),
-    posterUrl:
-      video.id === "video-home-corporate" || video.id === "video-member-dashboard-guide"
-        ? "/logo/logo carvipix.png"
-        : String(video.posterUrl).trim(),
-    active: Boolean(video.active),
+    videoUrl: "",
+    posterUrl: "",
+    active: false,
     updatedAt: toDateString(video.updatedAt),
   }));
 
@@ -291,8 +272,7 @@ export async function saveVideos(videos: MultimediaVideo[]): Promise<MultimediaV
 }
 
 export async function listActiveVideos(): Promise<MultimediaVideo[]> {
-  const videos = await listVideos();
-  return activeVideos(videos);
+  return [];
 }
 
 export async function getLatestAcceptancesByUser(userId: string): Promise<Map<string, string>> {

@@ -50,14 +50,6 @@ type DataSourceMeta = {
   validUntil: string;
 };
 
-type ComplianceVideo = {
-  id: string;
-  title: string;
-  description: string;
-  videoUrl: string;
-  posterUrl: string;
-};
-
 type DataOrigin = "REAL" | "SANDBOX" | "DEMO" | "MOCK";
 
 function normalizeDataOrigin(raw: string | undefined): DataOrigin {
@@ -103,7 +95,6 @@ export default function DashboardPage() {
   const [supportForm, setSupportForm] = useState(emptySupportForm);
   const [busy, setBusy] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSourceMeta | null>(null);
-  const [memberVideo, setMemberVideo] = useState<ComplianceVideo | null>(null);
 
   const refreshPortal = async () => {
     const response = await fetch("/api/client/portal", { cache: "no-store" });
@@ -174,32 +165,6 @@ export default function DashboardPage() {
       }).catch(() => undefined);
     };
   }, [isAdminView]);
-
-  useEffect(() => {
-    const loadMemberVideo = async () => {
-      try {
-        const response = await fetch("/api/client/compliance/catalog", { cache: "no-store" });
-        if (!response.ok) {
-          return;
-        }
-
-        const payload = (await response.json().catch(() => ({}))) as {
-          data?: {
-            videos?: {
-              memberDashboard?: ComplianceVideo[];
-            };
-          };
-        };
-
-        const video = payload.data?.videos?.memberDashboard?.[0] ?? null;
-        setMemberVideo(video);
-      } catch {
-        setMemberVideo(null);
-      }
-    };
-
-    void loadMemberVideo();
-  }, []);
 
   const paymentSummary = useMemo(() => portal?.payments.orders.reduce((total, order) => total + Number(order.total ?? 0), 0) ?? 0, [portal]);
   const planStatusLabel = portal?.plan.membershipActive
@@ -336,24 +301,11 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {memberVideo && (
-          <section className="rounded-3xl border border-white/10 bg-[#0b0f16] p-6">
-            <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Video explicativo del miembro</p>
-            <h2 className="mt-2 text-2xl font-semibold">{memberVideo.title}</h2>
-            <p className="mt-2 text-sm text-white/70">{memberVideo.description}</p>
-            <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-              <video
-                className="h-full w-full"
-                controls
-                preload="metadata"
-                poster={memberVideo.posterUrl}
-                src={memberVideo.videoUrl}
-              >
-                Tu navegador no soporta video HTML5.
-              </video>
-            </div>
-          </section>
-        )}
+        <section className="border-y border-white/10 py-8">
+          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Academia CARVIPIX</p>
+          <h2 className="mt-2 text-2xl font-semibold">Próximamente</h2>
+          <p className="mt-2 text-sm text-white/70">El nuevo contenido educativo estará disponible en una próxima actualización.</p>
+        </section>
 
         {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 

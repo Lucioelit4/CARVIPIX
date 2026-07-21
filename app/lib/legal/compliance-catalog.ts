@@ -147,30 +147,7 @@ export const LEGAL_DOCUMENTS_BASE: LegalDocument[] = [
   },
 ];
 
-export const MULTIMEDIA_VIDEOS_BASE: MultimediaVideo[] = [
-  {
-    id: "video-home-corporate",
-    scope: "public-home",
-    title: "CARVIPIX: Plataforma Profesional",
-    description:
-      "Video profesional: que es CARVIPIX, como funcionan las alertas, beneficios, flujo general, riesgos del trading y proceso de contratacion.",
-    videoUrl: "/training-videos/step-1-que-es-forex.mp4",
-    posterUrl: "/logo/logo carvipix.png",
-    active: true,
-    updatedAt: "2026-07-12T00:00:00.000Z",
-  },
-  {
-    id: "video-member-dashboard-guide",
-    scope: "member-dashboard",
-    title: "Guia del Panel del Miembro",
-    description:
-      "Video guiado: dashboard, alertas, resultados, membresias, soporte y herramientas operativas dentro de CARVIPIX.",
-    videoUrl: "/training-videos/step-2-aplicaciones.mp4",
-    posterUrl: "/logo/logo carvipix.png",
-    active: true,
-    updatedAt: "2026-07-12T00:00:00.000Z",
-  },
-];
+export const MULTIMEDIA_VIDEOS_BASE: MultimediaVideo[] = [];
 
 function compareVersions(left: string, right: string): number {
   const leftParts = left.split(".").map((item) => Number(item) || 0);
