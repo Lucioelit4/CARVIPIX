@@ -156,12 +156,12 @@ export default function Home() {
               <div className="rounded-xl border border-white/10 bg-black/40 p-4">
                 <p className="text-xs text-[#c7c0b4]">Plan BASIC</p>
                 <p className="mt-1 text-xl font-bold">$19.99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
-                <p className="mt-1 text-xs text-[#c7c0b4]">Hasta 5 alertas por día</p>
+                <p className="mt-1 text-xs text-[#c7c0b4]">De 2 a 5 alertas por día*</p>
               </div>
               <div className="rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-4">
                 <p className="text-xs text-[#d4af37]">Plan PRO</p>
                 <p className="mt-1 text-xl font-bold">$99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
-                <p className="mt-1 text-xs text-[#c7c0b4]">Acceso completo + herramientas</p>
+                <p className="mt-1 text-xs text-[#c7c0b4]">De 5 a 20 alertas por día*</p>
               </div>
             </div>
           </div>
@@ -251,6 +251,7 @@ export default function Home() {
         <div className="mb-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#d4af37]">Planes</p>
           <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Elige el nivel que necesitas</h2>
+          <p className="mt-3 text-sm text-[#c7c0b4]">*La cantidad depende de oportunidades válidas detectadas por el sistema; no se fuerzan operaciones para completar un mínimo.</p>
         </div>
         <div className="grid gap-6 sm:grid-cols-3">
           {[
@@ -258,8 +259,8 @@ export default function Home() {
               name: "FREE",
               price: "$0",
               period: "",
-              desc: "Acceso básico para conocer la plataforma.",
-              features: ["Dashboard básico", "Información pública", "Acceso a comunidad"],
+              desc: "Alertas seleccionadas para la comunidad pública.",
+              features: ["De 1 a 2 alertas por día en Telegram*", "Dashboard básico", "Información pública", "Acceso a comunidad"],
               highlight: false,
             },
             {
@@ -267,7 +268,7 @@ export default function Home() {
               price: "$19.99",
               period: "/ mes",
               desc: "Alertas en vivo con análisis estructural.",
-              features: ["Hasta 5 alertas por día", "XAUUSD y BTCUSD", "Dashboard del cliente", "Historial de alertas", "Estadísticas básicas"],
+              features: ["De 2 a 5 alertas por día*", "XAUUSD y BTCUSD", "Dashboard del cliente", "Historial de alertas", "Estadísticas básicas"],
               highlight: false,
             },
             {
@@ -275,7 +276,7 @@ export default function Home() {
               price: "$99",
               period: "/ mes",
               desc: "Acceso completo a todos los módulos.",
-              features: ["Todo BASIC incluido", "Más activos y alertas", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],
+              features: ["De 5 a 20 alertas por día*", "Todos los activos monitoreados", "Todo BASIC incluido", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],
               highlight: true,
             },
           ].map(({ name, price, period, desc, features, highlight }) => (

@@ -6,6 +6,7 @@ import type {
   ServiceAlertStats,
 } from "../contracts";
 import { AlertLimitGuard, PairAccessGuard } from "../commercial/access-control";
+import { buildPlanAlertDeliveryPolicy } from "../commercial/alert-delivery-policy";
 import { resolveUserCommercialAccess } from "../commercial/plan-entitlements-store";
 import { backendDatabase } from "../core/database";
 import { InMemoryServiceEventBus } from "../core/event-bus";
@@ -102,11 +103,23 @@ export class AlertsDomainService implements IAlertsDomainService {
   async getAlerts(query?: { userId?: string; limit?: number; includeAuditOnly?: boolean }): Promise<ServiceAlertRecord[]> {
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
 
+    const commercialAccess = query?.userId
+      ? await resolveUserCommercialAccess(query.userId)
+      : null;
+    const deliveryPolicy = commercialAccess
+      ? buildPlanAlertDeliveryPolicy(commercialAccess.entitlements, query?.limit)
+      : null;
+    if (deliveryPolicy?.limit === 0) {
+      return [];
+    }
+
     const lifecycleSignals = await realSignalLifecycleService.getRecentSignals({
-      limit: query?.limit,
+      limit: deliveryPolicy?.limit ?? query?.limit,
       includeAuditOnly: query?.includeAuditOnly ?? false,
+      symbols: deliveryPolicy?.symbols,
+      since: deliveryPolicy?.since,
     });
-    if (lifecycleSignals.length > 0) {
+    if (lifecycleSignals.length > 0 || commercialAccess) {
       const mappedSignals = lifecycleSignals.map(mapLifecycleRecordToAlert);
       this.eventBus.publish("alerts.read", {
         count: mappedSignals.length,
@@ -182,6 +195,26 @@ export class AlertsDomainService implements IAlertsDomainService {
 
   async getAlertStats(_userId?: string): Promise<ServiceAlertStats> {
     await realSignalLifecycleService.ensureLatestMasterSignalRegistered();
+
+    if (_userId) {
+      const commercialAccess = await resolveUserCommercialAccess(_userId);
+      const deliveryPolicy = buildPlanAlertDeliveryPolicy(commercialAccess.entitlements, undefined);
+      if (deliveryPolicy.limit === 0) {
+        return { total: 0, active: 0, triggered: 0, resolved: 0 };
+      }
+
+      const lifecycleSignals = await realSignalLifecycleService.getRecentSignals({
+        limit: deliveryPolicy.limit,
+        symbols: deliveryPolicy.symbols,
+        since: deliveryPolicy.since,
+      });
+      return {
+        total: lifecycleSignals.length,
+        active: lifecycleSignals.filter(signal => signal.status === "CREATED" || signal.status === "CONDITIONAL" || signal.status === "ACTIVE").length,
+        triggered: lifecycleSignals.filter(signal => signal.status === "TP_HIT" || signal.status === "SL_HIT").length,
+        resolved: lifecycleSignals.filter(signal => signal.status === "CANCELLED" || signal.status === "EXPIRED" || signal.status === "CLOSED").length,
+      };
+    }
 
     const lifecycleStats = await realSignalLifecycleService.getAlertStats();
     if (lifecycleStats.total > 0) {

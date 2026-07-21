@@ -51,7 +51,7 @@ function buildPremiumPayload(action: "BUY" | "SELL"): PayloadAlertaPremium {
   };
 }
 
-test("official alerts always pass through immediately", () => {
+test("the first Brain-approved official alert passes through immediately", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const plan = engine.prepareTelegramPlan({
     symbol: "XAUUSD",
@@ -65,6 +65,30 @@ test("official alerts always pass through immediately", () => {
   assert.equal(plan.category, "OFFICIAL_ALERT");
   assert.equal(plan.reason, "ALERTA");
   assert.match(plan.message ?? "", /Entrada: 3333.1/);
+});
+
+test("free Telegram sends at most two quality official alerts per day", () => {
+  const engine = new CommunicationEngine(createMemoryStore());
+
+  for (const symbol of ["XAUUSD", "EURUSD"]) {
+    const plan = engine.prepareTelegramPlan({
+      symbol,
+      decision: "ENTER_BUY",
+      payload: buildPayload(),
+      premiumPayload: buildPremiumPayload("BUY"),
+    });
+    assert.equal(plan.shouldSend, true);
+    engine.registerSent(plan);
+  }
+
+  const blocked = engine.prepareTelegramPlan({
+    symbol: "GBPUSD",
+    decision: "ENTER_SELL",
+    payload: buildPayload(),
+    premiumPayload: buildPremiumPayload("SELL"),
+  });
+  assert.equal(blocked.shouldSend, false);
+  assert.equal(blocked.reason, "CUPO_FREE");
 });
 
 test("repeated no-trade notes are suppressed after first send", () => {

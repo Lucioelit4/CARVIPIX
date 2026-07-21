@@ -7,6 +7,7 @@ import type { CadpDecisionV3, PayloadAlertaPremium, PayloadTelegram } from "./ty
 type ChannelKind = "alerts" | "notes";
 type CommunicationCategory = "OFFICIAL_ALERT" | "GLOBAL_SUMMARY";
 const MAX_CONTEXT_MESSAGES_PER_DAY = 3;
+const MAX_FREE_OFFICIAL_ALERTS_PER_DAY = 2;
 
 interface CommunicationEventMemory {
   symbol: string;
@@ -205,8 +206,23 @@ export class CommunicationEngine {
       ? `${input.symbol}|${input.decision}|official|${normalizedSummary}`
       : `GLOBAL|WAITING_MARKET|${normalizedSummary}`;
     const summaryHash = hashText(summaryBase);
+    const memory = this.store.load();
 
     if (isOfficialAlert) {
+      const officialAlertsSentToday = memory.events.filter(event => event.category === "OFFICIAL_ALERT").length;
+      if (officialAlertsSentToday >= MAX_FREE_OFFICIAL_ALERTS_PER_DAY) {
+        return {
+          shouldSend: false,
+          channel: "alerts",
+          category: "OFFICIAL_ALERT",
+          reason: "CUPO_FREE",
+          fingerprint: `${input.symbol}:${input.decision}:official:${summaryHash}`,
+          summaryHash,
+          symbol: input.symbol,
+          decision: input.decision,
+        };
+      }
+
       return {
         shouldSend: true,
         channel: "alerts",
@@ -221,7 +237,6 @@ export class CommunicationEngine {
     }
 
     const category: CommunicationCategory = "GLOBAL_SUMMARY";
-    const memory = this.store.load();
     const contextSentToday = memory.events.filter((event) => event.category === "GLOBAL_SUMMARY").length;
     if (contextSentToday >= MAX_CONTEXT_MESSAGES_PER_DAY) {
       return {

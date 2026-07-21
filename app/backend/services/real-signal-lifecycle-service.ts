@@ -420,9 +420,16 @@ export class RealSignalLifecycleService {
     return rows[0] ? mapRow(rows[0]) : null;
   }
 
-  async getRecentSignals(options?: { limit?: number; includeAuditOnly?: boolean }): Promise<RealSignalLifecycleRecord[]> {
+  async getRecentSignals(options?: {
+    limit?: number;
+    includeAuditOnly?: boolean;
+    symbols?: string[];
+    since?: Date;
+  }): Promise<RealSignalLifecycleRecord[]> {
     const includeAuditOnly = options?.includeAuditOnly ?? false;
     const limit = Math.max(1, Math.min(options?.limit ?? 50, 500));
+    const symbols = options?.symbols?.length ? options.symbols.map(symbol => symbol.toUpperCase()) : null;
+    const since = options?.since ?? null;
 
     const { rows } = await backendDatabase.query<LifecycleRow>(
       `
@@ -448,10 +455,12 @@ export class RealSignalLifecycleService {
       FROM real_signal_lifecycle
       WHERE ${CLIENT_VISIBLE_SIGNAL_FILTER}
         AND ($1::boolean = true OR decision NOT IN ('WAIT', 'NO_TRADE', 'DATA_INSUFFICIENT'))
+        AND ($3::timestamptz IS NULL OR signal_timestamp >= $3)
+        AND ($4::text[] IS NULL OR symbol = ANY($4::text[]))
       ORDER BY signal_timestamp DESC
       LIMIT $2
       `,
-      [includeAuditOnly, limit]
+      [includeAuditOnly, limit, since, symbols]
     );
 
     return rows.map(mapRow);

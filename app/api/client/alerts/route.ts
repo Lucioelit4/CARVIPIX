@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ecosystemServices } from "@/app/backend";
 import { CommercialAccessError, FeatureAccessGuard } from "@/app/backend/commercial/access-control";
 import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
-import { getAlertsCreatedToday, listAlertHistory } from "@/app/backend/commercial/portal-service";
+import { listAlertHistory } from "@/app/backend/commercial/portal-service";
 import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
 import { requireClientSession } from "@/app/api/client/_auth";
 
@@ -23,13 +23,13 @@ export async function GET(request: NextRequest) {
     );
 
     const limit = Number(request.nextUrl.searchParams.get("limit") ?? commercialAccess.entitlements.historyLimit);
-    const [alerts, stats, rules, createdToday, history] = await Promise.all([
+    const [alerts, stats, rules, history] = await Promise.all([
       ecosystemServices.alerts.getAlerts({ userId: auth.user.id, limit: Number.isFinite(limit) && limit > 0 ? limit : 50 }),
       ecosystemServices.alerts.getAlertStats(auth.user.id),
       ecosystemServices.alerts.getAlertRules(auth.user.id),
-      getAlertsCreatedToday(auth.user.id),
       listAlertHistory(auth.user.id, commercialAccess.entitlements.historyLimit),
     ]);
+    const deliveredToday = alerts.length;
 
     return NextResponse.json(
       {
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
           plan: commercialAccess.subscriptionPlan,
           entitlements: commercialAccess.entitlements,
           usage: {
-            createdToday,
-            remainingToday: Math.max(0, commercialAccess.entitlements.maxAlertsPerDay - createdToday),
+            createdToday: deliveredToday,
+            remainingToday: Math.max(0, commercialAccess.entitlements.maxAlertsPerDay - deliveredToday),
           },
           alerts,
           stats,

@@ -76,7 +76,7 @@ export const COMMERCIAL_PLAN_ENTITLEMENTS: Record<CommercialSubscriptionPlan, Co
   advanced: {
     alertsEnabled: true,
     botEnabled: true,
-    maxAlertsPerDay: 14,
+    maxAlertsPerDay: 20,
     maxPairs: 50,
     maxBots: 3,
     historyLimit: 180,
@@ -110,7 +110,7 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     requiresActiveMembership: false,
     checkoutEnabled: true,
     permissionKeys: ["dashboard.basic"],
-    features: ["Funciones basicas", "Captacion de clientes", "Sin servicios premium"],
+    features: ["1 a 2 alertas seleccionadas por dia en Telegram", "Funciones basicas", "Acceso a la comunidad"],
   },
   {
     id: "plan-basic",
@@ -127,7 +127,7 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     checkoutEnabled: true,
     permissionKeys: ["alertas.basic", "dashboard.client", "estadisticas.basic"],
     features: [
-      "Hasta 5 alertas por dia cuando existan oportunidades reales",
+      "De 2 a 5 alertas por dia cuando existan oportunidades validas",
       "XAUUSD y BTCUSD",
       "Dashboard del cliente",
       "Historial de alertas",
@@ -153,7 +153,7 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     features: [
       "Incluye todo BASIC",
       "Mas activos",
-      "Mas alertas",
+      "De 5 a 20 alertas por dia cuando existan oportunidades validas",
       "Herramientas premium",
       "Analisis completos",
       "Videos",
