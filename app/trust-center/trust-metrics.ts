@@ -62,13 +62,6 @@ export function buildTrustMetricsSnapshot(): TrustMetricsSnapshot {
       detail: "Servicios activos diferenciados de borradores o proximamente.",
       href: "/servicios",
     },
-    {
-      id: "marca-documentada",
-      label: "Marca registrada",
-      ok: TRUST_EVIDENCE_ITEMS.some((item) => item.id === "marca-registrada" && item.status === "verified"),
-      detail: "Marca registrada - evidencia pendiente de publicacion.",
-      href: "/trust-center/respaldos",
-    },
   ];
 
   const verifiedItems = TRUST_EVIDENCE_ITEMS.filter((item) => item.status === "verified").length;

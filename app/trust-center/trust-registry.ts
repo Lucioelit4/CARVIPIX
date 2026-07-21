@@ -31,15 +31,6 @@ export const TRUST_EVIDENCE_ITEMS: TrustEvidenceItem[] = [
     updatedAt: "2026-07-18",
   },
   {
-    id: "marca-registrada",
-    label: "Marca registrada",
-    status: "pending",
-    detail: "Marca registrada - evidencia pendiente de publicacion.",
-    sourceLabel: "Centro de evidencias",
-    sourceHref: "/trust-center/respaldos",
-    updatedAt: "2026-07-18",
-  },
-  {
     id: "dominio-protegido",
     label: "Dominio protegido",
     status: "verified",
