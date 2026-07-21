@@ -75,9 +75,6 @@ function BrandMotionPreview({ compact = false }: { compact?: boolean }) {
           <source src={BRAND_PREVIEW_VIDEO_SRC} type="video/mp4" />
         </video>
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <div className="pointer-events-none absolute left-2 top-2 rounded-full bg-[#D4AF37] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.1em] text-black">
-          Premium Motion
-        </div>
       </div>
     </div>
   );
