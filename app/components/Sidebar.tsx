@@ -90,17 +90,19 @@ export default function Sidebar() {
       <aside className="fixed left-0 top-0 hidden h-screen w-72 border-r border-[#2A2A2A] bg-[#030303] lg:flex lg:flex-col">
         <div className="flex h-full flex-col p-6">
           <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-            <div className="mb-10 rounded-[2rem] border border-[#2A2A2A] bg-[#121212] p-5 text-center shadow-[0_25px_80px_rgba(0,0,0,0.25)]">
+            <div className="mb-10 rounded-[2rem] border border-[#2A2A2A] bg-[#121212] px-5 py-6 text-center shadow-[0_25px_80px_rgba(0,0,0,0.25)]">
               <Image
                 src="/logo/logo carvipix.png"
                 alt="CARVIPIX"
                 width={200}
                 height={60}
                 priority
-                style={{ width: "200px", height: "auto" }}
+                className="mx-auto w-[168px] xl:w-[190px]"
+                style={{ height: "auto" }}
               />
-              <p className="mt-4 text-xs uppercase tracking-[0.24em] text-[#B5B5B5]">
-                Plataforma premium
+              <div className="mx-auto mt-5 h-px w-16 bg-gradient-to-r from-transparent via-[#D4AF37]/45 to-transparent" />
+              <p className="mt-3 whitespace-nowrap text-[11px] uppercase tracking-[0.18em] text-[#C7C0B4]">
+                Plataforma Premium
               </p>
             </div>
 
@@ -157,7 +159,8 @@ export default function Sidebar() {
             className="fixed left-0 top-0 h-full w-[300px] max-w-[86vw] overflow-y-auto border-r border-[#2A2A2A] bg-[#030303] p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-10 flex items-center justify-between">
+            <div className="mb-8 rounded-3xl border border-[#2A2A2A] bg-[#121212] px-4 py-5">
+              <div className="flex items-start justify-between gap-3">
               <Link href="/" className="flex items-center gap-2">
                 <Image
                   src="/logo/logo carvipix.png"
@@ -165,7 +168,8 @@ export default function Sidebar() {
                   width={160}
                   height={50}
                   priority
-                  style={{ width: "140px", height: "auto" }}
+                  className="w-[132px]"
+                  style={{ height: "auto" }}
                 />
               </Link>
               <button
@@ -176,6 +180,11 @@ export default function Sidebar() {
               >
                 <X size={20} />
               </button>
+              </div>
+              <div className="mx-auto mt-4 h-px w-14 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
+              <p className="mt-3 text-center whitespace-nowrap text-[10px] uppercase tracking-[0.17em] text-[#C7C0B4]">
+                Plataforma Premium
+              </p>
             </div>
 
             <div className="mb-3 px-1 text-[11px] uppercase tracking-[0.24em] text-[#B5B5B5]">Navegación</div>
