@@ -215,7 +215,10 @@ export class ShadowFlowV3 {
       }
 
       // ── PASO 6: Verify response
-      const verification = this.verifier.verify(rawResponse);
+      const verification = this.verifier.verify(
+        rawResponse,
+        new Set(expediente.authorized_strategies.map(strategy => strategy.strategy_id)),
+      );
       if (!verification.valid || !verification.repaired) {
         const record = observerV3.recordError({
           analysis_id, signal_id, canonical_symbol,

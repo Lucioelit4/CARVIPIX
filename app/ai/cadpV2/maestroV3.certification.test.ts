@@ -365,6 +365,21 @@ async function runAllTests(): Promise<void> {
     assert.ok(result.errors.some(e => e.includes("order_plan")));
   });
 
+  await test("4.6 Verifier acepta entrada discrecional autorizada", () => {
+    const response = buildMockResponse("ENTER_BUY");
+    response.master_decision.strategy_selected = "CARVIPIX_MAESTRO_DISCRETIONARY_V1";
+    const result = verifier.verify(response, new Set(["CARVIPIX_MAESTRO_DISCRETIONARY_V1", "CARVIPIX_NO_TRADE_V1"]));
+    assert.equal(result.valid, true, result.errors.join(", "));
+  });
+
+  await test("4.7 Verifier rechaza estrategia inventada", () => {
+    const response = buildMockResponse("ENTER_BUY");
+    response.master_decision.strategy_selected = "ESTRATEGIA_INVENTADA";
+    const result = verifier.verify(response, new Set(["CARVIPIX_MAESTRO_DISCRETIONARY_V1", "CARVIPIX_NO_TRADE_V1"]));
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.includes("UNAUTHORIZED_STRATEGY:ESTRATEGIA_INVENTADA"));
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   console.log("\n§5 — DISPARADOR: Distribución a 9 módulos");
   // ═══════════════════════════════════════════════════════════════════
@@ -556,13 +571,22 @@ async function runAllTests(): Promise<void> {
     }
   });
 
-  await test("7.2 Solo XAUUSD tiene estrategias de trading activas", () => {
+  await test("7.2 Los 4 instrumentos monitorizados autorizan decisiones discrecionales", () => {
     const xauStrategies = getAuthorizedStrategies("XAUUSD");
     assert.ok(xauStrategies.some(s => s.strategy_id === "CARVIPIX_MTF_TREND_PULLBACK_XAUUSD_V1"), "XAUUSD missing pullback");
     assert.ok(xauStrategies.some(s => s.strategy_id === "CARVIPIX_VOLATILITY_BREAKOUT_XAUUSD_V1"), "XAUUSD missing breakout");
 
-    const others = ["BTCUSD", "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCHF"] as const;
-    for (const sym of others) {
+    const monitored = ["XAUUSD", "BTCUSD", "EURUSD", "GBPUSD"] as const;
+    for (const sym of monitored) {
+      const strategies = getAuthorizedStrategies(sym);
+      assert.ok(
+        strategies.some(s => s.strategy_id === "CARVIPIX_MAESTRO_DISCRETIONARY_V1" && s.status === "SHADOW"),
+        `${sym} missing CARVIPIX_MAESTRO_DISCRETIONARY_V1 in SHADOW`,
+      );
+    }
+
+    const restricted = ["USDJPY", "AUDUSD", "USDCHF"] as const;
+    for (const sym of restricted) {
       const strategies = getAuthorizedStrategies(sym);
       assert.equal(strategies.length, 1, `${sym} should have only NO_TRADE, got ${strategies.length}`);
       assert.equal(strategies[0].strategy_id, "CARVIPIX_NO_TRADE_V1", `${sym} wrong strategy`);
@@ -703,6 +727,23 @@ async function runAllTests(): Promise<void> {
     const summary = summaryBuilder.build(withNarrative);
     const expediente = { ...withNarrative, executive_summary: summary };
     assert.equal(expediente.identity.broker_symbol, null);
+  });
+
+  await test("9.4 Prompt autoriza entradas discrecionales sin imponer NO_TRADE", async () => {
+    const snap = await snapshotBuilder.build({
+      analysis_id: "cert-prompt-004",
+      signal_id: "sig-prompt-004",
+      canonical_symbol: "EURUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+    });
+    const narrative = narrativeBuilder.build(snap.expediente);
+    const withNarrative = { ...snap.expediente, narrative_context: narrative };
+    const summary = summaryBuilder.build(withNarrative);
+    const expediente = { ...withNarrative, executive_summary: summary };
+    const { prompt_text } = promptBuilder.build(expediente);
+
+    assert.ok(prompt_text.includes("autorización para aprobar ENTER_BUY o ENTER_SELL"));
+    assert.ok(prompt_text.includes("NO_TRADE no es la respuesta predeterminada"));
   });
 
   // ═══════════════════════════════════════════════════════════════════

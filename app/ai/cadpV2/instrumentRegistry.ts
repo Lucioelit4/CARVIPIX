@@ -40,6 +40,17 @@ function buildNoTradeStrategy(symbol: CanonicalSymbol): AuthorizedStrategyV3 {
   };
 }
 
+function buildMaestroDiscretionaryStrategy(symbol: CanonicalSymbol): AuthorizedStrategyV3 {
+  return {
+    strategy_id: "CARVIPIX_MAESTRO_DISCRETIONARY_V1",
+    strategy_version: "1.0.0",
+    status: "SHADOW",
+    short_description: "Maestro evaluates the complete real-market expediente and decides whether a valid entry exists.",
+    critical_requirements: ["REAL_MARKET_DATA", "MULTI_TIMEFRAME_CONTEXT", "RISK_VALIDATION"],
+    canonical_symbol: symbol,
+  };
+}
+
 // ─── Registro de instrumentos ─────────────────────────────────────────────────
 
 export const INSTRUMENT_REGISTRY: Record<CanonicalSymbol, InstrumentDefinition> = {
@@ -55,6 +66,7 @@ export const INSTRUMENT_REGISTRY: Record<CanonicalSymbol, InstrumentDefinition> 
     strategy_status: "ACTIVE",
     pending_reason: null,
     strategies: [
+      buildMaestroDiscretionaryStrategy("XAUUSD"),
       {
         strategy_id: "CARVIPIX_MTF_TREND_PULLBACK_XAUUSD_V1",
         strategy_version: "1.0.0",
@@ -83,9 +95,9 @@ export const INSTRUMENT_REGISTRY: Record<CanonicalSymbol, InstrumentDefinition> 
     session_focus: ["CRYPTO_24H"],
     is_crypto: true,
     pip_value: 1,
-    strategy_status: "NO_TRADE_ONLY",
-    pending_reason: "PENDING: 6 parameters to define before activating strategies (ATR thresholds, 24H session policy, weekend gaps, news sources, spread policy).",
-    strategies: [buildNoTradeStrategy("BTCUSD")],
+    strategy_status: "ACTIVE",
+    pending_reason: null,
+    strategies: [buildMaestroDiscretionaryStrategy("BTCUSD"), buildNoTradeStrategy("BTCUSD")],
   },
 
   EURUSD: {
@@ -96,9 +108,9 @@ export const INSTRUMENT_REGISTRY: Record<CanonicalSymbol, InstrumentDefinition> 
     session_focus: ["LONDON", "NEW_YORK"],
     is_crypto: false,
     pip_value: 0.0001,
-    strategy_status: "NO_TRADE_ONLY",
-    pending_reason: "PENDING: ATR thresholds in pips for pullback and breakout strategies need calibration.",
-    strategies: [buildNoTradeStrategy("EURUSD")],
+    strategy_status: "ACTIVE",
+    pending_reason: null,
+    strategies: [buildMaestroDiscretionaryStrategy("EURUSD"), buildNoTradeStrategy("EURUSD")],
   },
 
   GBPUSD: {
@@ -109,9 +121,9 @@ export const INSTRUMENT_REGISTRY: Record<CanonicalSymbol, InstrumentDefinition> 
     session_focus: ["LONDON"],
     is_crypto: false,
     pip_value: 0.0001,
-    strategy_status: "NO_TRADE_ONLY",
-    pending_reason: "PENDING: Wider ATR thresholds and gap policy for London open need definition.",
-    strategies: [buildNoTradeStrategy("GBPUSD")],
+    strategy_status: "ACTIVE",
+    pending_reason: null,
+    strategies: [buildMaestroDiscretionaryStrategy("GBPUSD"), buildNoTradeStrategy("GBPUSD")],
   },
 
   USDJPY: {

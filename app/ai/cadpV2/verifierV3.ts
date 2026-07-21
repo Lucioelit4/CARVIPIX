@@ -35,7 +35,7 @@ function isNumberOrNull(v: unknown): boolean {
 }
 
 export class MaestroV3Verifier {
-  verify(raw: unknown): VerifierV3Result {
+  verify(raw: unknown, authorizedStrategyIds?: ReadonlySet<string>): VerifierV3Result {
     const errors: string[] = [];
 
     if (!isObject(raw)) {
@@ -56,6 +56,14 @@ export class MaestroV3Verifier {
       const prob = md["probability_estimated"];
       if (prob !== null && (typeof prob !== "number" || prob < 0 || prob > 100)) {
         errors.push("INVALID_PROBABILITY_RANGE");
+      }
+      const strategySelected = md["strategy_selected"];
+      if (
+        authorizedStrategyIds
+        && typeof strategySelected === "string"
+        && !authorizedStrategyIds.has(strategySelected)
+      ) {
+        errors.push(`UNAUTHORIZED_STRATEGY:${strategySelected}`);
       }
     }
 

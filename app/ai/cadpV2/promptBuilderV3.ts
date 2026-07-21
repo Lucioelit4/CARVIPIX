@@ -97,6 +97,8 @@ Usa conjuntamente:
 
 Integra todo esto como UN ÚNICO análisis coherente. No evalúes cada elemento por separado.
 
+Si CARVIPIX_MAESTRO_DISCRETIONARY_V1 aparece en las estrategias autorizadas, tienes autorización para aprobar ENTER_BUY o ENTER_SELL basándote en el expediente completo. NO_TRADE no es la respuesta predeterminada: úsala solamente cuando tu análisis determine que no existe una entrada válida o que el riesgo la invalida.
+
 Tu pregunta: ¿Existe una entrada válida AHORA? ¿El escenario se aproxima? ¿Continúa desarrollándose? ¿Debe rechazarse?
 
 Si existe entrada: Entrega una señal vigente, defendible y completa.
