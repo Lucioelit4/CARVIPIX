@@ -26,6 +26,14 @@ jobs:
         run: |
           TARGET="${{ github.event.inputs.environment }}"
 
+          if [ -z "$TARGET" ]; then
+            if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              TARGET="prod"
+            else
+              TARGET="staging"
+            fi
+          fi
+
           if [ "$TARGET" = "prod" ]; then
             echo "env_name=production" >> $GITHUB_OUTPUT
             echo "compose_file=docker-compose.prod.yml" >> $GITHUB_OUTPUT
@@ -51,11 +59,19 @@ jobs:
           DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR }}
         run: |
           set -e
-          [ -n "$DEPLOY_HOST" ] || { echo "Missing DEPLOY_HOST"; exit 1; }
-          [ -n "$DEPLOY_USER" ] || { echo "Missing DEPLOY_USER"; exit 1; }
-          [ -n "$DEPLOY_SSH_KEY" ] || { echo "Missing DEPLOY_SSH_KEY"; exit 1; }
-          [ -n "$DEPLOY_PORT" ] || { echo "Missing DEPLOY_PORT"; exit 1; }
-          [ -n "$DEPLOY_APP_DIR" ] || { echo "Missing DEPLOY_APP_DIR"; exit 1; }
+          missing=()
+          [ -n "$DEPLOY_HOST" ] || missing+=("DEPLOY_HOST")
+          [ -n "$DEPLOY_USER" ] || missing+=("DEPLOY_USER")
+          [ -n "$DEPLOY_SSH_KEY" ] || missing+=("DEPLOY_SSH_KEY")
+          [ -n "$DEPLOY_PORT" ] || missing+=("DEPLOY_PORT")
+          [ -n "$DEPLOY_APP_DIR" ] || missing+=("DEPLOY_APP_DIR")
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            message="Missing deployment secrets for environment ${{ needs.resolve-environment.outputs.env_name }}: ${missing[*]}"
+            echo "$message"
+            echo "::error title=Missing deployment secrets::$message"
+            exit 1
+          fi
 
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
