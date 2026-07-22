@@ -53,8 +53,8 @@ test("AlertLimitGuard blocks when daily alerts are exhausted", () => {
   const context = { membershipActive: true, entitlements: resolveDefaultPlanEntitlements("advanced") };
   const withinWindow = new Date(Date.UTC(2026, 0, 1, 10, 0, 0));
 
-  assert.doesNotThrow(() => guard.assertCanCreateAlert(context, 13, withinWindow));
-  assert.throws(() => guard.assertCanCreateAlert(context, 14, withinWindow), (error: unknown) => {
+  assert.doesNotThrow(() => guard.assertCanCreateAlert(context, 19, withinWindow));
+  assert.throws(() => guard.assertCanCreateAlert(context, 20, withinWindow), (error: unknown) => {
     assert.ok(error instanceof CommercialAccessError);
     assert.equal(error.code, "ALERT_LIMIT_EXCEEDED");
     return true;

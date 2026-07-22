@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
 import { clearAuthSession } from "@/app/lib/auth/session";
+import { resolveSidebarMembershipLabel, type SidebarMembership } from "./sidebar-membership";
 
 const menuItems = [
   { name: "Inicio", href: "/servicios" },
@@ -86,6 +87,35 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [membershipLabel, setMembershipLabel] = useState("Consultando...");
+
+  useEffect(() => {
+    let active = true;
+
+    void fetch("/api/auth/session", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          return null;
+        }
+
+        const payload = (await response.json()) as { membership?: SidebarMembership | null };
+        return payload.membership ?? null;
+      })
+      .then((membership) => {
+        if (active) {
+          setMembershipLabel(resolveSidebarMembershipLabel(membership));
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setMembershipLabel("Sin membresía");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     if (isLoggingOut) {
@@ -189,7 +219,7 @@ export default function Sidebar() {
 
           <div className="mt-6 rounded-[1.75rem] border border-[#2A2A2A] bg-[#121212] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
             <p className="text-sm text-[#B5B5B5]">Plan actual</p>
-            <p className="mt-2 text-xl font-semibold text-[#D4AF37]">CARVIPIX PRO</p>
+            <p className="mt-2 text-xl font-semibold text-[#D4AF37]">{membershipLabel}</p>
             <button
               onClick={() => setShowPlans(true)}
               className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4C542] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-200 hover:brightness-110"
@@ -266,6 +296,10 @@ export default function Sidebar() {
                 );
               })}
               <AdminMenuItem onNavigate={() => setMobileOpen(false)} compact />
+              <div className="mt-3 rounded-2xl border border-white/10 bg-[#121212] px-4 py-3">
+                <p className="text-xs text-[#B5B5B5]">Plan actual</p>
+                <p className="mt-1 text-base font-semibold text-[#D4AF37]">{membershipLabel}</p>
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}

@@ -47,7 +47,7 @@ async function main(): Promise<void> {
     {
       public_summary: "Validacion privada del contrato de entrega Maestro V3.",
       market_status: "SIN_MERCADO",
-      action_taken: "TEST_ONLY_NO_OPERATION",
+      action_taken: "TEST_ONLY_NOT_FOR_CLIENTS_NO_OPERATION",
       public_warning: "Prueba tecnica. No es una senal operativa.",
       recheck_minutes: 15,
       scenario_classification: "NO_SETUP",
