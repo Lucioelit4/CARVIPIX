@@ -8,6 +8,20 @@ type ChannelKind = "alerts" | "notes";
 type CommunicationCategory = "OFFICIAL_ALERT" | "GLOBAL_SUMMARY";
 const MAX_CONTEXT_MESSAGES_PER_DAY = 3;
 const MAX_FREE_OFFICIAL_ALERTS_PER_DAY = 2;
+const FORBIDDEN_PUBLIC_TERMS: RegExp[] = [
+  /\bchatgpt\b/gi,
+  /\bopenai\b/gi,
+  /\binteligencia artificial\b/gi,
+  /\bapi\b/gi,
+  /\bproveedor(?:es)? de datos\b/gi,
+  /\bprompt(?:s)?\b/gi,
+  /\bmodelo(?:s)?\b/gi,
+  /\bindicadores internos?\b/gi,
+  /\bm[oó]dulos?\b/gi,
+  /\bvalidadores?\b/gi,
+  /\barquitectura\b/gi,
+  /\bfuentes? t[eé]cnicas?\b/gi,
+];
 
 interface CommunicationEventMemory {
   symbol: string;
@@ -78,7 +92,29 @@ function pickVariant(seed: string, options: string[]): string {
 
 function compactReason(payload: PayloadTelegram): string {
   const source = payload.public_warning || payload.public_summary || "Mercado sin ventaja estadística clara.";
-  return truncate(source.replace(/\s+/g, " ").trim(), 90);
+  return truncate(sanitizeForClient(source.replace(/\s+/g, " ").trim()), 90);
+}
+
+function sanitizeForClient(value: string): string {
+  if (!value) {
+    return "";
+  }
+
+  let cleaned = value;
+  FORBIDDEN_PUBLIC_TERMS.forEach((pattern) => {
+    cleaned = cleaned.replace(pattern, "");
+  });
+
+  cleaned = cleaned.replace(/\s+/g, " ").trim();
+  if (!cleaned) {
+    return "";
+  }
+
+  if (/^carvipix\b/i.test(cleaned)) {
+    return cleaned;
+  }
+
+  return `CARVIPIX ${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}`;
 }
 
 function buildReviewLine(payload: PayloadTelegram): string {
@@ -383,7 +419,7 @@ export class CommunicationEngine {
     const directionLabel = premiumPayload.action === "BUY" ? "🟢 COMPRA" : "🔴 VENTA";
     const stateLabel = premiumPayload.action === "BUY" ? "Lista para ejecutar" : "Lista para ejecutar";
 
-    let message = `${directionLabel}\n`;
+    let message = `CARVIPIX detecta una oportunidad defendible.\n${directionLabel}\n`;
     message += `${symbol}\n\n`;
     message += `Entrada: ${premiumPayload.entry ?? "N/A"}\n`;
     message += `SL: ${premiumPayload.stop_loss ?? "N/A"}\n`;
@@ -402,26 +438,26 @@ export class CommunicationEngine {
     };
     const title = pickVariant(`${seed}:title:${tone}`, titles[tone]);
     const body = this.buildGlobalNoTradeContext(payload, tone, seed);
-    return `${title}\n\n${body}`;
+    return `${title}\n\n${sanitizeForClient(body)}`;
   }
 
   private buildGlobalNoTradeContext(payload: PayloadTelegram, tone: CommunityTone, seed: string): string {
     const baseByTone: Record<CommunityTone, string[]> = {
       CALM: [
-        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando con disciplina y avisaremos solo cuando aparezca una oportunidad clara.",
-        "El mercado sigue sin ofrecer una ventaja clara en los instrumentos principales. Mantenemos la calma y solo avisaremos si aparece una entrada realmente limpia.",
+        "CARVIPIX no identifica una entrada defendible por ahora en los instrumentos principales. CARVIPIX mantiene el escenario en observación y avisará solo con un cambio relevante.",
+        "El análisis de CARVIPIX muestra un mercado sin ventaja clara en los instrumentos principales. CARVIPIX mantiene disciplina y publicará únicamente cuando aparezca una oportunidad sólida.",
       ],
       MEASURED_POSITIVE: [
-        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Preferimos conservar calidad y avisar solo cuando aparezca una oportunidad clara.",
-        "Después del movimiento reciente seguimos selectivos: todavía no vemos una entrada con ventaja suficiente en los instrumentos principales. Avisaremos solo si el contexto mejora de verdad.",
+        "CARVIPIX no identifica una entrada defendible por ahora en los instrumentos principales. CARVIPIX prioriza calidad y avisará solo cuando el contexto mejore de forma clara.",
+        "El análisis de CARVIPIX mantiene enfoque selectivo: todavía no hay ventaja suficiente en los instrumentos principales. CARVIPIX avisará solo ante mejora real del escenario.",
       ],
       PATIENT: [
-        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando y avisaremos únicamente cuando aparezca una oportunidad clara.",
-        "El mercado sigue en espera en los principales instrumentos. Seguimos atentos y solo interrumpiremos al grupo cuando exista una oportunidad clara.",
+        "CARVIPIX no identifica una entrada defendible por ahora en los instrumentos principales. CARVIPIX mantiene este escenario en observación y avisará únicamente con una oportunidad clara.",
+        "El análisis de CARVIPIX mantiene a los principales instrumentos en espera. CARVIPIX seguirá atento y publicará solo ante un cambio relevante.",
       ],
       NEUTRAL: [
-        "Por ahora no detectamos una entrada con ventaja suficiente en los principales instrumentos. Seguimos monitoreando y avisaremos únicamente cuando aparezca una oportunidad clara.",
-        "De momento no vemos una entrada con ventaja suficiente en los instrumentos principales. Seguimos observando y avisaremos solo si aparece una oportunidad clara.",
+        "CARVIPIX no identifica una entrada defendible por ahora en los instrumentos principales. CARVIPIX mantiene monitoreo activo y avisará únicamente cuando exista una oportunidad clara.",
+        "El análisis de CARVIPIX no confirma ventaja suficiente en los instrumentos principales por ahora. CARVIPIX seguirá observando y publicará solo con contexto favorable.",
       ],
     };
 

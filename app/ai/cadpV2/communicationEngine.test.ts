@@ -64,6 +64,7 @@ test("the first Brain-approved official alert passes through immediately", () =>
   assert.equal(plan.channel, "alerts");
   assert.equal(plan.category, "OFFICIAL_ALERT");
   assert.equal(plan.reason, "ALERTA");
+  assert.match(plan.message ?? "", /CARVIPIX detecta una oportunidad defendible/i);
   assert.match(plan.message ?? "", /Entrada: 3333.1/);
 });
 
@@ -259,6 +260,25 @@ test("equivalent waiting state with different wording is suppressed", () => {
   const second = engine.prepareTelegramPlan({ symbol: "EURUSD", decision: "NO_TRADE", payload: secondPayload });
   assert.equal(second.shouldSend, false);
   assert.equal(second.reason, "SILENCIO");
+});
+
+test("public summary sanitizes forbidden technical references and keeps CARVIPIX voice", () => {
+  const engine = new CommunicationEngine(createMemoryStore());
+  const plan = engine.prepareTelegramPlan({
+    symbol: "XAUUSD",
+    decision: "WAIT",
+    payload: buildPayload({
+      public_summary: "OpenAI y ChatGPT indican por API una alerta.",
+      public_warning: "Prompt con modelos internos y arquitectura en revisión.",
+      market_status: "WAITING",
+      action_taken: "NO_ACTION",
+      scenario_classification: "NO_SETUP",
+    }),
+  });
+
+  assert.equal(plan.shouldSend, true);
+  assert.match(plan.message ?? "", /CARVIPIX/i);
+  assert.doesNotMatch(plan.message ?? "", /OpenAI|ChatGPT|API|prompt|modelos|arquitectura/i);
 });
 
 test("daily context messages are capped at three", () => {
