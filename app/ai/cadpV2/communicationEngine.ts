@@ -190,6 +190,14 @@ export interface CommunicationMemoryBackend {
 export class CommunicationEngine {
   constructor(private readonly store: CommunicationMemoryBackend = new CommunicationMemoryStore()) {}
 
+  private buildGlobalStateKey(payload: PayloadTelegram): string {
+    return [
+      normalizeText(payload.market_status),
+      normalizeText(payload.action_taken),
+      normalizeText(payload.scenario_classification),
+    ].join("|");
+  }
+
   prepareTelegramPlan(input: {
     symbol: string;
     decision: CadpDecisionV3;
@@ -252,8 +260,10 @@ export class CommunicationEngine {
     }
 
     const fingerprint = `GLOBAL:WAITING_MARKET:${summaryHash}`;
+  const equivalentStateFingerprint = `GLOBAL:STATE:${this.buildGlobalStateKey(input.payload)}`;
     const allRecent = memory.events.slice(-30);
     const sameFingerprint = allRecent.find((event) => event.fingerprint === fingerprint);
+  const sameStateAlreadySent = allRecent.find((event) => event.fingerprint === equivalentStateFingerprint);
     const lastGlobal = [...allRecent].reverse().find((event) => event.category === "GLOBAL_SUMMARY");
     const nowMs = Date.now();
     const tone = this.deriveTone(input.communityContext, allRecent, nowMs);
@@ -284,6 +294,19 @@ export class CommunicationEngine {
       };
     }
 
+    if (sameStateAlreadySent && nowMs - sameStateAlreadySent.sent_at_ms < this.getCooldownMs(category, input.payload.recheck_minutes)) {
+      return {
+        shouldSend: false,
+        channel: "notes",
+        category,
+        reason: "SILENCIO",
+        fingerprint,
+        summaryHash,
+        symbol: "GLOBAL",
+        decision: input.decision,
+      };
+    }
+
     const message = this.buildGlobalSummary(input.payload, summaryHash, tone);
 
     return {
@@ -292,7 +315,7 @@ export class CommunicationEngine {
       category,
       reason: "RESUMEN_GLOBAL",
       message,
-      fingerprint,
+      fingerprint: equivalentStateFingerprint,
       summaryHash,
       symbol: "GLOBAL",
       decision: input.decision,

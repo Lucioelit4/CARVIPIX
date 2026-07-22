@@ -41,6 +41,29 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
 
 function buildMockResponse(decision: RespuestaMaestraV3["master_decision"]["decision"]): RespuestaMaestraV3 {
   return {
+    decision,
+    direction: decision === "ENTER_BUY" ? "BUY" : decision === "ENTER_SELL" ? "SELL" : "NEUTRAL",
+    horizon: decision === "ENTER_BUY" || decision === "ENTER_SELL" ? "SHORT" : "MEDIUM",
+    quality: decision === "NO_TRADE" ? "NOT_APPLICABLE" : decision === "WAIT" ? "B" : "A",
+    confidence: decision === "NO_TRADE" ? "LOW" : "MEDIUM",
+    entry_price: decision === "ENTER_BUY" || decision === "ENTER_SELL" ? 2435.20 : null,
+    stop_loss: decision === "ENTER_BUY" || decision === "ENTER_SELL" ? 2430.50 : null,
+    take_profit: decision === "ENTER_BUY" || decision === "ENTER_SELL" ? 2445.00 : null,
+    risk_reward: decision === "ENTER_BUY" || decision === "ENTER_SELL" ? 2.08 : null,
+    decisive_evidence: ["EMA20>EMA50>EMA200 on H1", "M30 pullback to 38.2% level", "M5 bullish engulfing"],
+    opposing_evidence: ["High impact news in 45 min", "ADX declining slightly"],
+    critical_veto: decision === "NO_TRADE" ? "RISK_REWARD_INSUFFICIENT" : null,
+    missing_condition: decision === "WAIT" ? "M5 candle close above 2436.50 with continuity" : null,
+    technical_explanation: decision === "NO_TRADE"
+      ? "No hay entrada defendible: el riesgo operativo invalida la hipótesis en este ciclo."
+      : decision === "WAIT"
+      ? "Existe hipótesis activa, pero falta confirmación puntual en M5 sobre 2436.50 para habilitar entrada defendible."
+      : "Confluencia suficiente en H1/M30 y gatillo M5 defendible con invalidez clara y R:R operativo.",
+    public_explanation: decision === "NO_TRADE"
+      ? "No hay entrada porque el riesgo actual no es compatible con una operación corta o media.\nEsperamos una estructura más limpia antes de actuar."
+      : decision === "WAIT"
+      ? "El escenario mantiene potencial, pero falta confirmación concreta en M5 sobre 2436.50.\nSi aparece continuidad, la entrada podrá evaluarse de inmediato."
+      : "El contexto mantiene estructura favorable y gatillo operativo en M5.\nLa entrada es defendible con invalidación técnica clara y riesgo controlado.",
     master_decision: {
       decision,
       direction: decision === "ENTER_BUY" ? "BUY" : decision === "ENTER_SELL" ? "SELL" : "NEUTRAL",
@@ -238,7 +261,7 @@ async function runAllTests(): Promise<void> {
 
     const { prompt_text, section_order } = promptBuilder.build(expediente);
     assert.equal(section_order.length, 16, `Expected 16 sections, got ${section_order.length}`);
-    assert.ok(prompt_text.includes("Pregunta Maestra"), "Pregunta Maestra missing");
+    assert.ok(prompt_text.includes("PREGUNTA MAESTRA"), "Pregunta Maestra missing");
     assert.ok(prompt_text.includes("EXPEDIENTE MAESTRO CARVIPIX V3"), "Header missing");
     assert.ok(prompt_text.includes("XAUUSD"), "Symbol missing");
   });
@@ -739,7 +762,7 @@ async function runAllTests(): Promise<void> {
     assert.equal(expediente.identity.broker_symbol, null);
   });
 
-  await test("9.4 Prompt autoriza entradas discrecionales sin imponer NO_TRADE", async () => {
+  await test("9.4 Prompt autoriza entradas defendibles sin exigir perfeccion", async () => {
     const snap = await snapshotBuilder.build({
       analysis_id: "cert-prompt-004",
       signal_id: "sig-prompt-004",
@@ -752,8 +775,9 @@ async function runAllTests(): Promise<void> {
     const expediente = { ...withNarrative, executive_summary: summary };
     const { prompt_text } = promptBuilder.build(expediente);
 
-    assert.ok(prompt_text.includes("autorización para aprobar ENTER_BUY o ENTER_SELL"));
-    assert.ok(prompt_text.includes("NO_TRADE no es la respuesta predeterminada"));
+    assert.ok(prompt_text.includes("encontrar oportunidades técnicamente defendibles"));
+    assert.ok(prompt_text.includes("No debes buscar una operación perfecta"));
+    assert.ok(prompt_text.includes("Las condiciones ideales aumentan confianza, pero no son obligatorias"));
   });
 
   // ═══════════════════════════════════════════════════════════════════

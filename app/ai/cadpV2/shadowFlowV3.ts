@@ -6,11 +6,12 @@
  */
 
 import "server-only";
+import { randomUUID } from "node:crypto";
 import type { IndicatorFramework } from "../../engine/data/indicatorFramework";
 import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
 import type { Asset } from "../../engine/types/marketData";
 import { getOpenAIRuntimeConfig } from "../openAIConfig";
-import { OpenAIAdapterV2 } from "./openAIAdapterV2";
+import { getOpenAIRetryAfterMs, OpenAIAdapterV2 } from "./openAIAdapterV2";
 import { CadpCostManager } from "./costManager";
 import { MaestroV3SnapshotBuilder } from "./snapshotBuilderV3";
 import { NarrativeContextBuilder } from "./narrativeContextBuilder";
@@ -27,6 +28,7 @@ import { analysisStore } from "./analysisStore";
 import { telegramNotificationService } from "./telegramNotificationService";
 import { CadpMasterSignalBuilder } from "./masterSignalBuilder";
 import { masterSignalStore } from "./masterSignalStore";
+import { OpenAICircuitBreaker } from "./openAICircuitBreaker";
 import type {
   CanonicalSymbol,
   PreAnalysisTriggerReason,
@@ -57,12 +59,7 @@ export class ShadowFlowV3 {
   private readonly openAI = new OpenAIAdapterV2();
   private readonly costManager = new CadpCostManager();
 
-  /** Circuit breaker state */
-  private consecutiveErrors = 0;
-  private readonly maxConsecutiveErrors = 5;
-  private circuitOpen = false;
-  private circuitResetAt: number | null = null;
-  private readonly circuitCooldownMs = 5 * 60 * 1000; // 5 min cooldown
+  private readonly openAICircuit = new OpenAICircuitBreaker();
 
   /** Expose pipeline for monitoring/data access */
   public readonly pipeline: MarketDataPipeline;
@@ -79,20 +76,8 @@ export class ShadowFlowV3 {
     trigger_reason: PreAnalysisTriggerReason,
   ): Promise<ShadowFlowV3Result> {
     const started = Date.now();
-    const analysis_id = `anal-${canonical_symbol}-${new Date().toISOString().replace(/[:.]/g, "").slice(0, 15)}`;
-    const signal_id = `sig-${canonical_symbol}-${Date.now()}`;
-
-    // ── Circuit breaker check
-    if (this.circuitOpen) {
-      const now = Date.now();
-      if (this.circuitResetAt && now >= this.circuitResetAt) {
-        this.circuitOpen = false;
-        this.consecutiveErrors = 0;
-        this.circuitResetAt = null;
-      } else {
-        return { analysis_id, canonical_symbol, status: "SKIPPED_BEFORE_AI", decision: null, cost_usd: 0, latency_ms: 0 };
-      }
-    }
+    const analysis_id = `anal-${canonical_symbol}-${Date.now()}-${randomUUID()}`;
+    const signal_id = `sig-${canonical_symbol}-${Date.now()}-${randomUUID()}`;
 
     try {
       // ── PASO 1: Build snapshot (Secciones 1-13 + trigger)
@@ -162,6 +147,10 @@ export class ShadowFlowV3 {
       let rawResponse: unknown;
       let usage: { input_tokens: number; output_tokens: number; cached_tokens: number; reasoning_tokens: number; };
 
+      if (!this.openAICircuit.allowRequest()) {
+        return { analysis_id, canonical_symbol, status: "SKIPPED_BEFORE_AI", decision: null, cost_usd: 0, latency_ms: 0 };
+      }
+
       try {
         const result = await this.openAI.analyze({
           promptText: prompt_text,
@@ -177,15 +166,11 @@ export class ShadowFlowV3 {
           reasoning_tokens: 0,
         };
         aiLatency = Date.now() - aiStarted;
-        this.consecutiveErrors = 0; // Reset on success
+        this.openAICircuit.recordSuccess();
       } catch (err) {
-        this.consecutiveErrors++;
+        this.openAICircuit.recordFailure(getOpenAIRetryAfterMs(err));
         const errorMsg = err instanceof Error ? err.message : String(err);
         console.error(`[ShadowFlowV3] OpenAI ERROR for ${canonical_symbol}: ${errorMsg}`);
-        if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
-          this.circuitOpen = true;
-          this.circuitResetAt = Date.now() + this.circuitCooldownMs;
-        }
         const record = observerV3.recordError({
           analysis_id, signal_id, canonical_symbol,
           expediente, prompt_sent: prompt_text,
@@ -333,6 +318,13 @@ export class ShadowFlowV3 {
             dispatchResult.output.telegram,
             canonical_symbol,
             response.master_decision.decision,
+            dispatchResult.output.alerta_premium ?? undefined,
+            {
+              analysis_id,
+              signal_id,
+              event_id: `evt-${analysis_id}`,
+              test_only: false,
+            },
           );
 
           if (!telegramResult.success) {
@@ -413,11 +405,7 @@ export class ShadowFlowV3 {
       };
 
     } catch (err) {
-      this.consecutiveErrors++;
-      if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
-        this.circuitOpen = true;
-        this.circuitResetAt = Date.now() + this.circuitCooldownMs;
-      }
+      this.openAICircuit.recordFailure();
       return {
         analysis_id,
         canonical_symbol,
@@ -430,26 +418,37 @@ export class ShadowFlowV3 {
   }
 
   isCircuitOpen(): boolean {
-    return this.circuitOpen;
+    return this.openAICircuit.isBlockingRequests();
   }
 
-  getCircuitState(): { open: boolean; reset_at: string | null; consecutive_errors: number } {
-    return {
-      open: this.circuitOpen,
-      reset_at: this.circuitResetAt ? new Date(this.circuitResetAt).toISOString() : null,
-      consecutive_errors: this.consecutiveErrors,
-    };
+  getCircuitState(): ReturnType<OpenAICircuitBreaker["getSnapshot"]> {
+    return this.openAICircuit.getSnapshot();
   }
 
   private buildResponseSchema(): Record<string, unknown> {
     return {
       type: "object",
       properties: {
+        decision: { type: "string", enum: ["ENTER_BUY", "ENTER_SELL", "WAIT", "NO_TRADE"] },
+        direction: { type: "string", enum: ["BUY", "SELL", "NEUTRAL"] },
+        horizon: { type: "string", enum: ["SHORT", "MEDIUM"] },
+        quality: { type: "string", enum: ["A_PLUS", "A", "B", "NOT_APPLICABLE"] },
+        confidence: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"] },
+        entry_price: { type: ["number", "null"] },
+        stop_loss: { type: ["number", "null"] },
+        take_profit: { type: ["number", "null"] },
+        risk_reward: { type: ["number", "null"] },
+        decisive_evidence: { type: "array", items: { type: "string" } },
+        opposing_evidence: { type: "array", items: { type: "string" } },
+        critical_veto: { type: ["string", "null"] },
+        missing_condition: { type: ["string", "null"] },
+        technical_explanation: { type: "string" },
+        public_explanation: { type: "string" },
         master_decision: {
           type: "object",
           additionalProperties: false,
           properties: {
-            decision: { type: "string" },
+            decision: { type: "string", enum: ["ENTER_BUY", "ENTER_SELL", "WAIT", "NO_TRADE"] },
             direction: { type: ["string", "null"] },
             strategy_selected: { type: ["string", "null"] },
             conviction: { type: "string" },
@@ -607,7 +606,29 @@ export class ShadowFlowV3 {
           required: ["summary", "scenario_narrative", "key_observation"],
         },
       },
-      required: ["master_decision", "analysis_private", "analysis_public", "order_plan", "adaptive_state", "analyst_observations"],
+      required: [
+        "decision",
+        "direction",
+        "horizon",
+        "quality",
+        "confidence",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "risk_reward",
+        "decisive_evidence",
+        "opposing_evidence",
+        "critical_veto",
+        "missing_condition",
+        "technical_explanation",
+        "public_explanation",
+        "master_decision",
+        "analysis_private",
+        "analysis_public",
+        "order_plan",
+        "adaptive_state",
+        "analyst_observations",
+      ],
       additionalProperties: false,
     };
   }

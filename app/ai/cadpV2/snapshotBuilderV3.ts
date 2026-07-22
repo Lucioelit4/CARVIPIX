@@ -249,6 +249,7 @@ export class MaestroV3SnapshotBuilder {
     // ── Delta context
     const prevLatest = scenarioMemoryStore.getLatest(input.canonical_symbol);
     const delta = this.buildDelta(
+      input.canonical_symbol,
       input.trigger_reason,
       h1Closed,
       m30Closed,
@@ -593,6 +594,7 @@ export class MaestroV3SnapshotBuilder {
   }
 
   private buildDelta(
+    symbol: CanonicalSymbol,
     triggerReason: PreAnalysisTriggerReason,
     h1Closed: Candle[],
     m30Closed: Candle[],
@@ -601,7 +603,7 @@ export class MaestroV3SnapshotBuilder {
     watchConditions: Array<{ level: number | null }>,
     midPrice: number,
   ): DeltaContextV3 {
-    const prevLatest = scenarioMemoryStore.getLatest("XAUUSD" as CanonicalSymbol); // placeholder — actual latest from store
+    const prevLatest = scenarioMemoryStore.getLatest(symbol);
 
     const conditionMet = watchConditions.some(wc => wc.level !== null && Math.abs(midPrice - wc.level) / Math.max(currentAtr, 0.001) < 0.1);
 

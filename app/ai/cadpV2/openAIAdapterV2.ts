@@ -16,6 +16,7 @@ type OpenAIProviderError = Error & {
     error_code: string | null;
     error_param: string | null;
     error_message: string;
+    retry_after_ms: number | null;
     payload_top_level_fields: string[];
     payload_content_types: string[];
     payload_image_count: number;
@@ -29,6 +30,44 @@ type OpenAIProviderError = Error & {
     }>;
   };
 };
+
+const MAX_RETRY_DELAY_MS = 5 * 60 * 1000;
+
+export function parseRetryAfterMs(value: string | null, nowMs = Date.now()): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.min(MAX_RETRY_DELAY_MS, Math.ceil(seconds * 1000));
+  }
+
+  const dateMs = Date.parse(value);
+  if (!Number.isFinite(dateMs)) {
+    return null;
+  }
+
+  return Math.min(MAX_RETRY_DELAY_MS, Math.max(0, dateMs - nowMs));
+}
+
+export function calculateRetryDelayMs(input: {
+  retryNumber: number;
+  retryBaseMs: number;
+  retryAfterMs?: number | null;
+  random?: () => number;
+}): number {
+  const exponentialMs = input.retryBaseMs * (2 ** Math.max(0, input.retryNumber - 1));
+  const jitterMs = Math.floor((input.random ?? Math.random)() * input.retryBaseMs);
+  return Math.min(
+    MAX_RETRY_DELAY_MS,
+    Math.max(input.retryAfterMs ?? 0, exponentialMs + jitterMs),
+  );
+}
+
+export function getOpenAIRetryAfterMs(error: unknown): number | undefined {
+  return (error as OpenAIProviderError)?.providerDetails?.retry_after_ms ?? undefined;
+}
 
 function createProviderError(message: string, details: OpenAIProviderError["providerDetails"]): OpenAIProviderError {
   const err = new Error(message) as OpenAIProviderError;
@@ -207,7 +246,7 @@ export class OpenAIAdapterV2 {
           throw new Error("OPENAI_TIMEOUT_OR_NETWORK_ERROR");
         }
         retries += 1;
-        await sleepMs(config.retryBaseMs * retries);
+        await sleepMs(calculateRetryDelayMs({ retryNumber: retries, retryBaseMs: config.retryBaseMs }));
         continue;
       } finally {
         clearTimeout(timeoutId);
@@ -219,7 +258,11 @@ export class OpenAIAdapterV2 {
 
       if (isRetryableOpenAIStatus(response.status) && retries < config.maxRetries) {
         retries += 1;
-        await sleepMs(config.retryBaseMs * retries);
+        await sleepMs(calculateRetryDelayMs({
+          retryNumber: retries,
+          retryBaseMs: config.retryBaseMs,
+          retryAfterMs: parseRetryAfterMs(response.headers.get("retry-after")),
+        }));
         continue;
       }
 
@@ -254,6 +297,7 @@ export class OpenAIAdapterV2 {
         error_code: providerErrorCode,
         error_param: providerErrorParam,
         error_message: providerErrorMessage,
+        retry_after_ms: parseRetryAfterMs(response.headers.get("retry-after")),
         payload_top_level_fields: Object.keys(body),
         payload_content_types: contentTypes,
         payload_image_count: imageInputs.length,
@@ -305,6 +349,7 @@ export class OpenAIAdapterV2 {
         error_code: null,
         error_param: null,
         error_message: `Responses API returned non-completed status: ${raw.status}`,
+        retry_after_ms: null,
         payload_top_level_fields: Object.keys(body),
         payload_content_types:
           body.input && Array.isArray(body.input)

@@ -17,8 +17,23 @@ export interface PromptV3Assembly {
 
 /** Response schema for ChatGPT — strict JSON */
 const RESPONSE_SCHEMA_V3 = JSON.stringify({
+  decision: "ENTER_BUY | ENTER_SELL | WAIT | NO_TRADE",
+  direction: "BUY | SELL | NEUTRAL",
+  horizon: "SHORT | MEDIUM",
+  quality: "A_PLUS | A | B | NOT_APPLICABLE",
+  confidence: "HIGH | MEDIUM | LOW",
+  entry_price: "number | null",
+  stop_loss: "number | null",
+  take_profit: "number | null",
+  risk_reward: "number | null",
+  decisive_evidence: ["string (objective evidence that supports decision)"],
+  opposing_evidence: ["string (objective evidence against decision)"],
+  critical_veto: "string | null",
+  missing_condition: "string | null",
+  technical_explanation: "string (internal explanation for audit)",
+  public_explanation: "string (3-5 lines, client-ready, no promises)",
   master_decision: {
-    decision: "ENTER_BUY | ENTER_SELL | WAIT | CONDITIONAL_ENTRY | NO_TRADE | ENTRY_MISSED | DATA_INSUFFICIENT | NEWS_VERIFICATION_REQUIRED",
+    decision: "ENTER_BUY | ENTER_SELL | WAIT | NO_TRADE",
     direction: "BUY | SELL | NEUTRAL | null",
     strategy_selected: "string | null",
     conviction: "LOW | MEDIUM | HIGH",
@@ -48,7 +63,7 @@ const RESPONSE_SCHEMA_V3 = JSON.stringify({
     public_warning: "string | null",
   },
   order_plan: {
-    _note: "null if decision is not ENTER_BUY, ENTER_SELL, or CONDITIONAL_ENTRY",
+    _note: "null if decision is WAIT or NO_TRADE",
     entry_type: "MARKET | LIMIT | STOP",
     entry_price: "number | null",
     entry_zone_min: "number | null",
@@ -82,32 +97,74 @@ const RESPONSE_SCHEMA_V3 = JSON.stringify({
 
 const MASTER_QUESTION = `Eres el Analista Principal de CARVIPIX. Analiza exclusivamente el instrumento incluido en este expediente.
 
-Cada afirmación debe basarse en la información comprobada proporcionada. Nunca inventes datos, precios, noticias ni niveles que no estén en el expediente.
+Tu función es analizar el expediente real de mercado y encontrar oportunidades técnicamente defendibles que un trader profesional podría ejecutar con una gestión de riesgo responsable.
 
-Usa conjuntamente:
-• Contexto actual + delta desde análisis anterior
-• Mercado general (H1) 
-• Estructura intermedia (M30)
-• Gatillo (M5)
-• Coherencia multi-temporalidad
-• Volatilidad, liquidez, sesión
-• Noticias y riesgos
-• Validez temporal del escenario
-• Resumen ejecutivo
+No debes buscar una operación perfecta.
 
-Integra todo esto como UN ÚNICO análisis coherente. No evalúes cada elemento por separado.
+Tu prioridad es preservar el capital, pero sin caer en una prudencia excesiva que impida aprovechar oportunidades reales.
 
-Si CARVIPIX_MAESTRO_DISCRETIONARY_V1 aparece en las estrategias autorizadas, tienes autorización para aprobar ENTER_BUY o ENTER_SELL basándote en el expediente completo. NO_TRADE no es la respuesta predeterminada: úsala solamente cuando tu análisis determine que no existe una entrada válida o que el riesgo la invalida.
+No operes con miedo ni por impulso. Opera cuando exista evidencia suficiente y no exista un veto técnico crítico.
 
-Tu pregunta: ¿Existe una entrada válida AHORA? ¿El escenario se aproxima? ¿Continúa desarrollándose? ¿Debe rechazarse?
+CARVIPIX trabaja únicamente con operaciones de horizonte corto y medio.
+No evalúes operaciones largas ni Swing Trading.
+Toda señal debe clasificarse como SHORT o MEDIUM.
 
-Si existe entrada: Entrega una señal vigente, defendible y completa.
-Si falta una condición: Indica exactamente cuál.
-Si el escenario es inválido o datos insuficientes: Recházalo claramente.
+Toda decisión debe basarse exclusivamente en los datos reales del expediente generado por CARVIPIX desde la API oficial.
+Debes utilizar: OHLC reales, velas cerradas y vigentes, timestamps normalizados, contexto H1, estructura M30 (y M45 solo si existe explícitamente en el expediente), ejecución M5, EMAs e indicadores, volatilidad, zonas técnicas y relación riesgo-beneficio.
+No debes inventar precios, velas ni movimientos no presentes.
+No utilices imágenes ilustrativas como fuente principal.
 
-Explica brevemente qué factores fueron decisivos, cuál es el riesgo principal y qué tendría que cambiar para modificar tu decisión.
+Marco de razonamiento:
+• H1 define contexto y dirección principal.
+• M30 valida estructura y zona.
+• M5 valida ejecución.
+• EMAs/ADX/ATR son evidencia de apoyo y calidad, no vetos automáticos.
+• Soporte/resistencia/ruptura/rechazo/retroceso/impulso son contexto.
+• Riesgo-beneficio y Stop Loss técnico son requisitos operativos.
 
-probability_estimated representa tu evaluación analítica de qué tan sólida es la confluencia de factores observados. No es una garantía de resultado. Basa el número en la evidencia del expediente, no en tu entrenamiento previo de otros mercados.
+Definición de evidencia suficiente para ENTER_BUY/ENTER_SELL:
+1) Existe dirección o hipótesis clara.
+2) La estructura intermedia no contradice de manera crítica.
+3) M5 ofrece al menos una confirmación principal defendible.
+4) Existe Stop Loss técnico que invalida la hipótesis sin quedar dentro de ruido normal.
+5) Existe relación riesgo-beneficio adecuada.
+6) No existe veto crítico.
+
+No exijas simultáneamente todas las confirmaciones posibles.
+Las condiciones ideales aumentan confianza, pero no son obligatorias.
+Una condición ideal nunca bloquea por sí sola.
+Los conflictos menores reducen calidad/confianza.
+Solo un conflicto crítico invalida operación.
+
+Gestión de riesgo:
+• Se asume riesgo de 1%-2% del capital por operación.
+• No muevas SL arbitrariamente para mejorar R:R.
+• Si el SL técnicamente válido es demasiado amplio para SHORT/MEDIUM, responde NO_TRADE.
+
+Decisiones permitidas:
+• ENTER_BUY
+• ENTER_SELL
+• WAIT
+• NO_TRADE
+
+Reglas de decisión:
+• ENTER_BUY/ENTER_SELL: usar cuando la operación sea defendible ahora, aunque no perfecta.
+• WAIT: solo si existe oportunidad potencial y falta condición concreta/cercana; debes indicar exactamente qué confirmación, en qué temporalidad, en qué nivel/zona y qué cambiaría decisión.
+• NO_TRADE: solo con veto crítico (datos incompletos/obsoletos, mercado cerrado, noticia crítica inmediata, costo anormal, estructura caótica, R:R insuficiente, SL inválido o demasiado amplio, entrada demasiado extendida, conflicto crítico).
+
+Contrato obligatorio:
+• decision, direction, horizon, quality, confidence
+• entry_price, stop_loss, take_profit, risk_reward
+• decisive_evidence, opposing_evidence
+• critical_veto, missing_condition
+• technical_explanation, public_explanation
+
+Reglas de contrato:
+• BUY/SELL requieren entrada, SL, TP y R:R válidos.
+• WAIT requiere missing_condition concreta.
+• NO_TRADE requiere critical_veto.
+• public_explanation siempre obligatoria (3-5 líneas, profesional, sin promesas).
+• horizon solo SHORT o MEDIUM.
 
 Responde ÚNICAMENTE en el formato JSON solicitado por CARVIPIX. No incluyas texto fuera del esquema.`;
 
@@ -158,7 +215,7 @@ export class MaestroV3PromptBuilder {
       "",
       "---",
       "",
-      "### Pregunta Maestra",
+      "### PREGUNTA MAESTRA",
       MASTER_QUESTION,
     ].join("\n");
 

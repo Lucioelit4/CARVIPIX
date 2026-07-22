@@ -43,7 +43,7 @@ export interface DispatchResult {
 function deciscionToAction(decision: CadpDecisionV3): "BUY" | "SELL" | "WAIT" | "NO_TRADE" {
   if (decision === "ENTER_BUY") return "BUY";
   if (decision === "ENTER_SELL") return "SELL";
-  if (decision === "WAIT" || decision === "CONDITIONAL_ENTRY" || decision === "ENTRY_MISSED") return "WAIT";
+  if (decision === "WAIT") return "WAIT";
   return "NO_TRADE";
 }
 
