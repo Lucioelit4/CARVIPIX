@@ -24,8 +24,8 @@ export function CARVIPIXDataTable<T>({ columns, rows, rowKey, emptyLabel = 'No h
   }
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table className="cv-readable-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <div className="cv-table-wrap">
+      <table className="cv-readable-table cv-mobile-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
             {columns.map((column) => (
@@ -41,7 +41,11 @@ export function CARVIPIXDataTable<T>({ columns, rows, rowKey, emptyLabel = 'No h
               {columns.map((column) => {
                 const rawValue = (row as Record<string, unknown>)[String(column.key)];
                 return (
-                  <td key={String(column.key)} style={{ padding: `${spacing[12]} ${spacing[16]}`, fontSize: typography.sizes.sm, color: colors.white.text }}>
+                  <td
+                    key={String(column.key)}
+                    data-label={column.header}
+                    style={{ padding: `${spacing[12]} ${spacing[16]}`, fontSize: typography.sizes.sm, color: colors.white.text }}
+                  >
                     {column.render ? column.render(row) : (rawValue as React.ReactNode)}
                   </td>
                 );

@@ -389,8 +389,8 @@ function TradesTable({ trades }: TradesTableProps) {
   return (
     <div className="bg-slate-800 rounded p-4">
       <h3 className="font-bold text-slate-200 mb-3">📋 Últimos Trades Simulados</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs text-left">
+      <div className="cv-table-wrap">
+        <table className="cv-mobile-table w-full text-xs text-left">
           <thead>
             <tr className="border-b border-slate-700">
               <th className="px-2 py-2 text-slate-400">Entrada</th>
@@ -405,13 +405,13 @@ function TradesTable({ trades }: TradesTableProps) {
           <tbody>
             {displayTrades.map((trade, i) => (
               <tr key={i} className="border-b border-slate-700 hover:bg-slate-700/50">
-                <td className="px-2 py-2">${trade.entryPrice?.toFixed(2)}</td>
-                <td className="px-2 py-2">{trade.direction === 'long' ? '📈' : '📉'}</td>
-                <td className="px-2 py-2">{trade.quantity?.toFixed(2)}</td>
-                <td className="px-2 py-2">${trade.stopLoss?.toFixed(2)}</td>
-                <td className="px-2 py-2">${trade.takeProfit?.toFixed(2)}</td>
-                <td className="px-2 py-2">{trade.riskReward?.toFixed(2)}</td>
-                <td className={`px-2 py-2 font-bold ${trade.isWinning ? 'text-green-400' : 'text-red-400'}`}>
+                <td data-label="Entrada" className="px-2 py-2">${trade.entryPrice?.toFixed(2)}</td>
+                <td data-label="Dir" className="px-2 py-2">{trade.direction === 'long' ? '📈' : '📉'}</td>
+                <td data-label="Cantidad" className="px-2 py-2">{trade.quantity?.toFixed(2)}</td>
+                <td data-label="SL" className="px-2 py-2">${trade.stopLoss?.toFixed(2)}</td>
+                <td data-label="TP" className="px-2 py-2">${trade.takeProfit?.toFixed(2)}</td>
+                <td data-label="RR" className="px-2 py-2">{trade.riskReward?.toFixed(2)}</td>
+                <td data-label="Resultado" className={`px-2 py-2 font-bold ${trade.isWinning ? 'text-green-400' : 'text-red-400'}`}>
                   {trade.isWinning ? '+' : '-'}${Math.abs(trade.profit || 0).toFixed(2)}
                 </td>
               </tr>

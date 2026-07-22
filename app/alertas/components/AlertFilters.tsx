@@ -32,7 +32,7 @@ export default function AlertFilters({
   return (
     <CARVIPIXCard variant="elevated" padding="16" hover={false}>
       <div className="flex flex-wrap items-end gap-3">
-        <label className="relative min-w-[220px] flex-1">
+        <label className="relative min-w-0 w-full sm:flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/50" />
           <input
             value={search}
@@ -42,7 +42,7 @@ export default function AlertFilters({
           />
         </label>
 
-        <label className="min-w-[180px] flex-1 sm:flex-none">
+        <label className="min-w-0 w-full sm:w-auto sm:min-w-[180px]">
           <span className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-white/55">Activo</span>
           <select
             value={selectedSymbol}
@@ -57,7 +57,7 @@ export default function AlertFilters({
           </select>
         </label>
 
-        <label className="min-w-[210px] flex-1 sm:flex-none">
+        <label className="min-w-0 w-full sm:w-auto sm:min-w-[210px]">
           <span className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-white/55">Estado</span>
           <select
             value={selectedStatus}

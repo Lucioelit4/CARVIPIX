@@ -86,7 +86,7 @@ export default function WorkspaceHero() {
           <p className="mt-2 max-w-3xl text-sm text-[#B5B5B5] sm:text-base">{content.subtitle}</p>
         </div>
 
-        <div className="flex w-full items-center gap-3 sm:w-auto">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
           <div className="cv-search flex-1 sm:w-72">
             <Search size={16} className="text-[#B5B5B5]" />
             <input

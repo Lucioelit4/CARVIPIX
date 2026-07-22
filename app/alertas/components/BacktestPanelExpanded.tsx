@@ -127,12 +127,12 @@ export function BacktestPanelExpanded({ isPrivate = true, onClose }: BacktestPan
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-700 overflow-x-auto">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-700 pb-2">
         {(['config', 'results', 'monte_carlo', 'walk_forward', 'performance'] as TabType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`px-4 py-2 text-sm font-medium ${
               activeTab === tab
                 ? 'border-b-2 border-blue-500 text-blue-400'
                 : 'text-slate-400 hover:text-slate-200'

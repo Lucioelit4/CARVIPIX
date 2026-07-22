@@ -58,6 +58,8 @@
 html, body {
   margin: 0;
   padding: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 body {
@@ -66,11 +68,28 @@ body {
   font-family: var(--font-geist-sans), var(--font-sans);
   line-height: 1.5;
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
 * {
   box-sizing: border-box;
+}
+
+img,
+svg,
+canvas,
+video,
+iframe {
+  max-width: 100%;
+}
+
+main,
+section,
+article,
+aside,
+header,
+footer,
+div {
+  min-width: 0;
 }
 
 /* Typography Base */
@@ -423,6 +442,66 @@ a.cv-button {
 
 .cv-readable-table tbody td {
   line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.cv-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cv-mobile-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cv-mobile-table th,
+.cv-mobile-table td {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .cv-mobile-table thead {
+    display: none;
+  }
+
+  .cv-mobile-table,
+  .cv-mobile-table tbody,
+  .cv-mobile-table tr,
+  .cv-mobile-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .cv-mobile-table tbody {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .cv-mobile-table tr {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.6rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .cv-mobile-table td {
+    border: 0 !important;
+    padding: 0.35rem 0 !important;
+  }
+
+  .cv-mobile-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.58);
+    margin-bottom: 0.15rem;
+  }
 }
 
 .cv-app-shell {
@@ -462,8 +541,8 @@ a.cv-button {
 }
 
 .cv-icon-btn {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: #121212;

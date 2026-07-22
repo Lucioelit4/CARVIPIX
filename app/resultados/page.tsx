@@ -78,7 +78,7 @@ export default function ResultadosPage() {
 
       {/* Métricas Horizontales */}
       <div className="cv-workspace max-w-7xl py-14 sm:py-16">
-        <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             {
               label: "Pips del mes",
@@ -165,8 +165,8 @@ export default function ResultadosPage() {
             <p className="mb-8 mt-2 text-sm text-white/55">
               Escenarios calculados mediante probabilidades, condiciones históricas del mercado y reglas operativas de CARVIPIX.
             </p>
-            <div className="overflow-x-auto">
-              <table className="cv-readable-table w-full text-left text-sm">
+            <div className="cv-table-wrap">
+              <table className="cv-readable-table cv-mobile-table w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
                     <th className="pb-4 font-semibold">#</th>
@@ -181,17 +181,17 @@ export default function ResultadosPage() {
                   {globalResults?.enabled && globalResults.simulation && globalResults.profiles.featured.length > 0 ? (
                     globalResults.profiles.featured.map((profile, index) => (
                       <tr key={profile.profileId} className="hover:bg-white/5 transition">
-                        <td className="py-3.5 text-white/65">{index + 1}</td>
-                        <td className="py-3.5 font-medium">{profile.displayName}</td>
-                        <td className="py-3.5 text-white/65">{profile.riskType}</td>
-                        <td className="py-3.5">${profile.currentBalance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
-                        <td className="py-3.5">{profile.operationsApplied}</td>
-                        <td className="py-3.5">{profile.maxDrawdownPct.toFixed(2)}%</td>
+                        <td data-label="#" className="py-3.5 text-white/65">{index + 1}</td>
+                        <td data-label="Perfil" className="py-3.5 font-medium">{profile.displayName}</td>
+                        <td data-label="Riesgo" className="py-3.5 text-white/65">{profile.riskType}</td>
+                        <td data-label="Balance simulado" className="py-3.5">${profile.currentBalance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+                        <td data-label="Ops" className="py-3.5">{profile.operationsApplied}</td>
+                        <td data-label="Drawdown" className="py-3.5">{profile.maxDrawdownPct.toFixed(2)}%</td>
                       </tr>
                     ))
                   ) : (
                     <tr className="hover:bg-white/5 transition">
-                      <td className="py-3.5 text-white/65" colSpan={6}>La simulación probabilística está desactivada. Las métricas oficiales continúan disponibles por separado.</td>
+                      <td data-label="Estado" className="py-3.5 text-white/65" colSpan={6}>La simulación probabilística está desactivada. Las métricas oficiales continúan disponibles por separado.</td>
                     </tr>
                   )}
                 </tbody>
@@ -202,8 +202,8 @@ export default function ResultadosPage() {
           {/* Últimas Operaciones */}
           <CARVIPIXCard variant="info" padding="24" hover={false}>
             <h2 className="mb-8 text-2xl font-bold">Últimas operaciones cerradas</h2>
-            <div className="overflow-x-auto">
-              <table className="cv-readable-table w-full text-left text-sm">
+            <div className="cv-table-wrap">
+              <table className="cv-readable-table cv-mobile-table w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
                     <th className="pb-4 font-semibold">Fecha</th>
@@ -215,7 +215,7 @@ export default function ResultadosPage() {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   <tr className="hover:bg-white/5 transition">
-                    <td className="py-3.5 text-white/65" colSpan={5}>Cuando se registren cierres operativos, verás aquí el historial con detalle.</td>
+                    <td data-label="Estado" className="py-3.5 text-white/65" colSpan={5}>Cuando se registren cierres operativos, verás aquí el historial con detalle.</td>
                   </tr>
                 </tbody>
               </table>

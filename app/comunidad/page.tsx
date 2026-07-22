@@ -495,10 +495,10 @@ export default function ComunidadPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-            <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+            <button type="button" className="h-11 w-11 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
               <Search size={15} />
             </button>
-            <button type="button" className="relative h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+            <button type="button" className="relative h-11 w-11 rounded-lg border border-white/10 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
               <Bell size={15} />
               <span className="absolute -top-1 -right-1 min-w-4 h-4 rounded-full bg-[#D4AF37] text-black text-[10px] leading-none font-bold inline-flex items-center justify-center px-1">3</span>
             </button>
@@ -580,9 +580,9 @@ export default function ComunidadPage() {
                   <p className="mt-1 text-[11px] md:text-xs text-white/60">{activeChannelInfo.description}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Bell size={14} /></button>
-                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Search size={14} /></button>
-                  <button type="button" className="h-8 w-8 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Users size={14} /></button>
+                  <button type="button" className="h-11 w-11 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Bell size={14} /></button>
+                  <button type="button" className="h-11 w-11 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Search size={14} /></button>
+                  <button type="button" className="h-11 w-11 rounded-lg border border-white/10 bg-[#0B0B0B] inline-flex items-center justify-center text-white/80"><Users size={14} /></button>
                 </div>
               </div>
 
@@ -733,11 +733,11 @@ export default function ComunidadPage() {
                 </div>
               ) : null}
 
-              <div className="mt-2 rounded-xl border border-white/12 bg-[#070E17] p-1.5 grid grid-cols-[34px_34px_minmax(0,1fr)] md:grid-cols-[34px_34px_minmax(0,1fr)_auto] gap-1.5 items-center">
-                <button type="button" onClick={attachFile} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+              <div className="mt-2 rounded-xl border border-white/12 bg-[#070E17] p-1.5 grid grid-cols-[44px_44px_minmax(0,1fr)] md:grid-cols-[44px_44px_minmax(0,1fr)_auto] gap-1.5 items-center">
+                <button type="button" onClick={attachFile} className="h-[44px] w-[44px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
                   <Paperclip size={15} />
                 </button>
-                <button type="button" onClick={addEmoji} className="h-[34px] w-[34px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
+                <button type="button" onClick={addEmoji} className="h-[44px] w-[44px] rounded-lg border border-white/12 bg-[#0B0B0B] text-white/80 inline-flex items-center justify-center">
                   <Heart size={15} />
                 </button>
                 <input
@@ -749,12 +749,12 @@ export default function ComunidadPage() {
                     }
                   }}
                   placeholder="Escribe tu mensaje..."
-                  className="h-[34px] min-w-0 w-full rounded-lg border border-white/15 bg-[#0A111B] px-3 text-xs md:text-sm text-white placeholder:text-white/45 outline-none"
+                  className="h-[44px] min-w-0 w-full rounded-lg border border-white/15 bg-[#0A111B] px-3 text-xs md:text-sm text-white placeholder:text-white/45 outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => void sendMessage()}
-                  className="h-[34px] rounded-lg bg-gradient-to-r from-[#F0CF68] to-[#D4AF37] text-black font-bold px-3 text-xs inline-flex items-center justify-center gap-1 md:col-auto col-span-full"
+                  className="h-[44px] rounded-lg bg-gradient-to-r from-[#F0CF68] to-[#D4AF37] text-black font-bold px-3 text-xs inline-flex items-center justify-center gap-1 md:col-auto col-span-full"
                 >
                   <Send size={14} />
                   {editingMessageId ? "Guardar" : "Enviar"}

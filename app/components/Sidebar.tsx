@@ -241,7 +241,7 @@ export default function Sidebar() {
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 bg-black/70 lg:hidden" onClick={() => setMobileOpen(false)}>
           <div
-            className="fixed left-0 top-0 h-full w-[300px] max-w-[86vw] overflow-y-auto border-r border-[#2A2A2A] bg-[#030303] p-6 shadow-xl"
+            className="fixed left-0 top-0 h-full w-[320px] max-w-[92vw] overflow-y-auto border-r border-[#2A2A2A] bg-[#030303] p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-8 rounded-3xl border border-[#2A2A2A] bg-[#121212] px-4 py-5">
@@ -285,7 +285,7 @@ export default function Sidebar() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex min-h-[44px] items-center rounded-2xl border border-white/10 px-4 py-3 text-sm transition duration-200 ${
+                    className={`flex min-h-[44px] items-center rounded-2xl border border-white/10 px-4 py-3 text-sm leading-5 break-words transition duration-200 ${
                       isActive
                         ? "bg-[#181818] text-[#F4C542]"
                         : "text-[#B5B5B5] hover:bg-[#121212] hover:text-[#F4C542]"

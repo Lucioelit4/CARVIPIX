@@ -127,12 +127,12 @@ export function OptimizerPanel({ isPrivate = true, onClose }: OptimizerPanelProp
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-700 overflow-x-auto">
+      <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-700 pb-2">
         {(['progress', 'results', 'comparison', 'recommendations'] as TabType[]).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+            className={`px-4 py-2 text-sm font-medium ${
               activeTab === tab
                 ? 'border-b-2 border-blue-500 text-blue-400'
                 : 'text-slate-400 hover:text-slate-200'
@@ -253,8 +253,8 @@ function ResultsTab({ candidates, perAsset }: { candidates: any[]; perAsset: any
       <h3 className="font-bold text-slate-200">Top 10 Configuraciones</h3>
 
       {/* Tabla de Candidatos */}
-      <div className="bg-slate-800 rounded overflow-x-auto">
-        <table className="w-full text-xs">
+      <div className="cv-table-wrap rounded bg-slate-800">
+        <table className="cv-mobile-table w-full text-xs">
           <thead>
             <tr className="border-b border-slate-700">
               <th className="px-3 py-2 text-left text-blue-400">Rank</th>
@@ -272,16 +272,16 @@ function ResultsTab({ candidates, perAsset }: { candidates: any[]; perAsset: any
           <tbody>
             {candidates.map((cand) => (
               <tr key={cand.rank} className="border-b border-slate-700 hover:bg-slate-700/50">
-                <td className="px-3 py-2 font-bold text-green-400">#{cand.rank}</td>
-                <td className="px-3 py-2 font-bold text-blue-400">{cand.score.toFixed(1)}</td>
-                <td className="px-3 py-2">{cand.consensus}/11</td>
-                <td className="px-3 py-2">{cand.confidence}%</td>
-                <td className="px-3 py-2">{cand.rr}</td>
-                <td className="px-3 py-2">{cand.risk}%</td>
-                <td className="px-3 py-2">{cand.profitFactor.toFixed(2)}</td>
-                <td className="px-3 py-2">{cand.winRate.toFixed(1)}%</td>
-                <td className="px-3 py-2 text-orange-400">{cand.drawdown.toFixed(1)}%</td>
-                <td className="px-3 py-2">{cand.trades}</td>
+                <td data-label="Rank" className="px-3 py-2 font-bold text-green-400">#{cand.rank}</td>
+                <td data-label="Score" className="px-3 py-2 font-bold text-blue-400">{cand.score.toFixed(1)}</td>
+                <td data-label="Consensus" className="px-3 py-2">{cand.consensus}/11</td>
+                <td data-label="Confidence" className="px-3 py-2">{cand.confidence}%</td>
+                <td data-label="RR" className="px-3 py-2">{cand.rr}</td>
+                <td data-label="Risk" className="px-3 py-2">{cand.risk}%</td>
+                <td data-label="PF" className="px-3 py-2">{cand.profitFactor.toFixed(2)}</td>
+                <td data-label="WR %" className="px-3 py-2">{cand.winRate.toFixed(1)}%</td>
+                <td data-label="Drawdown" className="px-3 py-2 text-orange-400">{cand.drawdown.toFixed(1)}%</td>
+                <td data-label="Trades" className="px-3 py-2">{cand.trades}</td>
               </tr>
             ))}
           </tbody>

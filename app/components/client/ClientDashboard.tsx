@@ -113,11 +113,11 @@ export default function ClientDashboard() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 p-3 text-white sm:p-5 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-3xl font-bold text-transparent sm:text-4xl md:text-5xl">
             🚀 Panel de Control CARVIPIX
           </h1>
           <p className="text-gray-400">Gestión de tu Licencia y Operaciones Automatizadas</p>
@@ -130,7 +130,7 @@ export default function ClientDashboard() {
               ? "bg-gradient-to-br from-green-900 to-green-800 border-green-600"
               : "bg-gradient-to-br from-red-900 to-red-800 border-red-600"
           }`}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 md:gap-6">
               <div>
                 <p className="text-gray-300 text-sm">Estado</p>
                 <p className="text-2xl font-bold">
@@ -172,8 +172,8 @@ export default function ClientDashboard() {
 
         {/* Download Modal */}
         {showDownload && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 rounded-xl p-8 max-w-md">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-3">
+            <div className="max-w-md rounded-xl bg-gray-800 p-5 sm:p-8">
               <h2 className="text-2xl font-bold mb-4">📥 Descargar EA</h2>
               <p className="text-gray-300 mb-6">
                 Descarga el Expert Advisor V1 compilado. Requiere:
@@ -183,7 +183,7 @@ export default function ClientDashboard() {
                 <li>✓ Tu Licencia CARVIPIX</li>
                 <li>✓ Conexión a Internet</li>
               </ul>
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                 <button
                   onClick={downloadEA}
                   className="flex-1 bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg font-bold"
@@ -202,7 +202,7 @@ export default function ClientDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-4 mb-8 border-b border-gray-700">
+        <div className="mb-8 flex flex-wrap gap-2 border-b border-gray-700 pb-2">
           <button
             onClick={() => setActiveTab("overview")}
             className={`py-2 px-4 font-semibold ${
@@ -236,13 +236,13 @@ export default function ClientDashboard() {
         </div>
 
         {/* Content */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="rounded-xl bg-gray-800 p-4 sm:p-6">
           {/* OVERVIEW TAB */}
           {activeTab === "overview" && (
             <div>
               <h2 className="text-2xl font-bold mb-6">Resumen de Cuenta</h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+              <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                 <div className="bg-gray-700 rounded-lg p-4">
                   <p className="text-gray-400 text-sm">Instalaciones Activas</p>
                   <p className="text-3xl font-bold">
@@ -305,7 +305,7 @@ export default function ClientDashboard() {
                       key={idx}
                       className="bg-gray-700 rounded-lg p-6 border-l-4 border-green-500"
                     >
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                         <div>
                           <p className="text-gray-400 text-sm">Broker</p>
                           <p className="font-bold">{inst.broker}</p>
@@ -329,7 +329,7 @@ export default function ClientDashboard() {
                           </p>
                         </div>
                       </div>
-                      <div className="mt-4 flex gap-2 text-sm">
+                      <div className="mt-4 flex flex-wrap gap-2 text-sm">
                         <span className="bg-blue-900 px-2 py-1 rounded">
                           Posiciones: {inst.open_positions}
                         </span>
@@ -354,8 +354,8 @@ export default function ClientDashboard() {
                   <p className="text-gray-400">Sin operaciones registradas</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="cv-table-wrap">
+                  <table className="cv-mobile-table w-full text-sm">
                     <thead className="border-b border-gray-600">
                       <tr>
                         <th className="text-left py-3 px-4">Símbolo</th>
@@ -369,8 +369,8 @@ export default function ClientDashboard() {
                     <tbody>
                       {executions.map((exec, idx) => (
                         <tr key={idx} className="border-b border-gray-700 hover:bg-gray-700">
-                          <td className="py-3 px-4 font-bold">{exec.symbol}</td>
-                          <td className="py-3 px-4">
+                          <td data-label="Símbolo" className="py-3 px-4 font-bold">{exec.symbol}</td>
+                          <td data-label="Tipo" className="py-3 px-4">
                             <span className={`px-2 py-1 rounded text-xs font-bold ${
                               exec.direction === "BUY"
                                 ? "bg-green-900 text-green-200"
@@ -379,13 +379,13 @@ export default function ClientDashboard() {
                               {exec.direction}
                             </span>
                           </td>
-                          <td className="py-3 px-4">{exec.entry_price.toFixed(2)}</td>
-                          <td className={`py-3 px-4 font-bold ${
+                          <td data-label="Entrada" className="py-3 px-4">{exec.entry_price.toFixed(2)}</td>
+                          <td data-label="P/L" className={`py-3 px-4 font-bold ${
                             exec.pnl >= 0 ? "text-green-400" : "text-red-400"
                           }`}>
                             ${exec.pnl.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4">
+                          <td data-label="Estado" className="py-3 px-4">
                             <span className={`px-2 py-1 rounded text-xs ${
                               exec.status === "CLOSED"
                                 ? "bg-blue-900 text-blue-200"
@@ -394,7 +394,7 @@ export default function ClientDashboard() {
                               {exec.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-xs">
+                          <td data-label="Hora" className="py-3 px-4 text-xs">
                             {new Date(exec.opened_at).toLocaleString()}
                           </td>
                         </tr>
