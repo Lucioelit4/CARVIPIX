@@ -310,6 +310,9 @@ async function runAllTests(): Promise<void> {
   });
 
   await test("3.2 REUSED_PREVIOUS_ANALYSIS con misma clave de idempotencia", async () => {
+    const prevFlag = process.env.SMART_CHANGE_DETECTOR_ENABLED;
+    process.env.SMART_CHANGE_DETECTOR_ENABLED = "true";
+
     const result1 = await snapshotBuilder.build({
       analysis_id: "cert-idem-001",
       signal_id: "sig-idem-001",
@@ -329,6 +332,12 @@ async function runAllTests(): Promise<void> {
     });
 
     assert.equal(result2.expediente.quality.skip_before_ai?.skip_reason, "IDEMPOTENT_REUSE");
+
+    if (prevFlag === undefined) {
+      delete process.env.SMART_CHANGE_DETECTOR_ENABLED;
+    } else {
+      process.env.SMART_CHANGE_DETECTOR_ENABLED = prevFlag;
+    }
   });
 
   await test("3.3 Scenario version increment genera nueva clave", async () => {
@@ -663,6 +672,7 @@ async function runAllTests(): Promise<void> {
       scenario_first_seen_ms: Date.now() - 25 * 60 * 1000,
       strategy_version: "1.0.0",
       prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
     });
 
     const latest = scenarioMemoryStore.getLatest("XAUUSD");
@@ -702,6 +712,7 @@ async function runAllTests(): Promise<void> {
       scenario_first_seen_ms: Date.now() - 30 * 60 * 1000,
       strategy_version: "1.0.0",
       prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
     });
 
     const evolution = scenarioMemoryStore.buildDecisionEvolution("XAUUSD", 8);

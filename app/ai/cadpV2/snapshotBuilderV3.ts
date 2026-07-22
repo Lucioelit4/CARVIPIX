@@ -10,7 +10,7 @@ import type { IndicatorFramework } from "../../engine/data/indicatorFramework";
 import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
 import { AI_ENGINE_VERSION } from "../aiVersioning";
 import { CADP_PROMPT_VERSION } from "../aiVersioning";
-import { getCadpFeatureFlags } from "./config";
+import { getCadpFeatureFlags, getCadpV3OptimizationFlags } from "./config";
 import { getInstrument, getAuthorizedStrategies } from "./instrumentRegistry";
 import { scenarioMemoryStore } from "./scenarioMemoryStore";
 import { idempotencyStore } from "./idempotencyStore";
@@ -156,6 +156,7 @@ export class MaestroV3SnapshotBuilder {
     const asset = input.canonical_symbol as unknown as Asset;
     const pipValue = instrument.pip_value;
     const flags = getCadpFeatureFlags();
+    const optimizationFlags = getCadpV3OptimizationFlags();
 
     // ── Candle data
     const h1Raw = this.pipeline.getRecentCandles(asset, "1H", 120);
@@ -257,7 +258,11 @@ export class MaestroV3SnapshotBuilder {
       indM5?.atr ?? 0,
       prevLatest?.adaptive_state?.watch_conditions ?? [],
       midPrice,
+      pipValue,
+      prevLatest?.order_plan?.entry_price ?? null,
     );
+
+    const materialChanges = this.detectMaterialChanges(delta);
 
     // ── H1 timeframe
     const h1Highs = h1Closed.map(c => c.high);
@@ -514,9 +519,10 @@ export class MaestroV3SnapshotBuilder {
     // ── Pre-analysis trigger
     const pre_analysis_trigger: PreAnalysisTrigger = {
       trigger_reason: input.trigger_reason,
-      change_detected: delta.new_closed_candle.H1 || delta.new_closed_candle.M30 || delta.new_closed_candle.M5
-        || delta.break_detected.detected || delta.new_news_event.detected || delta.previous_condition_met.met,
-      change_description: this.buildChangeDescription(delta, input.trigger_reason),
+      change_detected: materialChanges.length > 0,
+      change_description: materialChanges.length > 0
+        ? materialChanges.join(" | ")
+        : this.buildChangeDescription(delta, input.trigger_reason),
       previous_condition_met: {
         met: delta.previous_condition_met.met,
         original_condition_text: previousContext.previous_vigilance?.condition_described ?? null,
@@ -569,7 +575,7 @@ export class MaestroV3SnapshotBuilder {
     });
 
     // Check idempotency
-    if (idempotencyStore.exists(idempotency_key.full_key)) {
+    if (optimizationFlags.SMART_CHANGE_DETECTOR_ENABLED && idempotencyStore.exists(idempotency_key.full_key)) {
       quality.skip_before_ai = { skip_reason: "IDEMPOTENT_REUSE", detail: `Key: ${idempotency_key.full_key}` };
     }
 
@@ -602,10 +608,26 @@ export class MaestroV3SnapshotBuilder {
     currentAtr: number,
     watchConditions: Array<{ level: number | null }>,
     midPrice: number,
+    pipValue: number,
+    previousEntryPrice: number | null,
   ): DeltaContextV3 {
     const prevLatest = scenarioMemoryStore.getLatest(symbol);
 
     const conditionMet = watchConditions.some(wc => wc.level !== null && Math.abs(midPrice - wc.level) / Math.max(currentAtr, 0.001) < 0.1);
+
+    const zoneReached = previousEntryPrice !== null
+      && Math.abs(midPrice - previousEntryPrice) / Math.max(pipValue, 0.00001) <= 3;
+
+    const atrPrevious = prevLatest ? (prevLatest.adaptive_state as unknown as { atr?: number }).atr ?? null : null;
+    const atrChangePct = atrPrevious && atrPrevious > 0
+      ? ((currentAtr - atrPrevious) / atrPrevious) * 100
+      : null;
+
+    const m5PrevClose = m5Closed.length >= 2 ? m5Closed[m5Closed.length - 2]?.close ?? null : null;
+    const m5LastClose = m5Closed.length >= 1 ? m5Closed[m5Closed.length - 1]?.close ?? null : null;
+    const directionalMovePct = m5PrevClose && m5LastClose
+      ? Math.abs((m5LastClose - m5PrevClose) / Math.max(m5PrevClose, 0.00001)) * 100
+      : 0;
 
     return {
       new_closed_candle: {
@@ -615,9 +637,23 @@ export class MaestroV3SnapshotBuilder {
       },
       new_high_detected: { detected: false, timeframe: null, level: null },
       new_low_detected: { detected: false, timeframe: null, level: null },
-      break_detected: { detected: false, direction: null, broken_level: null, timeframe: null, candle_that_broke_timestamp: null },
-      zone_reached: { detected: false, zone_type: null, zone_level: null, proximity_pips: null, timeframe: null },
-      atr_change: { previous: prevLatest ? (prevLatest.adaptive_state as unknown as { atr?: number }).atr ?? null : null, current: currentAtr, change_pct: null },
+      break_detected: {
+        detected: directionalMovePct >= 0.08,
+        direction: m5PrevClose !== null && m5LastClose !== null && m5LastClose > m5PrevClose ? "ABOVE" : "BELOW",
+        broken_level: m5PrevClose,
+        timeframe: "M5",
+        candle_that_broke_timestamp: m5Closed.at(-1)?.timestamp ?? null,
+      },
+      zone_reached: {
+        detected: zoneReached,
+        zone_type: zoneReached ? "SUPPORT" : null,
+        zone_level: zoneReached ? previousEntryPrice : null,
+        proximity_pips: zoneReached && previousEntryPrice !== null
+          ? Math.abs(midPrice - previousEntryPrice) / Math.max(pipValue, 0.00001)
+          : null,
+        timeframe: zoneReached ? "M5" : null,
+      },
+      atr_change: { previous: atrPrevious, current: currentAtr, change_pct: atrChangePct },
       session_changed: triggerReason === "SCHEDULED_RECHECK" ? false : false,
       session_previous: null,
       session_current: "UNKNOWN",
@@ -638,6 +674,21 @@ export class MaestroV3SnapshotBuilder {
         paper_trade_id: null,
       },
     };
+  }
+
+  private detectMaterialChanges(delta: DeltaContextV3): string[] {
+    const changes: string[] = [];
+    if (delta.new_closed_candle.H1) changes.push("NEW_H1_CANDLE_CLOSED");
+    if (delta.new_closed_candle.M30) changes.push("NEW_M30_CANDLE_CLOSED");
+    if (delta.break_detected.detected) changes.push("STRUCTURE_BREAK_OR_RECOVERY");
+    if (delta.zone_reached.detected) changes.push("RELEVANT_ZONE_REACHED");
+    if (delta.previous_condition_met.met) changes.push("PREVIOUS_CONDITION_MET");
+    if (delta.paper_trade_closed.occurred) changes.push("PAPER_TRADE_CLOSED");
+    if (delta.new_news_event.detected) changes.push("NEWS_CONTEXT_UPDATED");
+    if ((delta.atr_change.change_pct ?? 0) >= 20 || (delta.atr_change.change_pct ?? 0) <= -20) {
+      changes.push("VOLATILITY_SIGNIFICANT_CHANGE");
+    }
+    return changes;
   }
 
   private buildChangeDescription(delta: DeltaContextV3, reason: PreAnalysisTriggerReason): string {

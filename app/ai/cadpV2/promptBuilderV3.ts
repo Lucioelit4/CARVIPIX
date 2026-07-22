@@ -15,6 +15,10 @@ export interface PromptV3Assembly {
   estimated_tokens: number;
 }
 
+export interface PromptV3BuildOptions {
+  smartExpedientEnabled?: boolean;
+}
+
 /** Response schema for ChatGPT — strict JSON */
 const RESPONSE_SCHEMA_V3 = JSON.stringify({
   decision: "ENTER_BUY | ENTER_SELL | WAIT | NO_TRADE",
@@ -186,7 +190,11 @@ function estimateTokens(text: string): number {
 }
 
 export class MaestroV3PromptBuilder {
-  build(expediente: ExpedienteMaestroV3): PromptV3Assembly {
+  build(expediente: ExpedienteMaestroV3, options?: PromptV3BuildOptions): PromptV3Assembly {
+    if (options?.smartExpedientEnabled) {
+      return this.buildSmart(expediente);
+    }
+
     const sections: Array<{ title: string; content: unknown }> = [
       { title: "1. Identidad y trazabilidad", content: expediente.identity },
       { title: "2. Calidad del expediente", content: expediente.quality },
@@ -243,6 +251,111 @@ export class MaestroV3PromptBuilder {
       prompt_hash,
       prompt_cache_key,
       section_order: sections.map(s => s.title),
+      estimated_tokens: estimateTokens(prompt_text),
+    };
+  }
+
+  private buildSmart(expediente: ExpedienteMaestroV3): PromptV3Assembly {
+    const stableContext = {
+      symbol: expediente.identity.canonical_symbol,
+      trend_h1: expediente.multi_timeframe.structure_direction.h1,
+      trend_m30: expediente.multi_timeframe.structure_direction.m30,
+      zones_h1: {
+        support: expediente.market_h1.support_zones.slice(-2),
+        resistance: expediente.market_h1.resistance_zones.slice(-2),
+      },
+      zones_m30: {
+        support: expediente.market_m30.support_zones.slice(-2),
+        resistance: expediente.market_m30.resistance_zones.slice(-2),
+      },
+      previous_decision: expediente.previous_context.previous_decision,
+      previous_state: expediente.previous_context.previous_scenario_state,
+    };
+
+    const changes = {
+      trigger_reason: expediente.pre_analysis_trigger.trigger_reason,
+      description: expediente.pre_analysis_trigger.change_description,
+      delta: expediente.delta,
+    };
+
+    const indispensableState = {
+      quality: expediente.quality,
+      market_h1: {
+        ema20: expediente.market_h1.ema20,
+        ema50: expediente.market_h1.ema50,
+        ema200: expediente.market_h1.ema200,
+        atr: expediente.market_h1.atr,
+        adx: expediente.market_h1.adx,
+        last_closed: expediente.market_h1.closed_candles.slice(-8),
+      },
+      market_m30: {
+        ema20: expediente.market_m30.ema20,
+        ema50: expediente.market_m30.ema50,
+        ema200: expediente.market_m30.ema200,
+        atr: expediente.market_m30.atr,
+        adx: expediente.market_m30.adx,
+        last_closed: expediente.market_m30.closed_candles.slice(-8),
+      },
+      market_m5: {
+        ema20: expediente.market_m5.ema20,
+        ema50: expediente.market_m5.ema50,
+        ema200: expediente.market_m5.ema200,
+        atr: expediente.market_m5.atr,
+        adx: expediente.market_m5.adx,
+        mid_price: expediente.market_m5.mid_price,
+        last_closed: expediente.market_m5.closed_candles.slice(-12),
+      },
+      volatility_and_session: expediente.volatility_and_session,
+      news_and_risk: expediente.news_and_risk,
+      authorized_strategies: expediente.authorized_strategies,
+    };
+
+    const sections: Array<{ title: string; content: unknown }> = [
+      { title: "1. Identidad y trazabilidad", content: expediente.identity },
+      { title: "2. Contexto estable", content: stableContext },
+      { title: "3. Cambios nuevos", content: changes },
+      { title: "4. Estado actual indispensable", content: indispensableState },
+      { title: "5. Resumen ejecutivo", content: this.buildSummaryText(expediente.executive_summary) },
+    ];
+
+    const dataSections = sections.map((s) => serializeSection(s.title, s.content)).join("\n");
+
+    const prompt_text = [
+      "# EXPEDIENTE MAESTRO CARVIPIX V3 (SMART)",
+      `# Instrumento: ${expediente.identity.canonical_symbol} | Análisis: ${expediente.identity.analysis_id}`,
+      `# Versión: ${expediente.identity.version_expediente} | Modelo: ${expediente.identity.model_openai}`,
+      "",
+      dataSections,
+      "",
+      "---",
+      "",
+      "### Esquema JSON oficial de respuesta",
+      RESPONSE_SCHEMA_V3,
+      "",
+      "---",
+      "",
+      "### PREGUNTA MAESTRA",
+      MASTER_QUESTION,
+      "",
+      "NOTA: Reevaluar por cambio material detectado. No asumas datos externos ni memoria fuera del expediente.",
+    ].join("\n");
+
+    const prompt_hash = createHash("sha256").update(prompt_text).digest("hex");
+    const staticPart = [
+      "SMART",
+      expediente.identity.version_expediente,
+      expediente.identity.version_prompt,
+      JSON.stringify(expediente.authorized_strategies),
+      RESPONSE_SCHEMA_V3,
+      MASTER_QUESTION,
+    ].join("|");
+    const prompt_cache_key = createHash("sha256").update(staticPart).digest("hex");
+
+    return {
+      prompt_text,
+      prompt_hash,
+      prompt_cache_key,
+      section_order: sections.map((s) => s.title),
       estimated_tokens: estimateTokens(prompt_text),
     };
   }

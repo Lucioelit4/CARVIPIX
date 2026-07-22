@@ -12,6 +12,7 @@ import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
 import type { Asset } from "../../engine/types/marketData";
 import { getOpenAIRuntimeConfig } from "../openAIConfig";
 import { getOpenAIRetryAfterMs, OpenAIAdapterV2 } from "./openAIAdapterV2";
+import { getCadpV3OptimizationFlags } from "./config";
 import { CadpCostManager } from "./costManager";
 import { MaestroV3SnapshotBuilder } from "./snapshotBuilderV3";
 import { NarrativeContextBuilder } from "./narrativeContextBuilder";
@@ -44,6 +45,8 @@ interface ShadowFlowV3Result {
   cost_usd: number;
   latency_ms: number;
 }
+
+const TEMPORAL_MEMORY_TTL_MS = 30 * 60 * 1000;
 
 function isClientAlertAsset(symbol: CanonicalSymbol): symbol is Asset {
   return symbol === "XAUUSD" || symbol === "EURUSD" || symbol === "GBPUSD" || symbol === "BTCUSD";
@@ -80,6 +83,8 @@ export class ShadowFlowV3 {
     const signal_id = `sig-${canonical_symbol}-${Date.now()}-${randomUUID()}`;
 
     try {
+      const optimizationFlags = getCadpV3OptimizationFlags();
+
       // ── PASO 1: Build snapshot (Secciones 1-13 + trigger)
       const { expediente: partialExpediente, idempotency_key } = await this.snapshotBuilder.build({
         analysis_id,
@@ -90,6 +95,73 @@ export class ShadowFlowV3 {
 
       // ── PASO 2: Quality gate — ¿Debe skipearse antes de llamar a AI?
       if (partialExpediente.quality.skip_before_ai !== null) {
+        const latestBySymbol = analysisStore
+          .getBySymbol(canonical_symbol, 1)
+          .find((analysis) => analysis.status === "COMPLETED" && analysis.response_valid);
+
+        const canReuseFromTemporalMemory =
+          optimizationFlags.ANALYSIS_TEMPORAL_MEMORY_ENABLED
+          && partialExpediente.quality.skip_before_ai.skip_reason === "IDEMPOTENT_REUSE"
+          && latestBySymbol
+          && latestBySymbol.respuesta_maestra
+          && (Date.now() - latestBySymbol.timestamp_utc_ms) <= TEMPORAL_MEMORY_TTL_MS
+          && latestBySymbol.expediente.identity.version_prompt === partialExpediente.identity.version_prompt
+          && latestBySymbol.expediente.identity.version_expediente === partialExpediente.identity.version_expediente;
+
+        if (canReuseFromTemporalMemory) {
+          const reusedDecision = latestBySymbol.respuesta_maestra!.master_decision.decision;
+          const reusedTokens = (latestBySymbol.tokens_input ?? 0) + (latestBySymbol.tokens_output ?? 0);
+          const reusedCost = latestBySymbol.response_cost_usd ?? 0;
+
+          observerV3.recordSkipped({
+            analysis_id,
+            signal_id,
+            canonical_symbol,
+            skip: {
+              skip_reason: "IDEMPOTENT_REUSE",
+              detail: `Reused analysis ${latestBySymbol.analysis_id} due to equivalent scenario signature.`,
+            },
+            expediente: partialExpediente as ExpedienteMaestroV3,
+          });
+
+          analysisStore.record({
+            analysis_id,
+            signal_id,
+            canonical_symbol,
+            timestamp_utc_ms: partialExpediente.identity.timestamp_utc_ms,
+            trigger_reason,
+            expediente: partialExpediente as ExpedienteMaestroV3,
+            prompt_text: "",
+            prompt_hash: "",
+            estimated_tokens: 0,
+            respuesta_maestra: latestBySymbol.respuesta_maestra,
+            response_latency_ms: 0,
+            response_cost_usd: 0,
+            response_valid: true,
+            dispatch_result: null,
+            status: "REUSED_PREVIOUS_ANALYSIS",
+            skip_reason: partialExpediente.quality.skip_before_ai.skip_reason,
+            api_called: false,
+            reuse_of_analysis_id: latestBySymbol.analysis_id,
+            reuse_reason: "MATERIAL_SCENARIO_UNCHANGED",
+            material_changes_detected: [],
+            scenario_signature: idempotency_key.full_key,
+            tokens_avoided: reusedTokens,
+            cost_avoided_usd: reusedCost,
+            paper_balance_before_usd: paperTradeMonitor.getAccountState().current_balance_usd,
+            paper_balance_after_usd: paperTradeMonitor.getAccountState().current_balance_usd,
+          });
+
+          return {
+            analysis_id,
+            canonical_symbol,
+            status: "REUSED_PREVIOUS_ANALYSIS",
+            decision: reusedDecision,
+            cost_usd: 0,
+            latency_ms: Date.now() - started,
+          };
+        }
+
         const record = observerV3.recordSkipped({
           analysis_id,
           signal_id,
@@ -116,6 +188,9 @@ export class ShadowFlowV3 {
           dispatch_result: null,
           status: "SKIPPED_BEFORE_AI",
           skip_reason: partialExpediente.quality.skip_before_ai.skip_reason,
+          api_called: false,
+          material_changes_detected: [],
+          scenario_signature: idempotency_key.full_key,
           paper_balance_before_usd: paperTradeMonitor.getAccountState().current_balance_usd,
           paper_balance_after_usd: paperTradeMonitor.getAccountState().current_balance_usd,
         });
@@ -137,7 +212,10 @@ export class ShadowFlowV3 {
       const expediente: ExpedienteMaestroV3 = { ...expedienteWithNarrative, executive_summary };
 
       // ── PASO 4: Build prompt (16 secciones + Pregunta Maestra)
-        const { prompt_text, prompt_hash } = this.promptBuilder.build(expediente);
+      const promptAssembly = this.promptBuilder.build(expediente, {
+        smartExpedientEnabled: optimizationFlags.SMART_EXPEDIENT_ENABLED,
+      });
+      const { prompt_text, prompt_hash } = promptAssembly;
 
       // ── PASO 5: Call OpenAI
       const config = getOpenAIRuntimeConfig();
@@ -197,6 +275,11 @@ export class ShadowFlowV3 {
           response_errors: [err instanceof Error ? err.message : String(err)],
           dispatch_result: null,
           status: "AI_ERROR",
+          api_called: true,
+          material_changes_detected: partialExpediente.pre_analysis_trigger.change_detected
+            ? partialExpediente.pre_analysis_trigger.change_description.split(" | ")
+            : [],
+          scenario_signature: idempotency_key.full_key,
           paper_balance_before_usd: paperTradeMonitor.getAccountState().current_balance_usd,
           paper_balance_after_usd: paperTradeMonitor.getAccountState().current_balance_usd,
         });
@@ -301,6 +384,17 @@ export class ShadowFlowV3 {
         scenario_first_seen_ms: scenarioFirstSeen,
         strategy_version: "1.0.0",
         prompt_version: expediente.identity.version_prompt,
+        scenario_signature: idempotency_key.full_key,
+        expediente_version: expediente.identity.version_expediente,
+        brain_model: config.model,
+        expires_at_ms: Date.now() + TEMPORAL_MEMORY_TTL_MS,
+        analysis_valid: true,
+        analysis_public_explanation: response.public_explanation,
+        analysis_technical_explanation: response.technical_explanation,
+        analysis_summary: response.analysis_private.analysis_summary,
+        horizon: response.horizon,
+        quality: response.quality,
+        confidence: response.confidence,
       };
       scenarioMemoryStore.save(memoryEntry);
 
@@ -372,7 +466,7 @@ export class ShadowFlowV3 {
         expediente,
         prompt_text,
         prompt_hash,
-        estimated_tokens: this.promptBuilder.build(expediente).estimated_tokens,
+        estimated_tokens: promptAssembly.estimated_tokens,
         pregunta_maestra: prompt_text.split("### PREGUNTA MAESTRA").at(-1)?.slice(0, 500) ?? "",
         respuesta_maestra: response,
         response_latency_ms: aiLatency!,
@@ -380,6 +474,15 @@ export class ShadowFlowV3 {
         response_valid: true,
         dispatch_result: dispatchResult,
         status: "COMPLETED",
+        api_called: true,
+        material_changes_detected: partialExpediente.pre_analysis_trigger.change_detected
+          ? partialExpediente.pre_analysis_trigger.change_description.split(" | ")
+          : [],
+        scenario_signature: idempotency_key.full_key,
+        tokens_input: usage.input_tokens,
+        tokens_output: usage.output_tokens,
+        tokens_avoided: 0,
+        cost_avoided_usd: 0,
         paper_trade_opened: _paperTradeOpened
           ? {
               trade_id: analysis_id,

@@ -21,3 +21,17 @@ export function getCadpFeatureFlags(): CadpFeatureFlags {
     AI_IMAGE_DETAIL: envString("AI_IMAGE_DETAIL", ""),
   };
 }
+
+export interface CadpV3OptimizationFlags {
+  SMART_CHANGE_DETECTOR_ENABLED: boolean;
+  ANALYSIS_TEMPORAL_MEMORY_ENABLED: boolean;
+  SMART_EXPEDIENT_ENABLED: boolean;
+}
+
+export function getCadpV3OptimizationFlags(): CadpV3OptimizationFlags {
+  return {
+    SMART_CHANGE_DETECTOR_ENABLED: envBool("SMART_CHANGE_DETECTOR_ENABLED", false),
+    ANALYSIS_TEMPORAL_MEMORY_ENABLED: envBool("ANALYSIS_TEMPORAL_MEMORY_ENABLED", false),
+    SMART_EXPEDIENT_ENABLED: envBool("SMART_EXPEDIENT_ENABLED", false),
+  };
+}

@@ -43,6 +43,17 @@ export interface StoredAnalysis {
   status: "COMPLETED" | "SKIPPED_BEFORE_AI" | "REUSED_PREVIOUS_ANALYSIS" | "AI_ERROR" | "DISPATCH_ERROR";
   skip_reason?: string;
 
+  // API-consumption tracing
+  api_called: boolean;
+  reuse_of_analysis_id?: string;
+  reuse_reason?: string;
+  material_changes_detected?: string[];
+  scenario_signature?: string;
+  tokens_input?: number;
+  tokens_output?: number;
+  tokens_avoided?: number;
+  cost_avoided_usd?: number;
+
   // Paper trading impact (si aplica)
   paper_trade_opened?: {
     trade_id: string;

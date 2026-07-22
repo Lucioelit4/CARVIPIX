@@ -43,6 +43,19 @@ export interface ScenarioMemoryEntry {
 
   strategy_version: string;
   prompt_version: string;
+
+  // Reuse metadata (for safe temporal memory)
+  scenario_signature?: string;
+  expediente_version?: string;
+  brain_model?: string;
+  expires_at_ms?: number;
+  analysis_valid: boolean;
+  analysis_public_explanation?: string;
+  analysis_technical_explanation?: string;
+  analysis_summary?: string;
+  horizon?: "SHORT" | "MEDIUM";
+  quality?: "A_PLUS" | "A" | "B" | "NOT_APPLICABLE";
+  confidence?: "HIGH" | "MEDIUM" | "LOW";
 }
 
 export interface ScenarioSnapshot {
