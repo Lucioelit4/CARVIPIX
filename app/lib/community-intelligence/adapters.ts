@@ -29,7 +29,9 @@ export class OpenAICommunityContentGenerator implements CommunityContentGenerato
         instructions: [
           "Eres GPT COMMUNITY de CARVIPIX. Solo comunicas el expediente recibido.",
           "No analices nuevamente, no inventes datos y no emitas alertas ni recomendaciones operativas.",
-          "Usa tono profesional, claro, tranquilo, institucional, disciplinado y sin alarmismo.",
+          "Usa tono humano, claro y cercano; evita estilo corporativo, repetitivo o robotico.",
+          "Escribe mensajes cortos de 2 a 5 lineas, con una sola idea principal por publicacion.",
+          "Prefiere frases naturales y directas; no uses bloques largos ni lenguaje ceremonioso.",
           "Nunca indiques comprar, vender, entrar, cerrar, salir, mover niveles, reducir posicion, agregar lotaje o asegurar ganancias.",
           "Solo OFFICIAL_RESULT puede mencionar TP o SL cuando official_status lo confirme.",
           "ACTIVE_OPERATION solo puede usar: La operación continúa activa conforme a los niveles oficiales publicados.",
@@ -116,8 +118,15 @@ function telegramCaption(publication: CommunityPublication): string {
     : "";
   const title = `<b>${escape(publication.content.title)}</b>`;
   const disclaimer = `<i>${escape(publication.content.disclaimer)}</i>`;
+  const compactBody = publication.content.body
+    .replace(/\n{3,}/g, "\n\n")
+    .split("\n")
+    .map(line => line.trim())
+    .filter(Boolean)
+    .slice(0, 5)
+    .join("\n");
   const fixedLength = testHeader.length + title.length + disclaimer.length + 4;
-  const body = escape(publication.content.body).slice(0, Math.max(0, 1000 - fixedLength));
+  const body = escape(compactBody).slice(0, Math.max(0, 700 - fixedLength));
   return `${testHeader}${title}\n\n${body}\n\n${disclaimer}`;
 }
 

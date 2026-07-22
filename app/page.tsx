@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bot, TrendingUp, Users, Wallet, ShieldCheck, BarChart3, Zap, Star, CheckCircle2, ArrowRight } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
+import { globalResultsService } from "@/app/backend/results/global-results-service";
 
 const SITE_URL = "https://carvipix.com";
 
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  const globalResults = await globalResultsService.getSnapshot();
+
   return (
     <main className="min-h-screen bg-[#05070b] text-[#f5f1e8]">
 
@@ -172,16 +175,16 @@ export default function Home() {
       <section aria-label="Resultados" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-14">
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#d4af37]">Resultados</p>
-          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Historial verificado de operaciones</h2>
+          <h2 className="mt-3 text-3xl font-bold sm:text-4xl">Actividad oficial verificada</h2>
           <p className="mt-4 mx-auto max-w-xl text-[#c7c0b4]">
             Aviso importante: el trading implica riesgo significativo de pérdida de capital. Los resultados históricos no garantizan rendimiento futuro.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           {[
-            { label: "Instrumentos activos", value: "4", sub: "XAUUSD, EURUSD, GBPUSD, BTCUSD" },
-            { label: "Sistema de análisis", value: "V3", sub: "Analisis estructural y multi-temporalidad" },
-            { label: "Gestión de riesgo", value: "Siempre", sub: "Stop loss en cada operación" },
+            { label: "Alertas activadas", value: String(globalResults.alerts.activated), sub: "Solo BUY/SELL con activacion registrada" },
+            { label: "Pips semanales", value: globalResults.alerts.weeklyPips.toFixed(1), sub: "Cierres oficiales de los ultimos 7 dias" },
+            { label: "Win rate oficial", value: `${globalResults.alerts.winRate.toFixed(1)}%`, sub: "Calculado unicamente sobre TP y SL cerrados" },
           ].map(({ label, value, sub }) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
               <p className="text-4xl font-bold text-[#d4af37]">{value}</p>
@@ -190,6 +193,15 @@ export default function Home() {
             </div>
           ))}
         </div>
+        {globalResults.enabled && globalResults.simulation ? (
+          <div className="mt-6 border-t border-white/10 pt-6 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#d4af37]">Resultados probabilísticos históricos</p>
+            <p className="mt-2 text-sm text-[#c7c0b4]">
+              {globalResults.profiles.total} perfiles simulados · {globalResults.profiles.botTotal} perfiles Bot · periodo de cuatro meses
+            </p>
+            <p className="mt-2 text-xs text-[#c7c0b4]">Resultados simulados. No corresponden a operaciones ejecutadas ni garantizan resultados futuros.</p>
+          </div>
+        ) : null}
         <div className="mt-6 text-center">
           <CARVIPIXButtonLink href="/resultados" variant="secondary" size="lg">
             Ver resultados completos

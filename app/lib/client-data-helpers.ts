@@ -44,6 +44,67 @@ type AlertStats = {
   resolved: number;
 };
 
+export type GlobalResultsSnapshot = {
+  enabled: boolean;
+  generatedAt: string;
+  simulation: null | {
+    runId: string;
+    methodologyVersion: string;
+    periodStart: string;
+    periodEnd: string;
+    dataSource: string;
+    dataHash: string;
+    seed: string;
+    iterations: number;
+    assumptions: Record<string, unknown>;
+    limitations: Record<string, unknown>;
+    metrics: Record<string, unknown>;
+  };
+  profiles: {
+    total: number;
+    botTotal: number;
+    featured: Array<{
+      profileId: string;
+      displayName: string;
+      avatarKey: string;
+      riskType: "CONSERVATIVE" | "MODERATE" | "DYNAMIC";
+      initialBalance: number;
+      currentBalance: number;
+      maxDrawdownPct: number;
+      operationsApplied: number;
+      isBotProfile: boolean;
+      returnPct: number;
+      probableBalanceRange: { low: number; median: number; high: number };
+      probabilityOfLoss: number;
+      observedComponentPct: number;
+      simulatedComponentPct: number;
+      equityCurve: Array<{ occurredAt: string; balance: number; drawdownPct: number }>;
+      updatedAt: string;
+    }>;
+  };
+  alerts: {
+    total: number;
+    activated: number;
+    takeProfits: number;
+    stopLosses: number;
+    cancelled: number;
+    expired: number;
+    notActivated: number;
+    netPips: number;
+    weeklyPips: number;
+    monthlyPips: number;
+    winRate: number;
+    averageRiskReward: number;
+  };
+  activity: Array<{
+    activityId: string;
+    activityType: string;
+    title: string;
+    summary: string;
+    occurredAt: string;
+  }>;
+};
+
 type DataActionMap = {
   getCurrentUser: UserProfile;
   getCurrentMembership: Membership;
@@ -146,6 +207,12 @@ export async function getPlatformResults(period: "monthly" | "yearly" | "all-tim
 
 export async function getResultsHistory(months?: number) {
   return callDataApi("getResultsHistory", { months });
+}
+
+export async function getGlobalResults(): Promise<GlobalResultsSnapshot> {
+  const response = await fetch("/api/results/public", { cache: "no-store" });
+  if (!response.ok) throw new Error(`Global results API error: ${response.status}`);
+  return response.json() as Promise<GlobalResultsSnapshot>;
 }
 
 export async function getOperations(limit?: number) {

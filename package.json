@@ -36,6 +36,7 @@
     "test:ai-context": "tsx --test app/ai/aiContextBuilder.test.ts app/ai/contextOptimizer.test.ts app/ai/aiVerifier.test.ts",
     "test:ai-schema": "tsx --test app/ai/aiResponseSchema.test.ts app/ai/strategyPromptRegistry.test.ts app/ai/brainManager.test.ts",
     "test:ai-adapter": "tsx --test app/ai/openAIConfig.test.ts app/ai/cadpV2/openAIAdapterV2.test.ts",
+    "test:telegram-private": "node --conditions=react-server --import tsx scripts/test-maestro-telegram-private.ts",
     "test:ai-queue": "tsx --test app/ai/aiEvaluationQueue.test.ts app/ai/learningLayer.test.ts",
     "test:ai-audit": "tsx --test app/ai/aiDecisionAudit.test.ts",
     "test:ai-master-signal": "tsx --test app/ai/cadpV2/shadowFlow.test.ts app/ai/cadpV2/masterSignalBuilder.test.ts app/ai/cadpV2/masterSignalStore.test.ts app/ai/cadpV2/verifierV2.test.ts app/ai/cadpV2/promptBuilderV2.test.ts app/ai/cadpV2/openAIAdapterV2.test.ts app/ai/cadpV2/moduleImmutability.test.ts",

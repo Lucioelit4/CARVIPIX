@@ -5,7 +5,7 @@ import { Clock3, Gauge, ShieldCheck, Signal } from "lucide-react";
 import AlertFilters from "./components/AlertFilters";
 import AlertsTable from "./components/AlertsTable";
 import AlertDetails from "./components/AlertDetails";
-import { getAlerts } from "@/app/lib/client-data-helpers";
+import { getAlerts, getGlobalResults, type GlobalResultsSnapshot } from "@/app/lib/client-data-helpers";
 import { CARVIPIXButton, CARVIPIXCard } from "../design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
 import {
@@ -26,13 +26,15 @@ export default function AlertasPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [page, setPage] = useState<number>(1);
+  const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
 
   const refreshAlerts = useCallback(async () => {
     setIsLoading(true);
     setLoadError(null);
 
     try {
-      const result = await getAlerts(16);
+      const [result, centralResults] = await Promise.all([getAlerts(16), getGlobalResults()]);
+      setGlobalResults(centralResults);
 
       if (!Array.isArray(result)) {
         setAlerts([]);
@@ -178,6 +180,35 @@ export default function AlertasPage() {
               <p className="mt-3 text-3xl font-bold text-[#D4AF37]">{summary.avgConfidence}%</p>
             </CARVIPIXCard>
           </div>
+        </section>
+
+        <section className="border-y border-white/10 py-6">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Historial oficial</p>
+              <h2 className="mt-2 text-xl font-bold">Desempeño de alertas cerradas</h2>
+            </div>
+            <p className="text-xs text-white/55">Sin resultados monetarios de usuarios.</p>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              ["Activadas", globalResults?.alerts.activated ?? 0],
+              ["TP", globalResults?.alerts.takeProfits ?? 0],
+              ["SL", globalResults?.alerts.stopLosses ?? 0],
+              ["Pips netos", globalResults?.alerts.netPips.toFixed(1) ?? "0.0"],
+              ["Win rate", `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%`],
+            ].map(([label, value]) => (
+              <CARVIPIXCard key={String(label)} variant="statistics" padding="16" hover={false}>
+                <p className="text-xs uppercase tracking-[0.16em] text-white/60">{label}</p>
+                <p className="mt-2 text-2xl font-bold text-white">{value}</p>
+              </CARVIPIXCard>
+            ))}
+          </div>
+          {globalResults?.enabled && globalResults.simulation ? (
+            <div className="mt-5 border-t border-white/10 pt-4 text-sm text-white/60">
+              La simulación probabilística histórica usa los cierres oficiales solo como sustituciones observadas y nunca los duplica.
+            </div>
+          ) : null}
         </section>
 
         {protagonist ? (

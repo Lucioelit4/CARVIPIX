@@ -10,6 +10,8 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const BOT_API_BASE = 'https://api.telegram.org';
 const TIMEOUT_MS = 15_000;
 
+const COMMUNITY_INFO_DISCLAIMER = 'Contenido informativo. No es una alerta oficial ni una recomendacion operativa.';
+
 export interface TelegramSendResult {
   ok: boolean;
   message_id?: number;
@@ -194,6 +196,18 @@ export async function processPublicationForDelivery(
  * Construye el mensaje final a partir de datos de publication
  */
 function buildMessageFromPublication(publication: Publication): string {
+  if (
+    publication.publication_type === 'MARKET_STATUS' ||
+    publication.publication_type === 'OPPORTUNITY_DEVELOPING' ||
+    publication.publication_type === 'EDUCATIONAL_OR_PROMOTIONAL'
+  ) {
+    return buildConversationalCommunityMessage(publication);
+  }
+
+  return buildLegacyAlertMessage(publication);
+}
+
+function buildLegacyAlertMessage(publication: Publication): string {
   const metadata = publication.metadata as Record<string, unknown>;
 
   let text = '';
@@ -231,4 +245,90 @@ function buildMessageFromPublication(publication: Publication): string {
   text += `Verificado por CARVIPIX`;
 
   return text;
+}
+
+function buildConversationalCommunityMessage(publication: Publication): string {
+  const metadata = publication.metadata as Record<string, unknown>;
+  const context = String(metadata.market_context ?? metadata.decision ?? publication.content_preview ?? '').trim();
+  const confidence = String(metadata.confidence_level ?? '').trim().toUpperCase();
+  const instrument = publication.instrument;
+  const lead = pickVariant(publication.publication_id, [
+    `Update rapido de ${instrument}.`,
+    `Seguimiento breve de ${instrument}.`,
+    `Panorama actual de ${instrument}.`,
+    `Contexto de ${instrument} al momento.`,
+  ]);
+
+  const confidenceLine = confidence
+    ? confidence === 'HIGH'
+      ? 'Se ve mas claro que en ciclos anteriores, pero seguimos confirmando.'
+      : confidence === 'LOW'
+        ? 'Todavia sin confirmacion limpia, mejor mantener paciencia.'
+        : 'Hay senales mixtas, conviene esperar validacion.'
+    : pickVariant(publication.signal_id, [
+        'Aun sin confirmacion operativa, seguimos observando.',
+        'No vale forzar decisiones con estructura incompleta.',
+        'Seguimos atentos al siguiente cambio relevante.',
+      ]);
+
+  let middle = context;
+  if (!middle) {
+    middle = pickVariant(publication.analysis_id, [
+      'El mercado esta en fase de transicion y no hay ventaja clara.',
+      'La estructura sigue desarrollandose sin setup validado.',
+      'Todavia no hay un escenario estable para validar movimiento.',
+    ]);
+  }
+
+  const closing = pickVariant(`${publication.idempotency_key}:${publication.attempts}`, [
+    'Si aparece un cambio real, lo compartimos por este canal.',
+    'Cuando tengamos confirmacion verificable, te actualizamos.',
+    'Seguimos monitoreando y avisamos solo con contexto valido.',
+  ]);
+
+  const lines = [lead, middle, confidenceLine, closing, COMMUNITY_INFO_DISCLAIMER];
+  return compressMessage(lines, 520);
+}
+
+function compressMessage(lines: string[], maxLength: number): string {
+  const normalized = lines
+    .map(line => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  let output = '';
+  for (const line of normalized) {
+    const candidate = output ? `${output}\n${line}` : line;
+    if (candidate.length > maxLength) {
+      break;
+    }
+    output = candidate;
+  }
+
+  if (!output.includes(COMMUNITY_INFO_DISCLAIMER)) {
+    const withDisclaimer = `${output}\n${COMMUNITY_INFO_DISCLAIMER}`;
+    if (withDisclaimer.length <= maxLength) {
+      output = withDisclaimer;
+    } else {
+      output = `${output.slice(0, Math.max(0, maxLength - COMMUNITY_INFO_DISCLAIMER.length - 1)).trim()}\n${COMMUNITY_INFO_DISCLAIMER}`;
+    }
+  }
+
+  return output;
+}
+
+function pickVariant(seed: string, options: string[]): string {
+  if (options.length === 0) {
+    return '';
+  }
+  const idx = Math.abs(hashSeed(seed)) % options.length;
+  return options[idx];
+}
+
+function hashSeed(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash << 5) - hash + value.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
 }

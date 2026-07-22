@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { Download, TrendingUp, Zap, Target, AlertCircle, Scale } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getResultsHistory, getPlatformResults } from "@/app/lib/client-data-helpers";
+import { getGlobalResults, getResultsHistory, getPlatformResults, type GlobalResultsSnapshot } from "@/app/lib/client-data-helpers";
 import type { PlatformResults, ResultsHistory } from "@/app/lib/modules/results/types";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors } from "@/app/design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
@@ -12,14 +12,21 @@ import DataSourceBanner from "@/app/components/DataSourceBanner";
 export default function ResultadosPage() {
   const [monthlyData, setMonthlyData] = useState<Array<{ month: string; value: number }>>([]);
   const [platformResults, setPlatformResults] = useState<PlatformResults | null>(null);
+  const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
+  const featuredSimulationProfile = globalResults?.profiles.featured[0];
 
   // Load results data from modules on mount
   useEffect(() => {
     const loadResultsData = async () => {
       try {
-        const [history, currentResults] = await Promise.all([getResultsHistory(12), getPlatformResults("monthly")]);
+        const [history, currentResults, centralResults] = await Promise.all([
+          getResultsHistory(12),
+          getPlatformResults("monthly"),
+          getGlobalResults(),
+        ]);
 
         setPlatformResults(currentResults);
+        setGlobalResults(centralResults);
 
         if (history && history.length > 0) {
           const transformedData = history.map((h: ResultsHistory, index: number) => {
@@ -37,6 +44,7 @@ export default function ResultadosPage() {
       } catch {
         setMonthlyData([]);
         setPlatformResults(null);
+        setGlobalResults(null);
       }
     };
 
@@ -56,7 +64,7 @@ export default function ResultadosPage() {
               <CARVIPIXBadge variant="premium">Resultados</CARVIPIXBadge>
               <h1 className="mt-6 text-4xl font-bold text-[#D4AF37]">Resultados CARVIPIX</h1>
               <p className="mt-4 max-w-2xl text-lg text-white/80">
-                Resumen de rendimiento, operaciones cerradas y desempeño general de la comunidad.
+                Resultados verificables de alertas oficiales y simulaciones históricas identificadas por separado.
               </p>
             </div>
             <Link href="/soporte" style={{ display: 'inline-flex' }}>
@@ -73,26 +81,26 @@ export default function ResultadosPage() {
         <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           {[
             {
-              label: "Ganancia mensual",
-              value: `${platformResults ? (platformResults.bySource.alertas.profitLoss >= 0 ? "+" : "") : ""}${platformResults ? platformResults.bySource.alertas.profitLoss.toFixed(2) : "0"}%`,
+              label: "Pips del mes",
+              value: `${globalResults?.alerts.monthlyPips && globalResults.alerts.monthlyPips > 0 ? "+" : ""}${globalResults?.alerts.monthlyPips.toFixed(1) ?? "0.0"}`,
               color: "text-[#00D084]",
               icon: TrendingUp,
             },
             {
               label: "Win Rate",
-              value: `${platformResults ? platformResults.bySource.alertas.winRate.toFixed(1) : "0"}%`,
+              value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%`,
               color: "text-[#D4AF37]",
               icon: Zap,
             },
             {
               label: "Operaciones cerradas",
-              value: `${platformResults ? platformResults.bySource.alertas.totalTrades : "0"}`,
+              value: `${globalResults?.alerts.activated ?? platformResults?.bySource.alertas.totalTrades ?? 0}`,
               color: "text-white",
               icon: Target,
             },
-            { label: "Drawdown máximo", value: "0%", color: "text-[#D4AF37]", icon: AlertCircle },
-            { label: "Riesgo/Beneficio", value: "0", color: "text-[#D4AF37]", icon: Scale },
-            { label: "Mejor activo del mes", value: "Disponible al cerrar el primer ciclo", color: "text-white", icon: TrendingUp },
+            { label: "Take profits", value: `${globalResults?.alerts.takeProfits ?? 0}`, color: "text-[#00D084]", icon: AlertCircle },
+            { label: "Riesgo/Beneficio", value: globalResults?.alerts.averageRiskReward.toFixed(2) ?? "0.00", color: "text-[#D4AF37]", icon: Scale },
+            { label: "Stop losses", value: `${globalResults?.alerts.stopLosses ?? 0}`, color: "text-white", icon: TrendingUp },
           ].map((metric, i) => {
             const IconComponent = metric.icon;
             return (
@@ -151,25 +159,41 @@ export default function ResultadosPage() {
       {/* Secciones Inferiores - Dos Columnas */}
       <div className="cv-workspace max-w-7xl py-14 sm:py-16">
         <div className="grid gap-8 lg:grid-cols-2">
-          {/* Top 10 Miembros */}
+          {/* Probabilistic simulation profiles */}
           <CARVIPIXCard variant="info" padding="24" hover={false}>
-            <h2 className="mb-8 text-2xl font-bold">Top 10 miembros</h2>
+            <h2 className="text-2xl font-bold">Resultados probabilísticos históricos</h2>
+            <p className="mb-8 mt-2 text-sm text-white/55">
+              Escenarios calculados mediante probabilidades, condiciones históricas del mercado y reglas operativas de CARVIPIX.
+            </p>
             <div className="overflow-x-auto">
               <table className="cv-readable-table w-full text-left text-sm">
                 <thead className="border-b border-white/10 text-xs uppercase text-white/50">
                   <tr>
                     <th className="pb-4 font-semibold">#</th>
-                    <th className="pb-4 font-semibold">Miembro</th>
-                    <th className="pb-4 font-semibold">Plan</th>
-                    <th className="pb-4 font-semibold">Rendimiento</th>
+                    <th className="pb-4 font-semibold">Perfil</th>
+                    <th className="pb-4 font-semibold">Riesgo</th>
+                    <th className="pb-4 font-semibold">Balance simulado</th>
                     <th className="pb-4 font-semibold">Ops</th>
-                    <th className="pb-4 font-semibold">Racha</th>
+                    <th className="pb-4 font-semibold">Drawdown</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  <tr className="hover:bg-white/5 transition">
-                    <td className="py-3.5 text-white/65" colSpan={6}>El ranking aparecerá cuando se consoliden resultados verificables de miembros.</td>
-                  </tr>
+                  {globalResults?.enabled && globalResults.simulation && globalResults.profiles.featured.length > 0 ? (
+                    globalResults.profiles.featured.map((profile, index) => (
+                      <tr key={profile.profileId} className="hover:bg-white/5 transition">
+                        <td className="py-3.5 text-white/65">{index + 1}</td>
+                        <td className="py-3.5 font-medium">{profile.displayName}</td>
+                        <td className="py-3.5 text-white/65">{profile.riskType}</td>
+                        <td className="py-3.5">${profile.currentBalance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+                        <td className="py-3.5">{profile.operationsApplied}</td>
+                        <td className="py-3.5">{profile.maxDrawdownPct.toFixed(2)}%</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr className="hover:bg-white/5 transition">
+                      <td className="py-3.5 text-white/65" colSpan={6}>La simulación probabilística está desactivada. Las métricas oficiales continúan disponibles por separado.</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -200,10 +224,34 @@ export default function ResultadosPage() {
         </div>
       </div>
 
+      {featuredSimulationProfile?.equityCurve.length ? (
+        <div className="cv-workspace max-w-7xl py-8">
+          <CARVIPIXCard variant="info" padding="24" hover={false}>
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold">Curva de balance simulada</h2>
+              <p className="mt-2 text-sm text-white/55">
+                {featuredSimulationProfile.displayName} · {featuredSimulationProfile.simulatedComponentPct.toFixed(1)}% modelado · {featuredSimulationProfile.observedComponentPct.toFixed(1)}% observado
+              </p>
+            </div>
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={featuredSimulationProfile.equityCurve} margin={{ top: 16, right: 32, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#1a2535" />
+                  <XAxis dataKey="occurredAt" tickFormatter={(value: string) => new Date(value).toLocaleDateString("es-MX", { month: "short" })} stroke="#9CA3AF" />
+                  <YAxis stroke="#9CA3AF" />
+                  <Tooltip contentStyle={{ backgroundColor: colors.black.dark, border: "1px solid #D4AF37", borderRadius: "8px" }} />
+                  <Line type="monotone" dataKey="balance" stroke="#D4AF37" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CARVIPIXCard>
+        </div>
+      ) : null}
+
       {/* Footer pequeño */}
       <div className="cv-workspace mt-8 border-t border-white/5 py-16 text-center">
         <p className="text-xs text-white/40">
-          Datos cargados desde servicios de plataforma.
+          Resultados simulados. No corresponden a operaciones ejecutadas ni garantizan resultados futuros.
         </p>
       </div>
     </main>

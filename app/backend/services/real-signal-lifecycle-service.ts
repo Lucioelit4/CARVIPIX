@@ -342,6 +342,45 @@ export class RealSignalLifecycleService {
       ]
     );
 
+    if (TERMINAL_STATUSES.has(input.status)) {
+      void import("@/app/backend/results/global-results-service")
+        .then(({ globalResultsService }) => globalResultsService.applyOfficialClosure(input.signalId))
+        .catch(error => console.error("[ProbabilisticResults] Official closure update failed", {
+          signalId: input.signalId,
+          error: error instanceof Error ? error.message : String(error),
+        }));
+    }
+
+    await backendDatabase.query(
+      `
+      UPDATE real_signal_lifecycle AS lifecycle
+      SET metadata = COALESCE(lifecycle.metadata, '{}'::jsonb) || jsonb_build_object(
+        'telegramDelivery',
+        jsonb_build_object(
+          'deliveryId', delivery.delivery_id,
+          'eventId', delivery.event_id,
+          'classification', delivery.classification,
+          'state', delivery.delivery_state,
+          'destinationMode', delivery.destination_mode,
+          'channelId', delivery.channel_id,
+          'messageId', delivery.message_id,
+          'reason', delivery.reason,
+          'error', delivery.error_message,
+          'recordedAt', delivery.created_at
+        )
+      ), updated_at = NOW()
+      FROM LATERAL (
+        SELECT *
+        FROM telegram_delivery_ledger
+        WHERE signal_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) AS delivery
+      WHERE lifecycle.signal_id = $1
+      `,
+      [input.signalId]
+    );
+
     return this.getBySignalId(input.signalId);
   }
 

@@ -6,6 +6,7 @@ import { Bell, Bot, CreditCard, LifeBuoy, Monitor, RefreshCw, ShieldCheck } from
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
 import { writeAuthSession } from "@/app/lib/auth/session";
+import { getGlobalResults, type GlobalResultsSnapshot } from "@/app/lib/client-data-helpers";
 
 type PortalSnapshot = {
   plan: {
@@ -95,6 +96,7 @@ export default function DashboardPage() {
   const [supportForm, setSupportForm] = useState(emptySupportForm);
   const [busy, setBusy] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSourceMeta | null>(null);
+  const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
 
   const refreshPortal = async () => {
     const response = await fetch("/api/client/portal", { cache: "no-store" });
@@ -108,11 +110,15 @@ export default function DashboardPage() {
     setDataSource(payload.dataSource ?? null);
   };
 
+  const refreshGlobalResults = async () => {
+    setGlobalResults(await getGlobalResults());
+  };
+
   useEffect(() => {
     const bootstrap = async () => {
       try {
         try {
-          await refreshPortal();
+          await Promise.all([refreshPortal(), refreshGlobalResults()]);
           writeAuthSession("cliente");
           setIsAdminView(false);
           return;
@@ -299,6 +305,40 @@ export default function DashboardPage() {
               );
             })}
           </div>
+        </section>
+
+        <section className="border-y border-white/10 py-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
+              <h2 className="mt-2 text-2xl font-semibold">Resultados registrados de alertas</h2>
+              <p className="mt-2 text-sm text-white/65">Solo cierres BUY/SELL activados; excluye pruebas, WAIT y NO_TRADE.</p>
+            </div>
+            <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshGlobalResults()}>
+              Actualizar resultados
+            </CARVIPIXButton>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "Pips esta semana", value: globalResults?.alerts.weeklyPips.toFixed(1) ?? "0.0" },
+              { label: "Cierres TP", value: String(globalResults?.alerts.takeProfits ?? 0) },
+              { label: "Cierres SL", value: String(globalResults?.alerts.stopLosses ?? 0) },
+              { label: "Win rate oficial", value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%` },
+            ].map(item => (
+              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+                <p className="text-xs text-white/60">{item.label}</p>
+                <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
+              </CARVIPIXCard>
+            ))}
+          </div>
+          {globalResults?.enabled && globalResults.simulation ? (
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Resultados probabilísticos históricos</p>
+              <p className="mt-2 text-sm text-white/65">
+                {globalResults.profiles.total} perfiles aislados · {globalResults.profiles.botTotal} Bot · no representan miembros ni cuentas reales.
+              </p>
+            </div>
+          ) : null}
         </section>
 
         <section className="border-y border-white/10 py-8">

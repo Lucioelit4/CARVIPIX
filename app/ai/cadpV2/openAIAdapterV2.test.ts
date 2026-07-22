@@ -1,7 +1,25 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { OpenAIAdapterV2 } from "./openAIAdapterV2";
+import {
+  calculateRetryDelayMs,
+  OpenAIAdapterV2,
+  parseRetryAfterMs,
+} from "./openAIAdapterV2";
+
+test("retry delay honors seconds and HTTP-date Retry-After values", () => {
+  const now = Date.parse("2026-07-18T12:00:00.000Z");
+
+  assert.equal(parseRetryAfterMs("12", now), 12_000);
+  assert.equal(parseRetryAfterMs("Sat, 18 Jul 2026 12:00:45 GMT", now), 45_000);
+  assert.equal(parseRetryAfterMs("invalid", now), null);
+});
+
+test("retry delay uses exponential backoff with bounded jitter", () => {
+  assert.equal(calculateRetryDelayMs({ retryNumber: 1, retryBaseMs: 750, random: () => 0 }), 750);
+  assert.equal(calculateRetryDelayMs({ retryNumber: 3, retryBaseMs: 750, random: () => 0.5 }), 3_375);
+  assert.equal(calculateRetryDelayMs({ retryNumber: 1, retryBaseMs: 750, retryAfterMs: 20_000, random: () => 0 }), 20_000);
+});
 
 test("openai adapter v2 blocks when credentials are missing", async () => {
   const prevKey = process.env.OPENAI_API_KEY;

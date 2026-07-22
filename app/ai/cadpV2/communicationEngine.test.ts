@@ -67,6 +67,35 @@ test("the first Brain-approved official alert passes through immediately", () =>
   assert.match(plan.message ?? "", /Entrada: 3333.1/);
 });
 
+test("BUY or SELL without the dispatcher premium payload is never an official alert", () => {
+  const engine = new CommunicationEngine(createMemoryStore());
+
+  for (const decision of ["ENTER_BUY", "ENTER_SELL"] as const) {
+    const plan = engine.prepareTelegramPlan({
+      symbol: `XAUUSD-${decision}`,
+      decision,
+      payload: buildPayload(),
+    });
+
+    assert.equal(plan.category, "GLOBAL_SUMMARY");
+    assert.equal(plan.channel, "notes");
+  }
+});
+
+test("WAIT and NO_TRADE remain informational when no premium alert exists", () => {
+  for (const decision of ["WAIT", "NO_TRADE", "CONDITIONAL_ENTRY"] as const) {
+    const engine = new CommunicationEngine(createMemoryStore());
+    const plan = engine.prepareTelegramPlan({
+      symbol: `XAUUSD-${decision}`,
+      decision,
+      payload: buildPayload(),
+    });
+
+    assert.equal(plan.category, "GLOBAL_SUMMARY");
+    assert.equal(plan.channel, "notes");
+  }
+});
+
 test("free Telegram sends at most two quality official alerts per day", () => {
   const engine = new CommunicationEngine(createMemoryStore());
 

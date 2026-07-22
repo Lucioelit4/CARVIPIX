@@ -16,7 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { getBotInstances, getBotLicense } from "@/app/lib/client-data-helpers";
+import { getBotInstances, getBotLicense, getGlobalResults, type GlobalResultsSnapshot } from "@/app/lib/client-data-helpers";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors, spacing } from "@/app/design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
 
@@ -70,13 +70,6 @@ const BRAIN_FLOW = [
   "Resultado",
 ];
 
-const ACTION_FEED = [
-  { symbol: "XAUUSD", side: "Compra", entry: "2338.45", tp: "2345.00", sl: "2332.00", state: "Ejecutada" },
-  { symbol: "EURUSD", side: "Venta", entry: "1.07153", tp: "1.06900", sl: "1.07320", state: "TP Alcanzado" },
-  { symbol: "GBPUSD", side: "Venta", entry: "1.26840", tp: "1.26200", sl: "1.27200", state: "Gestion activa" },
-  { symbol: "BTCUSD", side: "Compra", entry: "61520", tp: "62880", sl: "60780", state: "Nueva senal" },
-];
-
 const FAQ_ITEMS = [
   {
     q: "Cuanto tiempo tarda en quedar operativo?",
@@ -120,6 +113,7 @@ const GUARANTEE_ITEMS = [
 ];
 
 export default function BotPage() {
+  const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     rendimiento30d: "0 USD",
     equity: "0 USD",
@@ -135,7 +129,8 @@ export default function BotPage() {
   useEffect(() => {
     const loadBotData = async () => {
       try {
-        const [license, instances] = await Promise.all([getBotLicense(), getBotInstances()]);
+        const [license, instances, centralResults] = await Promise.all([getBotLicense(), getBotInstances(), getGlobalResults()]);
+        setGlobalResults(centralResults);
         const primary = instances?.[0];
 
         if (!primary) {
@@ -354,6 +349,35 @@ export default function BotPage() {
               ))}
             </div>
           </CARVIPIXCard>
+
+          <div className="mt-6 border-y border-white/10 py-6">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase text-[#D4AF37]">Resultados probabilísticos históricos</p>
+                <h3 className="mt-2 text-xl font-bold">Perfiles Bot simulados</h3>
+                <p className="mt-2 max-w-3xl text-sm text-white/60">
+                  Son escenarios hipoteticos aislados. No representan clientes, licencias, instalaciones MT5 ni resultados reales de usuarios.
+                </p>
+              </div>
+              <CARVIPIXBadge variant="warning">{globalResults?.profiles.botTotal ?? 0} perfiles simulados</CARVIPIXBadge>
+            </div>
+            {globalResults?.enabled && globalResults.simulation && globalResults.profiles.featured.length > 0 ? (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {globalResults.profiles.featured.filter(profile => profile.isBotProfile).map(profile => (
+                  <div key={profile.profileId} className="border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <strong>{profile.displayName}</strong>
+                      <span className="text-xs text-[#D4AF37]">{profile.riskType}</span>
+                    </div>
+                    <p className="mt-3 text-2xl font-bold">${profile.currentBalance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
+                    <p className="mt-1 text-xs text-white/55">{profile.operationsApplied} operaciones · DD {profile.maxDrawdownPct.toFixed(2)}%</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-5 text-sm text-white/60">La simulación probabilística está desactivada. No afecta instancias ni cuentas Bot reales.</p>
+            )}
+          </div>
         </section>
 
         <section className="section-block" id="resultados-bot">
@@ -424,9 +448,9 @@ export default function BotPage() {
             <CARVIPIXCard variant="info" padding="16">
               <h3 className="action-title">Flujo de ejecucion</h3>
               <div className="action-feed">
-                {ACTION_FEED.map((item, idx) => (
+                {globalResults?.activity.length ? globalResults.activity.slice(0, 4).map((item, idx) => (
                   <motion.div
-                    key={`${item.symbol}-${idx}`}
+                    key={item.activityId}
                     className="action-row"
                     initial={{ opacity: 0, x: -14 }}
                     whileInView={{ opacity: 1, x: 0 }}
@@ -434,12 +458,12 @@ export default function BotPage() {
                     transition={{ duration: 0.35, delay: idx * 0.08 }}
                   >
                     <div>
-                      <p className="action-symbol">{item.symbol} - {item.side}</p>
-                      <p className="action-levels">Entrada {item.entry} | TP {item.tp} | SL {item.sl}</p>
+                      <p className="action-symbol">{item.title}</p>
+                      <p className="action-levels">{item.summary}</p>
                     </div>
-                    <CARVIPIXBadge variant={item.state === "TP Alcanzado" ? "success" : "default"}>{item.state}</CARVIPIXBadge>
+                    <CARVIPIXBadge variant="default">Registrado</CARVIPIXBadge>
                   </motion.div>
-                ))}
+                )) : <p className="action-levels">Sin actividad oficial registrada todavia.</p>}
               </div>
             </CARVIPIXCard>
 
