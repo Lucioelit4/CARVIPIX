@@ -19,8 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       env_name: ${{ steps.setenv.outputs.env_name }}
-      compose_file: ${{ steps.setenv.outputs.compose_file }}
-      image_tag: ${{ steps.setenv.outputs.image_tag }}
+      public_url: ${{ steps.setenv.outputs.public_url }}
     steps:
       - id: setenv
         run: |
@@ -35,74 +34,85 @@ jobs:
           fi
 
           if [ "$TARGET" = "prod" ]; then
-            echo "env_name=production" >> $GITHUB_OUTPUT
-            echo "compose_file=docker-compose.prod.yml" >> $GITHUB_OUTPUT
-            echo "image_tag=latest" >> $GITHUB_OUTPUT
+            echo "env_name=Production" >> $GITHUB_OUTPUT
+            echo "public_url=https://carvipix.com" >> $GITHUB_OUTPUT
           else
             echo "env_name=staging" >> $GITHUB_OUTPUT
-            echo "compose_file=docker-compose.staging.yml" >> $GITHUB_OUTPUT
-            echo "image_tag=staging" >> $GITHUB_OUTPUT
+            echo "public_url=https://carvipix.com" >> $GITHUB_OUTPUT
           fi
 
   deploy:
     needs: resolve-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.resolve-environment.outputs.env_name }}
+    permissions:
+      contents: read
+      statuses: read
 
     steps:
-      - name: Validate deployment secrets
+      - name: Wait for Vercel deployment
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST || secrets.SSH_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER || secrets.SSH_USER }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY || secrets.SSH_PRIVATE_KEY }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || secrets.SSH_PORT }}
-          DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR || secrets.APP_DIR || secrets.DEPLOY_PATH }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           set -e
-          missing=()
-          [ -n "$DEPLOY_HOST" ] || missing+=("DEPLOY_HOST")
-          [ -n "$DEPLOY_USER" ] || missing+=("DEPLOY_USER")
-          [ -n "$DEPLOY_SSH_KEY" ] || missing+=("DEPLOY_SSH_KEY")
-          [ -n "$DEPLOY_PORT" ] || missing+=("DEPLOY_PORT")
-          [ -n "$DEPLOY_APP_DIR" ] || missing+=("DEPLOY_APP_DIR")
+          python <<'PY'
+          import json
+          import os
+          import sys
+          import time
+          import urllib.request
 
-          if [ ${#missing[@]} -gt 0 ]; then
-            message="Missing deployment secrets for environment ${{ needs.resolve-environment.outputs.env_name }}: ${missing[*]}"
-            echo "$message"
-            echo "::error title=Missing deployment secrets::$message"
-            exit 1
-          fi
+          repository = os.environ["REPOSITORY"]
+          sha = os.environ["COMMIT_SHA"]
+          token = os.environ["GITHUB_TOKEN"]
+          url = f"https://api.github.com/repos/{repository}/commits/{sha}/status"
 
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.2.0
+          headers = {
+              "Authorization": f"Bearer {token}",
+              "Accept": "application/vnd.github+json",
+              "User-Agent": "copilot-deploy-check",
+          }
+
+          deadline = time.time() + 900
+          seen_vercel = False
+
+          while time.time() < deadline:
+              request = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(request) as response:
+                  payload = json.load(response)
+
+              statuses = payload.get("statuses", [])
+              vercel_statuses = [item for item in statuses if item.get("context") == "Vercel"]
+              if vercel_statuses:
+                  seen_vercel = True
+                  current = vercel_statuses[0]
+                  state = current.get("state")
+                  target_url = current.get("target_url") or ""
+                  description = current.get("description") or ""
+                  print(f"Vercel status: {state} | {description}")
+                  if target_url:
+                      print(f"Vercel deployment: {target_url}")
+                  if state == "success":
+                      sys.exit(0)
+                  if state in {"failure", "error"}:
+                      print("::error title=Vercel deployment failed::Vercel marked this commit deployment as failed")
+                      sys.exit(1)
+
+              time.sleep(10)
+
+          if not seen_vercel:
+              print("::error title=Vercel deployment missing::No Vercel deployment status was reported for this commit within 15 minutes")
+          else:
+              print("::error title=Vercel deployment timeout::Vercel did not finish deploying this commit within 15 minutes")
+          sys.exit(1)
+          PY
+
+      - name: Verify production health
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST || secrets.SSH_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER || secrets.SSH_USER }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY || secrets.SSH_PRIVATE_KEY }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || secrets.SSH_PORT }}
-          DEPLOY_APP_DIR: ${{ secrets.DEPLOY_APP_DIR || secrets.APP_DIR || secrets.DEPLOY_PATH }}
-          TARGET_ENV: ${{ needs.resolve-environment.outputs.env_name }}
-          COMPOSE_FILE: ${{ needs.resolve-environment.outputs.compose_file }}
-          IMAGE_TAG: ${{ needs.resolve-environment.outputs.image_tag }}
-          REPOSITORY: ${{ github.repository }}
-        with:
-          host: ${{ env.DEPLOY_HOST }}
-          username: ${{ env.DEPLOY_USER }}
-          key: ${{ env.DEPLOY_SSH_KEY }}
-          port: ${{ env.DEPLOY_PORT }}
-          envs: TARGET_ENV,COMPOSE_FILE,IMAGE_TAG,REPOSITORY
-          script: |
-            set -e
-            APP_DIR="${{ env.DEPLOY_APP_DIR }}"
-            cd "$APP_DIR"
-
-            REPO_LOWER=$(echo "$REPOSITORY" | tr '[:upper:]' '[:lower:]')
-            export APP_IMAGE="ghcr.io/${REPO_LOWER}:${IMAGE_TAG}"
-
-            echo "Deploying $APP_IMAGE with $COMPOSE_FILE to $TARGET_ENV"
-            docker compose -f "$COMPOSE_FILE" pull
-            docker compose -f "$COMPOSE_FILE" up -d --remove-orphans
-            docker image prune -f
-
-            curl -fsS http://localhost/api/health > /dev/null
-            echo "Deployment finished successfully"
+          PUBLIC_URL: ${{ needs.resolve-environment.outputs.public_url }}
+        run: |
+          set -e
+          curl -fsS -I "$PUBLIC_URL" > /dev/null
+          echo "Production endpoint reachable: $PUBLIC_URL"
