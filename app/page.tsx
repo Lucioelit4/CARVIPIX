@@ -60,12 +60,19 @@ export default async function Home() {
       <section aria-label="Video institucional" className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:px-14">
         <div className="rounded-2xl border border-white/10 bg-[#0d1119] p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#d4af37]">Video institucional</p>
-          <h2 className="mt-3 text-2xl font-semibold">Proximamente</h2>
-          <p className="mt-2 text-sm text-[#c7c0b4]">Este espacio estara disponible pronto.</p>
-          <div className="mt-5 flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/30">
-            <span className="rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#d4af37]">
-              Proximamente
-            </span>
+          <h2 className="mt-3 text-2xl font-semibold">CARVIPIX en accion</h2>
+          <p className="mt-2 text-sm text-[#c7c0b4]">Vista institucional de la plataforma y su ecosistema operativo.</p>
+          <div className="mt-5 aspect-video overflow-hidden rounded-xl border border-white/10 bg-black/30">
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              className="h-full w-full bg-black object-cover"
+              aria-label="Video institucional CARVIPIX"
+            >
+              <source src="/media/carvipix-home-institucional-90s.mp4" type="video/mp4" />
+              Tu navegador no soporta reproduccion de video.
+            </video>
           </div>
         </div>
       </section>
