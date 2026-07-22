@@ -145,7 +145,7 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad") || pathname.startsWith("/soporte")) && !hasClientSession && !hasAdminSession) {
+    if ((pathname.startsWith("/capital") || pathname.startsWith("/gestion") || pathname.startsWith("/gestion-capital") || pathname.startsWith("/perfil") || pathname.startsWith("/comunidad") || pathname.startsWith("/soporte") || pathname.startsWith("/fundador")) && !hasClientSession && !hasAdminSession) {
       return redirectToLogin();
     }
   }
@@ -171,6 +171,7 @@ export const config = {
     "/resultados/:path*",
     "/analisis/:path*",
     "/academia/:path*",
+    "/fundador/:path*",
     "/comunidad/:path*",
     "/bot/:path*",
     "/capital/:path*",

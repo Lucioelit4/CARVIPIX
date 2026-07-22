@@ -21,6 +21,8 @@ import {
   seedDemoStore,
   upsertMembership as upsertLocalMembership,
 } from "@/app/backend/core/local-auth-store";
+import { getFounderAccess } from "@/app/backend/founder-access/service";
+import { isFounderAccessSnapshotActive } from "@/app/backend/founder-access/types";
 
 export const AUTH_SESSION_COOKIE = "carvipix_auth_session";
 export const AUTH_ROLE_COOKIE = "carvipix_auth_role";
@@ -145,6 +147,17 @@ export async function findUserByEmail(email: string): Promise<AuthUserRow | null
 }
 
 export async function findMembershipByUserId(userId: string): Promise<AuthMembershipSnapshot | null> {
+  const founderAccess = await getFounderAccess(userId);
+  if (isFounderAccessSnapshotActive(founderAccess)) {
+    return {
+      plan: "founder",
+      estado: "activo",
+      fechaInicio: founderAccess.activatedAt,
+      renovacionAutomatica: false,
+      active: true,
+    };
+  }
+
   if (!backendDatabase.enabled) {
     await seedDemoStore();
     const membership = await findLocalMembershipByUserId(userId);

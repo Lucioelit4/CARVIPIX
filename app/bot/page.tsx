@@ -114,6 +114,7 @@ const GUARANTEE_ITEMS = [
 
 export default function BotPage() {
   const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
+  const [botAccessMode, setBotAccessMode] = useState<"loading" | "founder" | "commercial">("loading");
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     rendimiento30d: "0 USD",
     equity: "0 USD",
@@ -130,6 +131,7 @@ export default function BotPage() {
     const loadBotData = async () => {
       try {
         const [license, instances, centralResults] = await Promise.all([getBotLicense(), getBotInstances(), getGlobalResults()]);
+        setBotAccessMode(license?.licenseType === "FOUNDER" ? "founder" : "commercial");
         setGlobalResults(centralResults);
         const primary = instances?.[0];
 
@@ -166,6 +168,7 @@ export default function BotPage() {
           estado: primary.status === "running" ? "Licencia activa" : "Pendiente de instalacion",
         });
       } catch {
+        setBotAccessMode("commercial");
         setMetrics({
           rendimiento30d: "0 USD",
           equity: "0 USD",
@@ -182,6 +185,13 @@ export default function BotPage() {
 
     loadBotData();
   }, []);
+
+  const botAccessHref = botAccessMode === "loading"
+    ? "#"
+    : botAccessMode === "founder"
+      ? "/dashboard"
+      : "/checkout?product=bot-carvipix-license";
+  const botAccessLabel = botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "QUIERO EL BOT";
 
   const equityCurve = useMemo(() => {
     const values = [35, 38, 44, 42, 48, 54, 51, 60, 63, 69, 73, 79, 84, 88, 94];
@@ -222,9 +232,9 @@ export default function BotPage() {
               </p>
 
               <div className="hero-cta-row">
-                <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
+                <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
                   <CARVIPIXButton variant="premium" size="lg">
-                    QUIERO EL BOT
+                    {botAccessMode === "loading" ? "CONSULTANDO LICENCIA" : botAccessLabel}
                   </CARVIPIXButton>
                 </Link>
                 <a href="#resultados-bot" className="hero-secondary-cta">
@@ -540,13 +550,13 @@ export default function BotPage() {
             <div className="price-layout">
               <div>
                 <p className="price-label">BOT CARVIPIX PRO</p>
-                <h3 className="price-value">999 USD</h3>
-                <p className="price-note">Pago unico. Acceso de por vida a esta version del bot.</p>
+                <h3 className="price-value">{botAccessMode === "founder" ? "INCLUIDO" : "999 USD"}</h3>
+                <p className="price-note">{botAccessMode === "founder" ? "Acceso permanente Founder. Sin pago ni renovación." : "Pago unico. Acceso de por vida a esta version del bot."}</p>
               </div>
               <div className="price-cta-wrap">
-                <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
+                <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
                   <CARVIPIXButton variant="premium" size="lg">
-                    COMENZAR AHORA
+                    {botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "COMENZAR AHORA"}
                   </CARVIPIXButton>
                 </Link>
               </div>
@@ -601,9 +611,9 @@ export default function BotPage() {
                 <p>ULTIMO PASO</p>
                 <h2>Activa un sistema que opera con disciplina cuando tu no puedes.</h2>
               </div>
-              <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
+              <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
                 <CARVIPIXButton variant="premium" size="lg">
-                  ACTIVAR BOT AHORA
+                  {botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "ACTIVAR BOT AHORA"}
                 </CARVIPIXButton>
               </Link>
             </div>

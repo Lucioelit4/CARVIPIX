@@ -19,6 +19,8 @@ import {
 } from "../core/local-bot-store";
 import { InMemoryServiceEventBus } from "../core/event-bus";
 import { realSignalLifecycleService } from "./real-signal-lifecycle-service";
+import { getFounderAccess } from "../founder-access/service";
+import { isFounderAccessSnapshotActive } from "../founder-access/types";
 
 function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -92,6 +94,18 @@ export class BotDomainService implements IBotDomainService {
   constructor(private readonly eventBus: InMemoryServiceEventBus) {}
 
   async getLicense(userId: string): Promise<ServiceBotLicense | null> {
+    const founderAccess = await getFounderAccess(userId);
+    if (isFounderAccessSnapshotActive(founderAccess) && founderAccess.licenseId) {
+      return {
+        userId,
+        licenseKey: founderAccess.licenseId,
+        purchaseDate: founderAccess.activatedAt,
+        active: true,
+        licenseType: "FOUNDER",
+        paymentRequired: false,
+      };
+    }
+
     if (!backendDatabase.enabled) {
       const license = await getLocalBotLicense(userId);
       return license

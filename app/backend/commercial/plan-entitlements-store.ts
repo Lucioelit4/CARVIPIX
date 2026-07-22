@@ -7,6 +7,7 @@ import {
   normalizeSubscriptionPlan,
   resolveDefaultPlanEntitlements,
 } from "./access-control";
+import { hasActiveFounderAccess } from "../founder-access/service";
 
 type PlanEntitlementsRow = {
   plan: string;
@@ -258,6 +259,16 @@ export async function updatePlanEntitlements(
 
 export async function resolveUserCommercialAccess(userId: string): Promise<ResolvedUserCommercialAccess> {
   if (userId === "admin-session") {
+    const subscriptionPlan: SubscriptionPlan = "advanced";
+    return {
+      userId,
+      subscriptionPlan,
+      membershipActive: true,
+      entitlements: await getPlanEntitlements(subscriptionPlan),
+    };
+  }
+
+  if (await hasActiveFounderAccess(userId)) {
     const subscriptionPlan: SubscriptionPlan = "advanced";
     return {
       userId,

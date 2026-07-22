@@ -307,6 +307,8 @@ export interface ServiceBotLicense {
   expiryDate?: Date;
   active: boolean;
   brokerConnected?: "MT4" | "MT5";
+  licenseType?: "COMMERCIAL" | "FOUNDER";
+  paymentRequired?: boolean;
 }
 
 export interface ServiceBotStats {
