@@ -10,6 +10,7 @@ import { getTemplate } from '@/app/lib/community-publisher/templatePersistence';
 import { renderTemplate } from '@/app/lib/community-publisher/templateEngine';
 import { appendTemplateTestLog } from '@/app/lib/community-publisher/templatePersistence';
 import type { OriginType, Publication } from '@/app/lib/community-publisher/types';
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from '@/app/lib/community-intelligence/automation';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHANNEL_TEST = process.env.TELEGRAM_CHANNEL_TEST || '-5370238696';
@@ -56,6 +57,9 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest, { params }: { params: Promise<{ templateId: string }> }) {
   if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (!isCommunityAutomationEnabled()) {
+    return NextResponse.json({ status: 'BLOCKED', reason: COMMUNITY_AUTOMATION_DISABLED_REASON, no_message_sent: true });
   }
 
   // TEST_ONLY check

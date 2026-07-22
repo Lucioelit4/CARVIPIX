@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { isSameOriginRequest } from '@/app/api/admin/_shared/security';
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from '@/app/lib/community-intelligence/automation';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -58,6 +59,9 @@ export async function POST(request: NextRequest) {
   // ── Auth: solo same-origin ───────────────────────────────────────────────
   if (!isSameOriginRequest(request)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
+  if (!isCommunityAutomationEnabled()) {
+    return NextResponse.json({ status: 'BLOCKED', reason: COMMUNITY_AUTOMATION_DISABLED_REASON, no_message_sent: true });
   }
 
   const startTs = Date.now();

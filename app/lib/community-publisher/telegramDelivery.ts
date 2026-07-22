@@ -5,6 +5,7 @@
 
 import type { Publication } from './types';
 import { updatePublicationStatus } from './queueService';
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from '../community-intelligence/automation';
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const BOT_API_BASE = 'https://api.telegram.org';
@@ -31,6 +32,13 @@ export async function deliverPublicationToTelegram(
   officialChannelId?: string,
 ): Promise<TelegramSendResult> {
   const startTime = Date.now();
+  if (!isCommunityAutomationEnabled()) {
+    return {
+      ok: false,
+      error: COMMUNITY_AUTOMATION_DISABLED_REASON,
+      timestamp_utc_ms: startTime,
+    };
+  }
 
   // Validaciones
   if (!TELEGRAM_TOKEN) {
@@ -141,6 +149,9 @@ export async function processPublicationForDelivery(
   testChannelId: string,
   officialChannelId?: string,
 ): Promise<boolean> {
+  if (!isCommunityAutomationEnabled()) {
+    return false;
+  }
   try {
     // 1. Renderizar template con datos de la publicación
     const messageText = buildMessageFromPublication(publication);

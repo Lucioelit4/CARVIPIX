@@ -7,6 +7,7 @@
 
 import TelegramClientService from './telegramClientService';
 import TelegramValidationService from './telegramValidationService';
+import { isCommunityAutomationEnabled } from '../community-intelligence/automation';
 
 export class CommunityPublisherInitService {
   private static instance: CommunityPublisherInitService;
@@ -37,6 +38,9 @@ export class CommunityPublisherInitService {
     report?: string;
   }> {
     if (this.isInitialized) {
+      return { success: true };
+    }
+    if (!isCommunityAutomationEnabled()) {
       return { success: true };
     }
 

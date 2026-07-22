@@ -7,8 +7,12 @@ import {
 import { communityEditorialControl, communityRepository } from "./repository";
 import { CommunityIntelligenceService } from "./service";
 import type { StoredAnalysis } from "@/app/ai/cadpV2/analysisStore";
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from "./automation";
 
 export async function processStoredAnalysisForCommunity(analysis: StoredAnalysis) {
+  if (!isCommunityAutomationEnabled()) {
+    return { skipped: true as const, reason: COMMUNITY_AUTOMATION_DISABLED_REASON, analysis_id: analysis.analysis_id };
+  }
   if (analysis.status !== "COMPLETED" || !analysis.respuesta_maestra) {
     throw new Error("COMMUNITY_REQUIRES_COMPLETED_ANALYSIS");
   }

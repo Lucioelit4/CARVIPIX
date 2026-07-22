@@ -9,6 +9,7 @@ import type {
   CommunityPublication,
   CommunityTelegramPublisher,
 } from "./types";
+import { assertCommunityAutomationEnabled } from "./automation";
 
 function extractResponseText(payload: unknown): string {
   const data = payload as { output_text?: string; output?: Array<{ content?: Array<{ text?: string }> }> };
@@ -20,6 +21,7 @@ function extractResponseText(payload: unknown): string {
 
 export class OpenAICommunityContentGenerator implements CommunityContentGenerator {
   async generate(dossier: CommunityMarketDossier): Promise<CommunityContent> {
+    assertCommunityAutomationEnabled();
     const config = getOpenAIRuntimeConfig();
     const response = await fetch(`${config.baseUrl}/responses`, {
       method: "POST",
@@ -76,6 +78,7 @@ export class OpenAICommunityContentGenerator implements CommunityContentGenerato
 
 export class OpenAICommunityImageGenerator implements CommunityImageGenerator {
   async generate(dossier: CommunityMarketDossier, content: CommunityContent): Promise<CommunityImage> {
+    assertCommunityAutomationEnabled();
     const config = getOpenAIRuntimeConfig();
     const prompt = [
       "Institutional editorial cover for CARVIPIX financial market update.",
@@ -132,6 +135,7 @@ function telegramCaption(publication: CommunityPublication): string {
 
 export class DedicatedCommunityTelegramPublisher implements CommunityTelegramPublisher {
   async publish(publication: CommunityPublication): Promise<{ message_id: number; sent_at: string }> {
+    assertCommunityAutomationEnabled();
     if (process.env.COMMUNITY_INTELLIGENCE_ENABLED !== "true") {
       throw new Error("COMMUNITY_INTELLIGENCE_DISABLED");
     }

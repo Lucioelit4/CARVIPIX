@@ -15,6 +15,7 @@ import { duplicateFilter } from './filters/duplicateFilter';
 import { createPublication, createIdempotencyKey } from './publicationFactory';
 import { addToQueue, listQueue } from './queueService';
 import { appendProcessorLog } from './persistence';
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from '../community-intelligence/automation';
 
 // ─── Validación de contrato ───────────────────────────────────────────────────
 
@@ -92,6 +93,9 @@ function makeSkip(reason: SkipReason, detail: string, processingId: string): Pro
 
 export async function processEvent(rawEvent: unknown): Promise<ProcessorResult> {
   const processingId = `PROC-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+  if (!isCommunityAutomationEnabled()) {
+    return makeSkip('SKIPPED_AUTOMATION_DISABLED', COMMUNITY_AUTOMATION_DISABLED_REASON, processingId);
+  }
   const channelId = process.env.TELEGRAM_CHANNEL_TEST ?? '';
   const testOnly  = process.env.TEST_ONLY === 'true';
 

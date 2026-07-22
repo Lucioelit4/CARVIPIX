@@ -30,6 +30,7 @@ export type PublicationStatus =
   | 'CANCELLED';
 
 export type SkipReason =
+  | 'SKIPPED_AUTOMATION_DISABLED'
   | 'SKIPPED_INVALID_INPUT'
   | 'SKIPPED_SECURITY'
   | 'SKIPPED_ELIGIBILITY'

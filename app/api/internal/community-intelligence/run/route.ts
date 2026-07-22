@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analysisStore } from "@/app/ai/cadpV2/analysisStore";
 import { isSameOriginRequest } from "@/app/api/admin/_shared/security";
 import { processStoredAnalysisForCommunity } from "@/app/lib/community-intelligence/runtime";
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from "@/app/lib/community-intelligence/automation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ function isAuthorized(request: NextRequest): boolean {
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+  if (!isCommunityAutomationEnabled()) {
+    return NextResponse.json({ ok: true, disabled: true, reason: COMMUNITY_AUTOMATION_DISABLED_REASON });
   }
   if (process.env.COMMUNITY_INTELLIGENCE_ENABLED !== "true") {
     return NextResponse.json({ ok: false, error: "COMMUNITY_INTELLIGENCE_DISABLED" }, { status: 503 });

@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isSameOriginRequest } from '@/app/api/admin/_shared/security';
 import { listQueue } from '@/app/lib/community-publisher/queueService';
 import { processPublicationForDelivery } from '@/app/lib/community-publisher/telegramDelivery';
+import { COMMUNITY_AUTOMATION_DISABLED_REASON, isCommunityAutomationEnabled } from '@/app/lib/community-intelligence/automation';
 
 const TEST_CHANNEL = process.env.TELEGRAM_CHANNEL_TEST ?? '';
 const OFFICIAL_CHANNEL = process.env.TELEGRAM_CHANNEL_OFFICIAL ?? '';
@@ -20,6 +21,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       { error: 'Unauthorized' },
       { status: 403 },
     );
+  }
+  if (!isCommunityAutomationEnabled()) {
+    return NextResponse.json({ ok: true, disabled: true, processed: 0, reason: COMMUNITY_AUTOMATION_DISABLED_REASON });
   }
 
   try {
