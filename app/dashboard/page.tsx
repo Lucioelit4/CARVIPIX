@@ -364,7 +364,7 @@ export default function DashboardPage() {
               <input value={alertForm.symbol} onChange={(e) => setAlertForm((current) => ({ ...current, symbol: e.target.value.toUpperCase() }))} placeholder="Par" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
               <input value={alertForm.condition} onChange={(e) => setAlertForm((current) => ({ ...current, condition: e.target.value }))} placeholder="Condicion manual" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <CARVIPIXButton variant="premium" disabled={!canUseAlerts || busy === "alert" || !alertForm.name.trim() || !alertForm.symbol.trim() || !alertForm.condition.trim()} onClick={() => void submitJson("alert", "/api/client/alerts", { action: "createRule", rule: { name: alertForm.name, symbols: [alertForm.symbol], condition: alertForm.condition, enabled: true, alertTypes: ["signal"] } })}>
                 Crear alerta manual
               </CARVIPIXButton>
@@ -409,7 +409,7 @@ export default function DashboardPage() {
                 <option value="high">High</option>
               </select>
             </div>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <CARVIPIXButton variant="premium" disabled={!canUseBot || busy === "bot-create" || !botForm.name.trim() || !botForm.symbol.trim()} onClick={() => void submitJson("bot-create", "/api/client/bot", { action: "createInstance", ...botForm })}>
                 Registrar instalacion
               </CARVIPIXButton>
@@ -449,7 +449,7 @@ export default function DashboardPage() {
               <input value={brokerForm.login} onChange={(e) => setBrokerForm((current) => ({ ...current, login: e.target.value }))} placeholder="Login" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
               <input value={brokerForm.password} onChange={(e) => setBrokerForm((current) => ({ ...current, password: e.target.value }))} placeholder="Password" type="password" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
             </div>
-            <div className="mt-3 flex gap-3">
+            <div className="mt-3 flex flex-wrap gap-3">
               <CARVIPIXButton variant="secondary" disabled={!canUseBot || busy === "broker" || !brokerForm.botId || !brokerForm.server.trim() || !brokerForm.login.trim() || !brokerForm.password.trim()} onClick={() => void submitJson("broker", "/api/client/bot", { action: "connectBroker", ...brokerForm })}>
                 Preparar activacion MT4/MT5
               </CARVIPIXButton>
@@ -465,7 +465,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold mb-4">Socios estrategicos CARVIPIX</h2>
             <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
             <p className="text-sm text-white/70">Programa institucional con evaluacion selectiva y cupos limitados.</p>
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <CARVIPIXButton variant="premium" onClick={() => router.push("/socios-estrategicos/solicitud")}>
                 Solicitar evaluacion
               </CARVIPIXButton>
@@ -499,7 +499,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <textarea value={supportForm.message} onChange={(e) => setSupportForm((current) => ({ ...current, message: e.target.value }))} placeholder="Describe tu incidencia" className="mt-3 min-h-28 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-            <div className="mt-4 flex gap-3">
+            <div className="mt-4 flex flex-wrap gap-3">
               <CARVIPIXButton variant="secondary" disabled={busy === "support"} onClick={() => void submitJson("support", "/api/client/support", supportForm)}>
                 Crear ticket de soporte
               </CARVIPIXButton>

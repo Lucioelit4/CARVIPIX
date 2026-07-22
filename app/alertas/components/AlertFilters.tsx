@@ -72,13 +72,15 @@ export default function AlertFilters({
           </select>
         </label>
 
-        <CARVIPIXButton type="button" variant="secondary" size="sm" onClick={onRefresh} isLoading={isRefreshing}>
-          Actualizar
-        </CARVIPIXButton>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+          <CARVIPIXButton type="button" variant="secondary" size="sm" onClick={onRefresh} isLoading={isRefreshing} fullWidth>
+            Actualizar
+          </CARVIPIXButton>
 
-        <CARVIPIXButton type="button" variant="ghost" size="sm" onClick={onClear}>
-          Limpiar filtros
-        </CARVIPIXButton>
+          <CARVIPIXButton type="button" variant="ghost" size="sm" onClick={onClear} fullWidth>
+            Limpiar filtros
+          </CARVIPIXButton>
+        </div>
       </div>
     </CARVIPIXCard>
   );

@@ -18,7 +18,7 @@ export default function TrustCenterPage() {
   const recentEvidence = TRUST_EVIDENCE_ITEMS.slice(0, 4);
 
   return (
-    <main className="min-h-screen bg-[#030303] text-white">
+    <main className="min-h-screen overflow-x-clip bg-[#030303] text-white">
       <section className="mx-auto max-w-7xl px-6 py-16 sm:px-8">
         <div className="rounded-3xl border border-white/10 bg-[#0B1220]/95 p-8 sm:p-12">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">

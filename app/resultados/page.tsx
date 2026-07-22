@@ -62,7 +62,7 @@ export default function ResultadosPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <CARVIPIXBadge variant="premium">Resultados</CARVIPIXBadge>
-              <h1 className="mt-6 text-4xl font-bold text-[#D4AF37]">Resultados CARVIPIX</h1>
+              <h1 className="mt-6 break-words text-4xl font-bold text-[#D4AF37]">Resultados CARVIPIX</h1>
               <p className="mt-4 max-w-2xl text-lg text-white/80">
                 Resultados verificables de alertas oficiales y simulaciones históricas identificadas por separado.
               </p>
@@ -119,9 +119,9 @@ export default function ResultadosPage() {
       {/* Gráfica Grande - Ancho Completo */}
       <div className="cv-workspace max-w-7xl py-8">
         <CARVIPIXCard variant="info" padding="24" hover={false}>
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-6 flex flex-wrap items-start justify-between gap-2">
             <div>
-              <h2 className="text-2xl font-bold">Evolución de resultados</h2>
+              <h2 className="break-words pr-2 text-2xl font-bold">Evolución de resultados</h2>
               <p className="mt-2 text-sm text-white/50">Serie consolidada de resultados.</p>
             </div>
             <TrendingUp className="text-[#D4AF37]" size={28} />

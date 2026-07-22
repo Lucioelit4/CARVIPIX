@@ -139,7 +139,7 @@ export default function AlertasPage() {
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-white/70">Modo premium</span>
           </div>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">Alertas en Vivo</h1>
-          <p className="mt-2 max-w-3xl text-sm text-white/70 sm:text-base">
+          <p className="mt-2 max-w-3xl break-words text-sm text-white/70 sm:text-base">
             Señales comerciales con `signal_id`, `analysis_id`, estado real del lifecycle y niveles exactos de ejecución sin reconstrucciones ambiguas.
           </p>
           <p className="mt-2 text-xs text-white/55">
@@ -216,13 +216,13 @@ export default function AlertasPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">Alerta protagonista</p>
             <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold sm:text-3xl">
+                <h2 className="break-words text-2xl font-bold sm:text-3xl">
                   {protagonist.symbol} · {protagonist.direction}
                 </h2>
                 <p className="mt-1 text-sm text-white/65">
                   {protagonist.timestampLabel} · {protagonist.lifecycleLabel} · {protagonist.actionabilityLabel}
                 </p>
-                <p className="mt-2 text-xs text-white/55">signal_id: {protagonist.signalId} · analysis_id: {protagonist.analysisId}</p>
+                <p className="mt-2 break-all text-xs text-white/55">signal_id: {protagonist.signalId} · analysis_id: {protagonist.analysisId}</p>
               </div>
             </div>
 
@@ -261,7 +261,7 @@ export default function AlertasPage() {
         ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[1.3fr_0.9fr]">
-          <section className="space-y-4">
+          <section className="min-w-0 space-y-4">
             <AlertFilters
               search={search}
               selectedSymbol={symbolFilter}
@@ -309,11 +309,11 @@ export default function AlertasPage() {
                   <p className="text-sm text-white/70">
                     Página {paginatedAlerts.page} de {paginatedAlerts.totalPages} · {filteredAlerts.length} alertas filtradas
                   </p>
-                  <div className="flex gap-2">
-                    <CARVIPIXButton type="button" variant="ghost" size="sm" disabled={paginatedAlerts.page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+                  <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                    <CARVIPIXButton type="button" variant="ghost" size="sm" fullWidth disabled={paginatedAlerts.page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
                       Anterior
                     </CARVIPIXButton>
-                    <CARVIPIXButton type="button" variant="secondary" size="sm" disabled={paginatedAlerts.page >= paginatedAlerts.totalPages} onClick={() => setPage((current) => Math.min(paginatedAlerts.totalPages, current + 1))}>
+                    <CARVIPIXButton type="button" variant="secondary" size="sm" fullWidth disabled={paginatedAlerts.page >= paginatedAlerts.totalPages} onClick={() => setPage((current) => Math.min(paginatedAlerts.totalPages, current + 1))}>
                       Siguiente
                     </CARVIPIXButton>
                   </div>

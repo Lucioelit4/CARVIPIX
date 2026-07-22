@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[#030303] text-white">
+    <main className="min-h-screen overflow-x-clip bg-[#030303] text-white">
       <div className="mx-auto max-w-4xl px-6 py-20 sm:px-8">
         <Link
           href="/"

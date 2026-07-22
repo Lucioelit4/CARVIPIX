@@ -286,20 +286,20 @@ export default function PerfilPage() {
           transition={{ delay: 0.4 }}
           className="cv-card-muted rounded-2xl border border-white/10 p-8 mb-8"
         >
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-2xl font-bold">Datos personales</h3>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
               <button
                 onClick={handleRestoreDefaults}
                 title="Restaurar datos"
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 transition-all text-sm"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm text-white/60 transition-all hover:bg-white/10 hover:text-white/80 sm:w-auto"
               >
                 <RotateCcw size={16} />
                 Restaurar
               </button>
               <button
                 onClick={() => setEditMode(!editMode)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 transition-all sm:w-auto ${
                   editMode
                     ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                     : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30'
@@ -499,11 +499,11 @@ export default function PerfilPage() {
                 <p className="text-lg font-bold text-green-400">{membership?.estado || 'Pendiente de activación'}</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Link href="/checkout?product=plan-basic" className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all text-center">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link href="/checkout?product=plan-basic" className="w-full bg-white/10 text-center font-bold text-white transition-all hover:bg-white/20 sm:flex-1 rounded-lg py-2">
                 Ver planes
               </Link>
-              <Link href="/checkout?product=plan-basic" className="flex-1 bg-[#D4AF37] text-[#030303] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all text-center">
+              <Link href="/checkout?product=plan-basic" className="w-full bg-[#D4AF37] text-center font-bold text-[#030303] transition-all hover:bg-[#E5C158] sm:flex-1 rounded-lg py-2">
                 Actualizar membresía
               </Link>
             </div>

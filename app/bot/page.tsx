@@ -628,11 +628,12 @@ export default function BotPage() {
           display: flex;
           flex-direction: column;
           gap: 32px;
+          overflow-x: clip;
         }
 
         .bot-hero {
           position: relative;
-          overflow: hidden;
+          overflow: clip;
           border-radius: 28px;
           border: 1px solid rgba(212, 175, 55, 0.24);
           min-height: calc(100vh - 110px);

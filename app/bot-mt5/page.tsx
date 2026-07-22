@@ -75,7 +75,7 @@ export default function ClientMT5Page() {
   }
 
   return (
-    <div className="space-y-5 p-3 sm:p-4 md:p-6">
+    <div className="space-y-5 overflow-x-clip p-3 sm:p-4 md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold sm:text-3xl">Mi EA MT5</h1>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap">
@@ -111,7 +111,7 @@ export default function ClientMT5Page() {
               <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 sm:gap-6">
                 <div>
                   <p className="text-gray-600">Licencia</p>
-                  <p className="font-mono text-xs">{status.licenseId.substring(0, 25)}...</p>
+                  <p className="break-all font-mono text-xs">{status.licenseId.substring(0, 25)}...</p>
                 </div>
                 <div>
                   <p className="text-gray-600">Cuenta</p>
