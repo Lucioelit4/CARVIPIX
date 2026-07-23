@@ -92,6 +92,19 @@ export class TelegramNotificationService {
           closedTrades: paperAccount.closed_trades.length,
         },
       });
+
+      if (plan.category !== "OFFICIAL_ALERT") {
+        return this.recordResult({
+          success: true,
+          skipped: true,
+          channel_id: undefined,
+          latency_ms: Date.now() - started,
+          classification: plan.category,
+          reason: "NON_OFFICIAL_ALERT_BLOCKED",
+          destination_mode: destinationMode,
+        }, context, symbol, decision);
+      }
+
       let targetChannelId = this.resolveTargetChannel(plan.channel, destinationMode);
 
       if (!this.botToken || !targetChannelId) {
