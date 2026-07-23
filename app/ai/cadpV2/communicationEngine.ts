@@ -8,6 +8,14 @@ type ChannelKind = "alerts" | "notes";
 type CommunicationCategory = "OFFICIAL_ALERT" | "GLOBAL_SUMMARY";
 const MAX_CONTEXT_MESSAGES_PER_DAY = 3;
 const MAX_FREE_OFFICIAL_ALERTS_PER_DAY = 2;
+const SILENT_DECISIONS = new Set<CadpDecisionV3>([
+  'WAIT',
+  'NO_TRADE',
+  'CONDITIONAL_ENTRY',
+  'ENTRY_MISSED',
+  'DATA_INSUFFICIENT',
+  'NEWS_VERIFICATION_REQUIRED',
+]);
 
 interface CommunicationEventMemory {
   symbol: string;
@@ -197,6 +205,20 @@ export class CommunicationEngine {
     premiumPayload?: PayloadAlertaPremium;
     communityContext?: CommunityContextSnapshot;
   }): CommunicationPlan {
+    if (SILENT_DECISIONS.has(input.decision)) {
+      const summaryHash = hashText(`SILENT|${input.symbol}|${input.decision}`);
+      return {
+        shouldSend: false,
+        channel: 'notes',
+        category: 'GLOBAL_SUMMARY',
+        reason: 'SILENCIO',
+        fingerprint: `SILENT:${input.symbol}:${input.decision}:${summaryHash}`,
+        summaryHash,
+        symbol: input.symbol,
+        decision: input.decision,
+      };
+    }
+
     const normalizedSummary = `${normalizeText(input.payload.public_summary)}|${normalizeText(input.payload.public_warning)}|${input.payload.market_status}|${input.payload.action_taken}`;
     const premiumPayload = input.premiumPayload;
     const isOfficialAlert = !!premiumPayload

@@ -14,8 +14,8 @@ import type {
 
 // Decisiones que generan alertas gratuitas
 const FREE_ALERT_DECISIONS: Decision[] = ['ENTER_BUY', 'ENTER_SELL'];
-// Decisiones que generan oportunidad en desarrollo o estado de mercado
-const DEVELOPING_DECISIONS: Decision[] = ['WAIT', 'CONDITIONAL_ENTRY'];
+// Decisiones internas que no deben convertirse en publicaciones para Telegram
+const SILENT_DECISIONS: Decision[] = ['WAIT', 'NO_TRADE', 'CONDITIONAL_ENTRY'];
 
 export function determinePublicationType(event: CPEvent): PublicationType | null {
   if (event.event_type === 'TRADE_CLOSED') {
@@ -24,11 +24,7 @@ export function determinePublicationType(event: CPEvent): PublicationType | null
 
   const e = event as AnalysisCompletedEvent;
   if (FREE_ALERT_DECISIONS.includes(e.decision)) return 'FREE_ALERT';
-  if (DEVELOPING_DECISIONS.includes(e.decision)) {
-    // Si tiene contexto de mercado → MARKET_STATUS, sino → OPPORTUNITY_DEVELOPING
-    return e.analysis_public.market_context ? 'MARKET_STATUS' : 'OPPORTUNITY_DEVELOPING';
-  }
-  if (e.decision === 'NO_TRADE') return null; // NO genera publicación
+  if (SILENT_DECISIONS.includes(e.decision)) return null;
 
   return null;
 }
@@ -69,6 +65,10 @@ function checkAnalysisEligibility(
     if (!pub.market_context) {
       return fail('SKIPPED_ELIGIBILITY', 'MARKET_STATUS requiere market_context en analysis_public');
     }
+  }
+
+  if (pubType === 'OPPORTUNITY_DEVELOPING') {
+    return fail('SKIPPED_INACTIVE_DECISION', 'OPPORTUNITY_DEVELOPING no se publica en Telegram');
   }
 
   return { passed: true };

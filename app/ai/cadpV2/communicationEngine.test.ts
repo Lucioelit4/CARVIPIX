@@ -82,7 +82,7 @@ test("BUY or SELL without the dispatcher premium payload is never an official al
   }
 });
 
-test("WAIT and NO_TRADE remain informational when no premium alert exists", () => {
+test("WAIT and no-op decisions stay silent without premium alert", () => {
   for (const decision of ["WAIT", "NO_TRADE", "CONDITIONAL_ENTRY"] as const) {
     const engine = new CommunicationEngine(createMemoryStore());
     const plan = engine.prepareTelegramPlan({
@@ -91,8 +91,9 @@ test("WAIT and NO_TRADE remain informational when no premium alert exists", () =
       payload: buildPayload(),
     });
 
-    assert.equal(plan.category, "GLOBAL_SUMMARY");
+    assert.equal(plan.shouldSend, false);
     assert.equal(plan.channel, "notes");
+    assert.equal(plan.reason, "SILENCIO");
   }
 });
 
@@ -131,24 +132,15 @@ test("repeated no-trade notes are suppressed after first send", () => {
     payload,
   });
 
-  assert.equal(first.shouldSend, true);
-  engine.registerSent(first);
-
-  const second = engine.prepareTelegramPlan({
-    symbol,
-    decision: "NO_TRADE",
-    payload,
-  });
-
-  assert.equal(second.shouldSend, false);
-  assert.equal(second.reason, "SILENCIO");
+  assert.equal(first.shouldSend, false);
+  assert.equal(first.reason, "SILENCIO");
 });
 
 test("tone becomes calmer after negative session context", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const plan = engine.prepareTelegramPlan({
     symbol: "XAUUSD",
-    decision: "NO_TRADE",
+    decision: "ENTER_BUY",
     payload: buildPayload(),
     communityContext: {
       dailyPnlUsd: -120,
@@ -168,7 +160,7 @@ test("tone stays measured after positive session context", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const plan = engine.prepareTelegramPlan({
     symbol: "GBPUSD",
-    decision: "WAIT",
+    decision: "ENTER_BUY",
     payload: buildPayload({ recheck_minutes: 20 }),
     communityContext: {
       dailyPnlUsd: 180,
@@ -187,7 +179,7 @@ test("global summary stays concise and excludes review guidance", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const plan = engine.prepareTelegramPlan({
     symbol: "EURUSD",
-    decision: "WAIT",
+    decision: "ENTER_BUY",
     payload: buildPayload({
       public_summary: "Esperando confirmación de ruptura con cierre limpio antes de considerar entrada.",
       recheck_minutes: 10,
@@ -201,38 +193,26 @@ test("global summary stays concise and excludes review guidance", () => {
   assert.doesNotMatch(plan.message ?? "", /Próxima revisión|10 min/);
 });
 
-test("four simultaneous no-trade analyses produce only one global note", () => {
+test("NO_TRADE stays silent and does not enter the note stream", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const payload = buildPayload({
     public_summary: "No hay ventaja clara en los principales instrumentos.",
   });
 
   const first = engine.prepareTelegramPlan({ symbol: "XAUUSD", decision: "NO_TRADE", payload });
-  assert.equal(first.shouldSend, true);
-  assert.match(first.message ?? "", /Mercado en espera|Seguimos monitoreando con paciencia|Sin entrada por ahora/);
-  assert.doesNotMatch(first.message ?? "", /Próxima revisión|NOT_BROKER_VERIFIED/);
-  engine.registerSent(first);
-
-  for (const symbol of ["BTCUSD", "EURUSD", "GBPUSD"]) {
-    const next = engine.prepareTelegramPlan({ symbol, decision: "NO_TRADE", payload });
-    assert.equal(next.shouldSend, false);
-    assert.equal(next.reason, "SILENCIO");
-  }
+  assert.equal(first.shouldSend, false);
+  assert.equal(first.reason, "SILENCIO");
 });
 
-test("second similar global block produces silence", () => {
+test("WAIT stays silent and does not enter the note stream", () => {
   const engine = new CommunicationEngine(createMemoryStore());
   const payload = buildPayload({
     public_summary: "Sin ventaja clara en instrumentos principales.",
   });
 
-  const first = engine.prepareTelegramPlan({ symbol: "XAUUSD", decision: "NO_TRADE", payload });
-  assert.equal(first.shouldSend, true);
-  engine.registerSent(first);
-
-  const second = engine.prepareTelegramPlan({ symbol: "EURUSD", decision: "WAIT", payload });
-  assert.equal(second.shouldSend, false);
-  assert.equal(second.reason, "SILENCIO");
+  const plan = engine.prepareTelegramPlan({ symbol: "XAUUSD", decision: "WAIT", payload });
+  assert.equal(plan.shouldSend, false);
+  assert.equal(plan.reason, "SILENCIO");
 });
 
 test("daily context messages are capped at three", () => {
@@ -269,7 +249,15 @@ test("daily context messages are capped at three", () => {
             sent_at_ms: Date.now() - 180_000,
             channel: "notes",
           },
-        ] as any,
+        ] as Array<{
+          symbol: string;
+          decision: string;
+          category: string;
+          fingerprint: string;
+          summary_hash: string;
+          sent_at_ms: number;
+          channel: string;
+        }>,
       };
     },
     save() {

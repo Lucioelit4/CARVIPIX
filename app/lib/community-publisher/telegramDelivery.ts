@@ -12,6 +12,7 @@ const BOT_API_BASE = 'https://api.telegram.org';
 const TIMEOUT_MS = 15_000;
 
 const COMMUNITY_INFO_DISCLAIMER = 'Contenido informativo. No es una alerta oficial ni una recomendacion operativa.';
+const TELEGRAM_GROUP_PUBLICATION_TYPES = new Set(['FREE_ALERT', 'TRADE_RESULT']);
 
 export interface TelegramSendResult {
   ok: boolean;
@@ -53,6 +54,14 @@ export async function deliverPublicationToTelegram(
     return {
       ok: false,
       error: 'TEST_ONLY=true pero testChannelId no proporcionado',
+      timestamp_utc_ms: startTime,
+    };
+  }
+
+  if (!TELEGRAM_GROUP_PUBLICATION_TYPES.has(publication.publication_type)) {
+    return {
+      ok: false,
+      error: 'PUBLICATION_TYPE_NOT_FOR_TELEGRAM_GROUP',
       timestamp_utc_ms: startTime,
     };
   }
@@ -153,6 +162,15 @@ export async function processPublicationForDelivery(
     return false;
   }
   try {
+    if (!TELEGRAM_GROUP_PUBLICATION_TYPES.has(publication.publication_type)) {
+      await updatePublicationStatus(publication.publication_id, {
+        status: 'SKIPPED',
+        skip_reason: 'SKIPPED_INACTIVE_DECISION',
+        last_error: 'Publication type not allowed for Telegram group delivery',
+      });
+      return false;
+    }
+
     // 1. Renderizar template con datos de la publicación
     const messageText = buildMessageFromPublication(publication);
 
