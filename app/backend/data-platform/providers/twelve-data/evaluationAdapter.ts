@@ -5,6 +5,7 @@ import type { DatasetKind } from "../../types";
 import { getTwelveDataRuntimeConfig } from "./config";
 import { TwelveDataQuoteService } from "./quotes";
 import { TwelveDataTimeSeriesService } from "./timeSeries";
+import { parseTwelveDataTimestampUtc } from "./timestamp";
 
 const EVAL_ASSETS = ["XAUUSD", "BTCUSD", "EURUSD", "GBPUSD"] as const;
 
@@ -95,10 +96,11 @@ export class TwelveDataEvaluationAdapter implements DataProviderAdapter {
       });
 
       for (const row of series.rows) {
-        const ts = Date.parse(row.datetime);
-        if (!Number.isFinite(ts)) {
+        const parsed = parseTwelveDataTimestampUtc(row.datetimeRaw || row.datetime);
+        if (parsed.utcMs === null) {
           continue;
         }
+        const ts = parsed.utcMs;
 
         records.push({
           kind: "ohlc",
@@ -114,6 +116,8 @@ export class TwelveDataEvaluationAdapter implements DataProviderAdapter {
           volume: row.volume,
           metadata: {
             providerSymbol: result.selectedSymbol,
+            sourceDatetimeRaw: row.datetimeRaw,
+            sourceTimestampAssumedUtc: parsed.assumedUtc,
             timezone: series.timezone,
             exchange: series.exchange,
             marketType: series.marketType,

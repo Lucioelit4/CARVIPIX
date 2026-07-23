@@ -44,6 +44,14 @@ interface IngestionMetadata {
   candles_m5: number;
   last_price: Partial<Record<CanonicalSymbol, number>>;
   errors: string[];
+  timestamp_audit_samples: Array<{
+    symbol: CanonicalSymbol;
+    timeframe: "1H" | "30M" | "5M";
+    raw: string;
+    parsed_utc_ms: number | null;
+    assumed_utc: boolean;
+    reason: string | null;
+  }>;
 }
 
 // Singleton metadata tracker
@@ -54,7 +62,15 @@ const ingestionState: IngestionMetadata = {
   candles_m5: 0,
   last_price: {},
   errors: [],
+  timestamp_audit_samples: [],
 };
+
+function recordTimestampAuditSample(sample: IngestionMetadata["timestamp_audit_samples"][number]): void {
+  ingestionState.timestamp_audit_samples.push(sample);
+  if (ingestionState.timestamp_audit_samples.length > 200) {
+    ingestionState.timestamp_audit_samples = ingestionState.timestamp_audit_samples.slice(-200);
+  }
+}
 
 /**
  * Initialize pipeline with historical candles from Twelve Data
@@ -104,7 +120,28 @@ export async function initializePipelineWithRealData(
 
         let h1Count = 0;
         for (const row of h1Data.rows) {
-          const timestamp = new Date(row.datetime).getTime();
+          if (row.timestampUtcMs === null) {
+            const msg = `INVALID_TIMESTAMP ${symbol} 1H raw='${row.datetimeRaw}' reason='${row.timestampParseReason ?? "UNKNOWN"}'`;
+            ingestionState.errors.push(msg);
+            recordTimestampAuditSample({
+              symbol,
+              timeframe: "1H",
+              raw: row.datetimeRaw,
+              parsed_utc_ms: null,
+              assumed_utc: row.timestampAssumedUtc,
+              reason: row.timestampParseReason,
+            });
+            continue;
+          }
+          const timestamp = row.timestampUtcMs;
+          recordTimestampAuditSample({
+            symbol,
+            timeframe: "1H",
+            raw: row.datetimeRaw,
+            parsed_utc_ms: timestamp,
+            assumed_utc: row.timestampAssumedUtc,
+            reason: row.timestampParseReason,
+          });
           const candle = {
             symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
@@ -133,7 +170,28 @@ export async function initializePipelineWithRealData(
 
         let m30Count = 0;
         for (const row of m30Data.rows) {
-          const timestamp = new Date(row.datetime).getTime();
+          if (row.timestampUtcMs === null) {
+            const msg = `INVALID_TIMESTAMP ${symbol} 30M raw='${row.datetimeRaw}' reason='${row.timestampParseReason ?? "UNKNOWN"}'`;
+            ingestionState.errors.push(msg);
+            recordTimestampAuditSample({
+              symbol,
+              timeframe: "30M",
+              raw: row.datetimeRaw,
+              parsed_utc_ms: null,
+              assumed_utc: row.timestampAssumedUtc,
+              reason: row.timestampParseReason,
+            });
+            continue;
+          }
+          const timestamp = row.timestampUtcMs;
+          recordTimestampAuditSample({
+            symbol,
+            timeframe: "30M",
+            raw: row.datetimeRaw,
+            parsed_utc_ms: timestamp,
+            assumed_utc: row.timestampAssumedUtc,
+            reason: row.timestampParseReason,
+          });
           const candle = {
             symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
@@ -161,7 +219,28 @@ export async function initializePipelineWithRealData(
 
         let m5Count = 0;
         for (const row of m5Data.rows) {
-          const timestamp = new Date(row.datetime).getTime();
+          if (row.timestampUtcMs === null) {
+            const msg = `INVALID_TIMESTAMP ${symbol} 5M raw='${row.datetimeRaw}' reason='${row.timestampParseReason ?? "UNKNOWN"}'`;
+            ingestionState.errors.push(msg);
+            recordTimestampAuditSample({
+              symbol,
+              timeframe: "5M",
+              raw: row.datetimeRaw,
+              parsed_utc_ms: null,
+              assumed_utc: row.timestampAssumedUtc,
+              reason: row.timestampParseReason,
+            });
+            continue;
+          }
+          const timestamp = row.timestampUtcMs;
+          recordTimestampAuditSample({
+            symbol,
+            timeframe: "5M",
+            raw: row.datetimeRaw,
+            parsed_utc_ms: timestamp,
+            assumed_utc: row.timestampAssumedUtc,
+            reason: row.timestampParseReason,
+          });
           const candle = {
             symbol: symbol, // Use canonical symbol (XAUUSD)
             timestamp,
@@ -238,4 +317,5 @@ export function resetIngestionState(): void {
   ingestionState.candles_m5 = 0;
   ingestionState.last_price = {};
   ingestionState.errors = [];
+  ingestionState.timestamp_audit_samples = [];
 }

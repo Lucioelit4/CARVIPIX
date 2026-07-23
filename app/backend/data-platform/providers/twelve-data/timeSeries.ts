@@ -1,11 +1,16 @@
 import { withTwelveDataApikey } from "./auth";
 import type { TwelveDataRuntimeConfig } from "./types";
 import { TwelveDataRestClient } from "./restClient";
+import { parseTwelveDataTimestampUtc } from "./timestamp";
 
 export type TwelveInterval = "1min" | "5min" | "15min" | "30min" | "1h";
 
 export interface TwelveDataTimeSeriesRow {
+  datetimeRaw: string;
   datetime: string;
+  timestampUtcMs: number | null;
+  timestampParseReason: string | null;
+  timestampAssumedUtc: boolean;
   open: number;
   high: number;
   low: number;
@@ -69,14 +74,22 @@ export class TwelveDataTimeSeriesService {
     const values = result.data.values ?? [];
 
     return {
-      rows: values.map((row) => ({
-        datetime: String(row.datetime ?? ""),
-        open: Number(row.open ?? NaN),
-        high: Number(row.high ?? NaN),
-        low: Number(row.low ?? NaN),
-        close: Number(row.close ?? NaN),
-        volume: Number(row.volume ?? 0),
-      })),
+      rows: values.map((row) => {
+        const datetimeRaw = String(row.datetime ?? "");
+        const parsed = parseTwelveDataTimestampUtc(datetimeRaw);
+        return {
+          datetimeRaw,
+          datetime: datetimeRaw,
+          timestampUtcMs: parsed.utcMs,
+          timestampParseReason: parsed.reason,
+          timestampAssumedUtc: parsed.assumedUtc,
+          open: Number(row.open ?? NaN),
+          high: Number(row.high ?? NaN),
+          low: Number(row.low ?? NaN),
+          close: Number(row.close ?? NaN),
+          volume: Number(row.volume ?? 0),
+        };
+      }),
       latencyMs: result.meta.latencyMs,
       timezone: result.data.meta?.exchange_timezone ?? null,
       exchange: result.data.meta?.exchange ?? null,
