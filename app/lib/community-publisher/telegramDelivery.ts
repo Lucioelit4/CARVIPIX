@@ -12,7 +12,7 @@ const BOT_API_BASE = 'https://api.telegram.org';
 const TIMEOUT_MS = 15_000;
 
 const COMMUNITY_INFO_DISCLAIMER = 'Contenido informativo. No es una alerta oficial ni una recomendacion operativa.';
-const TELEGRAM_GROUP_PUBLICATION_TYPES = new Set(['FREE_ALERT', 'TRADE_RESULT']);
+const TELEGRAM_GROUP_PUBLICATION_TYPES = new Set(['FREE_ALERT']);
 
 export interface TelegramSendResult {
   ok: boolean;
@@ -225,11 +225,7 @@ export async function processPublicationForDelivery(
  * Construye el mensaje final a partir de datos de publication
  */
 function buildMessageFromPublication(publication: Publication): string {
-  if (
-    publication.publication_type === 'MARKET_STATUS' ||
-    publication.publication_type === 'OPPORTUNITY_DEVELOPING' ||
-    publication.publication_type === 'EDUCATIONAL_OR_PROMOTIONAL'
-  ) {
+  if (publication.publication_type !== 'FREE_ALERT') {
     return buildConversationalCommunityMessage(publication);
   }
 
