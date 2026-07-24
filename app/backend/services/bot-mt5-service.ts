@@ -194,7 +194,7 @@ export class BotMT5Service {
          broker_server, magic_number, ea_version, status, created_at, is_revoked, 
          max_open_trades, max_daily_trades, max_daily_loss_percent)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), false, 3, 10, 5)
-      ON CONFLICT (license_id, installation_id) DO UPDATE 
+      ON CONFLICT (installation_id) DO UPDATE
       SET last_heartbeat = NOW(), status = $10
       `,
       [

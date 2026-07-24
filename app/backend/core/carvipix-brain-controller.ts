@@ -21,13 +21,20 @@ import { realSignalLifecycleService, type RealSignalLifecycleRecord } from "../s
 import TelegramClientService from "@/app/lib/services/telegramClientService";
 import { backendDatabase } from "./database";
 
-// Inicializar Telegram con config
-const telegramClientService = new TelegramClientService({
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  channelTest: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
-  channelOfficial: process.env.TELEGRAM_CHANNEL_OFFICIAL || "@carvipix_alerts",
-  testOnly: process.env.NODE_ENV !== 'production'
-});
+let telegramClientService: TelegramClientService | null = null;
+
+function getTelegramClientService(): TelegramClientService {
+  if (!telegramClientService) {
+    telegramClientService = new TelegramClientService({
+      botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+      channelTest: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
+      channelOfficial: process.env.TELEGRAM_CHANNEL_OFFICIAL || "@carvipix_alerts",
+      testOnly: process.env.NODE_ENV !== 'production'
+    });
+  }
+
+  return telegramClientService;
+}
 
 export type BrainState = "STOPPED" | "STARTING" | "ACTIVE" | "PAUSED" | "ERROR" | "MAINTENANCE";
 
@@ -426,7 +433,7 @@ export class CarvipixBrainController {
 
   private async verifyTelegramConnection(): Promise<boolean> {
     try {
-      const info = await telegramClientService.getBotInfo();
+      const info = await getTelegramClientService().getBotInfo();
       return info.ok ?? false;
     } catch {
       return false;
@@ -443,7 +450,7 @@ export class CarvipixBrainController {
     const message = this.formatTelegramMessage(event);
     
     // Enviar a canal de test
-    const result = await telegramClientService.sendMessage({
+    const result = await getTelegramClientService().sendMessage({
       channelId: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       text: message,
       markdown: false
@@ -492,7 +499,7 @@ export class CarvipixBrainController {
 <b>Estado:</b> 🟢 EN OPERACIÓN
     `;
     
-    await telegramClientService.editMessage(
+    await getTelegramClientService().editMessage(
       process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       cycle.telegramMessageId,
       message
@@ -529,7 +536,7 @@ export class CarvipixBrainController {
 <b>Estado:</b> 🟢 CERRADA
     `;
     
-    await telegramClientService.editMessage(
+    await getTelegramClientService().editMessage(
       process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       cycle.telegramMessageId,
       message

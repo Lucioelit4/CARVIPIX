@@ -58,6 +58,7 @@ struct Signal {
   double risk_reward;
   string expires_at;
   string signature;
+  string certification_mode;
   datetime received_time;
   ulong ticket;
   double executed_entry;
@@ -416,6 +417,7 @@ bool ParseSignalFromJson(string json, Signal &signal) {
   signal.stop_loss = ExtractJsonDouble(json, "stop_loss");
   signal.take_profit = ExtractJsonDouble(json, "take_profit");
   signal.risk_reward = ExtractJsonDouble(json, "risk_reward");
+  signal.certification_mode = ExtractJsonString(json, "certification_mode");
   signal.expires_at = ExtractJsonString(json, "expires_at");
   signal.received_time = TimeCurrent();
   
@@ -449,6 +451,20 @@ void ProcessSignal(Signal &signal) {
   if (trade_symbol == "") {
     Print("[SYMBOL] ❌ No se puede resolver: ", signal.symbol);
     ReportSignalRejection(signal, "SYMBOL_NOT_FOUND");
+    return;
+  }
+
+  if (signal.certification_mode == "RECEIPT_ONLY_MARKET_CLOSED") {
+    if (!IsMarketSessionClosedForCertification(trade_symbol)) {
+      Print("[CERTIFICATION] ❌ La senal temporal requiere mercado cerrado");
+      ReportSignalRejection(signal, "CERTIFICATION_EXPECTED_MARKET_CLOSED");
+      MarkSignalProcessed(signal.signal_id);
+      return;
+    }
+
+    Print("[CERTIFICATION] ✅ RECEIVED - NOT EXECUTED - MARKET CLOSED: ", signal.signal_id);
+    ReportMarketClosedReceipt(signal);
+    MarkSignalProcessed(signal.signal_id);
     return;
   }
   
@@ -688,6 +704,42 @@ bool IsMarketOpen(string symbol) {
   return (ask > 0 && bid > 0);
 }
 
+bool IsMarketSessionClosedForCertification(string symbol) {
+  long trade_mode = SymbolInfoInteger(symbol, SYMBOL_TRADE_MODE);
+  if (trade_mode == SYMBOL_TRADE_MODE_DISABLED || trade_mode == SYMBOL_TRADE_MODE_CLOSEONLY) {
+    return true;
+  }
+
+  MqlDateTime current_time;
+  TimeToStruct(TimeTradeServer(), current_time);
+  int current_seconds = current_time.hour * 3600 + current_time.min * 60 + current_time.sec;
+  bool has_session = false;
+
+  for (uint session_index = 0; ; session_index++) {
+    datetime session_from = 0;
+    datetime session_to = 0;
+    if (!SymbolInfoSessionTrade(symbol, (ENUM_DAY_OF_WEEK)current_time.day_of_week, session_index, session_from, session_to)) {
+      break;
+    }
+
+    has_session = true;
+    int from_seconds = (int)session_from;
+    int to_seconds = (int)session_to;
+    bool active = from_seconds <= to_seconds
+      ? current_seconds >= from_seconds && current_seconds <= to_seconds
+      : current_seconds >= from_seconds || current_seconds <= to_seconds;
+    if (active) {
+      return false;
+    }
+  }
+
+  if (has_session) {
+    return true;
+  }
+
+  return !IsMarketOpen(symbol);
+}
+
 bool ValidateStopsForMarket(Signal &signal, string symbol) {
   double ask = SymbolInfoDouble(symbol, SYMBOL_ASK);
   double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
@@ -798,6 +850,20 @@ void ReportSignalRejection(Signal &signal, string reason) {
   uchar response_array[];
   string result_headers;
   
+  WebRequest("POST", url, headers, HTTP_TIMEOUT_MS, request_array, response_array, result_headers);
+}
+
+void ReportMarketClosedReceipt(Signal &signal) {
+  string url = CARVIPIX_API_URL + "/api/bot/mt5/execution";
+  string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\n";
+  string payload = "{\"event_id\":\"" + signal.event_id + "\",\"signal_id\":\"" + signal.signal_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"status\":\"RECEIVED_NOT_EXECUTED_MARKET_CLOSED\",\"reason\":\"MARKET_CLOSED\"}";
+
+  uchar request_array[];
+  StringToCharArray(payload, request_array, 0, WHOLE_ARRAY, CP_UTF8);
+  ArrayResize(request_array, ArraySize(request_array) - 1);
+
+  uchar response_array[];
+  string result_headers;
   WebRequest("POST", url, headers, HTTP_TIMEOUT_MS, request_array, response_array, result_headers);
 }
 

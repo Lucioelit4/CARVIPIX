@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import { requireActiveMt5License } from "../../_auth";
+import { getTemporaryCertificationMode } from "@/app/backend/services/temporary-demo-certification-service";
 
 type DbQueryResult<T> = {
   rows: T[];
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
     }
 
     const signal = rows[0];
+    const certificationMode = await getTemporaryCertificationMode(licenseId, signal.signal_id);
 
     // Marcar como DELIVERED para evitar doble ejecución
     await backendDatabase.query(
@@ -89,6 +91,7 @@ export async function GET(request: NextRequest) {
       stop_loss: parseFloat(signal.stop_loss),
       take_profit: parseFloat(signal.take_profit),
       risk_reward: parseFloat(signal.risk_reward || "1.5"),
+      certification_mode: certificationMode,
       created_at: signal.created_at,
       expires_at: signal.expires_at
     });

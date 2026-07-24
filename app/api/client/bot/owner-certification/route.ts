@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireClientSession } from "@/app/api/client/_auth";
 import { hasInternalOwnerAccess } from "@/app/backend/commercial/owner-access";
 import { createOwnerDemoCertificationSignal, provisionOwnerBotCertification } from "@/app/backend/services/owner-bot-certification-service";
+import { issueTemporaryMarketClosedSignal, provisionTemporaryDemoCertification, revokeTemporaryDemoCertification } from "@/app/backend/services/temporary-demo-certification-service";
 
 export async function POST(request: NextRequest) {
   const auth = await requireClientSession(request);
@@ -18,6 +19,27 @@ export async function POST(request: NextRequest) {
     if (action === "provision") {
       const data = await provisionOwnerBotCertification({ userId: auth.user.id });
       return NextResponse.json({ data }, { status: 201 });
+    }
+
+    if (action === "provision-temporary-demo") {
+      const data = await provisionTemporaryDemoCertification(auth.user.id);
+      return NextResponse.json({ data }, { status: 201 });
+    }
+
+    if (action === "issue-temporary-market-closed-signal") {
+      const data = await issueTemporaryMarketClosedSignal({
+        userId: auth.user.id,
+        licenseId: String(body.licenseId ?? "").trim(),
+        entry: Number(body.entry),
+        stopLoss: Number(body.stopLoss),
+        takeProfit: Number(body.takeProfit),
+      });
+      return NextResponse.json({ data }, { status: 201 });
+    }
+
+    if (action === "revoke-temporary-demo") {
+      await revokeTemporaryDemoCertification(auth.user.id, String(body.licenseId ?? "").trim());
+      return NextResponse.json({ ok: true }, { status: 200 });
     }
 
     if (action === "create-demo-signal") {

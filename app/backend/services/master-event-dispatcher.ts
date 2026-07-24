@@ -18,13 +18,20 @@ import TelegramClientService from "@/app/lib/services/telegramClientService";
 import { realSignalLifecycleService, type RealSignalLifecycleRecord } from "./real-signal-lifecycle-service";
 import { botMT5Service } from "./bot-mt5-service";
 
-// Inicializar Telegram
-const telegramClientService = new TelegramClientService({
-  botToken: process.env.TELEGRAM_BOT_TOKEN || "",
-  channelTest: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
-  channelOfficial: process.env.TELEGRAM_CHANNEL_OFFICIAL || "@carvipix_alerts",
-  testOnly: process.env.NODE_ENV !== 'production'
-});
+let telegramClientService: TelegramClientService | null = null;
+
+function getTelegramClientService(): TelegramClientService {
+  if (!telegramClientService) {
+    telegramClientService = new TelegramClientService({
+      botToken: process.env.TELEGRAM_BOT_TOKEN || "",
+      channelTest: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
+      channelOfficial: process.env.TELEGRAM_CHANNEL_OFFICIAL || "@carvipix_alerts",
+      testOnly: process.env.NODE_ENV !== 'production'
+    });
+  }
+
+  return telegramClientService;
+}
 
 // ==================== BRAIN STATE TYPES ====================
 
@@ -1031,7 +1038,7 @@ export class MasterEventDispatcher {
   private async sendToTelegram(event: MasterEvent): Promise<{ ok: boolean; message_id?: number }> {
     const message = this.formatTelegramMessage(event);
     
-    const result = await telegramClientService.sendMessage({
+    const result = await getTelegramClientService().sendMessage({
       channelId: process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       text: message,
       markdown: false
@@ -1078,7 +1085,7 @@ export class MasterEventDispatcher {
 <b>Estado:</b> 🟢 EN OPERACIÓN
     `;
     
-    await telegramClientService.editMessage(
+    await getTelegramClientService().editMessage(
       process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       cycle.telegramMessageId,
       message
@@ -1114,7 +1121,7 @@ export class MasterEventDispatcher {
 <b>Estado:</b> 🟢 CERRADA
     `;
     
-    await telegramClientService.editMessage(
+    await getTelegramClientService().editMessage(
       process.env.TELEGRAM_CHANNEL_TEST || "@carvipix_alerts_test",
       cycle.telegramMessageId,
       message
@@ -1155,7 +1162,7 @@ export class MasterEventDispatcher {
 
   private async verifyTelegramConnection(): Promise<boolean> {
     try {
-      const info = await telegramClientService.getBotInfo();
+      const info = await getTelegramClientService().getBotInfo();
       return info.ok ?? false;
     } catch {
       return false;

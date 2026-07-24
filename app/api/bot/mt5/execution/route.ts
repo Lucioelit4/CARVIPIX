@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { masterEventDispatcher } from "@/app/backend/services/master-event-dispatcher";
 import { backendDatabase } from "@/app/backend/core/database";
 import { requireActiveMt5License } from "../_auth";
+import { recordTemporaryMarketClosedReceipt } from "@/app/backend/services/temporary-demo-certification-service";
 
 /**
  * POST /api/bot/mt5/execution
@@ -54,11 +55,28 @@ export async function POST(request: NextRequest) {
     }
     
     // Validar status
-    if (!["EXECUTED", "REJECTED", "FAILED"].includes(body.status)) {
+    if (![
+      "EXECUTED",
+      "REJECTED",
+      "FAILED",
+      "RECEIVED_NOT_EXECUTED_MARKET_CLOSED",
+    ].includes(body.status)) {
       return NextResponse.json({
         success: false,
-        error: "status debe ser EXECUTED, REJECTED o FAILED"
+        error: "status de ejecucion invalido"
       }, { status: 400 });
+    }
+
+    if (body.status === "RECEIVED_NOT_EXECUTED_MARKET_CLOSED") {
+      const installationId = String(body.installation_id ?? "").trim();
+      const recorded = await recordTemporaryMarketClosedReceipt({
+        licenseId: auth.licenseKey,
+        signalId: String(body.signal_id),
+        installationId,
+      });
+      if (!recorded) {
+        return NextResponse.json({ success: false, error: "Recepcion temporal no autorizada" }, { status: 403 });
+      }
     }
     
     // Actualizar bot_mt5_signals si viene signal_id
@@ -73,6 +91,16 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.warn(`[EXECUTION] No se pudo actualizar bot_mt5_signals:`, err);
       }
+    }
+
+    if (body.status === "RECEIVED_NOT_EXECUTED_MARKET_CLOSED") {
+      return NextResponse.json({
+        success: true,
+        message: "Senal recibida sin ejecucion: mercado cerrado",
+        signal_id: body.signal_id,
+        status: body.status,
+        timestamp: new Date().toISOString()
+      });
     }
 
     // Enviar al Dispatcher

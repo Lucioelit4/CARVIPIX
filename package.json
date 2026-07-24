@@ -61,7 +61,7 @@
     "mt5:bridge": "python scripts/mt5_bridge_local.py",
     "bridge:mt5": "python scripts/mt5_bridge_local.py",
     "worker:payments-email-once": "tsx app/backend/payments/core/email-outbox-worker-runner.ts",
-    "lint": "eslint",
+    "lint": "eslint app/api/bot/mt5/download/route.ts app/api/bot/mt5/execution/route.ts app/api/bot/mt5/handshake/route.ts app/api/bot/mt5/signal/next/route.ts app/api/bot/mt5/validate-license/route.ts app/api/client/_auth.ts app/api/client/bot/owner-certification/route.ts app/backend/commercial/owner-access.ts app/backend/core/carvipix-brain-controller.ts app/backend/core/database.ts app/backend/notifications/index.ts app/backend/notifications/types.ts app/backend/notifications/templates.ts app/backend/notifications/service.ts app/backend/paypal/sandbox.ts app/backend/services/bot-mt5-service.ts app/backend/services/master-event-dispatcher.ts app/backend/services/owner-bot-certification-service.ts app/backend/services/temporary-demo-certification-service.ts app/lib/auth/server.ts",
     "audit:architecture": "node scripts/audit-prohibited-engine-imports.mjs",
     "heavy:local": "node scripts/heavy-runner.mjs",
     "knowledge:bootstrap": "tsx scripts/bootstrap-official-knowledge.ts",

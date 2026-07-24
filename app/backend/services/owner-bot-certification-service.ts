@@ -6,6 +6,9 @@ import { emailNotificationService } from "@/app/backend/notifications";
 
 const OWNER_CERTIFICATION_SOURCE = "owner_demo_certification";
 const OWNER_CERTIFICATION_TABLE = "bot_mt5_owner_certifications";
+const OWNER_DEMO_ACCOUNT_NUMBER = "1715547693";
+const OWNER_DEMO_BROKER_SERVER = "OANDA_Global-Demo-1";
+const OWNER_DEMO_SYMBOL = "XAUUSD.sml";
 
 type OwnerRow = {
   id: string;
@@ -194,6 +197,14 @@ export async function createOwnerDemoCertificationSignal(input: {
 }): Promise<{ signalId: string; expiresAt: Date }> {
   if (!backendDatabase.enabled) {
     throw new Error("La certificacion requiere base de datos de produccion");
+  }
+
+  if (
+    input.accountNumber !== OWNER_DEMO_ACCOUNT_NUMBER ||
+    input.brokerServer !== OWNER_DEMO_BROKER_SERVER ||
+    input.symbol !== OWNER_DEMO_SYMBOL
+  ) {
+    throw new Error("La certificacion solo permite la cuenta OANDA DEMO y el simbolo autorizados");
   }
 
   if (![input.entry, input.stopLoss, input.takeProfit].every((value) => Number.isFinite(value) && value > 0)) {

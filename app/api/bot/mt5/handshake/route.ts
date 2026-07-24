@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { botMT5Service } from "@/app/backend/services/bot-mt5-service";
 import { findActiveMt5License, requireActiveMt5License } from "../_auth";
+import { bindTemporaryDemoInstallation } from "@/app/backend/services/temporary-demo-certification-service";
 
 // ============================================================================
 // POST /api/bot/mt5/handshake
@@ -44,6 +45,21 @@ export async function POST(request: NextRequest) {
     const license = await findActiveMt5License(licenseId);
     if (!license) {
       return NextResponse.json({ error: "Licencia inválida o inactiva", valid: false }, { status: 401 });
+    }
+
+    try {
+      await bindTemporaryDemoInstallation({
+        userId: license.userId,
+        licenseId,
+        installationId,
+        accountNumber,
+        brokerServer,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Instalacion temporal no autorizada", valid: false },
+        { status: 403 }
+      );
     }
 
     // Registrar instalación
