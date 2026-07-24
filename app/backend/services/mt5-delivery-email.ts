@@ -1,6 +1,14 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resend: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+
+  return resend;
+}
 
 export type MT5DeliveryEmailParams = {
   to: string;
@@ -14,7 +22,7 @@ export async function sendMT5DeliveryEmail(params: MT5DeliveryEmailParams): Prom
   try {
     const { to, userName, licenseKey, downloadUrl, installationManualUrl } = params;
 
-    const result = await resend.emails.send({
+    const result = await getResend().emails.send({
       from: "CARVIPIX Support <support@carvipix.com>",
       to,
       subject: "Tu EA MT5 CARVIPIX está listo para descargar",

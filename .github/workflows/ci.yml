@@ -28,6 +28,8 @@ jobs:
         run: npm run lint
 
       - name: Build
+        env:
+          CARVIPIX_ENV: test
         run: npm run build
 
   build-docker-image:
