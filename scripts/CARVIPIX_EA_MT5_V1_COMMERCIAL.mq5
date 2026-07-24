@@ -49,6 +49,7 @@ input string  EA_VERSION              = "1.0.0";                 // Versión del
 
 struct Signal {
   string signal_id;
+  string event_id;
   string symbol;
   string direction;           // "BUY" or "SELL"
   double entry;
@@ -58,6 +59,8 @@ struct Signal {
   string expires_at;
   string signature;
   datetime received_time;
+  ulong ticket;
+  double executed_entry;
 };
 
 struct InstallationInfo {
@@ -287,7 +290,7 @@ bool IsBrokerSupported() {
 bool ValidateLicense() {
   // POST /api/bot/mt5/validate-license
   string url = CARVIPIX_API_URL + "/api/bot/mt5/validate-license";
-  string headers = "Content-Type: application/json\r\nUser-Agent: CARVIPIX-EA/" + EA_VERSION + "\r\n";
+  string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\nUser-Agent: CARVIPIX-EA/" + EA_VERSION + "\r\n";
   
   string payload = "{\"license_id\":\"" + g_installation.license_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\"}";
   
@@ -317,7 +320,7 @@ bool PerformHandshake() {
   string url = CARVIPIX_API_URL + "/api/bot/mt5/handshake";
   string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\nUser-Agent: CARVIPIX-EA/" + EA_VERSION + "\r\n";
   
-  string payload = "{\"license_id\":\"" + g_installation.license_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"account_hash\":\"" + g_installation.account_hash + "\",\"magic_number\":" + IntegerToString((int)g_installation.magic_number) + ",\"broker\":\"" + g_installation.broker_name + "\",\"server\":\"" + g_installation.server_name + "\",\"ea_version\":\"" + EA_VERSION + "\"}";
+  string payload = "{\"license_id\":\"" + g_installation.license_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"account_hash\":\"" + g_installation.account_hash + "\",\"account_number\":" + IntegerToString((int)g_installation.account_number) + ",\"magic_number\":" + IntegerToString((int)g_installation.magic_number) + ",\"broker_server\":\"" + g_installation.server_name + "\",\"ea_version\":\"" + EA_VERSION + "\"}";
   
   uchar request_array[];
   uchar response_array[];
@@ -347,7 +350,7 @@ void SendHeartbeat() {
   string url = CARVIPIX_API_URL + "/api/bot/mt5/heartbeat";
   string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\n";
   
-  string payload = "{\"installation_id\":\"" + g_installation.installation_id + "\",\"account_hash\":\"" + g_installation.account_hash + "\",\"status\":\"" + g_status + "\",\"open_positions\":" + IntegerToString(g_open_trades_count) + ",\"daily_trades\":" + IntegerToString(g_daily_trades) + ",\"daily_loss_percent\":" + DoubleToString(g_daily_loss, 2) + ",\"timestamp\":\"" + TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS) + "\"}";
+  string payload = "{\"license_id\":\"" + g_installation.license_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"ea_version\":\"" + EA_VERSION + "\",\"status\":\"" + g_status + "\",\"open_positions\":" + IntegerToString(g_open_trades_count) + ",\"equity\":" + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY), 2) + ",\"balance\":" + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE), 2) + ",\"account_hash\":\"" + g_installation.account_hash + "\",\"broker_server\":\"" + g_installation.server_name + "\"}";
   
   uchar request_array[];
   uchar response_array[];
@@ -368,7 +371,7 @@ void SendHeartbeat() {
 //+------------------------------------------------------------------+
 
 void FetchAndProcessSignals() {
-  string url = CARVIPIX_API_URL + "/api/bot/mt5/signal/next?installation_id=" + g_installation.installation_id + "&account_hash=" + g_installation.account_hash;
+  string url = CARVIPIX_API_URL + "/api/bot/mt5/signal/next?license_id=" + g_installation.license_id;
   string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\n";
   
   uchar request_array[];
@@ -406,6 +409,7 @@ bool ParseSignalFromJson(string json, Signal &signal) {
   }
   
   signal.signal_id = ExtractJsonString(json, "signal_id");
+  signal.event_id = ExtractJsonString(json, "event_id");
   signal.symbol = ExtractJsonString(json, "symbol");
   signal.direction = ExtractJsonString(json, "decision");
   signal.entry = ExtractJsonDouble(json, "entry");
@@ -417,6 +421,10 @@ bool ParseSignalFromJson(string json, Signal &signal) {
   
   if (signal.signal_id == "" || signal.symbol == "") {
     return false;
+  }
+
+  if (signal.event_id == "") {
+    signal.event_id = signal.signal_id;
   }
   
   return true;
@@ -448,6 +456,12 @@ void ProcessSignal(Signal &signal) {
   if (!IsMarketOpen(trade_symbol)) {
     Print("[MARKET] ⚠️ Mercado cerrado");
     ReportSignalRejection(signal, "MARKET_CLOSED");
+    return;
+  }
+
+  if (!ValidateStopsForMarket(signal, trade_symbol)) {
+    Print("[SIGNAL] ❌ SL/TP inválidos para el precio actual");
+    ReportSignalRejection(signal, "INVALID_STOPS_AT_MARKET");
     return;
   }
   
@@ -608,6 +622,8 @@ bool ExecuteTrade(Signal &signal, string symbol, double lot) {
   execution.lot_size = lot;
   execution.opened_at = TimeCurrent();
   execution.status = "OPEN";
+  signal.ticket = result.order;
+  signal.executed_entry = result.price;
   
   if (g_open_trades_count < 100) {
     g_open_trades[g_open_trades_count] = execution;
@@ -670,6 +686,24 @@ bool IsMarketOpen(string symbol) {
   double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
   
   return (ask > 0 && bid > 0);
+}
+
+bool ValidateStopsForMarket(Signal &signal, string symbol) {
+  double ask = SymbolInfoDouble(symbol, SYMBOL_ASK);
+  double bid = SymbolInfoDouble(symbol, SYMBOL_BID);
+  double point = SymbolInfoDouble(symbol, SYMBOL_POINT);
+  int stops_level = (int)SymbolInfoInteger(symbol, SYMBOL_TRADE_STOPS_LEVEL);
+  double min_distance = MathMax(1, stops_level) * point;
+
+  if (signal.direction == "BUY") {
+    return signal.stop_loss < bid - min_distance && signal.take_profit > ask + min_distance;
+  }
+
+  if (signal.direction == "SELL") {
+    return signal.stop_loss > ask + min_distance && signal.take_profit < bid - min_distance;
+  }
+
+  return false;
 }
 
 //+------------------------------------------------------------------+
@@ -739,7 +773,7 @@ void ReportSignalExecution(Signal &signal, double lot) {
   string url = CARVIPIX_API_URL + "/api/bot/mt5/execution";
   string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\n";
   
-  string payload = "{\"signal_id\":\"" + signal.signal_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"status\":\"EXECUTED\",\"timestamp\":\"" + TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS) + "\"}";
+  string payload = "{\"event_id\":\"" + signal.event_id + "\",\"signal_id\":\"" + signal.signal_id + "\",\"status\":\"EXECUTED\",\"ticket\":" + StringFormat("%I64u", signal.ticket) + ",\"entry_price\":" + DoubleToString(signal.executed_entry, 8) + "}";
   
   uchar request_array[];
   StringToCharArray(payload, request_array, 0, WHOLE_ARRAY, CP_UTF8);
@@ -752,10 +786,10 @@ void ReportSignalExecution(Signal &signal, double lot) {
 }
 
 void ReportSignalRejection(Signal &signal, string reason) {
-  string url = CARVIPIX_API_URL + "/api/bot/mt5/signal/reject";
+  string url = CARVIPIX_API_URL + "/api/bot/mt5/execution";
   string headers = "Content-Type: application/json\r\nAuthorization: Bearer " + g_installation.license_id + "\r\n";
   
-  string payload = "{\"signal_id\":\"" + signal.signal_id + "\",\"installation_id\":\"" + g_installation.installation_id + "\",\"reason\":\"" + reason + "\",\"timestamp\":\"" + TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS) + "\"}";
+  string payload = "{\"event_id\":\"" + signal.event_id + "\",\"signal_id\":\"" + signal.signal_id + "\",\"status\":\"REJECTED\",\"reason\":\"" + reason + "\"}";
   
   uchar request_array[];
   StringToCharArray(payload, request_array, 0, WHOLE_ARRAY, CP_UTF8);

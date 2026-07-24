@@ -94,6 +94,7 @@ type PayPalActivationResult = {
   fulfillment: "none" | "membership" | "bot-license";
   licenseKey?: string | null;
   downloadUrl?: string | null;
+  manualUrl?: string | null;
 };
 
 type PayPalApiResponse<T> = {
@@ -891,6 +892,31 @@ async function activateAccessByProduct(input: {
   }
 
   if (isBotLicenseCheckoutProduct(checkoutId)) {
+    const botAccessExpiresAt = addDays(input.now, 365);
+    await backendDatabase.query(
+      `
+      INSERT INTO memberships (user_id, plan, estado, fecha_inicio, fecha_fin, renovacion_automatica, source)
+      VALUES ($1, 'advanced', 'activo', $2, $3, false, $4)
+      ON CONFLICT (user_id) DO UPDATE
+      SET plan = 'advanced',
+          estado = 'activo',
+          fecha_inicio = COALESCE(memberships.fecha_inicio, EXCLUDED.fecha_inicio),
+          fecha_fin = GREATEST(COALESCE(memberships.fecha_fin, EXCLUDED.fecha_fin), EXCLUDED.fecha_fin),
+          renovacion_automatica = false,
+          source = EXCLUDED.source
+      `,
+      [input.userId, input.now, botAccessExpiresAt, "paypal_bot_license"]
+    );
+
+    await backendDatabase.query(
+      `
+      UPDATE users
+      SET plan = 'advanced', estado = 'activo', fecha_vencimiento = $2
+      WHERE id = $1
+      `,
+      [input.userId, botAccessExpiresAt]
+    );
+
     const currentLicense = await backendDatabase.query<{ user_id: string; license_key: string | null }>(
       `
       SELECT user_id, license_key
@@ -927,7 +953,7 @@ async function activateAccessByProduct(input: {
             expires_at = EXCLUDED.expires_at,
             activated_at = NOW()
         `,
-        [createId("mt5lic"), licenseKey, input.userId, addDays(input.now, 365)]
+        [createId("mt5lic"), licenseKey, input.userId, botAccessExpiresAt]
       );
 
       const downloadToken = createHash("sha256")
@@ -954,6 +980,7 @@ async function activateAccessByProduct(input: {
         fulfillment: "bot-license",
         licenseKey,
         downloadUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}`,
+        manualUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}&file=manual`,
       };
     } else {
       const licenseKey = `CVPX-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -975,7 +1002,7 @@ async function activateAccessByProduct(input: {
             expires_at = EXCLUDED.expires_at,
             activated_at = NOW()
         `,
-        [createId("mt5lic"), licenseKey, input.userId, addDays(input.now, 365)]
+        [createId("mt5lic"), licenseKey, input.userId, botAccessExpiresAt]
       );
 
       const downloadToken = createHash("sha256")
@@ -1002,6 +1029,7 @@ async function activateAccessByProduct(input: {
         fulfillment: "bot-license",
         licenseKey,
         downloadUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}`,
+        manualUrl: `${resolveAppPublicUrl()}/api/bot/mt5/download?token=${encodeURIComponent(downloadToken)}&file=manual`,
       };
     }
   }
@@ -1038,6 +1066,7 @@ async function sendPaymentFulfillmentEmail(input: {
     failureReason: input.failureReason,
     licenseKey: input.activation.licenseKey ?? undefined,
     downloadUrl: input.activation.downloadUrl ?? undefined,
+    manualUrl: input.activation.manualUrl ?? undefined,
   });
 }
 
@@ -1497,8 +1526,7 @@ export async function createPayPalSubscription(input: {
     ON CONFLICT (user_id) DO UPDATE
     SET payment_subscription_id = EXCLUDED.payment_subscription_id,
         renovacion_automatica = true,
-        source = EXCLUDED.source,
-        updated_at = NOW()
+        source = EXCLUDED.source
     `,
     [input.user.id, pendingPlan, resolvePayPalEnvironmentSource(), response.data.id]
   );
@@ -1639,8 +1667,7 @@ export async function cancelPayPalSubscription(input: {
     `
     UPDATE memberships
     SET renovacion_automatica = false,
-        estado = CASE WHEN fecha_fin IS NOT NULL AND fecha_fin > NOW() THEN estado ELSE 'cancelado' END,
-        updated_at = NOW()
+        estado = CASE WHEN fecha_fin IS NOT NULL AND fecha_fin > NOW() THEN estado ELSE 'cancelado' END
     WHERE user_id = $1
     `,
     [existing.user_id]

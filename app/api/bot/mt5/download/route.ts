@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireClientSession } from "@/app/api/client/_auth";
 import { backendDatabase } from "@/app/backend/core/database";
 import fs from "fs/promises";
 import path from "path";
@@ -10,13 +9,8 @@ import path from "path";
 // ============================================================================
 
 export async function GET(request: NextRequest) {
-  const auth = await requireClientSession(request);
-  if (!auth.ok) {
-    return auth.response;
-  }
-
   const token = request.nextUrl.searchParams.get("token") || "";
-  const userId = auth.user.id;
+  const requestedFile = request.nextUrl.searchParams.get("file") || "ea";
 
   if (!token) {
     return NextResponse.json({ error: "Token de descarga requerido" }, { status: 400 });
@@ -28,17 +22,16 @@ export async function GET(request: NextRequest) {
   } else {
     const { rows } = await backendDatabase.query<{
       id: string;
-      user_id: string;
       expires_at: Date;
       downloaded_at: Date | null;
     }>(
       `
-      SELECT id, user_id, expires_at, downloaded_at
+      SELECT id, expires_at, downloaded_at
       FROM bot_mt5_downloads
-      WHERE download_token = $1 AND user_id = $2
+      WHERE download_token = $1
       LIMIT 1
       `,
-      [token, userId]
+      [token]
     );
 
     if (!rows[0]) {
@@ -50,20 +43,41 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Token expirado" }, { status: 401 });
     }
 
-    // Registrar descarga
-    await backendDatabase.query(
-      `
-      UPDATE bot_mt5_downloads
-      SET downloaded_at = NOW()
-      WHERE download_token = $1
-      `,
-      [token]
-    );
+    if (requestedFile === "ea") {
+      await backendDatabase.query(
+        `
+        UPDATE bot_mt5_downloads
+        SET downloaded_at = NOW()
+        WHERE download_token = $1
+        `,
+        [token]
+      );
+    }
   }
 
-  // Leer archivo compilado
+  if (requestedFile === "manual") {
+    const manualPath = path.join(process.cwd(), "EA_MT5_INSTALLATION_PROCEDURE.md");
+
+    try {
+      const manualContent = await fs.readFile(manualPath);
+      return new NextResponse(manualContent, {
+        headers: {
+          "Content-Disposition": "attachment; filename=CARVIPIX_EA_MT5_INSTALLATION_PROCEDURE.md",
+          "Content-Type": "text/markdown; charset=utf-8",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+      });
+    } catch {
+      return NextResponse.json({ error: "Manual de instalacion no disponible. Contacta soporte." }, { status: 404 });
+    }
+  }
+
+  if (requestedFile !== "ea") {
+    return NextResponse.json({ error: "Archivo de entrega no valido" }, { status: 400 });
+  }
+
   const eaFileName = "CARVIPIX_EA_MT5_V1.ex5";
-  const eaPath = path.join(process.cwd(), "scripts", eaFileName);
+  const eaPath = path.join(process.cwd(), "public", "downloads", eaFileName);
 
   try {
     const fileContent = await fs.readFile(eaPath);
@@ -74,22 +88,10 @@ export async function GET(request: NextRequest) {
         "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
-  } catch (error) {
-    // Si el archivo compilado no existe, retornar el .mq5 como placeholder
-    try {
-      const mqFile = await fs.readFile(path.join(process.cwd(), "scripts", "CARVIPIX_EA_MT5_V1.mq5"));
-      return new NextResponse(mqFile, {
-        headers: {
-          "Content-Disposition": `attachment; filename="CARVIPIX_EA_MT5_V1.mq5"`,
-          "Content-Type": "text/plain",
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-        },
-      });
-    } catch (mqError) {
-      return NextResponse.json(
-        { error: "Archivo EA no disponible. Contacta soporte." },
-        { status: 404 }
-      );
-    }
+  } catch {
+    return NextResponse.json(
+      { error: "Archivo EA no disponible. Contacta soporte." },
+      { status: 404 }
+    );
   }
 }

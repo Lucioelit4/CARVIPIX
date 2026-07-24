@@ -460,11 +460,15 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
   if (input.templateId === "bot-license-delivery-ready") {
     const licenseKey = input.licenseKey ? `<br/><strong>Licencia:</strong> ${input.licenseKey}` : "";
     const downloadHtml = input.downloadUrl
-      ? `<p><a href="${input.downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:4px;">Descargar Bot CARVIPIX para MT5</a></p><p style="font-size:13px;color:#555;">Por seguridad, inicia sesion con la cuenta usada en la compra. El enlace vence en 24 horas.</p>`
+      ? `<p><a href="${input.downloadUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:4px;">Descargar Bot CARVIPIX para MT5</a></p><p style="font-size:13px;color:#555;">El enlace de entrega vence en 24 horas.</p>`
       : "";
     const downloadText = input.downloadUrl
-      ? `Descarga: ${input.downloadUrl}\nPor seguridad, inicia sesion con la cuenta usada en la compra. El enlace vence en 24 horas.`
+      ? `Descarga: ${input.downloadUrl}\nEl enlace de entrega vence en 24 horas.`
       : "";
+    const manualHtml = input.manualUrl
+      ? `<p><a href="${input.manualUrl}" style="color:#111;font-weight:700;">Ver manual de instalacion</a></p>`
+      : "";
+    const manualText = input.manualUrl ? `Manual de instalacion: ${input.manualUrl}` : "";
     return {
       subject: "CARVIPIX: licencia de Bot confirmada y entrega preparada",
       html: [
@@ -473,6 +477,7 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         "  <p>Confirmamos tu pago del Bot CARVIPIX y tu licencia ya quedo registrada correctamente.</p>",
         `  <p><strong>Orden:</strong> ${orderRef}<br/><strong>Monto:</strong> ${amount}${licenseKey}</p>`,
         `  ${downloadHtml}`,
+        `  ${manualHtml}`,
         "  <h2 style=\"font-size:18px;margin-top:24px;\">Instalacion facil en MetaTrader 5</h2>",
         "  <ol style=\"padding-left:22px;\">",
         "    <li><strong>Descarga el archivo:</strong> pulsa el boton anterior. Recibiras el archivo <code>CARVIPIX_EA_MT5_V1.ex5</code>.</li>",
@@ -497,6 +502,7 @@ function renderPaymentTransactionalTemplate(input: PaymentTransactionalEmailInpu
         input.licenseKey ? `Licencia: ${input.licenseKey}` : "",
         "",
         downloadText,
+        manualText,
         "",
         "INSTALACION FACIL EN METATRADER 5",
         "1. Descarga CARVIPIX_EA_MT5_V1.ex5 con el enlace anterior.",

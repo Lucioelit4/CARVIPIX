@@ -111,4 +111,5 @@ export type PaymentTransactionalEmailInput = {
   productType?: string;
   licenseKey?: string;
   downloadUrl?: string;
+  manualUrl?: string;
 };

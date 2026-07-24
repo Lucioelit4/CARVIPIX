@@ -67,6 +67,7 @@ test("buildPaymentTransactionalEmailTemplate renders bot downloadable delivery t
     productType: "bot",
     licenseKey: "CVPX-TEST-LICENSE",
     downloadUrl: "https://carvipix.com/api/bot/mt5/download?token=test-token",
+    manualUrl: "https://carvipix.com/api/bot/mt5/download?token=test-token&file=manual",
   });
 
   assert.match(rendered.subject, /licencia/i);
@@ -77,6 +78,8 @@ test("buildPaymentTransactionalEmailTemplate renders bot downloadable delivery t
   assert.match(rendered.text, /PRODUCTION/);
   assert.match(rendered.text, /cuenta demo/i);
   assert.match(rendered.text, /vence en 24 horas/i);
+  assert.match(rendered.text, /Manual de instalacion/);
+  assert.match(rendered.text, /file=manual/);
 });
 
 test("buildWelcomeActivatedEmailTemplate renders activation copy", () => {
