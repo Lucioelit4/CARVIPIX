@@ -25,6 +25,7 @@ export type AlertSignal = {
   timestampMs: number;
   timestampLabel: string;
   minutesAgo: number;
+  ageLabel: string;
   canEnter: boolean;
   confidence: number;
   timeframe: string;
@@ -33,8 +34,7 @@ export type AlertSignal = {
   analysis: string;
   validUntil: string | null;
   validUntilLabel: string;
-  source: string;
-  dataOrigin: string;
+  freshnessState: "vigente" | "proxima-expiracion" | "expirada";
 };
 
 export const STATUS_FILTER_OPTIONS: Array<{ value: StatusFilterValue; label: string }> = [
@@ -127,6 +127,106 @@ export function formatDateTimeLabel(value: Date | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function formatRelativeAgeLabel(timestampMs: number): string {
+  const elapsedMs = Math.max(0, Date.now() - timestampMs);
+  if (elapsedMs < 60000) {
+    const seconds = Math.max(1, Math.floor(elapsedMs / 1000));
+    return `Hace ${seconds} segundo${seconds === 1 ? "" : "s"}`;
+  }
+
+  if (elapsedMs < 3600000) {
+    const minutes = Math.floor(elapsedMs / 60000);
+    return `Hace ${minutes} minuto${minutes === 1 ? "" : "s"}`;
+  }
+
+  const hours = Math.floor(elapsedMs / 3600000);
+  return `Hace ${hours} hora${hours === 1 ? "" : "s"}`;
+}
+
+export function getFreshnessTone(state: AlertSignal["freshnessState"]): { label: string; className: string } {
+  if (state === "vigente") {
+    return {
+      label: "Vigente",
+      className: "border-emerald-400/40 bg-emerald-400/15 text-emerald-200",
+    };
+  }
+
+  if (state === "proxima-expiracion") {
+    return {
+      label: "Proxima a expirar",
+      className: "border-amber-300/50 bg-amber-300/15 text-amber-100",
+    };
+  }
+
+  return {
+    label: "Expirada",
+    className: "border-rose-300/50 bg-rose-300/15 text-rose-100",
+  };
+}
+
+export function getOutcomeTone(state: AlertLifecycleState): { label: string; className: string } {
+  if (state === "TP_HIT") {
+    return {
+      label: "Ganadora",
+      className: "border-emerald-300/45 bg-emerald-300/12 text-emerald-100",
+    };
+  }
+
+  if (state === "SL_HIT") {
+    return {
+      label: "Perdedora",
+      className: "border-rose-300/45 bg-rose-300/12 text-rose-100",
+    };
+  }
+
+  if (state === "CANCELLED") {
+    return {
+      label: "Cancelada",
+      className: "border-white/25 bg-white/10 text-white/80",
+    };
+  }
+
+  if (state === "EXPIRED") {
+    return {
+      label: "Expirada",
+      className: "border-amber-300/45 bg-amber-300/12 text-amber-100",
+    };
+  }
+
+  if (state === "ACTIVE" || state === "CONDITIONAL") {
+    return {
+      label: "Ejecutandose",
+      className: "border-sky-300/45 bg-sky-300/12 text-sky-100",
+    };
+  }
+
+  return {
+    label: "Historial",
+    className: "border-white/25 bg-white/10 text-white/80",
+  };
+}
+
+function resolveFreshnessState(lifecycleState: AlertLifecycleState, validUntilDate: Date | null): AlertSignal["freshnessState"] {
+  if (lifecycleState === "EXPIRED" || lifecycleState === "CLOSED" || lifecycleState === "CANCELLED") {
+    return "expirada";
+  }
+
+  if (!validUntilDate) {
+    return "vigente";
+  }
+
+  const remainingMs = validUntilDate.getTime() - Date.now();
+  if (remainingMs <= 0) {
+    return "expirada";
+  }
+
+  if (remainingMs <= 5 * 60000) {
+    return "proxima-expiracion";
+  }
+
+  return "vigente";
 }
 
 export function getLifecycleBadgeVariant(state: AlertLifecycleState) {
@@ -255,6 +355,7 @@ export function mapExternalAlerts(rawAlerts: unknown[]): AlertSignal[] {
       const analysisId = String(source.data?.analysisId ?? "Sin analysis_id").trim();
       const lifecycle = resolveLifecycleState(source.data?.signalStatus ?? source.status);
       const validUntilDate = parseDate(source.data?.expiresAt);
+      const freshnessState = resolveFreshnessState(lifecycle.state, validUntilDate);
       const actionability = resolveActionability({
         lifecycleState: lifecycle.state,
         entry,
@@ -284,6 +385,7 @@ export function mapExternalAlerts(rawAlerts: unknown[]): AlertSignal[] {
         timestampMs: timestamp.getTime(),
         timestampLabel: formatDateTimeLabel(timestamp),
         minutesAgo: Math.max(0, Math.round((now - timestamp.getTime()) / 60000)),
+        ageLabel: formatRelativeAgeLabel(timestamp.getTime()),
         canEnter: actionability.canEnter,
         confidence: resolveConfidence(source.data?.confidence, source.priority),
         timeframe: String(source.data?.timeframe ?? "Sin timeframe").trim(),
@@ -292,8 +394,7 @@ export function mapExternalAlerts(rawAlerts: unknown[]): AlertSignal[] {
         analysis: String(source.description ?? "Sin análisis disponible").trim(),
         validUntil: validUntilDate ? validUntilDate.toISOString() : null,
         validUntilLabel: formatDateTimeLabel(validUntilDate),
-        source: String(source.data?.source ?? "N/A").trim(),
-        dataOrigin: String(source.data?.dataOrigin ?? "N/A").trim(),
+        freshnessState,
       } satisfies AlertSignal;
     })
     .sort((a, b) => b.timestampMs - a.timestampMs);

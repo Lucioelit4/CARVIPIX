@@ -1,8 +1,10 @@
 "use client";
 
 import { Bell, Search, ShieldCheck } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useGlobalAlertsCenter } from "./alerts/GlobalAlertsCenterProvider";
+import { formatRelativeAgeLabel, getFreshnessTone, getOutcomeTone } from "@/app/alertas/alertas-view-model";
 
 const routeTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
@@ -67,6 +69,17 @@ function normalizePath(pathname: string): string {
 export default function WorkspaceHero() {
   const pathname = usePathname();
   const routeKey = normalizePath(pathname);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const {
+    alerts,
+    unreadIds,
+    unreadCount,
+    panelOpen,
+    togglePanel,
+    closePanel,
+    markAlertViewed,
+    viewAlertFromAnywhere,
+  } = useGlobalAlertsCenter();
 
   const content = useMemo(() => {
     return (
@@ -77,6 +90,29 @@ export default function WorkspaceHero() {
     );
   }, [routeKey]);
 
+  const visibleAlerts = useMemo(() => alerts.slice(0, 6), [alerts]);
+
+  useEffect(() => {
+    if (!panelOpen) {
+      return;
+    }
+
+    const onPointerDown = (event: MouseEvent) => {
+      if (!panelRef.current) {
+        return;
+      }
+
+      if (!panelRef.current.contains(event.target as Node)) {
+        closePanel();
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [panelOpen, closePanel]);
+
   return (
     <section className="cv-workspace pt-4 sm:pt-6 lg:pt-8">
       <div className="cv-toolbar">
@@ -86,7 +122,7 @@ export default function WorkspaceHero() {
           <p className="mt-2 max-w-3xl text-sm text-[#B5B5B5] sm:text-base">{content.subtitle}</p>
         </div>
 
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
+        <div className="relative flex w-full items-center gap-3 sm:w-auto" ref={panelRef}>
           <div className="cv-search flex-1 sm:w-72">
             <Search size={16} className="text-[#B5B5B5]" />
             <input
@@ -96,9 +132,96 @@ export default function WorkspaceHero() {
             />
           </div>
 
-          <button type="button" className="cv-icon-btn" aria-label="Notificaciones">
+          <button type="button" className="cv-icon-btn relative" aria-label="Notificaciones" onClick={togglePanel}>
             <Bell size={16} />
+            {unreadCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full border border-rose-300/55 bg-rose-500 px-1 text-[10px] font-bold text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : null}
           </button>
+
+          {panelOpen ? (
+            <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0A111D]/95 p-3 shadow-[0_30px_80px_rgba(0,0,0,0.5)] backdrop-blur-md">
+              <div className="mb-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-white">Centro de notificaciones</p>
+                  <p className="text-xs text-white/60">{unreadCount} nueva{unreadCount === 1 ? "" : "s"} pendiente{unreadCount === 1 ? "" : "s"}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closePanel}
+                  className="rounded-lg border border-white/15 px-2 py-1 text-[11px] text-white/65 transition hover:border-white/35 hover:text-white"
+                >
+                  Cerrar
+                </button>
+              </div>
+
+              {visibleAlerts.length === 0 ? (
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/65">
+                  Sin alertas nuevas por ahora.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {visibleAlerts.map((alert) => {
+                    const isUnread = unreadIds.includes(alert.id);
+                    const freshness = getFreshnessTone(alert.freshnessState);
+                    const outcome = getOutcomeTone(alert.lifecycleState);
+                    return (
+                      <div key={alert.id} className="rounded-xl border border-white/10 bg-[#111B2B] p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-white">
+                              {alert.symbol} · {alert.direction}
+                            </p>
+                            <p className="text-[11px] text-white/65">{formatRelativeAgeLabel(alert.timestampMs)}</p>
+                          </div>
+                          {isUnread ? (
+                            <span className="inline-flex items-center rounded-full border border-rose-300/50 bg-rose-500/20 px-2 py-1 text-[10px] font-semibold text-rose-100">
+                              Nueva
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-semibold text-white/75">
+                              Vista
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${outcome.className}`}>
+                            {outcome.label}
+                          </span>
+                          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${freshness.className}`}>
+                            {freshness.label}
+                          </span>
+                          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/85">
+                            {alert.actionabilityLabel}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => markAlertViewed(alert.id)}
+                            className="rounded-lg border border-white/15 px-2.5 py-1.5 text-[11px] font-semibold text-white/75 transition hover:border-white/35 hover:text-white"
+                          >
+                            Marcar vista
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => viewAlertFromAnywhere(alert.id)}
+                            className="rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37] px-2.5 py-1.5 text-[11px] font-semibold text-black transition hover:brightness-105"
+                          >
+                            Ver ahora
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : null}
 
           <button type="button" className="cv-icon-btn" aria-label="Seguridad">
             <ShieldCheck size={16} />

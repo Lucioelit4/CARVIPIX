@@ -10,6 +10,11 @@ import { validateProfileForm } from '@/app/lib/form-validators';
 import DataSourceBanner from '@/app/components/DataSourceBanner';
 import BillingCenter from '@/app/perfil/components/BillingCenter';
 import IdentityVerificationCenter from '@/app/perfil/components/IdentityVerificationCenter';
+import {
+  readAlertPreferences,
+  setAlertNotificationsEnabled,
+  setAlertSoundEnabled,
+} from '@/app/lib/alerts-client-preferences';
 
 const DEFAULT_USER_DATA = {
   nombre: '',
@@ -25,6 +30,7 @@ const DEFAULT_PREFERENCES = {
   riesgoPreferido: 'Moderado',
   sesionFavorita: 'Nueva York',
   notificaciones: true,
+  sonidoAlertas: true,
 };
 
 export default function PerfilPage() {
@@ -38,7 +44,14 @@ export default function PerfilPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [userData, setUserData] = useState(DEFAULT_USER_DATA);
-  const [preferencias, setPreferencias] = useState(DEFAULT_PREFERENCES);
+  const [preferencias, setPreferencias] = useState(() => {
+    const snapshot = readAlertPreferences();
+    return {
+      ...DEFAULT_PREFERENCES,
+      notificaciones: snapshot.notificationsEnabled,
+      sonidoAlertas: snapshot.soundEnabled,
+    };
+  });
 
   // Load user data from localStorage and modules on mount
   useEffect(() => {
@@ -122,6 +135,8 @@ export default function PerfilPage() {
   const handleRestoreDefaults = () => {
     setUserData(DEFAULT_USER_DATA);
     setPreferencias(DEFAULT_PREFERENCES);
+    setAlertNotificationsEnabled(DEFAULT_PREFERENCES.notificaciones);
+    setAlertSoundEnabled(DEFAULT_PREFERENCES.sonidoAlertas);
     setProfileErrors({});
     setSaveMessage('✓ Datos de perfil restaurados.');
     setTimeout(() => setSaveMessage(''), 3000);
@@ -286,20 +301,20 @@ export default function PerfilPage() {
           transition={{ delay: 0.4 }}
           className="cv-card-muted rounded-2xl border border-white/10 p-8 mb-8"
         >
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold">Datos personales</h3>
-            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleRestoreDefaults}
                 title="Restaurar datos"
-                className="flex w-full items-center justify-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-sm text-white/60 transition-all hover:bg-white/10 hover:text-white/80 sm:w-auto"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white/80 transition-all text-sm"
               >
                 <RotateCcw size={16} />
                 Restaurar
               </button>
               <button
                 onClick={() => setEditMode(!editMode)}
-                className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 transition-all sm:w-auto ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                   editMode
                     ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                     : 'bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30'
@@ -425,7 +440,13 @@ export default function PerfilPage() {
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-white/70">Notificaciones</label>
                 <button
-                  onClick={() => setPreferencias((prev) => ({ ...prev, notificaciones: !prev.notificaciones }))}
+                  onClick={() => {
+                    setPreferencias((prev) => {
+                      const nextValue = !prev.notificaciones;
+                      setAlertNotificationsEnabled(nextValue);
+                      return { ...prev, notificaciones: nextValue };
+                    });
+                  }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     preferencias.notificaciones
                       ? 'bg-green-500/20 text-green-400'
@@ -433,6 +454,25 @@ export default function PerfilPage() {
                   }`}
                 >
                   {preferencias.notificaciones ? 'Activadas' : 'Desactivadas'}
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-white/70">Sonido de alertas</label>
+                <button
+                  onClick={() => {
+                    setPreferencias((prev) => {
+                      const nextValue = !prev.sonidoAlertas;
+                      setAlertSoundEnabled(nextValue);
+                      return { ...prev, sonidoAlertas: nextValue };
+                    });
+                  }}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    preferencias.sonidoAlertas
+                      ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
+                      : 'bg-white/10 text-white/60'
+                  }`}
+                >
+                  {preferencias.sonidoAlertas ? 'Activado' : 'Desactivado'}
                 </button>
               </div>
             </div>
@@ -499,11 +539,11 @@ export default function PerfilPage() {
                 <p className="text-lg font-bold text-green-400">{membership?.estado || 'Pendiente de activación'}</p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/checkout?product=plan-basic" className="w-full bg-white/10 text-center font-bold text-white transition-all hover:bg-white/20 sm:flex-1 rounded-lg py-2">
+            <div className="flex gap-3">
+              <Link href="/checkout?product=plan-basic" className="flex-1 bg-white/10 text-white font-bold py-2 rounded-lg hover:bg-white/20 transition-all text-center">
                 Ver planes
               </Link>
-              <Link href="/checkout?product=plan-basic" className="w-full bg-[#D4AF37] text-center font-bold text-[#030303] transition-all hover:bg-[#E5C158] sm:flex-1 rounded-lg py-2">
+              <Link href="/checkout?product=plan-basic" className="flex-1 bg-[#D4AF37] text-[#030303] font-bold py-2 rounded-lg hover:bg-[#E5C158] transition-all text-center">
                 Actualizar membresía
               </Link>
             </div>
