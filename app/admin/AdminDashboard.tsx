@@ -310,12 +310,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <main className="min-h-screen bg-[#080706] text-white">
       <header className="sticky top-0 z-40 border-b border-[#D4AF37]/20 bg-gradient-to-b from-[#17120a] to-[#080706]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-start gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <div>
-            <h1 className="text-2xl font-bold text-[#D4AF37]">CARVIPIX Administración</h1>
+            <h1 className="text-xl font-bold text-[#D4AF37] sm:text-2xl">CARVIPIX Administración</h1>
             <p className="text-xs text-white/60">Centro directivo empresarial</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
             <CARVIPIXButton variant="ghost" size="sm" onClick={() => void load()} disabled={loading || Boolean(busyAction)}>
               Actualizar
             </CARVIPIXButton>
