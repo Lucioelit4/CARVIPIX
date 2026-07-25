@@ -66,6 +66,10 @@ function playAlertSound(): void {
     return;
   }
 
+  const countKey = "__carvipixAlertSoundCount";
+  const currentCount = Number((window as typeof window & { [key: string]: unknown })[countKey] ?? 0);
+  (window as typeof window & { [key: string]: unknown })[countKey] = Number.isFinite(currentCount) ? currentCount + 1 : 1;
+
   const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextCtor) {
     return;

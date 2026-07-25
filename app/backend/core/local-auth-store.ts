@@ -131,6 +131,7 @@ type LocalStore = {
 };
 
 const STORE_PATH = path.join(process.cwd(), "data", "auth-state.json");
+let storeWriteQueue: Promise<void> = Promise.resolve();
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -153,7 +154,16 @@ async function ensureStoreDir() {
   await fs.mkdir(path.dirname(STORE_PATH), { recursive: true });
 }
 
-async function readStore(): Promise<LocalStore> {
+function enqueueStoreWrite<T>(operation: () => Promise<T>): Promise<T> {
+  const run = storeWriteQueue.then(operation, operation);
+  storeWriteQueue = run.then(
+    () => undefined,
+    () => undefined
+  );
+  return run;
+}
+
+async function readStoreUnsafe(): Promise<LocalStore> {
   await ensureStoreDir();
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -177,7 +187,7 @@ async function readStore(): Promise<LocalStore> {
       const maybeFsError = error as NodeJS.ErrnoException;
       if (maybeFsError?.code === "ENOENT") {
         const store = blankStore();
-        await writeStore(store);
+        await writeStoreUnsafe(store);
         return store;
       }
 
@@ -199,7 +209,7 @@ async function readStore(): Promise<LocalStore> {
   throw new Error("Auth store unavailable");
 }
 
-async function writeStore(store: LocalStore): Promise<void> {
+async function writeStoreUnsafe(store: LocalStore): Promise<void> {
   await ensureStoreDir();
   const payload = JSON.stringify(store, null, 2);
 
@@ -230,6 +240,20 @@ async function writeStore(store: LocalStore): Promise<void> {
       throw error;
     }
   }
+}
+
+async function readStore(): Promise<LocalStore> {
+  await storeWriteQueue;
+  return readStoreUnsafe();
+}
+
+async function mutateStore<T>(mutator: (store: LocalStore) => Promise<T> | T): Promise<T> {
+  return enqueueStoreWrite(async () => {
+    const store = await readStoreUnsafe();
+    const result = await mutator(store);
+    await writeStoreUnsafe(store);
+    return result;
+  });
 }
 
 function nowIso(): string {
@@ -361,49 +385,49 @@ export async function createUser(input: {
   telefono: string;
   pais: string;
 }): Promise<LocalUser> {
-  const store = await readStore();
-  const user: LocalUser = {
-    id: input.id,
-    email: input.email,
-    nombre: input.nombre,
-    apellido: input.apellido,
-    userType: "STANDARD",
-    userRole: "CLIENT",
-    excludeFromCommercialMetrics: false,
-    plan: "demo",
-    estado: "inactivo",
-    fechaActivacion: nowIso(),
-    fechaVencimiento: null,
-    verificado: false,
-    passwordHash: input.passwordHash,
-    telefono: input.telefono,
-    pais: input.pais,
-    createdAt: nowIso(),
-  };
-
-  store.users = [user, ...store.users.filter((existing) => existing.id !== user.id)];
-  store.memberships = [
-    {
-      userId: user.id,
+  return mutateStore(async (store) => {
+    const user: LocalUser = {
+      id: input.id,
+      email: input.email,
+      nombre: input.nombre,
+      apellido: input.apellido,
+      userType: "STANDARD",
+      userRole: "CLIENT",
+      excludeFromCommercialMetrics: false,
       plan: "demo",
       estado: "inactivo",
-      fechaInicio: nowIso(),
-      fechaFin: null,
-      renovacionAutomatica: false,
-    },
-    ...store.memberships.filter((existing) => existing.userId !== user.id),
-  ];
-  await writeStore(store);
-  return user;
+      fechaActivacion: nowIso(),
+      fechaVencimiento: null,
+      verificado: false,
+      passwordHash: input.passwordHash,
+      telefono: input.telefono,
+      pais: input.pais,
+      createdAt: nowIso(),
+    };
+
+    store.users = [user, ...store.users.filter((existing) => existing.id !== user.id)];
+    store.memberships = [
+      {
+        userId: user.id,
+        plan: "demo",
+        estado: "inactivo",
+        fechaInicio: nowIso(),
+        fechaFin: null,
+        renovacionAutomatica: false,
+      },
+      ...store.memberships.filter((existing) => existing.userId !== user.id),
+    ];
+    return user;
+  });
 }
 
 export async function updateUser(userId: string, patch: Partial<Pick<LocalUser, "plan" | "estado" | "fechaVencimiento" | "verificado">>) {
-  const store = await readStore();
-  const index = store.users.findIndex((user) => user.id === userId);
-  if (index >= 0) {
-    store.users[index] = { ...store.users[index], ...patch };
-    await writeStore(store);
-  }
+  await mutateStore(async (store) => {
+    const index = store.users.findIndex((user) => user.id === userId);
+    if (index >= 0) {
+      store.users[index] = { ...store.users[index], ...patch };
+    }
+  });
 }
 
 export async function findMembershipByUserId(userId: string): Promise<LocalMembership | null> {
@@ -419,37 +443,37 @@ export async function upsertMembership(input: {
   fechaFin?: string | null;
   renovacionAutomatica: boolean;
 }): Promise<LocalMembership> {
-  const store = await readStore();
-  const membership: LocalMembership = {
-    userId: input.userId,
-    plan: input.plan,
-    estado: input.estado,
-    fechaInicio: input.fechaInicio,
-    fechaFin: input.fechaFin ?? null,
-    renovacionAutomatica: input.renovacionAutomatica,
-  };
-  store.memberships = [membership, ...store.memberships.filter((existing) => existing.userId !== input.userId)];
-  await writeStore(store);
-  return membership;
+  return mutateStore(async (store) => {
+    const membership: LocalMembership = {
+      userId: input.userId,
+      plan: input.plan,
+      estado: input.estado,
+      fechaInicio: input.fechaInicio,
+      fechaFin: input.fechaFin ?? null,
+      renovacionAutomatica: input.renovacionAutomatica,
+    };
+    store.memberships = [membership, ...store.memberships.filter((existing) => existing.userId !== input.userId)];
+    return membership;
+  });
 }
 
 export async function createSession(userId: string, sessionHours = 12): Promise<{ token: string; expiresAt: Date }> {
-  const store = await readStore();
-  const token = createRawToken();
-  const tokenHash = hashToken(token);
-  const expiresAt = new Date(Date.now() + sessionHours * 60 * 60 * 1000);
-  store.sessions = [
-    {
-      tokenHash,
-      userId,
-      expiresAt: expiresAt.toISOString(),
-      createdAt: nowIso(),
-      lastSeenAt: nowIso(),
-    },
-    ...store.sessions.filter((session) => session.tokenHash !== tokenHash),
-  ];
-  await writeStore(store);
-  return { token, expiresAt };
+  return mutateStore(async (store) => {
+    const token = createRawToken();
+    const tokenHash = hashToken(token);
+    const expiresAt = new Date(Date.now() + sessionHours * 60 * 60 * 1000);
+    store.sessions = [
+      {
+        tokenHash,
+        userId,
+        expiresAt: expiresAt.toISOString(),
+        createdAt: nowIso(),
+        lastSeenAt: nowIso(),
+      },
+      ...store.sessions.filter((session) => session.tokenHash !== tokenHash),
+    ];
+    return { token, expiresAt };
+  });
 }
 
 export async function readSessionUser(token: string): Promise<LocalUser | null> {
@@ -465,10 +489,10 @@ export async function readSessionUser(token: string): Promise<LocalUser | null> 
 }
 
 export async function revokeSession(token: string): Promise<void> {
-  const store = await readStore();
-  const tokenHash = hashToken(token);
-  store.sessions = store.sessions.filter((session) => session.tokenHash !== tokenHash);
-  await writeStore(store);
+  await mutateStore(async (store) => {
+    const tokenHash = hashToken(token);
+    store.sessions = store.sessions.filter((session) => session.tokenHash !== tokenHash);
+  });
 }
 
 export async function listSessions(userId: string) {
@@ -477,68 +501,64 @@ export async function listSessions(userId: string) {
 }
 
 export async function revokeSessionByHash(userId: string, tokenHash: string): Promise<boolean> {
-  const store = await readStore();
-  const before = store.sessions.length;
-  store.sessions = store.sessions.filter((session) => !(session.userId === userId && session.tokenHash === tokenHash));
-  if (before === store.sessions.length) {
-    return false;
-  }
-
-  await writeStore(store);
-  return true;
+  return mutateStore(async (store) => {
+    const before = store.sessions.length;
+    store.sessions = store.sessions.filter((session) => !(session.userId === userId && session.tokenHash === tokenHash));
+    return before !== store.sessions.length;
+  });
 }
 
 export async function createVerificationToken(userId: string): Promise<string> {
-  const store = await readStore();
-  const token = createRawToken();
-  const tokenHash = hashToken(token);
-  store.verificationTokens = [
-    {
-      tokenHash,
-      userId,
-      expiresAt: nowPlusHours(2),
-      usedAt: null,
-      createdAt: nowIso(),
-    },
-    ...store.verificationTokens,
-  ];
-  await writeStore(store);
-  return token;
+  return mutateStore(async (store) => {
+    const token = createRawToken();
+    const tokenHash = hashToken(token);
+    store.verificationTokens = [
+      {
+        tokenHash,
+        userId,
+        expiresAt: nowPlusHours(2),
+        usedAt: null,
+        createdAt: nowIso(),
+      },
+      ...store.verificationTokens,
+    ];
+    return token;
+  });
 }
 
 export async function consumeVerificationToken(token: string): Promise<boolean> {
-  const store = await readStore();
-  const tokenHash = hashToken(token);
-  const entry = store.verificationTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
-  if (!entry) {
-    return false;
-  }
+  return mutateStore(async (store) => {
+    const tokenHash = hashToken(token);
+    const entry = store.verificationTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
+    if (!entry) {
+      return false;
+    }
 
-  entry.usedAt = nowIso();
-  const user = store.users.find((item) => item.id === entry.userId);
-  if (user) {
-    user.verificado = true;
-  }
-  await writeStore(store);
-  return true;
+    entry.usedAt = nowIso();
+    const user = store.users.find((item) => item.id === entry.userId);
+    if (user) {
+      user.verificado = true;
+    }
+    return true;
+  });
 }
 
 export async function createPasswordResetToken(userId: string): Promise<string> {
-  const store = await readStore();
-  const token = createRawToken();
-  const tokenHash = hashToken(token);
-  store.passwordResetTokens = [
-    {
-      tokenHash,
-      userId,
-      expiresAt: nowPlusHours(2),
-      usedAt: null,
-      createdAt: nowIso(),
-    },
-    ...store.passwordResetTokens,
-  ];
-  await writeStore(store);
-  return token;
+  return mutateStore(async (store) => {
+    const token = createRawToken();
+    const tokenHash = hashToken(token);
+    store.passwordResetTokens = [
+      {
+        tokenHash,
+        userId,
+        expiresAt: nowPlusHours(2),
+        usedAt: null,
+        createdAt: nowIso(),
+      },
+      ...store.passwordResetTokens,
+    ];
+    return token;
+  });
 }
 
 export async function listVerificationTokenMetadata(userId: string): Promise<LocalTokenMetadata[]> {
@@ -604,20 +624,20 @@ export async function resolvePasswordResetTokenRecipient(token: string): Promise
 }
 
 export async function consumePasswordResetToken(token: string, newPasswordHash: string): Promise<boolean> {
-  const store = await readStore();
-  const tokenHash = hashToken(token);
-  const entry = store.passwordResetTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
-  if (!entry) {
-    return false;
-  }
+  return mutateStore(async (store) => {
+    const tokenHash = hashToken(token);
+    const entry = store.passwordResetTokens.find((item) => item.tokenHash === tokenHash && !item.usedAt && new Date(item.expiresAt) > new Date());
+    if (!entry) {
+      return false;
+    }
 
-  entry.usedAt = nowIso();
-  const user = store.users.find((item) => item.id === entry.userId);
-  if (user) {
-    user.passwordHash = newPasswordHash;
-  }
-  await writeStore(store);
-  return true;
+    entry.usedAt = nowIso();
+    const user = store.users.find((item) => item.id === entry.userId);
+    if (user) {
+      user.passwordHash = newPasswordHash;
+    }
+    return true;
+  });
 }
 
 export async function listUsers() {
@@ -631,9 +651,9 @@ export async function listPayments() {
 }
 
 export async function recordPayment(input: LocalPayment) {
-  const store = await readStore();
-  store.payments = [input, ...store.payments.filter((payment) => payment.id !== input.id)];
-  await writeStore(store);
+  await mutateStore(async (store) => {
+    store.payments = [input, ...store.payments.filter((payment) => payment.id !== input.id)];
+  });
 }
 
 export async function listBillingProfiles(userId: string): Promise<LocalBillingProfile[]> {
@@ -642,25 +662,25 @@ export async function listBillingProfiles(userId: string): Promise<LocalBillingP
 }
 
 export async function upsertBillingProfile(input: LocalBillingProfile): Promise<LocalBillingProfile> {
-  const store = await readStore();
-  const updatedAt = nowIso();
-  const existing = store.billingProfiles.find((item) => item.id === input.id);
+  return mutateStore(async (store) => {
+    const updatedAt = nowIso();
+    const existing = store.billingProfiles.find((item) => item.id === input.id);
 
-  if (input.isDefault) {
-    store.billingProfiles = store.billingProfiles.map((item) =>
-      item.userId === input.userId ? { ...item, isDefault: false, updatedAt } : item
-    );
-  }
+    if (input.isDefault) {
+      store.billingProfiles = store.billingProfiles.map((item) =>
+        item.userId === input.userId ? { ...item, isDefault: false, updatedAt } : item
+      );
+    }
 
-  const profile: LocalBillingProfile = {
-    ...input,
-    createdAt: existing?.createdAt ?? input.createdAt ?? updatedAt,
-    updatedAt,
-  };
+    const profile: LocalBillingProfile = {
+      ...input,
+      createdAt: existing?.createdAt ?? input.createdAt ?? updatedAt,
+      updatedAt,
+    };
 
-  store.billingProfiles = [profile, ...store.billingProfiles.filter((item) => item.id !== input.id)];
-  await writeStore(store);
-  return profile;
+    store.billingProfiles = [profile, ...store.billingProfiles.filter((item) => item.id !== input.id)];
+    return profile;
+  });
 }
 
 export async function listPaymentMethodReferences(userId: string): Promise<LocalPaymentMethodReference[]> {
@@ -669,84 +689,78 @@ export async function listPaymentMethodReferences(userId: string): Promise<Local
 }
 
 export async function upsertPaymentMethodReference(input: LocalPaymentMethodReference): Promise<LocalPaymentMethodReference> {
-  const store = await readStore();
-  const updatedAt = nowIso();
-  const existing = store.paymentMethodReferences.find((item) => item.id === input.id);
+  return mutateStore(async (store) => {
+    const updatedAt = nowIso();
+    const existing = store.paymentMethodReferences.find((item) => item.id === input.id);
 
-  if (input.isDefault) {
-    store.paymentMethodReferences = store.paymentMethodReferences.map((item) =>
-      item.userId === input.userId ? { ...item, isDefault: false, updatedAt } : item
-    );
-  }
+    if (input.isDefault) {
+      store.paymentMethodReferences = store.paymentMethodReferences.map((item) =>
+        item.userId === input.userId ? { ...item, isDefault: false, updatedAt } : item
+      );
+    }
 
-  const methodReference: LocalPaymentMethodReference = {
-    ...input,
-    createdAt: existing?.createdAt ?? input.createdAt ?? updatedAt,
-    updatedAt,
-  };
+    const methodReference: LocalPaymentMethodReference = {
+      ...input,
+      createdAt: existing?.createdAt ?? input.createdAt ?? updatedAt,
+      updatedAt,
+    };
 
-  store.paymentMethodReferences = [
-    methodReference,
-    ...store.paymentMethodReferences.filter((item) => item.id !== input.id),
-  ];
-  await writeStore(store);
-  return methodReference;
+    store.paymentMethodReferences = [
+      methodReference,
+      ...store.paymentMethodReferences.filter((item) => item.id !== input.id),
+    ];
+    return methodReference;
+  });
 }
 
 export async function deletePaymentMethodReference(userId: string, id: string): Promise<boolean> {
-  const store = await readStore();
-  const before = store.paymentMethodReferences.length;
-  store.paymentMethodReferences = store.paymentMethodReferences.filter((item) => !(item.id === id && item.userId === userId));
-
-  if (before === store.paymentMethodReferences.length) {
-    return false;
-  }
-
-  await writeStore(store);
-  return true;
+  return mutateStore(async (store) => {
+    const before = store.paymentMethodReferences.length;
+    store.paymentMethodReferences = store.paymentMethodReferences.filter((item) => !(item.id === id && item.userId === userId));
+    return before !== store.paymentMethodReferences.length;
+  });
 }
 
 export async function seedDemoStore() {
-  const store = await readStore();
-  if (store.users.length > 0) {
-    // Ensure founder policy is applied even when store already exists.
-    upsertFounderAccount(store);
-    await writeStore(store);
-    return;
-  }
+  await mutateStore(async (store) => {
+    if (store.users.length > 0) {
+      // Ensure founder policy is applied even when store already exists.
+      upsertFounderAccount(store);
+      return;
+    }
 
-  const demoUserId = "demo-client";
-  const demoUser: LocalUser = {
-    id: demoUserId,
-    email: "demo@carvipix.local",
-    nombre: "Cliente",
-    apellido: "Demo",
-    userType: "STANDARD",
-    userRole: "CLIENT",
-    excludeFromCommercialMetrics: false,
-    plan: "demo",
-    estado: "inactivo",
-    fechaActivacion: nowIso(),
-    fechaVencimiento: null,
-    verificado: true,
-    passwordHash: hashPassword("Demo1234!"),
-    telefono: "0000000000",
-    pais: "MX",
-    createdAt: nowIso(),
-  };
-
-  store.users = [demoUser];
-  store.memberships = [
-    {
-      userId: demoUserId,
+    const demoUserId = "demo-client";
+    const demoUser: LocalUser = {
+      id: demoUserId,
+      email: "demo@carvipix.local",
+      nombre: "Cliente",
+      apellido: "Demo",
+      userType: "STANDARD",
+      userRole: "CLIENT",
+      excludeFromCommercialMetrics: false,
       plan: "demo",
       estado: "inactivo",
-      fechaInicio: nowIso(),
-      fechaFin: null,
-      renovacionAutomatica: false,
-    },
-  ];
+      fechaActivacion: nowIso(),
+      fechaVencimiento: null,
+      verificado: true,
+      passwordHash: hashPassword("Demo1234!"),
+      telefono: "0000000000",
+      pais: "MX",
+      createdAt: nowIso(),
+    };
 
-  upsertFounderAccount(store);
-  await writeStore(store);
+    store.users = [demoUser];
+    store.memberships = [
+      {
+        userId: demoUserId,
+        plan: "demo",
+        estado: "inactivo",
+        fechaInicio: nowIso(),
+        fechaFin: null,
+        renovacionAutomatica: false,
+      },
+    ];
+
+    upsertFounderAccount(store);
+  });
 }

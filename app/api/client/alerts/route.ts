@@ -4,6 +4,12 @@ import { CommercialAccessError, FeatureAccessGuard } from "@/app/backend/commerc
 import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { listAlertHistory } from "@/app/backend/commercial/portal-service";
 import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
+import {
+  getAlertsQaPayload,
+  isAlertsQaAlertId,
+  isAlertsQaModeEnabled,
+  recordAlertsQaAction,
+} from "@/app/backend/services/alerts-qa-dataset";
 import { requireClientSession } from "@/app/api/client/_auth";
 
 export async function GET(request: NextRequest) {
@@ -29,7 +35,12 @@ export async function GET(request: NextRequest) {
       ecosystemServices.alerts.getAlertRules(auth.user.id),
       listAlertHistory(auth.user.id, commercialAccess.entitlements.historyLimit),
     ]);
-    const deliveredToday = alerts.length;
+
+    const qaPayload = isAlertsQaModeEnabled() ? getAlertsQaPayload(auth.user.id) : null;
+    const resolvedAlerts = qaPayload ? qaPayload.alerts : alerts;
+    const resolvedStats = qaPayload ? qaPayload.stats : stats;
+    const resolvedHistory = qaPayload ? qaPayload.history : history;
+    const deliveredToday = resolvedAlerts.length;
 
     return NextResponse.json(
       {
@@ -40,10 +51,10 @@ export async function GET(request: NextRequest) {
             createdToday: deliveredToday,
             remainingToday: Math.max(0, commercialAccess.entitlements.maxAlertsPerDay - deliveredToday),
           },
-          alerts,
-          stats,
+          alerts: resolvedAlerts,
+          stats: resolvedStats,
           rules,
-          history,
+          history: resolvedHistory,
         },
       },
       { status: 200 }
@@ -105,6 +116,20 @@ export async function POST(request: NextRequest) {
       if (!alertId) {
         return NextResponse.json({ error: "alertId es requerido" }, { status: 400 });
       }
+
+      if (isAlertsQaModeEnabled() && isAlertsQaAlertId(alertId)) {
+        recordAlertsQaAction(auth.user.id, alertId, action);
+        await recordCommercialAuditEvent({
+          userId: auth.user.id,
+          actorType: "client",
+          action: `alerts.${action}`,
+          resource: alertId,
+          result: "success",
+          metadata: { source: "qa-dataset" },
+        });
+        return NextResponse.json({ ok: true }, { status: 200 });
+      }
+
       await ecosystemServices.alerts.logAlertAction(auth.user.id, alertId, action);
       await recordCommercialAuditEvent({ userId: auth.user.id, actorType: "client", action: `alerts.${action}`, resource: alertId, result: "success" });
       return NextResponse.json({ ok: true }, { status: 200 });

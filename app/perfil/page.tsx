@@ -146,6 +146,18 @@ export default function PerfilPage() {
     setUserData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const toggleAlertNotifications = () => {
+    const nextValue = !preferencias.notificaciones;
+    setPreferencias((prev) => ({ ...prev, notificaciones: nextValue }));
+    setAlertNotificationsEnabled(nextValue);
+  };
+
+  const toggleAlertSound = () => {
+    const nextValue = !preferencias.sonidoAlertas;
+    setPreferencias((prev) => ({ ...prev, sonidoAlertas: nextValue }));
+    setAlertSoundEnabled(nextValue);
+  };
+
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">
@@ -440,13 +452,7 @@ export default function PerfilPage() {
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-white/70">Notificaciones</label>
                 <button
-                  onClick={() => {
-                    setPreferencias((prev) => {
-                      const nextValue = !prev.notificaciones;
-                      setAlertNotificationsEnabled(nextValue);
-                      return { ...prev, notificaciones: nextValue };
-                    });
-                  }}
+                  onClick={toggleAlertNotifications}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     preferencias.notificaciones
                       ? 'bg-green-500/20 text-green-400'
@@ -459,13 +465,7 @@ export default function PerfilPage() {
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-white/70">Sonido de alertas</label>
                 <button
-                  onClick={() => {
-                    setPreferencias((prev) => {
-                      const nextValue = !prev.sonidoAlertas;
-                      setAlertSoundEnabled(nextValue);
-                      return { ...prev, sonidoAlertas: nextValue };
-                    });
-                  }}
+                  onClick={toggleAlertSound}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     preferencias.sonidoAlertas
                       ? 'bg-[#D4AF37]/20 text-[#D4AF37]'
