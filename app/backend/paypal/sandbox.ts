@@ -656,7 +656,10 @@ async function upsertPayPalSubscription(input: {
         status = EXCLUDED.status,
       environment = EXCLUDED.environment,
         start_date = COALESCE(EXCLUDED.start_date, paypal_subscriptions.start_date),
-        next_billing_date = COALESCE(EXCLUDED.next_billing_date, paypal_subscriptions.next_billing_date),
+        next_billing_date = CASE
+          WHEN EXCLUDED.status = 'CANCELLED' THEN NULL
+          ELSE COALESCE(EXCLUDED.next_billing_date, paypal_subscriptions.next_billing_date)
+        END,
         cancelled_at = COALESCE(EXCLUDED.cancelled_at, paypal_subscriptions.cancelled_at),
         updated_at = NOW()
     `,
@@ -746,7 +749,10 @@ async function upsertBillingRecordBySubscription(input: {
         email = EXCLUDED.email,
         updated_at = NOW(),
         last_payment_at = COALESCE(EXCLUDED.last_payment_at, paypal_billing_records.last_payment_at),
-        next_billing_time = COALESCE(EXCLUDED.next_billing_time, paypal_billing_records.next_billing_time)
+        next_billing_time = CASE
+          WHEN EXCLUDED.status = 'cancelled' THEN NULL
+          ELSE COALESCE(EXCLUDED.next_billing_time, paypal_billing_records.next_billing_time)
+        END
     `,
     [
       createId("pprec"),
