@@ -53,6 +53,7 @@ async function loadExecutiveSnapshot() {
     usersResult,
     paymentsResult,
     supportResult,
+    botLicensesResult,
   ] = await Promise.all([
     backendDatabase.query<{
       id: string;
@@ -161,6 +162,31 @@ async function loadExecutiveSnapshot() {
       LIMIT 200
       `
     ),
+    backendDatabase.query<{
+      user_id: string;
+      email: string;
+      nombre: string;
+      apellido: string;
+      bot_active: boolean;
+      membership_plan: string | null;
+      membership_state: string | null;
+    }>(
+      `
+      SELECT
+        u.id AS user_id,
+        u.email,
+        u.nombre,
+        u.apellido,
+        (bl.active = true AND (bl.expiry_date IS NULL OR bl.expiry_date > NOW())) AS bot_active,
+        m.plan AS membership_plan,
+        m.estado AS membership_state
+      FROM bot_licenses bl
+      INNER JOIN users u ON u.id = bl.user_id
+      LEFT JOIN memberships m ON m.user_id = u.id
+      WHERE COALESCE(u.exclude_from_commercial_metrics, false) = false
+      ORDER BY bl.purchase_date DESC, u.id DESC
+      `
+    ),
   ]);
 
   const brainStatus = masterEventDispatcher.getBrainStatus();
@@ -267,6 +293,15 @@ async function loadExecutiveSnapshot() {
     adminReply: row.admin_reply,
   }));
 
+  const botLicenses = botLicensesResult.rows.map((row) => ({
+    userId: row.user_id,
+    name: `${row.nombre ?? ''} ${row.apellido ?? ''}`.trim() || row.email,
+    email: row.email,
+    botActive: row.bot_active,
+    membershipPlan: String(row.membership_plan ?? 'sin-plan').toLowerCase(),
+    membershipStatus: String(row.membership_state ?? 'inactivo').toLowerCase(),
+  }));
+
   return {
     overview,
     clients,
@@ -275,6 +310,7 @@ async function loadExecutiveSnapshot() {
     failedPayments,
     service,
     support,
+    botLicenses,
   };
 }
 

@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, AlertCircle, CheckCircle2, CreditCard, LifeBuoy, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, CreditCard, LifeBuoy, LogOut, ShieldCheck, Users } from 'lucide-react';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
-type TabType = 'inicio' | 'clientes' | 'membresias' | 'pagos' | 'servicio' | 'soporte';
+type TabType = 'inicio' | 'clientes' | 'membresias' | 'bots' | 'pagos' | 'servicio' | 'soporte';
 
 type Overview = {
   registeredPeople: number;
@@ -46,6 +46,15 @@ type MembershipRow = {
   currency: string | null;
 };
 
+type BotLicenseRow = {
+  userId: string;
+  name: string;
+  email: string;
+  botActive: boolean;
+  membershipPlan: string;
+  membershipStatus: string;
+};
+
 type PaymentRow = {
   orderId: string;
   userId: string;
@@ -81,6 +90,7 @@ type ExecutivePayload = {
   overview: Overview;
   clients: ClientRow[];
   memberships: MembershipRow[];
+  botLicenses: BotLicenseRow[];
   payments: PaymentRow[];
   failedPayments: PaymentRow[];
   service: ServiceSnapshot;
@@ -123,7 +133,10 @@ function waitingTime(value: string): string {
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<TabType>('inicio');
+  const tabParam = searchParams.get('tab') as TabType | null;
+  const activeTab: TabType = tabParam && ['inicio', 'clientes', 'membresias', 'bots', 'pagos', 'servicio', 'soporte'].includes(tabParam)
+    ? tabParam
+    : 'inicio';
   const [payload, setPayload] = useState<ExecutivePayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState<string | null>(null);
@@ -132,13 +145,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<SupportRow | null>(null);
   const [supportReply, setSupportReply] = useState('');
-
-  useEffect(() => {
-    const tabParam = searchParams.get('tab') as TabType | null;
-    if (tabParam && ['inicio', 'clientes', 'membresias', 'pagos', 'servicio', 'soporte'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
-  }, [searchParams]);
 
   async function load() {
     setLoading(true);
@@ -168,7 +174,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   }, []);
 
   function handleTabChange(tab: TabType) {
-    setActiveTab(tab);
     router.push(`?tab=${tab}`, { scroll: false });
   }
 
@@ -238,6 +243,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       { id: 'inicio', label: 'Inicio', icon: <Activity className="h-4 w-4" /> },
       { id: 'clientes', label: 'Clientes', icon: <Users className="h-4 w-4" /> },
       { id: 'membresias', label: 'Membresías', icon: <ShieldCheck className="h-4 w-4" /> },
+      { id: 'bots', label: 'Bots activos', icon: <Bot className="h-4 w-4" /> },
       { id: 'pagos', label: 'Pagos', icon: <CreditCard className="h-4 w-4" /> },
       { id: 'servicio', label: 'Servicio', icon: <CheckCircle2 className="h-4 w-4" /> },
       { id: 'soporte', label: 'Soporte', icon: <LifeBuoy className="h-4 w-4" /> },
@@ -411,6 +417,43 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <td className="px-4 py-3 text-sm text-white/80">{formatDate(membership.startedAt)}</td>
                         <td className="px-4 py-3 text-sm text-white/80">{formatDate(membership.nextRenewalAt)}</td>
                         <td className="px-4 py-3 text-sm text-white/80">{membership.lastPaymentAt ? `${formatDate(membership.lastPaymentAt)} · ${formatMoney(membership.lastPaymentAmount, membership.currency)}` : 'Sin actividad registrada.'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CARVIPIXCard>
+        )}
+
+        {!loading && payload && activeTab === 'bots' && (
+          <CARVIPIXCard variant="admin" padding="16" hover={false}>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b border-white/10 bg-white/5">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs text-white/60">Nombre</th>
+                    <th className="px-4 py-3 text-left text-xs text-white/60">Correo</th>
+                    <th className="px-4 py-3 text-left text-xs text-white/60">Bot</th>
+                    <th className="px-4 py-3 text-left text-xs text-white/60">Membresía actual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payload.botLicenses.length === 0 ? (
+                    <tr><td className="px-4 py-6 text-sm text-white/60" colSpan={4}>No hay compradores del bot registrados.</td></tr>
+                  ) : (
+                    payload.botLicenses.map((license) => (
+                      <tr key={license.userId} className="border-b border-white/5">
+                        <td className="px-4 py-3 text-sm text-white">{license.name}</td>
+                        <td className="px-4 py-3 text-sm text-white/80">{license.email}</td>
+                        <td className="px-4 py-3">
+                          <CARVIPIXBadge variant={license.botActive ? 'success' : 'warning'}>
+                            {license.botActive ? 'Activo' : 'No activo'}
+                          </CARVIPIXBadge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-white/80">
+                          {license.membershipPlan} · {license.membershipStatus}
+                        </td>
                       </tr>
                     ))
                   )}
