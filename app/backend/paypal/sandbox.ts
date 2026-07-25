@@ -272,7 +272,7 @@ export function mapPayPalToMembershipStatus(statusRaw: string | null | undefined
   return "PENDING";
 }
 
-async function ensurePayPalTables(): Promise<void> {
+export async function ensurePayPalTables(): Promise<void> {
   if (!backendDatabase.enabled) {
     throw new Error("DATABASE_URL no configurado");
   }
@@ -314,6 +314,26 @@ async function ensurePayPalTables(): Promise<void> {
           created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
           processed_at TIMESTAMPTZ
         );
+
+        CREATE TABLE IF NOT EXISTS paypal_payment_transactions (
+          id TEXT PRIMARY KEY,
+          paypal_transaction_id TEXT NOT NULL UNIQUE,
+          paypal_subscription_id TEXT NOT NULL,
+          user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          product_id TEXT NOT NULL,
+          status TEXT NOT NULL,
+          currency CHAR(3) NOT NULL,
+          gross_amount NUMERIC(14, 2) NOT NULL,
+          fee_amount NUMERIC(14, 2),
+          net_amount NUMERIC(14, 2),
+          payer_email TEXT,
+          paid_at TIMESTAMPTZ NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_paypal_payment_transactions_user_paid
+          ON paypal_payment_transactions (user_id, paid_at DESC);
 
         CREATE TABLE IF NOT EXISTS paypal_products (
           id TEXT PRIMARY KEY,
@@ -757,6 +777,87 @@ async function findRecordByOrderId(orderId: string): Promise<PayPalRecordRow | n
   );
 
   return result.rows[0] ?? null;
+}
+
+export async function reconcilePayPalSubscriptionTransactions(input: {
+  subscriptionId: string;
+  userId: string;
+}): Promise<{ discovered: number; stored: number }> {
+  const existing = await findRecordBySubscriptionId(input.subscriptionId);
+  if (!existing || existing.user_id !== input.userId) {
+    throw new Error("Suscripcion no encontrada para conciliacion");
+  }
+
+  const now = new Date();
+  let windowStart = new Date(existing.created_at.getTime() - 24 * 60 * 60 * 1000);
+  let discovered = 0;
+  let stored = 0;
+
+  while (windowStart < now) {
+    const windowEnd = new Date(Math.min(now.getTime(), windowStart.getTime() + 30 * 24 * 60 * 60 * 1000));
+    const response = await callPayPal<{
+      transactions?: Array<{
+        id?: string;
+        status?: string;
+        time?: string;
+        payer_email?: string;
+        amount_with_breakdown?: {
+          gross_amount?: { currency_code?: string; value?: string };
+          fee_amount?: { currency_code?: string; value?: string };
+          net_amount?: { currency_code?: string; value?: string };
+        };
+      }>;
+    }>(
+      `/v1/billing/subscriptions/${encodeURIComponent(input.subscriptionId)}/transactions` +
+        `?start_time=${encodeURIComponent(windowStart.toISOString())}&end_time=${encodeURIComponent(windowEnd.toISOString())}`,
+      { method: "GET" }
+    );
+
+    for (const transaction of response.data.transactions ?? []) {
+      const transactionId = String(transaction.id ?? "").trim();
+      const paidAt = transaction.time ? new Date(transaction.time) : null;
+      const gross = Number(transaction.amount_with_breakdown?.gross_amount?.value);
+      const currency = String(transaction.amount_with_breakdown?.gross_amount?.currency_code ?? existing.currency).toUpperCase();
+      if (!transactionId || !paidAt || Number.isNaN(paidAt.getTime()) || !Number.isFinite(gross)) {
+        continue;
+      }
+
+      discovered += 1;
+      const result = await backendDatabase.query<{ paypal_transaction_id: string }>(
+        `
+        INSERT INTO paypal_payment_transactions (
+          id, paypal_transaction_id, paypal_subscription_id, user_id, product_id,
+          status, currency, gross_amount, fee_amount, net_amount, payer_email, paid_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (paypal_transaction_id) DO NOTHING
+        RETURNING paypal_transaction_id
+        `,
+        [
+          createId("pptx"),
+          transactionId,
+          input.subscriptionId,
+          existing.user_id,
+          existing.product_id,
+          String(transaction.status ?? "UNKNOWN").toUpperCase(),
+          currency,
+          gross,
+          transaction.amount_with_breakdown?.fee_amount?.value
+            ? Number(transaction.amount_with_breakdown.fee_amount.value)
+            : null,
+          transaction.amount_with_breakdown?.net_amount?.value
+            ? Number(transaction.amount_with_breakdown.net_amount.value)
+            : null,
+          transaction.payer_email ?? existing.email,
+          paidAt,
+        ]
+      );
+      stored += result.rows.length;
+    }
+
+    windowStart = new Date(windowEnd.getTime() + 1000);
+  }
+
+  return { discovered, stored };
 }
 
 async function findRecordBySubscriptionId(subscriptionId: string): Promise<PayPalRecordRow | null> {

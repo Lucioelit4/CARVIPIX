@@ -4,6 +4,7 @@ import { backendDatabase } from '@/app/backend/core/database';
 import { masterEventDispatcher } from '@/app/backend/services/master-event-dispatcher';
 import { recordCommercialAuditEvent } from '@/app/backend/commercial/audit-store';
 import { isValidAdminSession } from '@/app/lib/auth/admin-server';
+import { ensurePayPalTables } from '@/app/backend/paypal/sandbox';
 
 type ExecutiveAction =
   | 'suspend-client'
@@ -48,6 +49,7 @@ function mapServiceState(brainState: string): 'ACTIVO' | 'SUSPENDIDO' {
 
 async function loadExecutiveSnapshot() {
   ensureDatabaseEnabled();
+  await ensurePayPalTables();
 
   const [
     usersResult,
@@ -92,11 +94,35 @@ async function loadExecutiveSnapshot() {
       FROM users u
       LEFT JOIN memberships m ON m.user_id = u.id
       LEFT JOIN LATERAL (
-        SELECT po.created_at, po.amount_total, po.currency
-        FROM payment_orders po
-        WHERE po.user_id = u.id
-          AND po.order_status IN ('paid', 'captured', 'completed', 'settled')
-        ORDER BY po.created_at DESC
+        SELECT paid_at AS created_at, amount_total, currency
+        FROM (
+          SELECT COALESCE(pt.captured_at, pt.settled_at, po.created_at) AS paid_at,
+                 po.amount_total, po.currency
+          FROM payment_orders po
+          LEFT JOIN LATERAL (
+            SELECT captured_at, settled_at
+            FROM payment_transactions
+            WHERE payment_order_id = po.id
+            ORDER BY created_at DESC
+            LIMIT 1
+          ) pt ON true
+          WHERE po.user_id = u.id
+            AND po.order_status IN ('paid', 'captured', 'completed', 'settled')
+          UNION ALL
+          SELECT ppt.paid_at, ppt.gross_amount, ppt.currency
+          FROM paypal_payment_transactions ppt
+          WHERE ppt.user_id = u.id AND ppt.status = 'COMPLETED'
+          UNION ALL
+          SELECT pbr.last_payment_at, pbr.amount, pbr.currency
+          FROM paypal_billing_records pbr
+          WHERE pbr.user_id = u.id
+            AND pbr.last_payment_at IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM paypal_payment_transactions ppt
+              WHERE ppt.paypal_subscription_id = pbr.paypal_subscription_id
+            )
+        ) payment_history
+        ORDER BY paid_at DESC
         LIMIT 1
       ) p_last ON true
       WHERE COALESCE(u.exclude_from_commercial_metrics, false) = false
@@ -104,35 +130,110 @@ async function loadExecutiveSnapshot() {
       `
     ),
     backendDatabase.query<{
-      order_id: string;
+      payment_id: string;
       user_id: string;
       client_name: string;
       email: string;
-      amount_total: number;
+      gross_amount: number;
+      fee_amount: number | null;
+      net_amount: number | null;
+      refunded_amount: number;
       currency: string;
-      created_at: Date;
-      order_status: string;
+      paid_at: Date;
+      payment_status: string;
+      provider: string;
+      provider_transaction_id: string | null;
+      provider_subscription_id: string | null;
+      product_id: string;
       membership_plan: string | null;
+      membership_state: string | null;
       membership_end: Date | null;
+      auto_renew: boolean | null;
+      subscription_status: string | null;
+      cancelled_at: Date | null;
+      failure_reason: string | null;
+      source: string;
     }>(
       `
+      WITH canonical_payments AS (
+        SELECT
+          po.id AS payment_id, po.user_id, po.amount_total AS gross_amount,
+          NULL::numeric AS fee_amount,
+          GREATEST(po.amount_total - COALESCE(pt.amount_refunded, 0), 0) AS net_amount,
+          COALESCE(pt.amount_refunded, 0) AS refunded_amount,
+          po.currency, COALESCE(pt.captured_at, pt.settled_at, pt.failed_at, po.created_at) AS paid_at,
+          COALESCE(pt.status, po.order_status) AS payment_status,
+          COALESCE(pt.provider, po.provider_preferred, 'custom') AS provider,
+          pt.provider_payment_id AS provider_transaction_id,
+          ps.provider_subscription_id, po.product_id,
+          pt.failure_reason, 'payment_orders'::text AS source
+        FROM payment_orders po
+        LEFT JOIN LATERAL (
+          SELECT provider, provider_payment_id, status, amount_refunded, captured_at, settled_at, failed_at, failure_reason
+          FROM payment_transactions
+          WHERE payment_order_id = po.id
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) pt ON true
+        LEFT JOIN LATERAL (
+          SELECT provider_subscription_id
+          FROM payment_subscriptions
+          WHERE user_id = po.user_id AND product_id = po.product_id
+          ORDER BY updated_at DESC
+          LIMIT 1
+        ) ps ON true
+      ),
+      paypal_payments AS (
+        SELECT
+          ppt.id AS payment_id, ppt.user_id, ppt.gross_amount, ppt.fee_amount, ppt.net_amount,
+          0::numeric AS refunded_amount, ppt.currency, ppt.paid_at,
+          LOWER(ppt.status) AS payment_status, 'paypal'::text AS provider,
+          ppt.paypal_transaction_id AS provider_transaction_id,
+          ppt.paypal_subscription_id AS provider_subscription_id,
+          ppt.product_id, NULL::text AS failure_reason,
+          'paypal_payment_transactions'::text AS source
+        FROM paypal_payment_transactions ppt
+      ),
+      paypal_unreconciled AS (
+        SELECT
+          pbr.id AS payment_id, pbr.user_id, pbr.amount AS gross_amount,
+          NULL::numeric AS fee_amount, NULL::numeric AS net_amount,
+          0::numeric AS refunded_amount, pbr.currency, pbr.last_payment_at AS paid_at,
+          'reconciliation_pending'::text AS payment_status, 'paypal'::text AS provider,
+          pbr.paypal_order_id AS provider_transaction_id,
+          pbr.paypal_subscription_id AS provider_subscription_id,
+          pbr.product_id, NULL::text AS failure_reason,
+          'paypal_billing_records'::text AS source
+        FROM paypal_billing_records pbr
+        WHERE pbr.last_payment_at IS NOT NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM paypal_payment_transactions ppt
+            WHERE ppt.paypal_subscription_id = pbr.paypal_subscription_id
+          )
+      ),
+      ledger AS (
+        SELECT * FROM canonical_payments
+        UNION ALL SELECT * FROM paypal_payments
+        UNION ALL SELECT * FROM paypal_unreconciled
+      )
       SELECT
-        po.id AS order_id,
-        po.user_id,
+        ledger.*,
         CONCAT(COALESCE(u.nombre, ''), ' ', COALESCE(u.apellido, '')) AS client_name,
         u.email,
-        po.amount_total,
-        po.currency,
-        po.created_at,
-        po.order_status,
         m.plan AS membership_plan,
-        m.fecha_fin AS membership_end
-      FROM payment_orders po
-      INNER JOIN users u ON u.id = po.user_id
-      LEFT JOIN memberships m ON m.user_id = po.user_id
+        m.estado AS membership_state,
+        m.fecha_fin AS membership_end,
+        m.renovacion_automatica AS auto_renew,
+        COALESCE(pps.status, ps.status) AS subscription_status,
+        COALESCE(pps.cancelled_at, ps.cancelled_at) AS cancelled_at
+      FROM ledger
+      INNER JOIN users u ON u.id = ledger.user_id
+      LEFT JOIN memberships m ON m.user_id = ledger.user_id
+      LEFT JOIN paypal_subscriptions pps ON pps.paypal_subscription_id = ledger.provider_subscription_id
+      LEFT JOIN payment_subscriptions ps ON ps.provider_subscription_id = ledger.provider_subscription_id
       WHERE COALESCE(u.exclude_from_commercial_metrics, false) = false
-      ORDER BY po.created_at DESC
-      LIMIT 300
+      ORDER BY ledger.paid_at DESC
+      LIMIT 1000
       `
     ),
     backendDatabase.query<{
@@ -200,10 +301,10 @@ async function loadExecutiveSnapshot() {
   );
 
   const monthRevenue = paymentsResult.rows
-    .filter((row) => row.created_at >= monthStart && ['paid', 'captured', 'completed', 'settled'].includes(row.order_status.toLowerCase()))
-    .reduce((sum, row) => sum + Number(row.amount_total ?? 0), 0);
+    .filter((row) => row.paid_at >= monthStart && ['paid', 'captured', 'completed', 'settled'].includes(row.payment_status.toLowerCase()))
+    .reduce((sum, row) => sum + Number(row.gross_amount ?? 0), 0);
 
-  const failedPaymentsCount = paymentsResult.rows.filter((row) => ['failed', 'cancelled', 'chargeback', 'expired'].includes(row.order_status.toLowerCase())).length;
+  const failedPaymentsCount = paymentsResult.rows.filter((row) => ['failed', 'payment_failed', 'declined', 'chargeback'].includes(row.payment_status.toLowerCase())).length;
 
   const openSupportCount = supportResult.rows.filter((row) => row.status !== 'closed' && row.status !== 'resolved').length;
 
@@ -261,19 +362,35 @@ async function loadExecutiveSnapshot() {
   }));
 
   const payments = paymentsResult.rows.map((row) => ({
-    orderId: row.order_id,
+    paymentId: row.payment_id,
     userId: row.user_id,
     client: String(row.client_name).trim() || row.email,
     email: row.email,
-    amount: Number(row.amount_total),
+    grossAmount: Number(row.gross_amount),
+    feeAmount: row.fee_amount === null ? null : Number(row.fee_amount),
+    netAmount: row.net_amount === null ? null : Number(row.net_amount),
+    refundedAmount: Number(row.refunded_amount ?? 0),
     currency: row.currency,
-    plan: String(row.membership_plan ?? 'sin-plan').toLowerCase(),
-    createdAt: row.created_at.toISOString(),
-    status: row.order_status,
-    nextRenewalAt: row.membership_end ? row.membership_end.toISOString() : null,
+    plan: String(row.membership_plan ?? row.product_id ?? 'sin-plan').toLowerCase(),
+    productId: row.product_id,
+    paidAt: row.paid_at.toISOString(),
+    paymentStatus: row.payment_status,
+    provider: row.provider,
+    providerTransactionId: row.provider_transaction_id,
+    providerSubscriptionId: row.provider_subscription_id,
+    membershipStatus: String(row.membership_state ?? 'inactivo').toLowerCase(),
+    renewalStatus: row.auto_renew
+      ? 'active'
+      : String(row.subscription_status ?? '').toLowerCase() === 'cancelled'
+        ? 'cancelled_at_period_end'
+        : 'provider_action_required',
+    validUntil: row.membership_end ? row.membership_end.toISOString() : null,
+    cancelledAt: row.cancelled_at ? row.cancelled_at.toISOString() : null,
+    failureReason: row.failure_reason,
+    source: row.source,
   }));
 
-  const failedPayments = payments.filter((row) => ['failed', 'cancelled', 'chargeback', 'expired'].includes(row.status.toLowerCase()));
+  const failedPayments = payments.filter((row) => ['failed', 'payment_failed', 'declined', 'chargeback'].includes(row.paymentStatus.toLowerCase()));
 
   const service: ServiceSnapshot = {
     serviceState,

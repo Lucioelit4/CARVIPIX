@@ -33,6 +33,11 @@ export type BillingDependencies = {
       params?: Array<string | number | boolean | Date | null | string[]>
     ) => Promise<{ rows: T[] }>;
   };
+  cancelSubscription?: (input: {
+    subscriptionId: string;
+    userId: string;
+    reason: string;
+  }) => Promise<unknown>;
 };
 
 function createId(prefix: string): string {
@@ -491,14 +496,46 @@ export function createBillingHandlers(deps: BillingDependencies) {
       try {
         if (action === "toggleAutoRenew") {
           const enabled = Boolean(payload.enabled);
-          await deps.db.query(
+          if (enabled) {
+            return NextResponse.json(
+              { error: "Para reactivar la renovacion inicia una nueva suscripcion con el proveedor" },
+              { status: 409 }
+            );
+          }
+
+          const subscriptionResult = await deps.db.query<{
+            payment_subscription_id: string | null;
+            paypal_subscription_id: string | null;
+          }>(
             `
-            UPDATE memberships
-            SET renovacion_automatica = $2
-            WHERE user_id = $1
+            SELECT m.payment_subscription_id, ps.paypal_subscription_id
+            FROM memberships m
+            LEFT JOIN LATERAL (
+              SELECT paypal_subscription_id
+              FROM paypal_subscriptions
+              WHERE user_id = m.user_id
+              ORDER BY updated_at DESC
+              LIMIT 1
+            ) ps ON true
+            WHERE m.user_id = $1
+            LIMIT 1
             `,
-            [auth.user.id, enabled]
+            [auth.user.id]
           );
+          const subscription = subscriptionResult.rows[0];
+          const subscriptionId = subscription?.payment_subscription_id ?? subscription?.paypal_subscription_id;
+          if (!subscriptionId) {
+            return NextResponse.json({ error: "No hay una suscripcion activa para cancelar" }, { status: 409 });
+          }
+          if (!deps.cancelSubscription) {
+            throw new Error("Cancelacion con proveedor no configurada");
+          }
+
+          await deps.cancelSubscription({
+            subscriptionId,
+            userId: auth.user.id,
+            reason: "Cancelacion solicitada desde el centro de facturacion",
+          });
 
           const data = await getBillingSnapshot(auth.user.id, deps);
           return NextResponse.json({ ok: true, data }, { status: 200 });

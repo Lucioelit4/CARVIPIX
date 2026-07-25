@@ -80,6 +80,12 @@ function createBaseDbForSnapshot(overrides?: {
 
   return createMockDb([
     (sql) => {
+      if (sql.includes("SELECT m.payment_subscription_id")) {
+        return [{ payment_subscription_id: "sub_001", paypal_subscription_id: "sub_001" }];
+      }
+      return null;
+    },
+    (sql) => {
       if (sql.includes("FROM users u") && sql.includes("LEFT JOIN memberships")) {
         return [
           {
@@ -495,8 +501,9 @@ test("POST updateBillingProfile rejects invalid fiscal email", async () => {
   assert.equal(response.status, 400);
 });
 
-test("POST toggleAutoRenew supports cancellation and reactivation", async () => {
+test("POST toggleAutoRenew cancels with the provider before refreshing local state", async () => {
   const db = createBaseDbForSnapshot();
+  const cancellations: Array<{ subscriptionId: string; userId: string }> = [];
   const handlers = createBillingHandlers({
     requireAuth: createMockAuth("user-renew"),
     resolveAccess: async () => ({
@@ -505,6 +512,9 @@ test("POST toggleAutoRenew supports cancellation and reactivation", async () => 
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    cancelSubscription: async (input) => {
+      cancellations.push(input);
+    },
   });
 
   const cancelResponse = await handlers.POST(
@@ -515,18 +525,8 @@ test("POST toggleAutoRenew supports cancellation and reactivation", async () => 
     })
   );
   assert.equal(cancelResponse.status, 200);
-
-  const reactivateResponse = await handlers.POST(
-    createRequest("http://localhost:3000/api/client/billing", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "toggleAutoRenew", payload: { enabled: true } }),
-    })
-  );
-  assert.equal(reactivateResponse.status, 200);
-
-  const renewUpdates = db.calls.filter((call) => call.sql.includes("UPDATE memberships") && call.sql.includes("renovacion_automatica"));
-  assert.equal(renewUpdates.length >= 2, true);
+  assert.equal(cancellations[0]?.subscriptionId, "sub_001");
+  assert.equal(cancellations[0]?.userId, "user-renew");
 });
 
 test("POST ignores attempted cross-user modification by always using authenticated user", async () => {
@@ -566,6 +566,7 @@ test("POST ignores attempted cross-user modification by always using authenticat
 
 test("POST toggleAutoRenew ignores payload userId and updates only authenticated user membership", async () => {
   const db = createBaseDbForSnapshot();
+  const cancellations: Array<{ subscriptionId: string; userId: string }> = [];
   const handlers = createBillingHandlers({
     requireAuth: createMockAuth("user-membership-owner"),
     resolveAccess: async () => ({
@@ -574,6 +575,9 @@ test("POST toggleAutoRenew ignores payload userId and updates only authenticated
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    cancelSubscription: async (input) => {
+      cancellations.push(input);
+    },
   });
 
   const response = await handlers.POST(
@@ -591,8 +595,7 @@ test("POST toggleAutoRenew ignores payload userId and updates only authenticated
   );
 
   assert.equal(response.status, 200);
-  const membershipUpdate = db.calls.find((call) => call.sql.includes("UPDATE memberships") && call.sql.includes("renovacion_automatica"));
-  assert.equal(membershipUpdate?.params[0], "user-membership-owner");
+  assert.equal(cancellations[0]?.userId, "user-membership-owner");
 });
 
 test("GET returns 500 when database query fails", async () => {

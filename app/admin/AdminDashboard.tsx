@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Activity, Bot, CheckCircle2, CreditCard, LifeBuoy, LogOut, ShieldCheck, Users } from 'lucide-react';
+import { Activity, Bot, CheckCircle2, CreditCard, Eye, LifeBuoy, LogOut, ShieldCheck, Users } from 'lucide-react';
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from '@/app/design-system';
 
 type TabType = 'inicio' | 'clientes' | 'membresias' | 'bots' | 'pagos' | 'servicio' | 'soporte';
@@ -56,16 +56,28 @@ type BotLicenseRow = {
 };
 
 type PaymentRow = {
-  orderId: string;
+  paymentId: string;
   userId: string;
   client: string;
   email: string;
-  amount: number;
+  grossAmount: number;
+  feeAmount: number | null;
+  netAmount: number | null;
+  refundedAmount: number;
   currency: string;
   plan: string;
-  createdAt: string;
-  status: string;
-  nextRenewalAt: string | null;
+  productId: string;
+  paidAt: string;
+  paymentStatus: string;
+  provider: string;
+  providerTransactionId: string | null;
+  providerSubscriptionId: string | null;
+  membershipStatus: string;
+  renewalStatus: 'active' | 'cancelled_at_period_end' | 'provider_action_required';
+  validUntil: string | null;
+  cancelledAt: string | null;
+  failureReason: string | null;
+  source: string;
 };
 
 type ServiceSnapshot = {
@@ -130,6 +142,21 @@ function waitingTime(value: string): string {
   return `${hours} h ${mins} min`;
 }
 
+function paymentStatusLabel(status: string): string {
+  const normalized = status.toLowerCase();
+  if (['paid', 'captured', 'completed', 'settled'].includes(normalized)) return 'Completado';
+  if (normalized === 'reconciliation_pending') return 'Pendiente de conciliación';
+  if (['refunded', 'partially_refunded'].includes(normalized)) return 'Reembolsado';
+  if (['failed', 'payment_failed', 'declined', 'chargeback'].includes(normalized)) return 'Fallido';
+  return status;
+}
+
+function renewalStatusLabel(status: PaymentRow['renewalStatus']): string {
+  if (status === 'active') return 'Renovación activa';
+  if (status === 'cancelled_at_period_end') return 'No renovará';
+  return 'Requiere acción en proveedor';
+}
+
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -144,7 +171,34 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientRow | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<SupportRow | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentRow | null>(null);
   const [supportReply, setSupportReply] = useState('');
+  const [paymentDateFrom, setPaymentDateFrom] = useState('');
+  const [paymentDateTo, setPaymentDateTo] = useState('');
+
+  const filteredPayments = useMemo(() => {
+    const from = paymentDateFrom ? new Date(`${paymentDateFrom}T00:00:00`).getTime() : null;
+    const to = paymentDateTo ? new Date(`${paymentDateTo}T23:59:59.999`).getTime() : null;
+    return (payload?.payments ?? []).filter((payment) => {
+      const paidAt = new Date(payment.paidAt).getTime();
+      return Number.isFinite(paidAt) && (from === null || paidAt >= from) && (to === null || paidAt <= to);
+    });
+  }, [payload?.payments, paymentDateFrom, paymentDateTo]);
+
+  const paymentTotals = useMemo(() => {
+    const completed = filteredPayments.filter((payment) =>
+      ['paid', 'captured', 'completed', 'settled'].includes(payment.paymentStatus.toLowerCase())
+    );
+    return completed.reduce(
+      (totals, payment) => ({
+        gross: totals.gross + payment.grossAmount,
+        fees: totals.fees + (payment.feeAmount ?? 0),
+        net: totals.net + (payment.netAmount ?? 0),
+        refunds: totals.refunds + payment.refundedAmount,
+      }),
+      { gross: 0, fees: 0, net: 0, refunds: 0 }
+    );
+  }, [filteredPayments]);
 
   async function load() {
     setLoading(true);
@@ -465,32 +519,56 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {!loading && payload && activeTab === 'pagos' && (
           <div className="space-y-4">
+            <div className="flex flex-wrap items-end gap-3 border-b border-white/10 pb-4">
+              <label className="grid gap-1 text-xs text-white/60">
+                Desde
+                <input type="date" value={paymentDateFrom} onChange={(event) => setPaymentDateFrom(event.target.value)} className="h-10 rounded-md border border-white/15 bg-black/30 px-3 text-sm text-white" />
+              </label>
+              <label className="grid gap-1 text-xs text-white/60">
+                Hasta
+                <input type="date" value={paymentDateTo} onChange={(event) => setPaymentDateTo(event.target.value)} className="h-10 rounded-md border border-white/15 bg-black/30 px-3 text-sm text-white" />
+              </label>
+              <CARVIPIXButton variant="ghost" size="sm" onClick={() => { setPaymentDateFrom(''); setPaymentDateTo(''); }}>Limpiar fechas</CARVIPIXButton>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60">Ingresos brutos</p><p className="mt-2 text-2xl font-bold text-white">{formatMoney(paymentTotals.gross, 'USD')}</p></CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60">Comisiones</p><p className="mt-2 text-2xl font-bold text-white">{formatMoney(paymentTotals.fees, 'USD')}</p></CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60">Ingreso neto</p><p className="mt-2 text-2xl font-bold text-emerald-300">{formatMoney(paymentTotals.net, 'USD')}</p></CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false}><p className="text-xs text-white/60">Reembolsos</p><p className="mt-2 text-2xl font-bold text-amber-300">{formatMoney(paymentTotals.refunds, 'USD')}</p></CARVIPIXCard>
+            </div>
+
             <CARVIPIXCard variant="admin" padding="16" hover={false}>
-              <h3 className="mb-3 text-lg font-semibold">Pagos registrados</h3>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="text-lg font-semibold">Historial de pagos</h3>
+                <span className="text-xs text-white/55">{filteredPayments.length} registro(s)</span>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="border-b border-white/10 bg-white/5">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs text-white/60">Cliente</th>
-                      <th className="px-4 py-3 text-left text-xs text-white/60">Monto</th>
-                      <th className="px-4 py-3 text-left text-xs text-white/60">Plan</th>
                       <th className="px-4 py-3 text-left text-xs text-white/60">Fecha</th>
+                      <th className="px-4 py-3 text-left text-xs text-white/60">Cliente</th>
+                      <th className="px-4 py-3 text-left text-xs text-white/60">Bruto / neto</th>
+                      <th className="px-4 py-3 text-left text-xs text-white/60">Plan</th>
                       <th className="px-4 py-3 text-left text-xs text-white/60">Estado</th>
-                      <th className="px-4 py-3 text-left text-xs text-white/60">Próxima renovación</th>
+                      <th className="px-4 py-3 text-left text-xs text-white/60">Renovación / vigencia</th>
+                      <th className="w-14 px-4 py-3 text-left text-xs text-white/60">Detalle</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {payload.payments.length === 0 ? (
-                      <tr><td className="px-4 py-6 text-sm text-white/60" colSpan={6}>Sin actividad registrada.</td></tr>
+                    {filteredPayments.length === 0 ? (
+                      <tr><td className="px-4 py-6 text-sm text-white/60" colSpan={7}>No hay pagos reales para el periodo seleccionado.</td></tr>
                     ) : (
-                      payload.payments.map((payment) => (
-                        <tr key={payment.orderId} className="border-b border-white/5">
-                          <td className="px-4 py-3 text-sm text-white">{payment.client}</td>
-                          <td className="px-4 py-3 text-sm text-white/80">{formatMoney(payment.amount, payment.currency)}</td>
+                      filteredPayments.map((payment) => (
+                        <tr key={payment.paymentId} className="border-b border-white/5 align-top">
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-white/80">{formatDate(payment.paidAt)}</td>
+                          <td className="px-4 py-3 text-sm text-white"><p>{payment.client}</p><p className="text-xs text-white/50">{payment.email}</p></td>
+                          <td className="whitespace-nowrap px-4 py-3 text-sm text-white/80"><p>{formatMoney(payment.grossAmount, payment.currency)}</p><p className="text-xs text-white/50">Neto: {payment.netAmount === null ? 'Por conciliar' : formatMoney(payment.netAmount, payment.currency)}</p></td>
                           <td className="px-4 py-3 text-sm text-white/80">{payment.plan}</td>
-                          <td className="px-4 py-3 text-sm text-white/80">{formatDate(payment.createdAt)}</td>
-                          <td className="px-4 py-3"><CARVIPIXBadge variant={['paid', 'captured', 'completed', 'settled'].includes(payment.status.toLowerCase()) ? 'success' : 'warning'}>{payment.status}</CARVIPIXBadge></td>
-                          <td className="px-4 py-3 text-sm text-white/80">{formatDate(payment.nextRenewalAt)}</td>
+                          <td className="px-4 py-3"><CARVIPIXBadge variant={['paid', 'captured', 'completed', 'settled'].includes(payment.paymentStatus.toLowerCase()) ? 'success' : payment.paymentStatus === 'reconciliation_pending' ? 'warning' : 'danger'}>{paymentStatusLabel(payment.paymentStatus)}</CARVIPIXBadge></td>
+                          <td className="px-4 py-3 text-sm text-white/80"><p>{renewalStatusLabel(payment.renewalStatus)}</p><p className="text-xs text-white/50">Hasta {formatDate(payment.validUntil)}</p></td>
+                          <td className="px-4 py-3"><button type="button" title="Ver detalle de venta" aria-label="Ver detalle de venta" onClick={() => setSelectedPayment(payment)} className="grid h-9 w-9 place-items-center rounded-md border border-white/15 text-white/75 hover:bg-white/10"><Eye className="h-4 w-4" /></button></td>
                         </tr>
                       ))
                     )}
@@ -498,6 +576,31 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </table>
               </div>
             </CARVIPIXCard>
+
+            {selectedPayment && (
+              <CARVIPIXCard variant="admin" padding="16" hover={false}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="text-lg font-semibold">Detalle de venta</h3>
+                  <CARVIPIXButton size="sm" variant="ghost" onClick={() => setSelectedPayment(null)}>Cerrar</CARVIPIXButton>
+                </div>
+                <div className="grid gap-x-8 gap-y-3 text-sm text-white/75 md:grid-cols-2 xl:grid-cols-3">
+                  <p><span className="text-white">Cliente:</span> {selectedPayment.client} · {selectedPayment.email}</p>
+                  <p><span className="text-white">Fecha:</span> {formatDate(selectedPayment.paidAt)}</p>
+                  <p><span className="text-white">Proveedor:</span> {selectedPayment.provider}</p>
+                  <p><span className="text-white">Transacción:</span> {selectedPayment.providerTransactionId ?? 'Pendiente de conciliación'}</p>
+                  <p><span className="text-white">Suscripción:</span> {selectedPayment.providerSubscriptionId ?? 'No aplica'}</p>
+                  <p><span className="text-white">Producto:</span> {selectedPayment.productId}</p>
+                  <p><span className="text-white">Bruto:</span> {formatMoney(selectedPayment.grossAmount, selectedPayment.currency)}</p>
+                  <p><span className="text-white">Comisión:</span> {selectedPayment.feeAmount === null ? 'Pendiente de conciliación' : formatMoney(selectedPayment.feeAmount, selectedPayment.currency)}</p>
+                  <p><span className="text-white">Neto:</span> {selectedPayment.netAmount === null ? 'Pendiente de conciliación' : formatMoney(selectedPayment.netAmount, selectedPayment.currency)}</p>
+                  <p><span className="text-white">Pago:</span> {paymentStatusLabel(selectedPayment.paymentStatus)}</p>
+                  <p><span className="text-white">Membresía:</span> {selectedPayment.membershipStatus}</p>
+                  <p><span className="text-white">Vigencia:</span> {formatDate(selectedPayment.validUntil)}</p>
+                  <p><span className="text-white">Renovación:</span> {renewalStatusLabel(selectedPayment.renewalStatus)}</p>
+                  <p><span className="text-white">Cancelación proveedor:</span> {formatDate(selectedPayment.cancelledAt)}</p>
+                </div>
+              </CARVIPIXCard>
+            )}
 
             <CARVIPIXCard variant="admin" padding="16" hover={false}>
               <h3 className="mb-3 text-lg font-semibold">Pagos fallidos</h3>
@@ -516,11 +619,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </thead>
                     <tbody>
                       {payload.failedPayments.map((payment) => (
-                        <tr key={payment.orderId} className="border-b border-white/5">
+                        <tr key={payment.paymentId} className="border-b border-white/5">
                           <td className="px-4 py-3 text-sm text-white">{payment.client}</td>
-                          <td className="px-4 py-3 text-sm text-white/80">{formatMoney(payment.amount, payment.currency)}</td>
-                          <td className="px-4 py-3 text-sm text-white/80">{formatDate(payment.createdAt)}</td>
-                          <td className="px-4 py-3"><CARVIPIXBadge variant="danger">{payment.status}</CARVIPIXBadge></td>
+                          <td className="px-4 py-3 text-sm text-white/80">{formatMoney(payment.grossAmount, payment.currency)}</td>
+                          <td className="px-4 py-3 text-sm text-white/80">{formatDate(payment.paidAt)}</td>
+                          <td className="px-4 py-3"><CARVIPIXBadge variant="danger">{paymentStatusLabel(payment.paymentStatus)}</CARVIPIXBadge><p className="mt-1 text-xs text-white/50">{payment.failureReason ?? 'Sin detalle del proveedor'}</p></td>
                         </tr>
                       ))}
                     </tbody>
