@@ -54,7 +54,6 @@ export function CommunityAnalysisFeed() {
                 {publication.labels.map((label) => <span key={label}>{label}</span>)}
               </div>
               <p className="mt-2 line-clamp-4 text-sm leading-6 text-white/65">{publication.content.body}</p>
-              <p className="mt-3 border-t border-white/10 pt-3 text-xs text-[#D4AF37]/80">{publication.content.disclaimer}</p>
             </div>
           </article>
         ))}
