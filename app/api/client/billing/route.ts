@@ -1,4 +1,5 @@
 import { requireClientSession } from "@/app/api/client/_auth";
+import { hasInternalOwnerAccess } from "@/app/backend/commercial/owner-access";
 import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
 import { backendDatabase } from "@/app/backend/core/database";
 import { cancelPayPalSubscription } from "@/app/backend/paypal/sandbox";
@@ -10,6 +11,7 @@ const handlers = createBillingHandlers({
   resolveAccess: resolveUserCommercialAccess,
   db: backendDatabase,
   cancelSubscription: cancelPayPalSubscription,
+  isInternalOwner: hasInternalOwnerAccess,
 });
 
 export const GET = handlers.GET;

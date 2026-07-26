@@ -38,6 +38,8 @@ export type BillingDependencies = {
     userId: string;
     reason: string;
   }) => Promise<unknown>;
+  isInternalOwner: (userId: string) => Promise<boolean>;
+  isInternalOwner: (userId: string) => Promise<boolean>;
 };
 
 function createId(prefix: string): string {
@@ -180,8 +182,9 @@ function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-export async function getBillingSnapshot(userId: string, deps: Pick<BillingDependencies, "resolveAccess" | "db">) {
+export async function getBillingSnapshot(userId: string, deps: Pick<BillingDependencies, "resolveAccess" | "db" | "isInternalOwner">) {
   const access = await deps.resolveAccess(userId);
+  const isInternalOwner = await deps.isInternalOwner(userId);
 
   const membershipResult = await deps.db.query<{
     user_plan: string;
@@ -300,7 +303,7 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
     [userId]
   );
 
-  const timeline = [
+  const timeline = isInternalOwner ? [] : [
     ...paymentsResult.rows.map((row) => {
       const transactionId = row.provider_payment_id ?? row.order_id;
       return {
@@ -424,9 +427,9 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
       state: normalizedState,
       stateLabel: labelForMembershipState(normalizedState),
       startDate: startIso,
-      nextChargeDate: nextChargeIso,
+      nextChargeDate: isInternalOwner ? null : nextChargeIso,
       expiryDate: expiryIso,
-      autoRenew: Boolean(membershipRow?.renovacion_automatica),
+      autoRenew: isInternalOwner ? false : Boolean(membershipRow?.renovacion_automatica),
       daysRemaining: daysRemaining(expiryIso),
       accessKeepsUntil: expiryIso,
       benefits: [
@@ -435,13 +438,13 @@ export async function getBillingSnapshot(userId: string, deps: Pick<BillingDepen
         `Bots permitidos: ${access.entitlements.maxBots}`,
         `Historial operativo: ${access.entitlements.historyLimit}`,
       ],
-      subscriptionId: membershipRow?.payment_subscription_id ?? membershipRow?.paypal_subscription_id ?? null,
+      subscriptionId: isInternalOwner ? null : membershipRow?.payment_subscription_id ?? membershipRow?.paypal_subscription_id ?? null,
     },
     paymentHistory: dedupedPayments,
     billingProfile: fiscal,
     paymentMethod: {
-      activeMethod: latestMethod ? mapPaymentMethod(latestMethod.payment_type ?? latestMethod.provider) : fallbackMethod,
-      status: latestMethod?.status ?? "active",
+      activeMethod: isInternalOwner ? "Owner" : latestMethod ? mapPaymentMethod(latestMethod.payment_type ?? latestMethod.provider) : fallbackMethod,
+      status: isInternalOwner ? "owner_exempt" : latestMethod?.status ?? "active",
       last4: latestMethod?.last4 ?? null,
       updatedAt: toIso(latestMethod?.updated_at ?? null),
       brand: latestMethod?.brand ?? null,

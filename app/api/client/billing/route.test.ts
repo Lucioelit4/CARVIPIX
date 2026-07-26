@@ -39,6 +39,10 @@ function createUnauthorizedAuth() {
   });
 }
 
+function createInternalOwnerCheck(value = false) {
+  return async () => value;
+}
+
 function createMockDb(handlers: Array<(sql: string, params: unknown[]) => MockRow[] | null>, opts?: { throwOnQuery?: boolean }) {
   const calls: DbQueryCall[] = [];
 
@@ -243,6 +247,7 @@ test("GET billing rejects unauthenticated user", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -259,6 +264,7 @@ test("GET billing returns pending state when user has no membership", async () =
       entitlements: { maxAlertsPerDay: 0, maxPairs: 0, maxBots: 0, historyLimit: 0 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -279,6 +285,7 @@ test("GET billing returns active membership state", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 3, historyLimit: 50 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -297,6 +304,7 @@ test("GET billing returns suspended membership state", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -314,6 +322,7 @@ test("GET billing returns cancelled membership state", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -331,6 +340,7 @@ test("GET billing returns expired membership state", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -348,6 +358,7 @@ test("GET billing handles empty payment history", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -399,6 +410,7 @@ test("GET billing returns multiple payment records", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -417,6 +429,7 @@ test("POST updateBillingProfile updates fiscal data", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
@@ -449,6 +462,7 @@ test("POST updateBillingProfile rejects invalid RFC", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
@@ -480,6 +494,7 @@ test("POST updateBillingProfile rejects invalid fiscal email", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
@@ -515,6 +530,11 @@ test("POST toggleAutoRenew cancels with the provider before refreshing local sta
     cancelSubscription: async (input) => {
       cancellations.push(input);
     },
+    isInternalOwner: createInternalOwnerCheck(),
+    cancelSubscription: async (input) => {
+      cancellations.push(input);
+    },
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const cancelResponse = await handlers.POST(
@@ -529,6 +549,63 @@ test("POST toggleAutoRenew cancels with the provider before refreshing local sta
   assert.equal(cancellations[0]?.userId, "user-renew");
 });
 
+test("GET billing hides payment history and subscription metadata for internal owner", async () => {
+  const db = createBaseDbForSnapshot({
+    paymentHistoryRows: [
+      {
+        order_id: "ord_owner_001",
+        product_id: "bot-carvipix-999",
+        concept: "Bot CARVIPIX",
+        amount_total: 999,
+        currency: "USD",
+        order_status: "pending_provider",
+        requested_method: "wallet",
+        provider_payment_id: "txn_owner_001",
+        transaction_status: "initiated",
+        created_at: new Date(),
+        paid_at: null,
+      },
+    ],
+    paypalRows: [
+      {
+        paypal_order_id: null,
+        paypal_subscription_id: "I-OWNER123",
+        product_id: "plan-basic-monthly",
+        amount: 19.99,
+        currency: "USD",
+        status: "pending",
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ],
+  });
+  const handlers = createBillingHandlers({
+    requireAuth: createMockAuth("user-owner"),
+    resolveAccess: async () => ({
+      subscriptionPlan: "advanced",
+      membershipActive: true,
+      entitlements: { maxAlertsPerDay: 20, maxPairs: 50, maxBots: 3, historyLimit: 180 },
+    }) as never,
+    db: db as never,
+    isInternalOwner: createInternalOwnerCheck(true),
+  });
+
+  const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
+  assert.equal(response.status, 200);
+  const payload = await parseJson(response);
+  const data = payload.data as Record<string, unknown>;
+  const membership = data.membership as Record<string, unknown>;
+  const paymentHistory = extractPaymentHistory(payload);
+  const paymentMethod = data.paymentMethod as Record<string, unknown>;
+
+  assert.equal(paymentHistory.length, 0);
+  assert.equal(membership.subscriptionId, null);
+  assert.equal(membership.nextChargeDate, null);
+  assert.equal(membership.autoRenew, false);
+  assert.equal(paymentMethod.activeMethod, "Owner");
+  assert.equal(paymentMethod.status, "owner_exempt");
+});
+
 test("POST ignores attempted cross-user modification by always using authenticated user", async () => {
   const db = createBaseDbForSnapshot();
   const handlers = createBillingHandlers({
@@ -539,6 +616,7 @@ test("POST ignores attempted cross-user modification by always using authenticat
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
@@ -578,6 +656,11 @@ test("POST toggleAutoRenew ignores payload userId and updates only authenticated
     cancelSubscription: async (input) => {
       cancellations.push(input);
     },
+    isInternalOwner: createInternalOwnerCheck(),
+    cancelSubscription: async (input) => {
+      cancellations.push(input);
+    },
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
@@ -608,6 +691,7 @@ test("GET returns 500 when database query fails", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.GET(createRequest("http://localhost:3000/api/client/billing"));
@@ -624,6 +708,7 @@ test("POST setPaymentMethod does not persist fake method changes", async () => {
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
+    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const response = await handlers.POST(
