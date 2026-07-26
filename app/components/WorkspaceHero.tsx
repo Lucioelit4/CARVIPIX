@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useGlobalAlertsCenter } from "./alerts/GlobalAlertsCenterProvider";
 import { formatRelativeAgeLabel, getFreshnessTone, getOutcomeTone } from "@/app/alertas/alertas-view-model";
+import InstallTraderButton from "./pwa/InstallTraderButton";
 
 const routeTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
@@ -226,6 +227,7 @@ export default function WorkspaceHero() {
           <button type="button" className="cv-icon-btn" aria-label="Seguridad">
             <ShieldCheck size={16} />
           </button>
+          <InstallTraderButton compact />
         </div>
       </div>
     </section>

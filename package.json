@@ -97,7 +97,8 @@
     "recharts": "^3.9.1",
     "resend": "^6.17.2",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -106,6 +107,7 @@
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",

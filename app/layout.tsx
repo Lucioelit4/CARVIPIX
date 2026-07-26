@@ -27,6 +27,7 @@ const SITE_URL = "https://carvipix.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  manifest: "/manifest.webmanifest",
   title: {
     default: "CARVIPIX — Plataforma Profesional de Trading",
     template: "%s | CARVIPIX",
@@ -88,6 +89,11 @@ export const metadata: Metadata = {
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION ?? undefined,
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "CARVIPIX Trader",
   },
 };
 

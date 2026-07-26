@@ -563,3 +563,41 @@ a.cv-button {
   border-color: rgba(212, 175, 55, 0.48);
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.18);
 }
+
+@keyframes trader-page-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes trader-splash-pulse {
+  0%,
+  100% {
+    opacity: 0.82;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cv-trader-shell {
+  background:
+    radial-gradient(circle at 10% -10%, rgba(212, 175, 55, 0.12), transparent 30%),
+    radial-gradient(circle at 90% 0%, rgba(36, 70, 120, 0.2), transparent 32%),
+    #030303;
+}
+
+.cv-trader-page {
+  animation: trader-page-fade 260ms ease-out;
+}
+
+.cv-trader-splash {
+  animation: trader-splash-pulse 520ms ease-in-out;
+}

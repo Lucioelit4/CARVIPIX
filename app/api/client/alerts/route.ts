@@ -4,6 +4,7 @@ import { CommercialAccessError, FeatureAccessGuard } from "@/app/backend/commerc
 import { recordCommercialAuditEvent } from "@/app/backend/commercial/audit-store";
 import { listAlertHistory } from "@/app/backend/commercial/portal-service";
 import { resolveUserCommercialAccess } from "@/app/backend/commercial/plan-entitlements-store";
+import { dispatchAlertPushes } from "@/app/backend/services/pwa-push-service";
 import {
   getAlertsQaPayload,
   isAlertsQaAlertId,
@@ -41,6 +42,20 @@ export async function GET(request: NextRequest) {
     const resolvedStats = qaPayload ? qaPayload.stats : stats;
     const resolvedHistory = qaPayload ? qaPayload.history : history;
     const deliveredToday = resolvedAlerts.length;
+
+    const viewedAlertIds = new Set(
+      (Array.isArray(resolvedHistory) ? resolvedHistory : [])
+        .filter((item) => item && typeof item === "object")
+        .filter((item) => String((item as { action?: unknown }).action ?? "") === "viewed")
+        .map((item) => String((item as { alertId?: unknown }).alertId ?? "").trim())
+        .filter(Boolean)
+    );
+
+    void dispatchAlertPushes({
+      userId: auth.user.id,
+      alerts: Array.isArray(resolvedAlerts) ? resolvedAlerts : [],
+      viewedAlertIds,
+    }).catch(() => undefined);
 
     return NextResponse.json(
       {
