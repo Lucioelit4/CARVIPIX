@@ -88,17 +88,17 @@ export default function InstallTraderButton({ compact = false }: InstallTraderBu
           : "rounded-xl border border-[#D4AF37]/45 bg-[#D4AF37] px-4 py-2.5 text-sm font-semibold text-black"
         }
       >
-        {hasPrompt ? "Instalar CARVIPIX Trader" : "Como instalar"}
+        {hasPrompt ? "Descargar aplicación CARVIPIX" : "Descargar aplicación CARVIPIX"}
       </button>
 
       {showIosHelp ? (
         <div className="fixed inset-0 z-[120] grid place-items-center bg-black/70 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#101010] p-5">
-            <p className="text-sm font-semibold text-[#D4AF37]">Instalacion en iPhone</p>
+            <p className="text-sm font-semibold text-[#D4AF37]">Descarga en iPhone</p>
             <p className="mt-2 text-sm text-white/80">
               {isIosBrowser()
-                ? "En Safari toca Compartir y luego Agregar a pantalla de inicio para instalar CARVIPIX Trader."
-                : "Si el navegador no muestra instalacion directa, abre el menu del navegador y selecciona Instalar aplicacion o Agregar a escritorio."}
+                ? "En Safari toca Compartir y luego Agregar a pantalla de inicio para abrir CARVIPIX desde el navegador."
+                : "Si el navegador no muestra descarga directa, abre el menu del navegador y selecciona Instalar aplicacion o Agregar a escritorio."}
             </p>
             <button
               type="button"
