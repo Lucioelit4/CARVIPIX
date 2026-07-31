@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import { hasInternalOwnerAccess } from "@/app/backend/commercial/owner-access";
+import { getInternalOwnerEmails } from "@/app/backend/commercial/owner-access-config";
 
 export async function findActiveMt5License(licenseKey: string): Promise<{ userId: string } | null> {
   if (!licenseKey || !backendDatabase.enabled) {
@@ -13,15 +14,15 @@ export async function findActiveMt5License(licenseKey: string): Promise<{ userId
       `
       SELECT id
       FROM users
-      LIMIT 100
+      WHERE user_type = 'FOUNDER' OR email = ANY($1::text[])
+      LIMIT 1
       `,
+      [Array.from(getInternalOwnerEmails())],
     );
 
-    for (const row of rows) {
-      const ownerUserId = row.id;
-      if (ownerUserId && (await hasInternalOwnerAccess(ownerUserId))) {
-        return { userId: ownerUserId };
-      }
+    const ownerUserId = rows[0]?.id;
+    if (ownerUserId && (await hasInternalOwnerAccess(ownerUserId))) {
+      return { userId: ownerUserId };
     }
   }
 

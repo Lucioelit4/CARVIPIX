@@ -90,3 +90,37 @@ test("findActiveMt5License reconoce usuarios FOUNDER directamente", async () => 
     restore();
   }
 });
+
+test("findActiveMt5License usa una consulta dirigida a founder y email interno", async () => {
+  const restore = mockBackend({
+    enabled: true,
+    query: async (sql, params) => {
+      if (sql.includes("FROM bot_mt5_licenses")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM bot_licenses")) {
+        return { rows: [] };
+      }
+      if (sql.includes("user_type = 'FOUNDER'")) {
+        assert.deepEqual(params?.[0], ["salcidoabraham525@gmail.com", "ymiler94@gmail.com"]);
+        return {
+          rows: [
+            {
+              id: "founder-client",
+              email: "salcidoabraham525@gmail.com",
+              user_type: "FOUNDER",
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  });
+
+  try {
+    const license = await findActiveMt5License("CVPX-OWNER-FOUNDER-QUERY");
+    assert.deepEqual(license, { userId: "founder-client" });
+  } finally {
+    restore();
+  }
+});
