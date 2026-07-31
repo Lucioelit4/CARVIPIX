@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
     const fileContent = fs.readFileSync(eaPath);
     const fileName = getUniversalEaFileName();
 
-    return new NextResponse(fileContent, {
+    return new NextResponse(new Uint8Array(fileContent), {
       status: 200,
       headers: {
         "Content-Type": "application/octet-stream",

@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const manualContent = await fs.readFile(manualPath);
-      return new NextResponse(manualContent, {
+      return new NextResponse(new Uint8Array(manualContent), {
         headers: {
           "Content-Disposition": "attachment; filename=CARVIPIX_EA_MT5_INSTALLATION_PROCEDURE.md",
           "Content-Type": "text/markdown; charset=utf-8",
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const fileContent = await readCommercialEaArtifact();
-    return new NextResponse(fileContent, {
+    return new NextResponse(new Uint8Array(fileContent), {
       headers: {
         "Content-Disposition": `attachment; filename="${eaFileName}"`,
         "Content-Type": "application/octet-stream",

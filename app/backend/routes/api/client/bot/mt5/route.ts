@@ -182,7 +182,7 @@ export async function GET_DownloadEA(request: NextRequest) {
 
     const fileBuffer = fs.readFileSync(eaPath);
 
-    return new Response(fileBuffer, {
+    return new Response(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/octet-stream",
