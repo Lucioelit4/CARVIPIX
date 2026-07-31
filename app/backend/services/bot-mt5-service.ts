@@ -85,8 +85,6 @@ export type BotMT5Heartbeat = {
   receivedAt: Date;
 };
 
-<<<<<<< HEAD
-=======
 let mt5RoutingSchemaReady: Promise<void> | null = null;
 
 async function ensureMt5RoutingSchema(): Promise<void> {
@@ -213,17 +211,12 @@ export class BotMT5Service {
       };
     }
 
+    await ensureMt5RoutingSchema();
+
     await backendDatabase.query(
       `
       INSERT INTO bot_mt5_installations 
         (id, user_id, license_id, installation_id, account_hash, account_number, 
-<<<<<<< HEAD
-         broker_server, magic_number, ea_version, status, created_at, is_revoked, 
-         max_open_trades, max_daily_trades, max_daily_loss_percent)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), false, 3, 10, 5)
-      ON CONFLICT (installation_id) DO UPDATE
-      SET last_heartbeat = NOW(), status = $10
-=======
          broker_server, broker_symbol, canonical_symbol, magic_number, ea_version, status, created_at, is_revoked,
          max_open_trades, max_daily_trades, max_daily_loss_percent)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), false, 3, 10, 5)
@@ -237,7 +230,6 @@ export class BotMT5Service {
           ea_version = EXCLUDED.ea_version,
           last_heartbeat = NOW(),
           status = EXCLUDED.status
->>>>>>> aa23527 (fix(mt5): allow owner license handshake and idempotent installation schema)
       `,
       [
         id,
@@ -247,6 +239,8 @@ export class BotMT5Service {
         accountHash,
         accountNumber,
         brokerServer,
+        null,
+        null,
         magicNumber,
         eaVersion,
         "ACTIVE",

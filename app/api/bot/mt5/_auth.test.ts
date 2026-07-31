@@ -57,3 +57,36 @@ test("findActiveMt5License reconoce licencias owner derivadas de usuarios intern
     restore();
   }
 });
+
+test("findActiveMt5License reconoce usuarios FOUNDER directamente", async () => {
+  const restore = mockBackend({
+    enabled: true,
+    query: async (sql) => {
+      if (sql.includes("FROM bot_mt5_licenses")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM bot_licenses")) {
+        return { rows: [] };
+      }
+      if (sql.includes("FROM users")) {
+        return {
+          rows: [
+            {
+              id: "founder-client",
+              email: "founder@carvipix.test",
+              user_type: "FOUNDER",
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  });
+
+  try {
+    const license = await findActiveMt5License("CVPX-OWNER-FOUNDER");
+    assert.deepEqual(license, { userId: "founder-client" });
+  } finally {
+    restore();
+  }
+});
