@@ -39,7 +39,6 @@ export type BillingDependencies = {
     reason: string;
   }) => Promise<unknown>;
   isInternalOwner: (userId: string) => Promise<boolean>;
-  isInternalOwner: (userId: string) => Promise<boolean>;
 };
 
 function createId(prefix: string): string {
