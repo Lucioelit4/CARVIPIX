@@ -22,6 +22,14 @@
 - Public file exists after hardening: False
 - Delivery endpoint invalid token: 401
 - Delivery endpoint missing token: 400
+- Legacy client download without auth: 401
+- Current production direct URL status (before merge/deploy): 200
+
+## Git publication
+- Branch: deploy/mt5-owner-fix
+- Commit: cbfed21
+- Remote: origin/deploy/mt5-owner-fix
+- GitHub Actions runs for branch at validation time: none
 
 ## Delivery package inventory (server-delivered)
 1. CARVIPIX_EA_MT5_V1.ex5
