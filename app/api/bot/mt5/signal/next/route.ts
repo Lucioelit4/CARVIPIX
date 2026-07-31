@@ -32,7 +32,7 @@ async function handleSignalNext(input: SignalNextInput, request: NextRequest) {
   }
 
   const signals = await backendDatabase.query(
-    `SELECT id, signal_id, symbol, decision, entry, stop_loss, take_profit, risk_reward, created_at, expires_at
+    `SELECT id, signal_id, symbol, decision, entry, stop_loss, take_profit, risk_reward, signature, created_at, expires_at
      FROM bot_mt5_signals
      WHERE license_id = $1
        AND status = 'PENDING'
@@ -52,6 +52,7 @@ async function handleSignalNext(input: SignalNextInput, request: NextRequest) {
     stop_loss: string;
     take_profit: string;
     risk_reward?: string;
+    signature: string;
     created_at: string;
     expires_at: string;
   }>;
@@ -83,6 +84,7 @@ async function handleSignalNext(input: SignalNextInput, request: NextRequest) {
     broker_symbol: signal.symbol,
     direction: signal.decision,
     decision: signal.decision,
+    signature: signal.signature,
     entry: parseFloat(signal.entry),
     stop_loss: parseFloat(signal.stop_loss),
     take_profit: parseFloat(signal.take_profit),

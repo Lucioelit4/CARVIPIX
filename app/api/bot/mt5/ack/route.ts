@@ -12,11 +12,12 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return auth.response;
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const licenseId = String(body.license_id ?? "").trim();
+  const bodyLicenseId = String(body.license_id ?? "").trim();
+  const licenseId = bodyLicenseId || auth.licenseKey;
   const signalId = String(body.signal_id ?? "").trim();
   const status = String(body.status ?? "").trim();
 
-  if (auth.licenseKey !== licenseId) {
+  if (bodyLicenseId && auth.licenseKey !== bodyLicenseId) {
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
   }
 
