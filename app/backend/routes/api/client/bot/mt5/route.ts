@@ -4,8 +4,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
+import { getUniversalEaFileName, resolveCommercialEaArtifactPath } from "@/app/backend/services/mt5-ea-artifact";
 import fs from "fs";
-import path from "path";
 
 // Middleware: Verify user authentication
 async function verifyUserSession(request: NextRequest) {
@@ -171,10 +171,7 @@ export async function GET_DownloadEA(request: NextRequest) {
     }
 
     // Read EA binary from filesystem
-    const eaPath = path.join(
-      process.cwd(),
-      "public/downloads/CARVIPIX_EA_MT5_V1.ex5"
-    );
+    const eaPath = resolveCommercialEaArtifactPath();
 
     if (!fs.existsSync(eaPath)) {
       return NextResponse.json(
@@ -189,7 +186,7 @@ export async function GET_DownloadEA(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": "attachment; filename=CARVIPIX_EA_MT5_V1.ex5",
+        "Content-Disposition": `attachment; filename=${getUniversalEaFileName()}`,
       },
     });
   } catch (error) {

@@ -136,19 +136,21 @@ class PayPalService {
     }
 
     const tier = order.purchase_units[0].custom_id;
-    const tierConfig: Record<string, { max_installations: number; days: number }> = {
-      BASIC: { max_installations: 1, days: 365 },
-      PRO: { max_installations: 5, days: 365 },
-      ENTERPRISE: { max_installations: 999, days: 365 },
-    };
+    if (tier !== "ENTERPRISE") {
+      return {
+        success: true,
+        fulfillment: "membership-only",
+        message: "Pago capturado sin entrega de EA. La licencia MT5 comercial se emite solo para Bot CARVIPIX de pago unico (999 USD).",
+      };
+    }
 
-    const config = tierConfig[tier] || { max_installations: 1, days: 365 };
+    const config = { max_installations: 1, days: 365 };
     const license_id = "LIC-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9).toUpperCase();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + config.days);
 
     const result = await backendDatabase.query(
-      "INSERT INTO bot_mt5_licenses (id, license_id, user_id, status, subscription_tier, created_at, expires_at, max_installations, activated_at) VALUES (, , , , , NOW(), , , NOW()) RETURNING id, license_id, subscription_tier, expires_at",
+      "INSERT INTO bot_mt5_licenses (id, license_id, user_id, status, subscription_tier, created_at, expires_at, max_installations, activated_at) VALUES ($1, $2, $3, $4, $5, NOW(), $6, $7, NOW()) RETURNING id, license_id, subscription_tier, expires_at",
       [randomUUID(), license_id, userId, "ACTIVE", tier, expiresAt, config.max_installations]
     );
 
@@ -166,6 +168,7 @@ class PayPalService {
 
     return {
       success: true,
+      fulfillment: "bot-license",
       license_id: license.license_id,
       subscription_tier: license.subscription_tier,
       expires_at: license.expires_at,
