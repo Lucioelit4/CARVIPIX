@@ -1,9 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
+import { hasInternalOwnerAccess } from "@/app/backend/commercial/owner-access";
 
 export async function findActiveMt5License(licenseKey: string): Promise<{ userId: string } | null> {
   if (!licenseKey || !backendDatabase.enabled) {
     return null;
+  }
+
+  const ownerMatch = /^CVPX-OWNER-(.+)$/i.exec(licenseKey.trim());
+  if (ownerMatch) {
+    const { rows } = await backendDatabase.query<{ id: string }>(
+      `
+      SELECT id
+      FROM users
+      LIMIT 100
+      `,
+    );
+
+    for (const row of rows) {
+      const ownerUserId = row.id;
+      if (ownerUserId && (await hasInternalOwnerAccess(ownerUserId))) {
+        return { userId: ownerUserId };
+      }
+    }
   }
 
   const result = await backendDatabase.query<{ user_id: string }>(

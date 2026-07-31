@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         { status: 201 }
       );
     } catch (error) {
+      console.error("[MT5_HANDSHAKE_ERROR]", { message: error instanceof Error ? error.message : String(error) });
       return NextResponse.json(
         { error: "Error registrando instalación", valid: false },
         { status: 500 }

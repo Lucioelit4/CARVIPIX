@@ -85,6 +85,32 @@ export type BotMT5Heartbeat = {
   receivedAt: Date;
 };
 
+<<<<<<< HEAD
+=======
+let mt5RoutingSchemaReady: Promise<void> | null = null;
+
+async function ensureMt5RoutingSchema(): Promise<void> {
+  if (!backendDatabase.enabled) {
+    return;
+  }
+
+  if (!mt5RoutingSchemaReady) {
+    mt5RoutingSchemaReady = (async () => {
+      await backendDatabase.query("ALTER TABLE bot_mt5_installations ADD COLUMN IF NOT EXISTS broker_symbol TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_installations ADD COLUMN IF NOT EXISTS canonical_symbol TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS canonical_symbol TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS signal_mode TEXT NOT NULL DEFAULT 'SHORT'");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS delivered_installation_id TEXT");
+      await backendDatabase.query("DROP INDEX IF EXISTS idx_bot_mt5_signals_signal_license_unique");
+      await backendDatabase.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_mt5_signals_signal_license_unique ON bot_mt5_signals(signal_id, license_id)");
+      await backendDatabase.query("CREATE INDEX IF NOT EXISTS idx_bot_mt5_signals_route_queue ON bot_mt5_signals(license_id, canonical_symbol, status, created_at)");
+      await backendDatabase.query("UPDATE bot_mt5_signals SET canonical_symbol = symbol WHERE canonical_symbol IS NULL");
+    })();
+  }
+
+  await mt5RoutingSchemaReady;
+}
+
 // ============================================================================
 // SERVICIO BOT MT5
 // ============================================================================
@@ -191,11 +217,27 @@ export class BotMT5Service {
       `
       INSERT INTO bot_mt5_installations 
         (id, user_id, license_id, installation_id, account_hash, account_number, 
+<<<<<<< HEAD
          broker_server, magic_number, ea_version, status, created_at, is_revoked, 
          max_open_trades, max_daily_trades, max_daily_loss_percent)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), false, 3, 10, 5)
       ON CONFLICT (installation_id) DO UPDATE
       SET last_heartbeat = NOW(), status = $10
+=======
+         broker_server, broker_symbol, canonical_symbol, magic_number, ea_version, status, created_at, is_revoked,
+         max_open_trades, max_daily_trades, max_daily_loss_percent)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), false, 3, 10, 5)
+      ON CONFLICT (license_id, installation_id) DO UPDATE 
+      SET account_hash = EXCLUDED.account_hash,
+          account_number = EXCLUDED.account_number,
+          broker_server = EXCLUDED.broker_server,
+          broker_symbol = EXCLUDED.broker_symbol,
+          canonical_symbol = EXCLUDED.canonical_symbol,
+          magic_number = EXCLUDED.magic_number,
+          ea_version = EXCLUDED.ea_version,
+          last_heartbeat = NOW(),
+          status = EXCLUDED.status
+>>>>>>> aa23527 (fix(mt5): allow owner license handshake and idempotent installation schema)
       `,
       [
         id,
