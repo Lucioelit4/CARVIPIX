@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import fs from "fs/promises";
 import path from "path";
+import { getUniversalEaFileName, readCommercialEaArtifact } from "@/app/backend/services/mt5-ea-artifact";
 
 // ============================================================================
 // GET /api/bot/mt5/download
@@ -76,11 +77,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Archivo de entrega no valido" }, { status: 400 });
   }
 
-  const eaFileName = "CARVIPIX_EA_MT5_V1.ex5";
-  const eaPath = path.join(process.cwd(), "public", "downloads", eaFileName);
+  const eaFileName = getUniversalEaFileName();
 
   try {
-    const fileContent = await fs.readFile(eaPath);
+    const fileContent = await readCommercialEaArtifact();
     return new NextResponse(fileContent, {
       headers: {
         "Content-Disposition": `attachment; filename="${eaFileName}"`,

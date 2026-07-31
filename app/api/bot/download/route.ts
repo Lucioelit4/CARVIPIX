@@ -14,8 +14,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { backendDatabase } from "@/app/backend/core/database";
 import fs from "fs";
-import path from "path";
 import { requireClientSession } from "@/app/api/client/_auth";
+import { getUniversalEaFileName, resolveCommercialEaArtifactPath } from "@/app/backend/services/mt5-ea-artifact";
 
 export async function GET(request: NextRequest) {
   const auth = await requireClientSession(request);
@@ -115,12 +115,7 @@ export async function GET(request: NextRequest) {
     });
 
     // ── Buscar archivo EA ────────────────────────────────────────────────
-    const eaPath = path.join(
-      process.cwd(),
-      "public",
-      "downloads",
-      "CARVIPIX_EA_MT5_V1.ex5"
-    );
+    const eaPath = resolveCommercialEaArtifactPath();
 
     if (!fs.existsSync(eaPath)) {
       console.error("[DOWNLOAD] EA file not found:", { eaPath });
@@ -132,7 +127,7 @@ export async function GET(request: NextRequest) {
 
     // ── Leer y servir archivo ────────────────────────────────────────────
     const fileContent = fs.readFileSync(eaPath);
-    const fileName = `CARVIPIX_${licenseKey.substring(0, 12)}.ex5`;
+    const fileName = getUniversalEaFileName();
 
     return new NextResponse(fileContent, {
       status: 200,
