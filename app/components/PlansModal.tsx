@@ -112,15 +112,16 @@ export default function PlansModal({ open, onClose }: Props) {
                       <Link
                         href={plan.href}
                         onClick={onClose}
+                        style={isPro ? { color: "#000000", opacity: 1, fontWeight: 700 } : undefined}
                         className={`inline-flex min-h-[48px] w-full items-center justify-center rounded-full px-4 py-3 text-sm font-bold transition duration-200 ${
                           isPro
-                            ? "bg-gradient-to-r from-[#D4AF37] to-[#F4C542] text-black shadow-[0_16px_40px_rgba(212,175,55,0.18)] hover:brightness-110"
+                            ? "bg-gradient-to-r from-[#D4AF37] to-[#F4C542] text-black hover:!text-black focus:!text-black active:!text-black shadow-[0_16px_40px_rgba(212,175,55,0.18)] hover:brightness-110"
                             : isBasic
                               ? "border border-[#D4AF37]/35 bg-[#17120a] text-[#F4C542] hover:bg-[#1e180d]"
                               : "border border-white/12 bg-[#151515] text-white hover:bg-[#1d1d1d]"
                         }`}
                       >
-                        {plan.cta}
+                        {isPro ? <span style={{ color: "#000000", opacity: 1, fontWeight: 700 }}>{plan.cta}</span> : plan.cta}
                       </Link>
                     </div>
                   </article>
