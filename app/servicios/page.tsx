@@ -111,14 +111,64 @@ export default function ServiciosPage() {
 
   return (
     <main className="min-h-screen bg-[#020305] text-white">
-      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.12),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(26,55,96,0.45),_transparent_52%),linear-gradient(180deg,#06080F_0%,#020305_100%)] py-14 sm:py-18">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.12),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(26,55,96,0.45),_transparent_52%),linear-gradient(180deg,#06080F_0%,#020305_100%)] py-8 sm:py-10">
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              .cv-servicios-hero-shell {
+                position: relative;
+                overflow: hidden;
+                background: #02070f;
+                height: clamp(470px, 34vw, 540px);
+                min-height: 470px;
+                max-height: 540px;
+              }
+
+              .cv-servicios-hero-content {
+                position: relative;
+                z-index: 10;
+                display: flex;
+                height: 100%;
+                align-items: center;
+                padding: 56px 24px 48px;
+              }
+
+              @media (min-width: 640px) {
+                .cv-servicios-hero-content {
+                  padding-left: 40px;
+                  padding-right: 40px;
+                }
+              }
+
+              @media (min-width: 1024px) {
+                .cv-servicios-hero-content {
+                  padding: 52px 48px 42px;
+                }
+              }
+
+              @media (max-width: 1023px) {
+                .cv-servicios-hero-shell {
+                  height: auto;
+                  min-height: 0;
+                  max-height: none;
+                }
+
+                .cv-servicios-hero-content {
+                  padding-top: 44px;
+                  padding-bottom: 30px;
+                }
+              }
+            `,
+          }}
+        />
+
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute left-0 right-0 top-[26%] h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
           <div className="absolute left-0 right-0 top-[64%] h-px bg-gradient-to-r from-transparent via-[#285B9C]/40 to-transparent" />
         </div>
 
         <RevealOnScroll className="relative w-full">
-          <div className="relative aspect-[7/4] min-h-[760px] overflow-hidden bg-[#02070F] sm:min-h-[580px] lg:min-h-[620px]">
+          <div className="cv-servicios-hero-shell">
             <img
               src="/media/servicios/carvipix-hero-mercados.png"
               alt=""
@@ -142,7 +192,7 @@ export default function ServiciosPage() {
               }}
             />
 
-            <div className="relative z-10 flex h-full items-center px-6 py-10 sm:px-10 sm:py-14 lg:px-12 lg:py-16">
+            <div className="cv-servicios-hero-content">
               <div className="max-w-[18rem] sm:max-w-2xl">
                 <p className="inline-flex rounded-full border border-[#D4AF37]/55 bg-black/45 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#F6D878] shadow-[0_12px_28px_-18px_rgba(212,175,55,0.85)] sm:text-sm">
                   PLATAFORMA CARVIPIX
@@ -163,7 +213,7 @@ export default function ServiciosPage() {
                   </CARVIPIXButtonLink>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/60">
+                <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-white/60">
                   <Link href="/" className="transition hover:text-white/90">
                     Inicio
                   </Link>
