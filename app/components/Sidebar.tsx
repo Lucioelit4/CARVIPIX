@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { ChevronRight, Crown, LogOut, Menu, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import PlansModal from "./PlansModal";
 import AdminMenuItem from "./AdminMenuItem";
@@ -88,6 +88,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [membership, setMembership] = useState<SidebarMembership | null>(null);
   const [membershipLabel, setMembershipLabel] = useState("Consultando...");
 
   useEffect(() => {
@@ -104,11 +105,13 @@ export default function Sidebar() {
       })
       .then((membership) => {
         if (active) {
+          setMembership(membership);
           setMembershipLabel(resolveSidebarMembershipLabel(membership));
         }
       })
       .catch(() => {
         if (active) {
+          setMembership(null);
           setMembershipLabel("Sin membresía");
         }
       });
@@ -148,6 +151,14 @@ export default function Sidebar() {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  const hasActiveMembership = Boolean(membership?.active);
+  const planDisplayLabel = membershipLabel === "Consultando..." ? membershipLabel : membershipLabel.toUpperCase();
+  const membershipDescription = hasActiveMembership
+    ? "Acceso completo habilitado"
+    : membershipLabel === "Sin membresía"
+      ? "Activa un plan oficial para continuar"
+      : "Estado de membresía en revisión";
 
   return (
     <>
@@ -218,23 +229,62 @@ export default function Sidebar() {
             </nav>
           </div>
 
-          <div className="mt-6 rounded-[1.75rem] border border-[#2A2A2A] bg-[#121212] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
-            <p className="text-sm text-[#B5B5B5]">Plan actual</p>
-            <p className="mt-2 text-xl font-semibold text-[#D4AF37]">{membershipLabel}</p>
+          <div className="mt-6 overflow-hidden rounded-[1.9rem] border border-[#D4AF37]/35 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.16),transparent_36%),linear-gradient(180deg,#101010_0%,#050505_100%)] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#D4AF37] shadow-[0_0_24px_rgba(212,175,55,0.14)]">
+                  <Crown size={18} />
+                </span>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">PLAN ACTUAL</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[0.08em] text-white">{planDisplayLabel}</p>
+                </div>
+              </div>
+              {hasActiveMembership ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                  <ShieldCheck size={12} />
+                  ACTIVO
+                </span>
+              ) : null}
+            </div>
+
+            <p className="mt-4 text-sm text-[#C7C0B4]">{membershipDescription}</p>
+
             <button
               onClick={() => setShowPlans(true)}
-              className="mt-5 inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4C542] px-4 py-3 text-sm font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition duration-200 hover:brightness-110"
+              className="mt-5 inline-flex min-h-[48px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4C542] px-4 py-3 text-sm font-bold uppercase tracking-[0.12em] text-black shadow-[0_16px_40px_rgba(212,175,55,0.18)] transition duration-200 hover:brightness-110"
             >
-              Ver planes
+              VER PLANES Y MEMBRESÍA
             </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-full border border-white/15 bg-transparent px-4 py-3 text-sm font-semibold text-white transition duration-200 hover:border-white/30 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
-            </button>
+
+            <div className="mt-4 border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowPlans(true)}
+                className="flex min-h-[44px] w-full items-center justify-between rounded-2xl px-3 py-3 text-sm font-medium text-white transition duration-200 hover:bg-white/5"
+              >
+                <span className="flex items-center gap-3">
+                  <Sparkles size={16} className="text-[#D4AF37]" />
+                  Administrar membresía
+                </span>
+                <ChevronRight size={16} className="text-[#C7C0B4]" />
+              </button>
+            </div>
+
+            <div className="mt-2 border-t border-white/10 pt-4">
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex min-h-[44px] w-full items-center justify-between rounded-2xl px-3 py-3 text-sm font-semibold text-white transition duration-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="flex items-center gap-3">
+                  <LogOut size={16} className="text-[#D4AF37]" />
+                  {isLoggingOut ? "Cerrando sesión..." : "Cerrar sesión"}
+                </span>
+                <ChevronRight size={16} className="text-[#C7C0B4]" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -297,9 +347,48 @@ export default function Sidebar() {
                 );
               })}
               <AdminMenuItem onNavigate={() => setMobileOpen(false)} compact />
-              <div className="mt-3 rounded-2xl border border-white/10 bg-[#121212] px-4 py-3">
-                <p className="text-xs text-[#B5B5B5]">Plan actual</p>
-                <p className="mt-1 text-base font-semibold text-[#D4AF37]">{membershipLabel}</p>
+              <div className="mt-3 overflow-hidden rounded-[1.65rem] border border-[#D4AF37]/30 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.14),transparent_34%),linear-gradient(180deg,#101010_0%,#050505_100%)] px-4 py-4 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#D4AF37]">
+                      <Crown size={16} />
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">PLAN ACTUAL</p>
+                      <p className="mt-1 text-base font-semibold tracking-[0.08em] text-white">{planDisplayLabel}</p>
+                    </div>
+                  </div>
+                  {hasActiveMembership ? (
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+                      ACTIVO
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-xs text-[#C7C0B4]">{membershipDescription}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPlans(true);
+                    setMobileOpen(false);
+                  }}
+                  className="mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4C542] px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-black shadow-[0_14px_32px_rgba(212,175,55,0.18)] transition duration-200 hover:brightness-110"
+                >
+                  VER PLANES Y MEMBRESÍA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPlans(true);
+                    setMobileOpen(false);
+                  }}
+                  className="mt-2 flex min-h-[42px] w-full items-center justify-between rounded-2xl px-2 py-2 text-sm text-white transition duration-200 hover:bg-white/5"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Sparkles size={15} className="text-[#D4AF37]" />
+                    Administrar membresía
+                  </span>
+                  <ChevronRight size={15} className="text-[#C7C0B4]" />
+                </button>
               </div>
               <button
                 type="button"
