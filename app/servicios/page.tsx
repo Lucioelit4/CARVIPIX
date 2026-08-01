@@ -97,6 +97,15 @@ const services = [
   },
 ];
 
+const serviceCardBackgrounds: Record<string, { src: string; position?: string }> = {
+  "Alertas en Vivo": { src: "/media/servicios/cards/alertas-en-vivo.png" },
+  "Bot CARVIPIX": { src: "/media/servicios/cards/bot-carvipix.png" },
+  "Plan Pro": { src: "/media/servicios/cards/plan-pro.webp" },
+  "Socios Estratégicos": { src: "/media/servicios/cards/socios-estrategicos.png" },
+  "Cuentas Fondeadas": { src: "/media/servicios/cards/cuentas-fondeadas.png", position: "55% center" },
+  Academia: { src: "/media/servicios/cards/academia.png" },
+};
+
 export default function ServiciosPage() {
   const membershipsAndAutomation = ["Alertas en Vivo", "Bot CARVIPIX", "Plan Pro"];
   const ecosystemServices = ["Socios Estratégicos", "Cuentas Fondeadas", "Academia"];
@@ -263,18 +272,47 @@ export default function ServiciosPage() {
             const Icon = service.icon;
             const isBot = service.title === "Bot CARVIPIX";
             const isPro = service.title === "Plan Pro";
+            const background = serviceCardBackgrounds[service.title];
 
             return (
               <RevealOnScroll
                 key={service.title}
                 delayMs={service.title === "Bot CARVIPIX" ? 30 : 0}
-                className={`group relative overflow-hidden rounded-[1.75rem] border bg-[linear-gradient(170deg,rgba(12,20,33,0.97),rgba(6,10,17,0.96))] p-6 shadow-[0_28px_70px_-48px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_30px_75px_-40px_rgba(16,35,60,0.85)] motion-reduce:transform-none ${
+                className={`group relative h-full overflow-hidden rounded-[1.75rem] border bg-[#060A12] p-6 shadow-[0_28px_70px_-48px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_30px_75px_-40px_rgba(16,35,60,0.85)] motion-reduce:transform-none ${
                   isBot
                     ? "border-[#D4AF37]/45 shadow-[0_38px_90px_-44px_rgba(212,175,55,0.55)] lg:scale-[1.02]"
                     : "border-white/10"
                 }`}
               >
+                {background ? (
+                  <img
+                    src={background.src}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                    style={{ objectPosition: background.position ?? "center" }}
+                    aria-hidden="true"
+                  />
+                ) : null}
+
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, rgba(4, 10, 22, 0.22) 0%, rgba(4, 10, 22, 0.52) 34%, rgba(4, 10, 22, 0.80) 62%, rgba(4, 10, 22, 0.93) 100%)",
+                  }}
+                />
+
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, rgba(4, 10, 22, 0.80) 0%, rgba(4, 10, 22, 0.52) 55%, rgba(4, 10, 22, 0.20) 100%)",
+                  }}
+                />
+
                 {isBot ? <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.18),transparent_55%)]" /> : null}
+
+                <div className="relative z-10 flex h-full flex-col">
 
                 <div className="relative flex items-start justify-between gap-4">
                   <div className={`inline-flex rounded-2xl border p-3 text-[#D4AF37] transition-transform duration-500 motion-safe:group-hover:-translate-y-0.5 ${isBot ? "border-[#D4AF37]/40 bg-[#D4AF37]/12" : "border-[#D4AF37]/20 bg-[#D4AF37]/10"}`}>
@@ -291,13 +329,9 @@ export default function ServiciosPage() {
                   </p>
                 ) : null}
 
-                <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-br from-[#0D1A2B] via-[#09111D] to-[#060A12]">
-                  <div className="absolute inset-0 border border-dashed border-[#D4AF37]/30" />
-                </div>
-
                 <h2 className="relative mt-5 text-2xl font-semibold text-white">{service.title}</h2>
                 <p className="relative mt-3 text-sm leading-6 text-white/65">{service.description}</p>
-                <ul className="relative mt-5 space-y-2 text-sm text-white/75">
+                <ul className="relative mt-5 flex-1 space-y-2 text-sm text-white/75">
                   {service.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-2">
                       <CheckCircle2 size={16} className="text-[#D4AF37]" />
@@ -306,13 +340,14 @@ export default function ServiciosPage() {
                   ))}
                 </ul>
 
-                <div className="relative mt-6 flex flex-col gap-3">
+                <div className="relative mt-6 flex flex-col gap-3 sm:mt-auto">
                   <CARVIPIXButtonLink href={service.href} variant="secondary" size="md">
                     Ver detalle
                   </CARVIPIXButtonLink>
                   <CARVIPIXButtonLink href={service.checkout} variant="primary" size="md">
                     {service.ctaLabel}
                   </CARVIPIXButtonLink>
+                </div>
                 </div>
               </RevealOnScroll>
             );
@@ -328,9 +363,37 @@ export default function ServiciosPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           {ecosystemBlockServices.map((service) => {
             const Icon = service.icon;
+            const background = serviceCardBackgrounds[service.title];
 
             return (
-              <RevealOnScroll className="group rounded-[1.75rem] border border-white/10 bg-[linear-gradient(170deg,rgba(10,16,26,0.96),rgba(5,9,15,0.95))] p-6 shadow-[0_25px_65px_-50px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_26px_75px_-42px_rgba(16,35,60,0.82)] motion-reduce:transform-none" key={service.title}>
+              <RevealOnScroll className="group relative h-full overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#060A12] p-6 shadow-[0_25px_65px_-50px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_26px_75px_-42px_rgba(16,35,60,0.82)] motion-reduce:transform-none" key={service.title}>
+                {background ? (
+                  <img
+                    src={background.src}
+                    alt=""
+                    className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                    style={{ objectPosition: background.position ?? "center" }}
+                    aria-hidden="true"
+                  />
+                ) : null}
+
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, rgba(4, 10, 22, 0.22) 0%, rgba(4, 10, 22, 0.50) 34%, rgba(4, 10, 22, 0.80) 62%, rgba(4, 10, 22, 0.93) 100%)",
+                  }}
+                />
+
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, rgba(4, 10, 22, 0.80) 0%, rgba(4, 10, 22, 0.52) 55%, rgba(4, 10, 22, 0.20) 100%)",
+                  }}
+                />
+
+                <div className="relative z-10 flex h-full flex-col">
                 <div className="flex items-start justify-between gap-4">
                   <div className="inline-flex rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3 text-[#D4AF37] transition-transform duration-500 motion-safe:group-hover:-translate-y-0.5">
                     <Icon size={22} />
@@ -340,13 +403,9 @@ export default function ServiciosPage() {
                   </span>
                 </div>
 
-                <div className="mt-5 aspect-[16/9] overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-br from-[#0C1828] via-[#08111D] to-[#050910]">
-                  <div className="h-full w-full border border-dashed border-[#D4AF37]/25" />
-                </div>
-
                 <h2 className="mt-5 text-2xl font-semibold text-white">{service.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-white/65">{service.description}</p>
-                <ul className="mt-5 space-y-2 text-sm text-white/75">
+                <ul className="mt-5 flex-1 space-y-2 text-sm text-white/75">
                   {service.benefits.map((benefit) => (
                     <li key={benefit} className="flex items-center gap-2">
                       <CheckCircle2 size={16} className="text-[#D4AF37]" />
@@ -355,13 +414,14 @@ export default function ServiciosPage() {
                   ))}
                 </ul>
 
-                <div className="mt-6 flex flex-col gap-3">
+                <div className="mt-6 flex flex-col gap-3 sm:mt-auto">
                   <CARVIPIXButtonLink href={service.href} variant="secondary" size="md">
                     Ver detalle
                   </CARVIPIXButtonLink>
                   <CARVIPIXButtonLink href={service.checkout} variant="primary" size="md">
                     {service.ctaLabel}
                   </CARVIPIXButtonLink>
+                </div>
                 </div>
               </RevealOnScroll>
             );
