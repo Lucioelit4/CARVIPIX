@@ -193,9 +193,9 @@ export default function DashboardPage() {
   }, [isAdminView]);
 
   const paymentSummary = useMemo(() => portal?.payments.orders.reduce((total, order) => total + Number(order.total ?? 0), 0) ?? 0, [portal]);
-  const planStatusLabel = portal?.plan.membershipActive
-    ? `Membresia ${portal?.plan.officialPlan}`
-    : `Sin membresía activa (${portal?.plan.officialPlan})`;
+  const planBadgeLabel = portal?.plan.membershipActive
+    ? `Membresía ${portal?.plan.officialPlan}`
+    : `Sin membresía activa · ${portal?.plan.officialPlan}`;
   const dataOrigin = normalizeDataOrigin(dataSource?.origin);
 
   if (loading) {
@@ -226,6 +226,40 @@ export default function DashboardPage() {
   const latestOperation = portal.operations[0] ?? null;
   const botHasLicense = Boolean(portal.bot.license?.active);
   const botConnectionState = latestConnection?.connectionStatus ?? (portal.bot.license?.brokerConnected ? "connected" : "pending");
+  const planStatusLabel = portal.plan.membershipActive
+    ? `Plan activo: ${portal.plan.officialPlan}`
+    : `Plan activo: ${portal.plan.officialPlan || "No disponible"}`;
+  const planDisplayName = portal.plan.officialPlan ? `CARVIPIX ${portal.plan.officialPlan}` : "CARVIPIX";
+  const planAvailabilityLabel = (() => {
+    const maxAlerts = portal.plan.entitlements.maxAlertsPerDay;
+    if (typeof maxAlerts === "number" && maxAlerts > 0) {
+      return `${maxAlerts} alertas al día`;
+    }
+    if (portal.plan.officialPlan === "BASIC") {
+      return "Hasta 2–7 alertas al día, según el mercado";
+    }
+    if (portal.plan.officialPlan === "PRO") {
+      return "Hasta 5–25 alertas al día, según el mercado";
+    }
+    return "Según la configuración de tu plan";
+  })();
+  const lastUpdatedLabel = dataSource
+    ? `Última actualización: ${formatDateTime(dataSource.capturedAt || dataSource.validUntil)}`
+    : null;
+  const connectionStatusLabel = latestConnection?.heartbeatAt
+    ? "Conectado"
+    : latestConnection?.connectionStatus === "connected"
+      ? "Conexión registrada"
+      : "Desconectado";
+  const communicationStatusLabel = latestConnection?.heartbeatAt
+    ? formatDateTime(latestConnection.heartbeatAt)
+    : "No disponible";
+  const weeklyMetricLabel = globalResults && Number.isFinite(globalResults.alerts.weeklyPips) && globalResults.alerts.weeklyPips !== 0
+    ? "Resultado semanal"
+    : "Alertas cerradas";
+  const weeklyMetricValue = globalResults && Number.isFinite(globalResults.alerts.weeklyPips) && globalResults.alerts.weeklyPips !== 0
+    ? globalResults.alerts.weeklyPips.toFixed(1)
+    : String(globalResults?.alerts.total ?? portal.alerts.stats.total ?? 0);
 
   return (
     <main className="dashboard-shell min-h-screen text-white px-4 py-8 sm:px-6 lg:px-8">
@@ -234,17 +268,18 @@ export default function DashboardPage() {
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-stretch">
             <div className="flex flex-col gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">Dashboard oficial</p>
-                <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">CARVIPIX {portal.plan.officialPlan}</h1>
-                <p className="mt-3 max-w-3xl text-sm text-white/70">Vista simplificada con datos reales de membresía, alertas y bot.</p>
+                <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">CENTRO DE CONTROL OPERATIVO</p>
+                <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{planDisplayName}</h1>
+                <p className="mt-3 max-w-3xl text-sm text-white/70">Tu espacio central para supervisar alertas, el estado del bot y el rendimiento de tu membresía.</p>
+                <p className="mt-2 max-w-3xl text-sm text-white/60">Consulta la actividad operativa, los recursos disponibles y la evolución de tus resultados desde un único panel.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <CARVIPIXBadge variant={portal.plan.membershipActive ? "success" : "warning"}>
-                  {planStatusLabel}
+                  {planBadgeLabel}
                 </CARVIPIXBadge>
                 {dataSource && (
                   <CARVIPIXBadge variant={dataOrigin === "REAL" ? "success" : "warning"}>
-                    {`Fuente ${dataOrigin} · ${dataSource.status}`}
+                    INFORMACIÓN ACTUALIZADA
                   </CARVIPIXBadge>
                 )}
                 <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshPortal()}>
@@ -256,26 +291,24 @@ export default function DashboardPage() {
             <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
               <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Resumen de cuenta</p>
               <div className="mt-4 space-y-2 text-sm text-white/75">
-                <p>Plan oficial: <span className="text-white">{portal.plan.officialPlan}</span></p>
-                <p>Membresía: <span className="text-white">{portal.plan.membershipActive ? "Activa" : "Inactiva"}</span></p>
+                <p>Plan activo: <span className="text-white">{portal.plan.officialPlan}</span></p>
+                <p>Estado de la membresía: <span className="text-white">{portal.plan.membershipActive ? "Activa" : "Inactiva"}</span></p>
                 <p>Pares habilitados: <span className="text-white">{portal.plan.entitlements.allowedPairs ? portal.plan.entitlements.allowedPairs.join(", ") : "Todos"}</span></p>
-                <p>Alertas por día: <span className="text-white">{portal.plan.entitlements.maxAlertsPerDay}</span></p>
-                <p>Bot adquirido: <span className="text-white">{botHasLicense ? "Si" : "No"}</span></p>
+                <p>Disponibilidad diaria: <span className="text-white">{planAvailabilityLabel}</span></p>
+                <p>Bot CARVIPIX: <span className="text-white">{botHasLicense ? "Conectado" : "Sin licencia activa"}</span></p>
               </div>
             </CARVIPIXCard>
           </div>
 
-          {dataSource && (
-            <p className="mt-3 text-xs text-white/60">
-              {`Origen: ${dataOrigin} · Capturado: ${formatDateTime(dataSource.capturedAt)} · Vigencia: ${formatDateTime(dataSource.validUntil)}`}
-            </p>
+          {lastUpdatedLabel && (
+            <p className="mt-3 text-xs text-white/60">{lastUpdatedLabel}</p>
           )}
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
-              { label: "Alertas restantes hoy", value: String(portal.alerts.remainingToday), icon: Bell },
+              { label: "Alertas disponibles hoy", value: String(portal.alerts.remainingToday), icon: Bell },
               { label: "Pares habilitados", value: portal.plan.entitlements.allowedPairs ? String(portal.plan.entitlements.allowedPairs.length) : "Todos", icon: ShieldCheck },
-              { label: "Instancias bot activas", value: String(activeBots), icon: Bot },
+              { label: "Bots operativos", value: String(activeBots), icon: Bot },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -295,30 +328,29 @@ export default function DashboardPage() {
 
         <section className="grid gap-6 xl:grid-cols-2">
           <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold">Alerta actual</h2>
-            <div className="mt-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
+            <h2 className="text-xl font-semibold">Alerta destacada</h2>
             {latestAlert ? (
               <div className="mt-4 space-y-2 text-sm">
-                <p className="text-white"><span className="text-white/60">Activo:</span> {latestAlert.symbol}</p>
-                <p className="text-white"><span className="text-white/60">Estado:</span> {latestAlert.status}</p>
-                <p className="text-white"><span className="text-white/60">Titulo:</span> {latestAlert.title}</p>
+                <p className="text-white"><span className="text-white/60">Par:</span> {latestAlert.symbol}</p>
+                <p className="text-white"><span className="text-white/60">Resumen:</span> {latestAlert.title}</p>
                 <p className="text-white/75">{latestAlert.description}</p>
                 <p className="text-white/50">{formatDateTime(latestAlert.timestamp)}</p>
               </div>
             ) : (
-              <p className="mt-4 text-sm text-white/60">No hay alerta activa registrada en este momento.</p>
+              <div className="mt-4 space-y-2">
+                <p className="text-white font-medium">No hay una alerta activa en este momento.</p>
+                <p className="text-sm text-white/65">CARVIPIX continúa monitoreando el mercado en busca de oportunidades válidas y oportunas.</p>
+              </div>
             )}
           </CARVIPIXCard>
 
           <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold">Estado del Bot</h2>
-            <div className="mt-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
+            <h2 className="text-xl font-semibold">Estado operativo del Bot</h2>
             <div className="mt-4 space-y-2 text-sm text-white/75">
-              <p>Licencia: <span className="text-white">{botHasLicense ? "Activa" : "No disponible"}</span></p>
-              <p>Broker: <span className="text-white">{portal.bot.license?.brokerConnected ?? "Sin vincular"}</span></p>
-              <p>Estado de conexión: <span className="text-white">{botConnectionState}</span></p>
-              <p>Heartbeat: <span className="text-white">{latestConnection?.heartbeatAt ? formatDateTime(latestConnection.heartbeatAt) : "Sin heartbeat"}</span></p>
-              <p>Ultima actividad bot: <span className="text-white">{latestBotLog ? `${latestBotLog.eventType} · ${formatDateTime(latestBotLog.createdAt)}` : "Sin actividad registrada"}</span></p>
+              <p>Plataforma: <span className="text-white">{portal.bot.license?.brokerConnected ?? "Sin vincular"}</span></p>
+              <p>Conexión: <span className="text-white">{connectionStatusLabel}</span></p>
+              <p>Comunicación con el bot: <span className="text-white">{communicationStatusLabel}</span></p>
+              <p>Última actividad registrada: <span className="text-white">{latestBotLog ? formatDateTime(latestBotLog.createdAt) : "Sin actividad reciente"}</span></p>
             </div>
           </CARVIPIXCard>
         </section>
@@ -327,8 +359,8 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
-              <h2 className="mt-2 text-2xl font-semibold">Resultados de Alertas</h2>
-              <p className="mt-2 text-sm text-white/65">Solo cierres BUY/SELL activados; excluye pruebas, WAIT y NO_TRADE.</p>
+              <h2 className="mt-2 text-2xl font-semibold">Rendimiento de alertas</h2>
+              <p className="mt-2 text-sm text-white/65">Resultados de las alertas oficiales cerradas de CARVIPIX y su desempeño operativo.</p>
             </div>
             <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshGlobalResults()}>
               Actualizar resultados
@@ -336,11 +368,11 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: "Pips esta semana", value: globalResults?.alerts.weeklyPips.toFixed(1) ?? "0.0" },
-              { label: "Cierres TP", value: String(globalResults?.alerts.takeProfits ?? 0) },
-              { label: "Cierres SL", value: String(globalResults?.alerts.stopLosses ?? 0) },
-              { label: "Win rate oficial", value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%` },
-            ].map(item => (
+              { label: weeklyMetricLabel, value: weeklyMetricValue },
+              { label: "Objetivos alcanzados", value: String(globalResults?.alerts.takeProfits ?? 0) },
+              { label: "Stop Loss alcanzados", value: String(globalResults?.alerts.stopLosses ?? 0) },
+              { label: "Efectividad de alertas", value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%` },
+            ].map((item) => (
               <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
                 <p className="text-xs text-white/60">{item.label}</p>
                 <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
@@ -353,8 +385,8 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
-              <h2 className="mt-2 text-2xl font-semibold">Resultados del Bot</h2>
-              <p className="mt-2 text-sm text-white/65">Métricas operativas basadas en estado real de instancias y operaciones registradas.</p>
+              <h2 className="mt-2 text-2xl font-semibold">Rendimiento operativo del Bot</h2>
+              <p className="mt-2 text-sm text-white/65">Actividad y resultados de las operaciones ejecutadas por el Bot CARVIPIX.</p>
             </div>
             <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshPortal()}>
               Actualizar bot
@@ -362,10 +394,10 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: "Instancias registradas", value: String(portal.bot.instances.length) },
-              { label: "Instancias en ejecucion", value: String(activeBots) },
-              { label: "Conexiones broker", value: String(botConnections.length) },
-              { label: "Operaciones registradas", value: String(portal.operations.length) },
+              { label: "Instalaciones registradas", value: String(portal.bot.instances.length) },
+              { label: "Bots en operación", value: String(activeBots) },
+              { label: "Cuentas conectadas", value: String(botConnections.length) },
+              { label: "Operaciones ejecutadas", value: String(portal.operations.length) },
             ].map((item) => (
               <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
                 <p className="text-xs text-white/60">{item.label}</p>
@@ -375,19 +407,19 @@ export default function DashboardPage() {
           </div>
           <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/75">
             <p>
-              Ultima operacion: <span className="text-white">{latestOperation ? `${latestOperation.symbol} · ${latestOperation.status} · ${latestOperation.pnl >= 0 ? "+" : ""}${latestOperation.pnl.toFixed(2)}` : "Sin operaciones registradas"}</span>
+              Última operación: <span className="text-white">{latestOperation ? `${latestOperation.symbol} · ${latestOperation.status} · ${latestOperation.pnl >= 0 ? "+" : ""}${latestOperation.pnl.toFixed(2)}` : "Aún no hay operaciones ejecutadas"}</span>
             </p>
             {latestOperation ? <p className="mt-1 text-white/50">{formatDateTime(latestOperation.executedAt)}</p> : null}
           </div>
         </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/alertas")}>Ir a Alertas</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/bot")}>Ir a Bot</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/resultados")}>Ir a Resultados</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/membresia")}>Ir a Membresía</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/soporte")}>Ir a Soporte</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/servicios")}>Ir a Servicios</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/alertas")}>Ver alertas</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/bot")}>Estado operativo del Bot</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/resultados")}>Ver resultados</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/membresia")}>Gestionar membresía</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/soporte")}>Centro de soporte</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/servicios")}>Explorar servicios</CARVIPIXButton>
         </section>
       </div>
       <style jsx>{`
