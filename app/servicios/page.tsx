@@ -111,53 +111,66 @@ export default function ServiciosPage() {
 
   return (
     <main className="min-h-screen bg-[#020305] text-white">
-      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.12),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(26,55,96,0.45),_transparent_52%),linear-gradient(180deg,#06080F_0%,#020305_100%)] px-6 py-16 sm:px-8 sm:py-20">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.12),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(26,55,96,0.45),_transparent_52%),linear-gradient(180deg,#06080F_0%,#020305_100%)] py-14 sm:py-18">
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute left-0 right-0 top-[26%] h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
           <div className="absolute left-0 right-0 top-[64%] h-px bg-gradient-to-r from-transparent via-[#285B9C]/40 to-transparent" />
         </div>
 
-        <RevealOnScroll className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div>
-            <p className="inline-flex rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37] sm:text-sm">
-              PLATAFORMA CARVIPIX
-            </p>
-            <h1 className="mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
-              Tecnología, análisis y automatización para operar con mayor control
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
-              Conoce el ecosistema CARVIPIX: alertas en vivo, automatización, herramientas profesionales y servicios diseñados para acompañar tu evolución en los mercados.
-            </p>
+        <RevealOnScroll className="relative w-full">
+          <div className="relative aspect-[7/4] min-h-[760px] overflow-hidden bg-[#02070F] sm:min-h-[580px] lg:min-h-[620px]">
+            <img
+              src="/media/servicios/carvipix-hero-mercados.png"
+              alt=""
+              className="absolute inset-0 h-full w-full object-contain object-center"
+              aria-hidden="true"
+            />
 
-            <div className="mt-8 flex flex-wrap gap-3">
-              <CARVIPIXButtonLink href="/registro" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
-                Crear cuenta
-              </CARVIPIXButtonLink>
-              <CARVIPIXButtonLink href="/login" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
-                Iniciar sesión
-              </CARVIPIXButtonLink>
-            </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(to bottom, rgba(2, 7, 15, 0.95) 0%, rgba(2, 7, 15, 0.55) 12%, rgba(2, 7, 15, 0.12) 25%, transparent 38%, transparent 70%, rgba(2, 7, 15, 0.22) 82%, rgba(2, 7, 15, 0.80) 100%)",
+              }}
+            />
 
-            <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/55">
-              <Link href="/" className="transition hover:text-white/90">
-                Inicio
-              </Link>
-              <Link href="/dashboard" className="transition hover:text-white/90">
-                Workspace
-              </Link>
-            </div>
-          </div>
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(2, 7, 15, 0.98) 0%, rgba(2, 7, 15, 0.88) 32%, rgba(2, 7, 15, 0.38) 58%, rgba(2, 7, 15, 0.05) 82%, transparent 100%)",
+              }}
+            />
 
-          <div className="relative">
-            <div className="pointer-events-none absolute -inset-2 rounded-[2rem] bg-[#D4AF37]/10 blur-2xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-[linear-gradient(160deg,rgba(17,26,39,0.94),rgba(6,10,18,0.92))] p-5 shadow-[0_34px_90px_-36px_rgba(0,0,0,0.9)]">
-              <div className="aspect-[16/9] rounded-[1.5rem] border border-dashed border-[#D4AF37]/35 bg-gradient-to-br from-[#122137] via-[#0B1422] to-[#06080F]" />
-              <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 sm:text-xs">
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Dashboard</span>
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Alertas</span>
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Automatización</span>
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Estadísticas</span>
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Móvil + Escritorio</span>
+            <div className="relative z-10 flex h-full items-center px-6 py-10 sm:px-10 sm:py-14 lg:px-12 lg:py-16">
+              <div className="max-w-[18rem] sm:max-w-2xl">
+                <p className="inline-flex rounded-full border border-[#D4AF37]/55 bg-black/45 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#F6D878] shadow-[0_12px_28px_-18px_rgba(212,175,55,0.85)] sm:text-sm">
+                  PLATAFORMA CARVIPIX
+                </p>
+                <h1 className="mt-6 break-words text-[2.5rem] font-semibold leading-tight text-white sm:break-normal sm:text-5xl lg:text-[4.15rem]">
+                  Tecnología, análisis y automatización para operar con mayor control
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 sm:text-lg">
+                  Conoce el ecosistema CARVIPIX: alertas en vivo, automatización, herramientas profesionales y servicios diseñados para acompañar tu evolución en los mercados.
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <CARVIPIXButtonLink href="/registro" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
+                    Crear cuenta
+                  </CARVIPIXButtonLink>
+                  <CARVIPIXButtonLink href="/login" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
+                    Iniciar sesión
+                  </CARVIPIXButtonLink>
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/60">
+                  <Link href="/" className="transition hover:text-white/90">
+                    Inicio
+                  </Link>
+                  <Link href="/dashboard" className="transition hover:text-white/90">
+                    Workspace
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
