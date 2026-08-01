@@ -193,11 +193,11 @@ export default function ServiciosPage() {
             />
 
             <div className="cv-servicios-hero-content">
-              <div className="max-w-[18rem] sm:max-w-2xl">
+              <div className="max-w-[18rem] sm:max-w-[min(72vw,1100px)] lg:max-w-[1100px]">
                 <p className="inline-flex rounded-full border border-[#D4AF37]/55 bg-black/45 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#F6D878] shadow-[0_12px_28px_-18px_rgba(212,175,55,0.85)] sm:text-sm">
                   PLATAFORMA CARVIPIX
                 </p>
-                <h1 className="mt-6 break-words text-[2.5rem] font-semibold leading-tight text-white sm:break-normal sm:text-5xl lg:text-[4.15rem]">
+                <h1 className="mt-6 break-words text-[2.5rem] font-semibold leading-tight text-white sm:max-w-[min(68vw,1000px)] sm:break-normal sm:text-5xl lg:max-w-[1000px] lg:text-[4.15rem]">
                   Tecnología, análisis y automatización para operar con mayor control
                 </h1>
                 <p className="mt-5 max-w-2xl text-base leading-7 text-white/80 sm:text-lg">
