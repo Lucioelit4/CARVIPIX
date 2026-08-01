@@ -166,12 +166,12 @@ export default async function Home() {
               <div className="rounded-xl border border-white/10 bg-black/40 p-4">
                 <p className="text-xs text-[#c7c0b4]">Plan BASIC</p>
                 <p className="mt-1 text-xl font-bold">$29.00 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
-                <p className="mt-1 text-xs text-[#c7c0b4]">De 2 a 5 alertas por día*</p>
+                <p className="mt-1 text-xs text-[#c7c0b4]">De 2 a 7 alertas por día*</p>
               </div>
               <div className="rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-4">
                 <p className="text-xs text-[#d4af37]">Plan PRO</p>
                 <p className="mt-1 text-xl font-bold">$280.00 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
-                <p className="mt-1 text-xs text-[#c7c0b4]">De 5 a 20 alertas por día*</p>
+                <p className="mt-1 text-xs text-[#c7c0b4]">De 5 a 25 alertas por día*</p>
               </div>
             </div>
           </div>
@@ -287,7 +287,7 @@ export default async function Home() {
               price: "$29.00",
               period: "/ mes",
               desc: "Alertas en vivo con análisis estructural.",
-              features: ["De 2 a 5 alertas por día*", "XAUUSD y BTCUSD", "Dashboard del cliente", "Historial de alertas", "Estadísticas básicas"],
+              features: ["De 2 a 7 alertas por día, cuando existan oportunidades válidas*", "XAUUSD y BTCUSD", "Dashboard del cliente", "Historial de alertas", "Resultados", "Notificaciones", "Estadísticas básicas", "Con el BOT CARVIPIX adquirido por separado: automatización de hasta 2 a 7 operaciones al día, cuando existan oportunidades válidas"],
               highlight: false,
             },
             {
@@ -295,7 +295,7 @@ export default async function Home() {
               price: "$280.00",
               period: "/ mes",
               desc: "Acceso completo a todos los módulos.",
-              features: ["De 5 a 20 alertas por día*", "Todos los activos monitoreados", "Todo BASIC incluido", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],
+              features: ["Incluye todo BASIC", "De 5 a 25 alertas por día, cuando existan oportunidades válidas*", "XAUUSD, BTCUSD, EURUSD y GBPUSD", "Más activos", "Herramientas premium", "Análisis completos", "Videos", "Reportes", "Estadísticas avanzadas", "Con el BOT CARVIPIX adquirido por separado: automatización de hasta 5 a 25 operaciones al día, cuando existan oportunidades válidas"],
               highlight: true,
             },
           ].map(({ name, price, period, desc, features, highlight }) => (

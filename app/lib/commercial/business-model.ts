@@ -127,13 +127,14 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     checkoutEnabled: true,
     permissionKeys: ["alertas.basic", "dashboard.client", "estadisticas.basic"],
     features: [
-      "De 2 a 5 alertas por dia cuando existan oportunidades validas",
+      "De 2 a 7 alertas por dia cuando existan oportunidades validas",
       "XAUUSD y BTCUSD",
       "Dashboard del cliente",
       "Historial de alertas",
       "Resultados",
       "Notificaciones",
       "Estadisticas basicas",
+      "Con el BOT CARVIPIX adquirido por separado: automatizacion de hasta 2 a 7 operaciones al dia, cuando existan oportunidades validas",
     ],
   },
   {
@@ -152,13 +153,15 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     permissionKeys: ["alertas.pro", "herramientas.premium", "analisis.completo", "estadisticas.avanzadas"],
     features: [
       "Incluye todo BASIC",
+      "XAUUSD, BTCUSD, EURUSD y GBPUSD",
       "Mas activos",
-      "De 5 a 20 alertas por dia cuando existan oportunidades validas",
+      "De 5 a 25 alertas por dia cuando existan oportunidades validas",
       "Herramientas premium",
       "Analisis completos",
       "Videos",
       "Reportes",
       "Estadisticas avanzadas",
+      "Con el BOT CARVIPIX adquirido por separado: automatizacion de hasta 5 a 25 operaciones al dia, cuando existan oportunidades validas",
     ],
   },
   {
