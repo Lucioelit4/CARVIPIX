@@ -172,7 +172,7 @@ export default function ServiciosPage() {
             <img
               src="/media/servicios/carvipix-hero-mercados.png"
               alt=""
-              className="absolute inset-0 h-full w-full object-contain object-center"
+              className="absolute inset-0 h-full w-full object-cover object-center"
               aria-hidden="true"
             />
 
