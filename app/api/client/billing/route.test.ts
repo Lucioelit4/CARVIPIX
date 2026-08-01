@@ -376,7 +376,7 @@ test("GET billing returns multiple payment records", async () => {
         order_id: "ord_001",
         product_id: "plan-basic-monthly",
         concept: "Plan Basic",
-        amount_total: 19.99,
+        amount_total: 29.0,
         currency: "USD",
         order_status: "paid",
         requested_method: "wallet",
@@ -531,10 +531,6 @@ test("POST toggleAutoRenew cancels with the provider before refreshing local sta
       cancellations.push(input);
     },
     isInternalOwner: createInternalOwnerCheck(),
-    cancelSubscription: async (input) => {
-      cancellations.push(input);
-    },
-    isInternalOwner: createInternalOwnerCheck(),
   });
 
   const cancelResponse = await handlers.POST(
@@ -571,7 +567,7 @@ test("GET billing hides payment history and subscription metadata for internal o
         paypal_order_id: null,
         paypal_subscription_id: "I-OWNER123",
         product_id: "plan-basic-monthly",
-        amount: 19.99,
+        amount: 29.0,
         currency: "USD",
         status: "pending",
         created_at: new Date(),
@@ -653,10 +649,6 @@ test("POST toggleAutoRenew ignores payload userId and updates only authenticated
       entitlements: { maxAlertsPerDay: 50, maxPairs: 10, maxBots: 2, historyLimit: 30 },
     }) as never,
     db: db as never,
-    cancelSubscription: async (input) => {
-      cancellations.push(input);
-    },
-    isInternalOwner: createInternalOwnerCheck(),
     cancelSubscription: async (input) => {
       cancellations.push(input);
     },

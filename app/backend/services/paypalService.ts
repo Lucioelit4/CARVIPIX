@@ -56,8 +56,8 @@ class PayPalService {
     const token = await this.getAccessToken();
 
     const pricing = {
-      BASIC: { price: "19.99", description: "CARVIPIX Plan BASIC - 1 mes", installations: 1 },
-      PRO: { price: "99", description: "CARVIPIX Plan PRO - 1 mes", installations: 5 },
+      BASIC: { price: "29.00", description: "CARVIPIX Plan BASIC - 1 mes", installations: 1 },
+      PRO: { price: "280.00", description: "CARVIPIX Plan PRO - 1 mes", installations: 5 },
       ENTERPRISE: { price: "999", description: "CARVIPIX Bot EA MT5 - Licencia unica", installations: 999 },
     };
 

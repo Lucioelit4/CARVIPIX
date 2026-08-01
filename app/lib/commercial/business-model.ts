@@ -85,9 +85,9 @@ export const COMMERCIAL_PLAN_ENTITLEMENTS: Record<CommercialSubscriptionPlan, Co
   },
 };
 
-const PRO_PRICE_CANDIDATES = [99] as const;
+const PRO_PRICE_CANDIDATES = [280] as const;
 
-const PRO_SELECTED_PRICE = 99;
+const PRO_SELECTED_PRICE = 280;
 
 export const PRO_PRICE_DECISION = {
   selectedPriceUsd: PRO_SELECTED_PRICE,
@@ -121,7 +121,7 @@ export const COMMERCIAL_PRODUCTS: CommercialProduct[] = [
     billingType: "subscription",
     renewalType: "automatic",
     currency: "USD",
-    priceUsd: 19.99,
+    priceUsd: 29,
     planCode: "basic",
     requiresActiveMembership: false,
     checkoutEnabled: true,

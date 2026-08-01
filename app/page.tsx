@@ -165,12 +165,12 @@ export default async function Home() {
             <div className="space-y-3">
               <div className="rounded-xl border border-white/10 bg-black/40 p-4">
                 <p className="text-xs text-[#c7c0b4]">Plan BASIC</p>
-                <p className="mt-1 text-xl font-bold">$19.99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
+                <p className="mt-1 text-xl font-bold">$29.00 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
                 <p className="mt-1 text-xs text-[#c7c0b4]">De 2 a 5 alertas por día*</p>
               </div>
               <div className="rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-4">
                 <p className="text-xs text-[#d4af37]">Plan PRO</p>
-                <p className="mt-1 text-xl font-bold">$99 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
+                <p className="mt-1 text-xl font-bold">$280.00 <span className="text-sm font-normal text-[#c7c0b4]">/ mes</span></p>
                 <p className="mt-1 text-xs text-[#c7c0b4]">De 5 a 20 alertas por día*</p>
               </div>
             </div>
@@ -284,7 +284,7 @@ export default async function Home() {
             },
             {
               name: "BASIC",
-              price: "$19.99",
+              price: "$29.00",
               period: "/ mes",
               desc: "Alertas en vivo con análisis estructural.",
               features: ["De 2 a 5 alertas por día*", "XAUUSD y BTCUSD", "Dashboard del cliente", "Historial de alertas", "Estadísticas básicas"],
@@ -292,7 +292,7 @@ export default async function Home() {
             },
             {
               name: "PRO",
-              price: "$99",
+              price: "$280.00",
               period: "/ mes",
               desc: "Acceso completo a todos los módulos.",
               features: ["De 5 a 20 alertas por día*", "Todos los activos monitoreados", "Todo BASIC incluido", "Herramientas premium", "Análisis completos", "Estadísticas avanzadas", "Videos y reportes"],

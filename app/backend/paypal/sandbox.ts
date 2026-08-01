@@ -112,7 +112,7 @@ const PAYPAL_OFFERINGS_LIST: PayPalOffering[] = [
     name: "CARVIPIX Basico",
     description: "Suscripcion mensual CARVIPIX Basico.",
     type: "subscription",
-    amount: 19.99,
+    amount: 29.0,
     currency: "USD",
   },
   {
@@ -120,7 +120,7 @@ const PAYPAL_OFFERINGS_LIST: PayPalOffering[] = [
     name: "CARVIPIX Pro",
     description: "Suscripcion mensual CARVIPIX Pro.",
     type: "subscription",
-    amount: 99.0,
+    amount: 280.0,
     currency: "USD",
   },
   {
@@ -1283,29 +1283,47 @@ export async function ensureSubscriptionPlanForOffering(productIdRaw: string): P
   if (cache?.paypal_product_id && cache.paypal_plan_id) {
     try {
       await callPayPal(`/v1/catalogs/products/${encodeURIComponent(cache.paypal_product_id)}`, { method: "GET" });
-      await callPayPal(`/v1/billing/plans/${encodeURIComponent(cache.paypal_plan_id)}`, { method: "GET" });
+      const cachedPlanResponse = await callPayPal<{
+        billing_cycles?: Array<{
+          tenure_type?: string;
+          pricing_scheme?: {
+            fixed_price?: {
+              value?: string;
+              currency_code?: string;
+            };
+          };
+        }>;
+      }>(`/v1/billing/plans/${encodeURIComponent(cache.paypal_plan_id)}`, { method: "GET" });
 
-      await upsertPayPalProductCatalog({
-        internalCode: offering.id,
-        paypalProductId: cache.paypal_product_id,
-        name: offering.name,
-        status: "ACTIVE",
-      });
-      await upsertPayPalPlanCatalog({
-        internalCode: offering.id,
-        paypalPlanId: cache.paypal_plan_id,
-        paypalProductId: cache.paypal_product_id,
-        name: `${offering.name} mensual`,
-        price: offering.amount,
-        currency: offering.currency,
-        billingInterval: "MONTH:1",
-        status: "ACTIVE",
-      });
-      return {
-        offering,
-        paypalProductId: cache.paypal_product_id,
-        paypalPlanId: cache.paypal_plan_id,
-      };
+      const regularCycle = cachedPlanResponse.data.billing_cycles?.find((cycle) => cycle.tenure_type === "REGULAR");
+      const cachedPrice = Number.parseFloat(String(regularCycle?.pricing_scheme?.fixed_price?.value || "NaN"));
+      const cachedCurrency = String(regularCycle?.pricing_scheme?.fixed_price?.currency_code || "").toUpperCase();
+      const amountMatches = Number.isFinite(cachedPrice) && Math.abs(cachedPrice - offering.amount) < 0.0001;
+      const currencyMatches = cachedCurrency === offering.currency.toUpperCase();
+
+      if (amountMatches && currencyMatches) {
+        await upsertPayPalProductCatalog({
+          internalCode: offering.id,
+          paypalProductId: cache.paypal_product_id,
+          name: offering.name,
+          status: "ACTIVE",
+        });
+        await upsertPayPalPlanCatalog({
+          internalCode: offering.id,
+          paypalPlanId: cache.paypal_plan_id,
+          paypalProductId: cache.paypal_product_id,
+          name: `${offering.name} mensual`,
+          price: offering.amount,
+          currency: offering.currency,
+          billingInterval: "MONTH:1",
+          status: "ACTIVE",
+        });
+        return {
+          offering,
+          paypalProductId: cache.paypal_product_id,
+          paypalPlanId: cache.paypal_plan_id,
+        };
+      }
     } catch (error) {
       if (!isPayPalMissingResourceError(error)) {
         throw error;
