@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, Bot, CreditCard, LifeBuoy, Monitor, RefreshCw, ShieldCheck } from "lucide-react";
+import { Bell, Bot, RefreshCw, ShieldCheck } from "lucide-react";
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
 import { writeAuthSession } from "@/app/lib/auth/session";
@@ -27,10 +27,35 @@ type PortalSnapshot = {
     createdToday: number;
     stats: { total: number; active: number; triggered: number; resolved: number };
     rules: Array<{ id: string; name: string; symbols: string[]; condition: string; enabled: boolean }>;
+    recent?: Array<{
+      id: string;
+      symbol: string;
+      title: string;
+      description: string;
+      status: string;
+      timestamp: string;
+    }>;
   };
   bot: {
     license: { active: boolean; licenseKey?: string; brokerConnected?: "MT4" | "MT5" } | null;
     instances: Array<{ id: string; name: string; symbol: string; status: string; strategy: string; riskLevel: string }>;
+    connections?: Array<{
+      id: string;
+      botInstanceId: string;
+      brokerType: string;
+      mode: string;
+      connectionStatus: string;
+      heartbeatAt: string | null;
+      updatedAt: string;
+    }>;
+    logs?: Array<{
+      id: string;
+      botInstanceId: string | null;
+      level: string;
+      eventType: string;
+      message: string;
+      createdAt: string;
+    }>;
   };
   strategicPartners: {
     requests: Array<{ id: string; status: string; companyOrBrand: string; createdAt: string }>;
@@ -90,11 +115,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [isAdminView, setIsAdminView] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [alertForm, setAlertForm] = useState(emptyAlertForm);
-  const [botForm, setBotForm] = useState(emptyBotForm);
-  const [brokerForm, setBrokerForm] = useState(emptyBrokerForm);
-  const [supportForm, setSupportForm] = useState(emptySupportForm);
-  const [busy, setBusy] = useState<string | null>(null);
   const [dataSource, setDataSource] = useState<DataSourceMeta | null>(null);
   const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
 
@@ -177,30 +197,6 @@ export default function DashboardPage() {
     ? `Membresia ${portal?.plan.officialPlan}`
     : `Sin membresía activa (${portal?.plan.officialPlan})`;
   const dataOrigin = normalizeDataOrigin(dataSource?.origin);
-  const canUseAlerts = Boolean(portal?.plan.membershipActive && (portal?.plan.entitlements.maxAlertsPerDay ?? 0) > 0);
-  const canUseBot = Boolean(portal?.plan.membershipActive && (portal?.plan.entitlements.maxBots ?? 0) > 0);
-
-  const submitJson = async (key: string, url: string, body: Record<string, unknown>) => {
-    setBusy(key);
-    setError(null);
-
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const payload = await parseJsonSafe<{ error?: string }>(response);
-      if (!response.ok) {
-        throw new Error(payload.error || "No se pudo completar la accion");
-      }
-      await refreshPortal();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "No se pudo completar la accion");
-    } finally {
-      setBusy(null);
-    }
-  };
 
   if (loading) {
     return <div className="min-h-screen bg-[#030303] text-white flex items-center justify-center">Cargando panel cliente...</div>;
@@ -222,8 +218,14 @@ export default function DashboardPage() {
   }
 
   const activeBots = portal.bot.instances.filter((item) => item.status === "running").length;
-  const paidOrders = portal.payments.orders.filter((order) => order.status === "completed").length;
-  const openTickets = portal.support.filter((ticket) => ticket.status === "open" || ticket.status === "in_progress").length;
+  const botConnections = portal.bot.connections ?? [];
+  const botLogs = portal.bot.logs ?? [];
+  const latestAlert = portal.alerts.recent?.[0] ?? null;
+  const latestConnection = botConnections[0] ?? null;
+  const latestBotLog = botLogs[0] ?? null;
+  const latestOperation = portal.operations[0] ?? null;
+  const botHasLicense = Boolean(portal.bot.license?.active);
+  const botConnectionState = latestConnection?.connectionStatus ?? (portal.bot.license?.brokerConnected ? "connected" : "pending");
 
   return (
     <main className="dashboard-shell min-h-screen text-white px-4 py-8 sm:px-6 lg:px-8">
@@ -234,7 +236,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">Dashboard oficial</p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">CARVIPIX {portal.plan.officialPlan}</h1>
-                <p className="mt-3 max-w-3xl text-sm text-white/70">Centro operativo con validación backend para alertas, bot, pagos, dispositivos, soporte y solicitudes institucionales según el estado real de tu membresía.</p>
+                <p className="mt-3 max-w-3xl text-sm text-white/70">Vista simplificada con datos reales de membresía, alertas y bot.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <CARVIPIXBadge variant={portal.plan.membershipActive ? "success" : "warning"}>
@@ -251,31 +253,16 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="cv-hero-visual rounded-2xl border border-white/10 p-5">
-              <div className="flex items-start justify-between gap-3 text-xs text-white/70">
-                <p className="uppercase tracking-[0.2em] text-[#D4AF37]">Resumen de cuenta</p>
-                <p>{portal.plan.membershipActive ? "Estado premium" : "Estado limitado"}</p>
+            <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Resumen de cuenta</p>
+              <div className="mt-4 space-y-2 text-sm text-white/75">
+                <p>Plan oficial: <span className="text-white">{portal.plan.officialPlan}</span></p>
+                <p>Membresía: <span className="text-white">{portal.plan.membershipActive ? "Activa" : "Inactiva"}</span></p>
+                <p>Pares habilitados: <span className="text-white">{portal.plan.entitlements.allowedPairs ? portal.plan.entitlements.allowedPairs.join(", ") : "Todos"}</span></p>
+                <p>Alertas por día: <span className="text-white">{portal.plan.entitlements.maxAlertsPerDay}</span></p>
+                <p>Bot adquirido: <span className="text-white">{botHasLicense ? "Si" : "No"}</span></p>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="cv-mini-metric">
-                  <p>Balance</p>
-                  <strong>${paymentSummary.toLocaleString()}</strong>
-                </div>
-                <div className="cv-mini-metric">
-                  <p>Bots activos</p>
-                  <strong>{activeBots}</strong>
-                </div>
-                <div className="cv-mini-metric">
-                  <p>Tickets abiertos</p>
-                  <strong>{openTickets}</strong>
-                </div>
-                <div className="cv-mini-metric">
-                  <p>Órdenes pagadas</p>
-                  <strong>{paidOrders}</strong>
-                </div>
-              </div>
-              <div className="cv-hero-car mt-4" aria-hidden="true" />
-            </div>
+            </CARVIPIXCard>
           </div>
 
           {dataSource && (
@@ -284,14 +271,11 @@ export default function DashboardPage() {
             </p>
           )}
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
             {[
-              { label: "Alertas restantes", value: String(portal.alerts.remainingToday), icon: Bell },
+              { label: "Alertas restantes hoy", value: String(portal.alerts.remainingToday), icon: Bell },
               { label: "Pares habilitados", value: portal.plan.entitlements.allowedPairs ? String(portal.plan.entitlements.allowedPairs.length) : "Todos", icon: ShieldCheck },
-              { label: "Bots activos", value: String(activeBots), icon: Bot },
-              { label: "Pagos completados", value: String(paidOrders), icon: CreditCard },
-              { label: "Soporte abierto", value: String(openTickets), icon: LifeBuoy },
-              { label: "Dispositivos", value: String(portal.devices.length), icon: Monitor },
+              { label: "Instancias bot activas", value: String(activeBots), icon: Bot },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -307,11 +291,43 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
+            <h2 className="text-xl font-semibold">Alerta actual</h2>
+            <div className="mt-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
+            {latestAlert ? (
+              <div className="mt-4 space-y-2 text-sm">
+                <p className="text-white"><span className="text-white/60">Activo:</span> {latestAlert.symbol}</p>
+                <p className="text-white"><span className="text-white/60">Estado:</span> {latestAlert.status}</p>
+                <p className="text-white"><span className="text-white/60">Titulo:</span> {latestAlert.title}</p>
+                <p className="text-white/75">{latestAlert.description}</p>
+                <p className="text-white/50">{formatDateTime(latestAlert.timestamp)}</p>
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-white/60">No hay alerta activa registrada en este momento.</p>
+            )}
+          </CARVIPIXCard>
+
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
+            <h2 className="text-xl font-semibold">Estado del Bot</h2>
+            <div className="mt-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
+            <div className="mt-4 space-y-2 text-sm text-white/75">
+              <p>Licencia: <span className="text-white">{botHasLicense ? "Activa" : "No disponible"}</span></p>
+              <p>Broker: <span className="text-white">{portal.bot.license?.brokerConnected ?? "Sin vincular"}</span></p>
+              <p>Estado de conexión: <span className="text-white">{botConnectionState}</span></p>
+              <p>Heartbeat: <span className="text-white">{latestConnection?.heartbeatAt ? formatDateTime(latestConnection.heartbeatAt) : "Sin heartbeat"}</span></p>
+              <p>Ultima actividad bot: <span className="text-white">{latestBotLog ? `${latestBotLog.eventType} · ${formatDateTime(latestBotLog.createdAt)}` : "Sin actividad registrada"}</span></p>
+            </div>
+          </CARVIPIXCard>
+        </section>
+
         <section className="border-y border-white/10 py-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
-              <h2 className="mt-2 text-2xl font-semibold">Resultados registrados de alertas</h2>
+              <h2 className="mt-2 text-2xl font-semibold">Resultados de Alertas</h2>
               <p className="mt-2 text-sm text-white/65">Solo cierres BUY/SELL activados; excluye pruebas, WAIT y NO_TRADE.</p>
             </div>
             <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshGlobalResults()}>
@@ -331,243 +347,47 @@ export default function DashboardPage() {
               </CARVIPIXCard>
             ))}
           </div>
-          {globalResults?.enabled && globalResults.simulation ? (
-            <div className="mt-6 border-t border-white/10 pt-5">
-              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Resultados probabilísticos históricos</p>
-              <p className="mt-2 text-sm text-white/65">
-                {globalResults.profiles.total} perfiles aislados · {globalResults.profiles.botTotal} Bot · no representan miembros ni cuentas reales.
-              </p>
-            </div>
-          ) : null}
         </section>
 
         <section className="border-y border-white/10 py-8">
-          <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Academia CARVIPIX</p>
-          <h2 className="mt-2 text-2xl font-semibold">Próximamente</h2>
-          <p className="mt-2 text-sm text-white/70">El nuevo contenido educativo estará disponible en una próxima actualización.</p>
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
+              <h2 className="mt-2 text-2xl font-semibold">Resultados del Bot</h2>
+              <p className="mt-2 text-sm text-white/65">Métricas operativas basadas en estado real de instancias y operaciones registradas.</p>
+            </div>
+            <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshPortal()}>
+              Actualizar bot
+            </CARVIPIXButton>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { label: "Instancias registradas", value: String(portal.bot.instances.length) },
+              { label: "Instancias en ejecucion", value: String(activeBots) },
+              { label: "Conexiones broker", value: String(botConnections.length) },
+              { label: "Operaciones registradas", value: String(portal.operations.length) },
+            ].map((item) => (
+              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+                <p className="text-xs text-white/60">{item.label}</p>
+                <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
+              </CARVIPIXCard>
+            ))}
+          </div>
+          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-white/75">
+            <p>
+              Ultima operacion: <span className="text-white">{latestOperation ? `${latestOperation.symbol} · ${latestOperation.status} · ${latestOperation.pnl >= 0 ? "+" : ""}${latestOperation.pnl.toFixed(2)}` : "Sin operaciones registradas"}</span>
+            </p>
+            {latestOperation ? <p className="mt-1 text-white/50">{formatDateTime(latestOperation.executedAt)}</p> : null}
+          </div>
         </section>
 
-        {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
-
-        <section className="grid gap-6 xl:grid-cols-2">
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Alertas manuales</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="mb-4 grid gap-3 md:grid-cols-3 text-sm text-white/70">
-              <p>Plan: <span className="text-white">{portal.plan.officialPlan}</span></p>
-              <p>Limite/dia: <span className="text-white">{portal.plan.entitlements.maxAlertsPerDay}</span></p>
-              <p>Historial: <span className="text-white">{portal.plan.entitlements.historyLimit}</span></p>
-            </div>
-            <div className="mb-4 text-sm text-white/60">Pares: {portal.plan.entitlements.allowedPairs ? portal.plan.entitlements.allowedPairs.join(", ") : "Todos los permitidos por PRO"}</div>
-            <div className="grid gap-3 md:grid-cols-3">
-              <input value={alertForm.name} onChange={(e) => setAlertForm((current) => ({ ...current, name: e.target.value }))} placeholder="Nombre" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={alertForm.symbol} onChange={(e) => setAlertForm((current) => ({ ...current, symbol: e.target.value.toUpperCase() }))} placeholder="Par" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={alertForm.condition} onChange={(e) => setAlertForm((current) => ({ ...current, condition: e.target.value }))} placeholder="Condicion manual" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <CARVIPIXButton variant="premium" disabled={!canUseAlerts || busy === "alert" || !alertForm.name.trim() || !alertForm.symbol.trim() || !alertForm.condition.trim()} onClick={() => void submitJson("alert", "/api/client/alerts", { action: "createRule", rule: { name: alertForm.name, symbols: [alertForm.symbol], condition: alertForm.condition, enabled: true, alertTypes: ["signal"] } })}>
-                Crear alerta manual
-              </CARVIPIXButton>
-            </div>
-            {!canUseAlerts ? <p className="mt-3 text-sm text-amber-300">Tu plan actual no habilita creación de alertas desde este módulo.</p> : null}
-            <div className="mt-6 space-y-3">
-              {portal.alerts.rules.length === 0 ? (
-                <p className="text-sm text-white/60">Sin reglas de alerta registradas todavía.</p>
-              ) : (
-                portal.alerts.rules.slice(0, 5).map((rule) => (
-                  <div key={rule.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-medium text-white">{rule.name}</p>
-                      <CARVIPIXBadge variant={rule.enabled ? "success" : "warning"}>{rule.enabled ? "Activa" : "Pausada"}</CARVIPIXBadge>
-                    </div>
-                    <p className="mt-1 text-white/60">{rule.symbols.join(", ")} · {rule.condition}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </CARVIPIXCard>
-
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Bot CARVIPIX (producto descargable)</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="mb-4 text-sm text-white/70">
-              Licencia: <span className="text-white">{portal.bot.license?.active ? "Activa y lista para entrega" : "Pendiente de compra"}</span>
-              {portal.bot.license?.licenseKey ? ` · ${portal.bot.license.licenseKey}` : ""}
-            </div>
-            <div className="grid gap-3 md:grid-cols-4">
-              <input value={botForm.name} onChange={(e) => setBotForm((current) => ({ ...current, name: e.target.value }))} placeholder="Nombre instancia" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={botForm.symbol} onChange={(e) => setBotForm((current) => ({ ...current, symbol: e.target.value.toUpperCase() }))} placeholder="Par" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <select value={botForm.strategy} onChange={(e) => setBotForm((current) => ({ ...current, strategy: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="momentum">Momentum</option>
-                <option value="grid">Grid</option>
-                <option value="breakout">Breakout</option>
-                <option value="scalping">Scalping</option>
-              </select>
-              <select value={botForm.riskLevel} onChange={(e) => setBotForm((current) => ({ ...current, riskLevel: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <CARVIPIXButton variant="premium" disabled={!canUseBot || busy === "bot-create" || !botForm.name.trim() || !botForm.symbol.trim()} onClick={() => void submitJson("bot-create", "/api/client/bot", { action: "createInstance", ...botForm })}>
-                Registrar instalacion
-              </CARVIPIXButton>
-            </div>
-            {!canUseBot ? <p className="mt-3 text-sm text-amber-300">Tu plan actual no habilita registro y activacion del bot.</p> : null}
-            <div className="mt-6 space-y-3">
-              {portal.bot.instances.length === 0 ? (
-                <p className="text-sm text-white/60">No hay instancias de bot creadas aún.</p>
-              ) : (
-                portal.bot.instances.map((instance) => (
-                  <div key={instance.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-white">{instance.name} · {instance.symbol}</p>
-                        <p className="text-sm text-white/60">{instance.strategy} · riesgo {instance.riskLevel}</p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <CARVIPIXBadge variant={instance.status === "running" ? "success" : instance.status === "paused" ? "warning" : "default"}>{instance.status}</CARVIPIXBadge>
-                        <CARVIPIXButton size="sm" variant="ghost" disabled={!canUseBot || busy === `run-${instance.id}`} onClick={() => void submitJson(`run-${instance.id}`, "/api/client/bot", { action: "changeStatus", botId: instance.id, status: "running" })}>Activar</CARVIPIXButton>
-                        <CARVIPIXButton size="sm" variant="ghost" disabled={!canUseBot || busy === `pause-${instance.id}`} onClick={() => void submitJson(`pause-${instance.id}`, "/api/client/bot", { action: "changeStatus", botId: instance.id, status: "paused" })}>Pausar</CARVIPIXButton>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="mt-6 grid gap-3 md:grid-cols-5">
-              <select value={brokerForm.botId} onChange={(e) => setBrokerForm((current) => ({ ...current, botId: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="">Selecciona bot</option>
-                {portal.bot.instances.map((instance) => <option key={instance.id} value={instance.id}>{instance.name}</option>)}
-              </select>
-              <select value={brokerForm.brokerType} onChange={(e) => setBrokerForm((current) => ({ ...current, brokerType: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="MT5">MT5</option>
-                <option value="MT4">MT4</option>
-              </select>
-              <input value={brokerForm.server} onChange={(e) => setBrokerForm((current) => ({ ...current, server: e.target.value }))} placeholder="Servidor" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={brokerForm.login} onChange={(e) => setBrokerForm((current) => ({ ...current, login: e.target.value }))} placeholder="Login" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <input value={brokerForm.password} onChange={(e) => setBrokerForm((current) => ({ ...current, password: e.target.value }))} placeholder="Password" type="password" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-            </div>
-            <div className="mt-3 flex flex-wrap gap-3">
-              <CARVIPIXButton variant="secondary" disabled={!canUseBot || busy === "broker" || !brokerForm.botId || !brokerForm.server.trim() || !brokerForm.login.trim() || !brokerForm.password.trim()} onClick={() => void submitJson("broker", "/api/client/bot", { action: "connectBroker", ...brokerForm })}>
-                Preparar activacion MT4/MT5
-              </CARVIPIXButton>
-              <CARVIPIXButton variant="ghost" disabled={!canUseBot || busy === "diagnostics" || !brokerForm.botId} onClick={() => brokerForm.botId && void submitJson("diagnostics", "/api/client/bot", { action: "runDiagnostics", botId: brokerForm.botId })}>
-                Diagnostico
-              </CARVIPIXButton>
-            </div>
-          </CARVIPIXCard>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-2">
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Socios estrategicos CARVIPIX</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <p className="text-sm text-white/70">Programa institucional con evaluacion selectiva y cupos limitados.</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <CARVIPIXButton variant="premium" onClick={() => router.push("/socios-estrategicos/solicitud")}>
-                Solicitar evaluacion
-              </CARVIPIXButton>
-            </div>
-            <div className="mt-6 space-y-3">
-              {portal.strategicPartners.requests.length === 0 ? (
-                <p className="text-sm text-white/60">Sin solicitudes registradas en Socios estrategicos.</p>
-              ) : (
-                portal.strategicPartners.requests.map((request) => (
-                  <div key={request.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="font-medium text-white">Solicitud {request.id}</p>
-                      <CARVIPIXBadge variant={request.status === "approved_for_contact" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{request.status}</CARVIPIXBadge>
-                    </div>
-                    <p className="mt-1 text-white/60">{request.companyOrBrand || "Perfil institucional"} · {new Date(request.createdAt).toLocaleDateString("es-ES")}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </CARVIPIXCard>
-
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Soporte, pagos y seguridad</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <input value={supportForm.subject} onChange={(e) => setSupportForm((current) => ({ ...current, subject: e.target.value }))} placeholder="Asunto" className="rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-              <select value={supportForm.priority} onChange={(e) => setSupportForm((current) => ({ ...current, priority: e.target.value }))} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <textarea value={supportForm.message} onChange={(e) => setSupportForm((current) => ({ ...current, message: e.target.value }))} placeholder="Describe tu incidencia" className="mt-3 min-h-28 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2" />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <CARVIPIXButton variant="secondary" disabled={busy === "support"} onClick={() => void submitJson("support", "/api/client/support", supportForm)}>
-                Crear ticket de soporte
-              </CARVIPIXButton>
-            </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
-                <p className="text-white/60">Facturacion acumulada</p>
-                <p className="mt-2 text-2xl font-bold text-white">${paymentSummary.toLocaleString()}</p>
-                <p className="mt-2 text-white/60">Renovacion: {portal.plan.renewalDate ? formatDateTime(portal.plan.renewalDate) : "No aplica"}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
-                <p className="text-white/60">Dispositivos activos</p>
-                <p className="mt-2 text-2xl font-bold text-white">{portal.devices.length}</p>
-                <p className="mt-2 text-white/60">Auditoria reciente: {portal.audit.length} eventos</p>
-              </div>
-            </div>
-          </CARVIPIXCard>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-3">
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card xl:col-span-2">
-            <h2 className="text-xl font-semibold mb-4">Pagos y operaciones</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="space-y-3">
-              {portal.payments.orders.length === 0 ? <p className="text-sm text-white/60">Sin órdenes de pago registradas.</p> : null}
-              {portal.payments.orders.slice(0, 6).map((order) => (
-                <div key={order.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-white">{order.productId}</p>
-                    <CARVIPIXBadge variant={order.status === "completed" ? "success" : order.status === "cancelled" ? "danger" : "warning"}>{order.status}</CARVIPIXBadge>
-                  </div>
-                  <p className="mt-1 text-white/60">{order.currency} {Number(order.total).toLocaleString()} · {formatDateTime(order.fechaCreacion)}</p>
-                </div>
-              ))}
-              {portal.operations.length === 0 ? <p className="text-sm text-white/60">Sin operaciones registradas.</p> : null}
-              {portal.operations.slice(0, 8).map((operation) => (
-                <div key={operation.id} className="cv-item rounded-xl border border-white/10 bg-[#0C0C0C] p-3 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-white">{operation.symbol}</p>
-                    <span className={operation.pnl >= 0 ? "text-green-400" : "text-red-400"}>{operation.pnl >= 0 ? "+" : ""}{operation.pnl.toFixed(2)}</span>
-                  </div>
-                  <p className="mt-1 text-white/60">{operation.status} · {formatDateTime(operation.executedAt)}</p>
-                </div>
-              ))}
-            </div>
-          </CARVIPIXCard>
-
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold mb-4">Dispositivos y trazabilidad</h2>
-            <div className="mb-3 text-xs text-white/60">{`Fuente de datos: ${dataOrigin}`}</div>
-            <div className="space-y-3">
-              {portal.devices.length === 0 ? <p className="text-sm text-white/60">Sin dispositivos activos registrados.</p> : null}
-              {portal.devices.map((device) => (
-                <div key={device.id} className="cv-item rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
-                  <p className="font-medium text-white">{device.deviceLabel}</p>
-                  <p className="mt-1 text-white/60">{device.userAgent}</p>
-                  <p className="mt-1 text-white/50">Ultima actividad: {formatDateTime(device.lastSeenAt)}</p>
-                </div>
-              ))}
-              {portal.audit.length === 0 ? <p className="text-sm text-white/60">Sin eventos de auditoría recientes.</p> : null}
-              {portal.audit.slice(0, 8).map((event) => (
-                <div key={event.id} className="cv-item rounded-xl border border-white/10 bg-[#0C0C0C] p-3 text-sm">
-                  <p className="font-medium text-white">{event.action}</p>
-                  <p className="mt-1 text-white/60">{event.resource} · {event.result}</p>
-                </div>
-              ))}
-            </div>
-          </CARVIPIXCard>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/alertas")}>Ir a Alertas</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/bot")}>Ir a Bot</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/resultados")}>Ir a Resultados</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/membresia")}>Ir a Membresía</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/soporte")}>Ir a Soporte</CARVIPIXButton>
+          <CARVIPIXButton variant="ghost" onClick={() => router.push("/servicios")}>Ir a Servicios</CARVIPIXButton>
         </section>
       </div>
       <style jsx>{`
@@ -592,95 +412,15 @@ export default function DashboardPage() {
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 40px rgba(0, 0, 0, 0.4);
         }
 
-        .cv-mini-metric {
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          background: rgba(255, 255, 255, 0.04);
-          padding: 10px 12px;
-        }
-
-        .cv-mini-metric p {
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.62);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-
-        .cv-mini-metric strong {
-          display: block;
-          margin-top: 6px;
-          font-size: 18px;
-          color: #f8e7b5;
-        }
-
-        .cv-hero-car {
-          height: 128px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          background:
-            radial-gradient(circle at 25% 70%, rgba(212, 175, 55, 0.24), transparent 42%),
-            radial-gradient(circle at 80% 28%, rgba(245, 158, 11, 0.2), transparent 38%),
-            linear-gradient(130deg, rgba(12, 12, 14, 0.98), rgba(22, 22, 24, 0.94));
-          position: relative;
-          overflow: hidden;
-        }
-
-        .cv-hero-car::before {
-          content: "";
-          position: absolute;
-          left: 8%;
-          right: 8%;
-          top: 52%;
-          height: 34%;
-          border-radius: 999px;
-          background: linear-gradient(90deg, rgba(212, 175, 55, 0.08), rgba(245, 158, 11, 0.3), rgba(212, 175, 55, 0.08));
-          filter: blur(0.5px);
-        }
-
-        .cv-hero-car::after {
-          content: "";
-          position: absolute;
-          inset: -20px;
-          background-image: linear-gradient(0deg, transparent 0 93%, rgba(255, 255, 255, 0.06) 93% 94%, transparent 94% 100%);
-          background-size: 100% 24px;
-          opacity: 0.5;
-        }
-
-        :global(.dashboard-shell input),
-        :global(.dashboard-shell select),
-        :global(.dashboard-shell textarea) {
-          border-color: rgba(212, 175, 55, 0.22) !important;
-          background: rgba(9, 10, 13, 0.72) !important;
-          color: #f4f4f5 !important;
-          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-        }
-
-        :global(.dashboard-shell input:focus),
-        :global(.dashboard-shell select:focus),
-        :global(.dashboard-shell textarea:focus) {
-          outline: none;
-          border-color: rgba(212, 175, 55, 0.55) !important;
-          box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 0 0 6px rgba(212, 175, 55, 0.12);
-        }
-
         .cv-card {
           border: 1px solid rgba(212, 175, 55, 0.2) !important;
           background: linear-gradient(180deg, rgba(9, 10, 14, 0.95), rgba(6, 7, 10, 0.96)) !important;
           box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
-        .cv-item {
-          border-color: rgba(212, 175, 55, 0.16) !important;
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)) !important;
-        }
-
         @media (max-width: 768px) {
-          .cv-hero-car {
-            height: 104px;
-          }
-
-          .cv-mini-metric strong {
-            font-size: 16px;
+          .cv-hero-visual {
+            min-height: 180px;
           }
         }
       `}</style>
