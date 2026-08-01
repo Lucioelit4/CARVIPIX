@@ -100,13 +100,13 @@ export default function ServiciosPage() {
       <section className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-6 py-16 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-            Servicios y membresías
+            SERVICIOS Y MEMBRESÍAS
           </p>
           <h1 className="mt-6 text-4xl font-bold text-white sm:text-5xl">
-            Elige tu plan y accede a CARVIPIX.
+            Todo CARVIPIX en un solo lugar
           </h1>
           <p className="mt-4 max-w-3xl text-base text-white/70 sm:text-lg">
-            Catálogo comercial actualizado con Plan Básico, Plan Pro, Bot como producto descargable y servicios complementarios sin romper el flujo actual.
+            Elige la membresía, el Bot o el servicio que mejor se adapte a tu forma de operar.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <CARVIPIXButtonLink href="/" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
