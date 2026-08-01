@@ -26,9 +26,20 @@ const services = [
   },
   {
     title: "Bot CARVIPIX",
-    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.description ?? "",
+    description:
+      "Licencia única para automatizar en MT5 las señales incluidas en tu membresía CARVIPIX. La cantidad de operaciones y los pares disponibles dependen del plan BASIC o PRO que tengas activo.",
     price: `${COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.priceUsd?.toFixed(0)} USD`,
-    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "bot-carvipix-license")?.features ?? [],
+    benefits: [
+      "Pago único",
+      "Licencia oficial de uso",
+      "Automatización según tu membresía activa",
+      "BASIC: XAUUSD y BTCUSD, hasta 2–7 operaciones al día",
+      "PRO: XAUUSD, BTCUSD, EURUSD y GBPUSD, hasta 5–25 operaciones al día",
+      "Operaciones solo cuando existan oportunidades válidas",
+      "Entrega por correo con archivo, manual e instrucciones",
+      "Instalación guiada para MT5",
+      "Soporte de activación",
+    ],
     href: "/servicios/bot",
     checkout: "/checkout?product=bot-carvipix-license",
     ctaLabel: "Comprar ahora",
@@ -56,9 +67,16 @@ const services = [
   },
   {
     title: "Cuentas Fondeadas",
-    description: COMMERCIAL_PRODUCTS.find((item) => item.id === "cuenta-fondeada")?.description ?? "",
+    description:
+      "Te ayudamos a prepararte y avanzar en el challenge de tu cuenta de fondeo con estructura, gestión de riesgo y acompañamiento CARVIPIX.",
     price: "Próximamente",
-    benefits: COMMERCIAL_PRODUCTS.find((item) => item.id === "cuenta-fondeada")?.features ?? [],
+    benefits: [
+      "Preparación para challenge",
+      "Plan de gestión de riesgo",
+      "Seguimiento del proceso",
+      "Apoyo para cumplir las reglas de la fondeadora",
+      "Próximamente",
+    ],
     href: "/servicios/fondeo",
     checkout: "/servicios/fondeo",
     ctaLabel: "Ver estado",
