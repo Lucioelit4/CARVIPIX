@@ -17,6 +17,7 @@ type AppShellProps = {
 export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname.startsWith("/admin");
+  const isServiciosLandingRoute = pathname === "/servicios";
   const isStandaloneRoute =
     pathname === "/" ||
     pathname === "/servicios" ||
@@ -44,7 +45,7 @@ export default function AppShell({ children }: AppShellProps) {
     return (
       <>
         <PwaRuntimeController />
-        {!isAdminRoute ? (
+        {!isAdminRoute && !isServiciosLandingRoute ? (
           <div className="fixed bottom-4 right-4 z-[85]">
             <InstallTraderButton />
           </div>
@@ -57,7 +58,7 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <GlobalAlertsCenterProvider>
       <PwaRuntimeController />
-      {!isAdminRoute ? (
+      {!isAdminRoute && !isServiciosLandingRoute ? (
         <div className="fixed bottom-4 right-4 z-[85]">
           <InstallTraderButton />
         </div>

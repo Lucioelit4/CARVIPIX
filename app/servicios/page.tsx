@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowRight, BarChart3, Bot, ShieldCheck, Crown, Users, CheckCircle2 } from "lucide-react";
 import { CARVIPIXButtonLink } from "@/app/design-system";
 import { COMMERCIAL_PRODUCTS } from "@/app/lib/commercial/business-model";
+import InstallTraderButton from "@/app/components/pwa/InstallTraderButton";
+import RevealOnScroll from "@/app/components/RevealOnScroll";
 
 export const metadata: Metadata = {
   title: "Servicios y Planes — CARVIPIX",
@@ -95,50 +98,189 @@ const services = [
 ];
 
 export default function ServiciosPage() {
+  const membershipsAndAutomation = ["Alertas en Vivo", "Bot CARVIPIX", "Plan Pro"];
+  const ecosystemServices = ["Socios Estratégicos", "Cuentas Fondeadas", "Academia"];
+
+  const topBlockServices = membershipsAndAutomation
+    .map((title) => services.find((service) => service.title === title))
+    .filter((service): service is NonNullable<typeof service> => Boolean(service));
+
+  const ecosystemBlockServices = ecosystemServices
+    .map((title) => services.find((service) => service.title === title))
+    .filter((service): service is NonNullable<typeof service> => Boolean(service));
+
   return (
-    <main className="min-h-screen bg-[#030303] text-white">
-      <section className="border-b border-white/10 bg-gradient-to-b from-[#0B0B0B] to-[#030303] px-6 py-16 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="inline-flex rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-1 text-sm font-semibold uppercase tracking-[0.24em] text-[#D4AF37]">
-            SERVICIOS Y MEMBRESÍAS
-          </p>
-          <h1 className="mt-6 text-4xl font-bold text-white sm:text-5xl">
-            Todo CARVIPIX en un solo lugar
-          </h1>
-          <p className="mt-4 max-w-3xl text-base text-white/70 sm:text-lg">
-            Elige la membresía, el Bot o el servicio que mejor se adapte a tu forma de operar.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <CARVIPIXButtonLink href="/" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
-              Inicio
-            </CARVIPIXButtonLink>
-            <CARVIPIXButtonLink href="/dashboard" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
-              Workspace
-            </CARVIPIXButtonLink>
-            <CARVIPIXButtonLink href="/login" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
-              Iniciar sesión
-            </CARVIPIXButtonLink>
-            <CARVIPIXButtonLink href="/registro" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
-              Crear cuenta
-            </CARVIPIXButtonLink>
-          </div>
+    <main className="min-h-screen bg-[#020305] text-white">
+      <section className="relative overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(212,175,55,0.12),_transparent_45%),radial-gradient(circle_at_top_left,_rgba(26,55,96,0.45),_transparent_52%),linear-gradient(180deg,#06080F_0%,#020305_100%)] px-6 py-16 sm:px-8 sm:py-20">
+        <div className="pointer-events-none absolute inset-0 opacity-40">
+          <div className="absolute left-0 right-0 top-[26%] h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
+          <div className="absolute left-0 right-0 top-[64%] h-px bg-gradient-to-r from-transparent via-[#285B9C]/40 to-transparent" />
         </div>
+
+        <RevealOnScroll className="relative mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div>
+            <p className="inline-flex rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-[#D4AF37] sm:text-sm">
+              PLATAFORMA CARVIPIX
+            </p>
+            <h1 className="mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
+              Tecnología, análisis y automatización para operar con mayor control
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-white/75 sm:text-lg">
+              Conoce el ecosistema CARVIPIX: alertas en vivo, automatización, herramientas profesionales y servicios diseñados para acompañar tu evolución en los mercados.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <CARVIPIXButtonLink href="/registro" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
+                Crear cuenta
+              </CARVIPIXButtonLink>
+              <CARVIPIXButtonLink href="/login" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
+                Iniciar sesión
+              </CARVIPIXButtonLink>
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/55">
+              <Link href="/" className="transition hover:text-white/90">
+                Inicio
+              </Link>
+              <Link href="/dashboard" className="transition hover:text-white/90">
+                Workspace
+              </Link>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="pointer-events-none absolute -inset-2 rounded-[2rem] bg-[#D4AF37]/10 blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-[linear-gradient(160deg,rgba(17,26,39,0.94),rgba(6,10,18,0.92))] p-5 shadow-[0_34px_90px_-36px_rgba(0,0,0,0.9)]">
+              <div className="aspect-[16/9] rounded-[1.5rem] border border-dashed border-[#D4AF37]/35 bg-gradient-to-br from-[#122137] via-[#0B1422] to-[#06080F]" />
+              <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45 sm:text-xs">
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Dashboard</span>
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Alertas</span>
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Automatización</span>
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Estadísticas</span>
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Móvil + Escritorio</span>
+              </div>
+            </div>
+          </div>
+        </RevealOnScroll>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8">
-        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-          {services.map((service) => {
+      <section className="mx-auto max-w-7xl px-6 py-10 sm:px-8 sm:py-12">
+        <RevealOnScroll className="rounded-[2rem] border border-white/10 bg-[linear-gradient(160deg,rgba(10,14,24,0.96),rgba(4,6,10,0.94))] p-6 shadow-[0_28px_70px_-45px_rgba(212,175,55,0.6)] sm:p-8" delayMs={60}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Instalación oficial</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">Lleva CARVIPIX contigo</h2>
+              <p className="mt-2 max-w-2xl text-sm text-white/70 sm:text-base">
+                Accede a tus alertas y herramientas desde cualquier dispositivo.
+              </p>
+            </div>
+            <div className="shrink-0">
+              <InstallTraderButton label="Instalar CARVIPIX" />
+            </div>
+          </div>
+        </RevealOnScroll>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-6 sm:px-8">
+        <RevealOnScroll className="max-w-3xl" delayMs={90}>
+          <h2 className="text-3xl font-semibold text-white sm:text-4xl">Descubre todo lo que CARVIPIX pone a tu alcance</h2>
+          <p className="mt-4 text-base text-white/70 sm:text-lg">
+            Explora nuestras membresías, herramientas de automatización y servicios complementarios.
+          </p>
+        </RevealOnScroll>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h3 className="text-2xl font-semibold text-white sm:text-3xl">Membresías y automatización</h3>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {topBlockServices.map((service) => {
             const Icon = service.icon;
+            const isBot = service.title === "Bot CARVIPIX";
+            const isPro = service.title === "Plan Pro";
+
             return (
-              <article key={service.title} className="rounded-[1.75rem] border border-white/10 bg-[#0B1220]/95 p-6 shadow-2xl shadow-black/30">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="inline-flex rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3 text-[#D4AF37]">
+              <RevealOnScroll
+                key={service.title}
+                delayMs={service.title === "Bot CARVIPIX" ? 30 : 0}
+                className={`group relative overflow-hidden rounded-[1.75rem] border bg-[linear-gradient(170deg,rgba(12,20,33,0.97),rgba(6,10,17,0.96))] p-6 shadow-[0_28px_70px_-48px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_30px_75px_-40px_rgba(16,35,60,0.85)] motion-reduce:transform-none ${
+                  isBot
+                    ? "border-[#D4AF37]/45 shadow-[0_38px_90px_-44px_rgba(212,175,55,0.55)] lg:scale-[1.02]"
+                    : "border-white/10"
+                }`}
+              >
+                {isBot ? <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.18),transparent_55%)]" /> : null}
+
+                <div className="relative flex items-start justify-between gap-4">
+                  <div className={`inline-flex rounded-2xl border p-3 text-[#D4AF37] transition-transform duration-500 motion-safe:group-hover:-translate-y-0.5 ${isBot ? "border-[#D4AF37]/40 bg-[#D4AF37]/12" : "border-[#D4AF37]/20 bg-[#D4AF37]/10"}`}>
                     <Icon size={22} />
                   </div>
                   <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
                     {service.price}
                   </span>
                 </div>
+
+                {isPro ? (
+                  <p className="relative mt-4 inline-flex rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/75">
+                    Membresía más completa
+                  </p>
+                ) : null}
+
+                <div className="relative mt-5 aspect-[16/9] overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-br from-[#0D1A2B] via-[#09111D] to-[#060A12]">
+                  <div className="absolute inset-0 border border-dashed border-[#D4AF37]/30" />
+                </div>
+
+                <h2 className="relative mt-5 text-2xl font-semibold text-white">{service.title}</h2>
+                <p className="relative mt-3 text-sm leading-6 text-white/65">{service.description}</p>
+                <ul className="relative mt-5 space-y-2 text-sm text-white/75">
+                  {service.benefits.map((benefit) => (
+                    <li key={benefit} className="flex items-center gap-2">
+                      <CheckCircle2 size={16} className="text-[#D4AF37]" />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="relative mt-6 flex flex-col gap-3">
+                  <CARVIPIXButtonLink href={service.href} variant="secondary" size="md">
+                    Ver detalle
+                  </CARVIPIXButtonLink>
+                  <CARVIPIXButtonLink href={service.checkout} variant="primary" size="md">
+                    {service.ctaLabel}
+                  </CARVIPIXButtonLink>
+                </div>
+              </RevealOnScroll>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <h3 className="text-2xl font-semibold text-white sm:text-3xl">Ecosistema CARVIPIX</h3>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {ecosystemBlockServices.map((service) => {
+            const Icon = service.icon;
+
+            return (
+              <RevealOnScroll className="group rounded-[1.75rem] border border-white/10 bg-[linear-gradient(170deg,rgba(10,16,26,0.96),rgba(5,9,15,0.95))] p-6 shadow-[0_25px_65px_-50px_rgba(0,0,0,0.9)] transition duration-300 motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-[0_26px_75px_-42px_rgba(16,35,60,0.82)] motion-reduce:transform-none" key={service.title}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="inline-flex rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-3 text-[#D4AF37] transition-transform duration-500 motion-safe:group-hover:-translate-y-0.5">
+                    <Icon size={22} />
+                  </div>
+                  <span className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-1 text-xs font-semibold text-[#D4AF37]">
+                    {service.price}
+                  </span>
+                </div>
+
+                <div className="mt-5 aspect-[16/9] overflow-hidden rounded-2xl border border-white/12 bg-gradient-to-br from-[#0C1828] via-[#08111D] to-[#050910]">
+                  <div className="h-full w-full border border-dashed border-[#D4AF37]/25" />
+                </div>
+
                 <h2 className="mt-5 text-2xl font-semibold text-white">{service.title}</h2>
                 <p className="mt-3 text-sm leading-6 text-white/65">{service.description}</p>
                 <ul className="mt-5 space-y-2 text-sm text-white/75">
@@ -149,6 +291,7 @@ export default function ServiciosPage() {
                     </li>
                   ))}
                 </ul>
+
                 <div className="mt-6 flex flex-col gap-3">
                   <CARVIPIXButtonLink href={service.href} variant="secondary" size="md">
                     Ver detalle
@@ -157,10 +300,29 @@ export default function ServiciosPage() {
                     {service.ctaLabel}
                   </CARVIPIXButtonLink>
                 </div>
-              </article>
+              </RevealOnScroll>
             );
           })}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-16 pt-8 sm:px-8 sm:pb-20">
+        <RevealOnScroll className="rounded-[2rem] border border-white/10 bg-[linear-gradient(160deg,rgba(8,13,22,0.98),rgba(4,7,12,0.95))] p-8 shadow-[0_34px_84px_-48px_rgba(0,0,0,0.9)] sm:p-10" delayMs={120}>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">Acceso al ecosistema</p>
+          <h2 className="mt-4 text-3xl font-semibold text-white sm:text-4xl">Comienza tu experiencia CARVIPIX</h2>
+          <p className="mt-4 max-w-3xl text-base text-white/75 sm:text-lg">
+            Crea tu cuenta y accede a una plataforma diseñada para mantener tus herramientas, alertas y servicios en un solo entorno.
+          </p>
+
+          <div className="mt-8 flex flex-wrap gap-3">
+            <CARVIPIXButtonLink href="/registro" variant="primary" size="lg" rightIcon={<ArrowRight size={16} />}>
+              Crear cuenta
+            </CARVIPIXButtonLink>
+            <CARVIPIXButtonLink href="/login" variant="secondary" size="lg" rightIcon={<ArrowRight size={16} />}>
+              Ya tengo una cuenta
+            </CARVIPIXButtonLink>
+          </div>
+        </RevealOnScroll>
       </section>
     </main>
   );

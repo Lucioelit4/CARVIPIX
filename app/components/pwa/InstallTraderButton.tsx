@@ -15,9 +15,10 @@ type BeforeInstallPromptEvent = Event & {
 
 type InstallTraderButtonProps = {
   compact?: boolean;
+  label?: string;
 };
 
-export default function InstallTraderButton({ compact = false }: InstallTraderButtonProps) {
+export default function InstallTraderButton({ compact = false, label = "Descargar aplicación CARVIPIX" }: InstallTraderButtonProps) {
   const [isInstalled, setIsInstalled] = useState(() => {
     if (typeof window === "undefined") return false;
     return isStandaloneMode();
@@ -88,7 +89,7 @@ export default function InstallTraderButton({ compact = false }: InstallTraderBu
           : "rounded-xl border border-[#D4AF37]/45 bg-[#D4AF37] px-4 py-2.5 text-sm font-semibold text-black"
         }
       >
-        {hasPrompt ? "Descargar aplicación CARVIPIX" : "Descargar aplicación CARVIPIX"}
+        {hasPrompt ? label : label}
       </button>
 
       {showIosHelp ? (
