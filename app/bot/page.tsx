@@ -1,202 +1,337 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Activity,
-  ArrowRight,
-  Bot,
-  Brain,
-  CheckCircle2,
-  Cpu,
-  Gauge,
-  Layers,
-  ShieldCheck,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, Bot, Download, FileText, LifeBuoy, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { getBotInstances, getBotLicense, getGlobalResults, type GlobalResultsSnapshot } from "@/app/lib/client-data-helpers";
+
+import type { BotInstance, BotLicense } from "@/app/lib/modules/bot/types";
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard, colors, spacing } from "@/app/design-system";
 import DataSourceBanner from "@/app/components/DataSourceBanner";
 
-type DashboardMetrics = {
-  rendimiento30d: string;
-  equity: string;
-  balance: string;
-  winRate: string;
-  profitFactor: string;
-  drawdown: string;
-  operaciones: string;
-  broker: "MT4" | "MT5" | "MT4 / MT5";
-  estado: string;
+type BotConnection = {
+  id: string;
+  botInstanceId: string;
+  brokerType: "MT4" | "MT5";
+  mode: string;
+  connectionStatus: string;
+  heartbeatAt: string | null;
+  updatedAt: string;
 };
 
-const OUTCOME_ITEMS = [
-  {
-    icon: Bot,
-    title: "Instala y opera en tu terminal",
-    description: "Recibes el paquete descargable, instalas en MT4/MT5 y ejecutas con reglas disciplinadas.",
-  },
-  {
-    icon: Brain,
-    title: "Reduce emociones",
-    description: "Cada decision responde a reglas objetivas, no a impulsos ni miedo de mercado.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Protege tu capital",
-    description: "Controla riesgo por operacion con limites definidos antes de entrar al mercado.",
-  },
-  {
-    icon: Layers,
-    title: "Analiza miles de oportunidades",
-    description: "Escanea multiples escenarios para identificar contextos con mejor probabilidad.",
-  },
-  {
-    icon: Cpu,
-    title: "Ejecuta automaticamente",
-    description: "Entrada, TP y SL se procesan con velocidad y precision en un mismo flujo.",
-  },
-];
+type BotLog = {
+  id: string;
+  botInstanceId: string | null;
+  level: string;
+  eventType: string;
+  message: string;
+  createdAt: string;
+};
 
-const BRAIN_FLOW = [
-  "Mercado",
-  "Filtros",
-  "Confirmaciones",
-  "Gestion de riesgo",
-  "Entrada",
-  "TP / SL",
-  "Resultado",
-];
+type BotOperation = {
+  id: string;
+  symbol: string;
+  side: string;
+  status: string;
+  pnl: number;
+  executedAt: string;
+  metadata: Record<string, unknown>;
+};
 
-const FAQ_ITEMS = [
-  {
-    q: "Cuanto tiempo tarda en quedar operativo?",
-    a: "Normalmente el mismo dia: recibes licencia, guia de instalacion, manual y recursos de puesta en marcha.",
-  },
-  {
-    q: "Necesito estar mirando la pantalla todo el dia?",
-    a: "No. Esta pensado para ejecutar de forma automatica bajo parametros definidos.",
-  },
-  {
-    q: "Funciona en cualquier broker?",
-    a: "Funciona en brokers compatibles con MT4/MT5 y requiere completar instalacion y activacion guiada.",
-  },
-  {
-    q: "Garantiza rentabilidad?",
-    a: "No. Ninguna herramienta puede garantizar resultados futuros. Si ofrece disciplina, estructura y control de riesgo.",
-  },
-];
+type BotLatestSignal = {
+  signalId: string;
+  symbol: string;
+  direction: "BUY" | "SELL" | "NONE";
+  entry: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  status: string;
+  createdAt: string;
+};
 
-const GUARANTEE_ITEMS = [
-  {
-    icon: Zap,
-    title: "Actualizaciones",
-    description: "Mejoras continuas para mantener el sistema competitivo en escenarios cambiantes.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Seguridad",
-    description: "Arquitectura con reglas operativas para reducir errores manuales y sobreexposicion.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Soporte",
-    description: "Acompanamiento para activacion, validacion inicial y resolucion de dudas de uso.",
-  },
-  {
-    icon: Cpu,
-    title: "Compatibilidad",
-    description: "Entrega preparada para ecosistemas MT4 y MT5 con requisitos claros de instalacion y soporte.",
-  },
-];
+type BotSnapshot = {
+  generatedAt: string;
+  runningInstances: number;
+  connectedAccounts: number;
+};
+
+type BotPortalPayload = {
+  license: BotLicense | null;
+  instances: BotInstance[];
+  connections: BotConnection[];
+  logs: BotLog[];
+  latestSignal: BotLatestSignal | null;
+  operations: BotOperation[];
+  snapshot: BotSnapshot | null;
+};
+
+type PortalSnapshot = {
+  plan: {
+    entitlements: {
+      allowedPairs: string[] | null;
+    };
+  };
+};
+
+type ActivityItem = {
+  id: string;
+  title: string;
+  summary: string;
+  occurredAt: string;
+};
+
+function formatDateTime(value: string | Date | null | undefined): string {
+  if (!value) {
+    return "No disponible";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "No disponible";
+  }
+
+  return date.toLocaleString("es-ES");
+}
+
+function formatBotStatus(status: string | undefined): string {
+  switch (status) {
+    case "running":
+    case "connected":
+    case "ACTIVE":
+      return "Operativo";
+    case "paused":
+      return "Pausado";
+    case "error":
+    case "ERROR":
+      return "Con incidencia";
+    case "inactive":
+    case "pending":
+      return "Pendiente";
+    case "disconnected":
+      return "Desconectado";
+    default:
+      return "Pendiente";
+  }
+}
+
+function formatConnectionStatus(status: string | undefined): string {
+  switch (status) {
+    case "connected":
+      return "Conectado";
+    case "disconnected":
+      return "Desconectado";
+    case "pending":
+      return "Pendiente";
+    default:
+      return "Pendiente";
+  }
+}
+
+function formatDecision(value: string | undefined): string {
+  if (value === "BUY") {
+    return "Compra";
+  }
+  if (value === "SELL") {
+    return "Venta";
+  }
+  return "Sin operación";
+}
+
+function formatNumericLevel(value: number | null | undefined): string {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "No disponible";
+  }
+
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 5,
+  });
+}
+
+function formatActivityTitle(eventType: string, message: string): string {
+  const normalized = eventType.toLowerCase();
+
+  if (normalized.includes("broker.connected") || normalized.includes("connection")) {
+    return "Conexión";
+  }
+  if (normalized.includes("instance.created") || normalized.includes("installation")) {
+    return "Instalación registrada";
+  }
+  if (normalized.includes("signal")) {
+    return "Señal recibida";
+  }
+  if (normalized.includes("execution") || normalized.includes("operation")) {
+    return "Operación ejecutada";
+  }
+  if (normalized.includes("license")) {
+    return "Actualización de licencia";
+  }
+  if (normalized.includes("status.changed")) {
+    return "Estado actualizado";
+  }
+  if (normalized.includes("diagnostics")) {
+    return "Diagnóstico";
+  }
+
+  return message ? "Actividad del Bot" : "Actividad reciente";
+}
 
 export default function BotPage() {
-  const [globalResults, setGlobalResults] = useState<GlobalResultsSnapshot | null>(null);
-  const [botAccessMode, setBotAccessMode] = useState<"loading" | "founder" | "commercial">("loading");
-  const [metrics, setMetrics] = useState<DashboardMetrics>({
-    rendimiento30d: "0 USD",
-    equity: "0 USD",
-    balance: "0 USD",
-    winRate: "0%",
-    profitFactor: "0",
-    drawdown: "0%",
-    operaciones: "0",
-    broker: "MT4 / MT5",
-    estado: "Inactivo",
-  });
+  const [loading, setLoading] = useState(true);
+  const [botData, setBotData] = useState<BotPortalPayload | null>(null);
+  const [allowedPairs, setAllowedPairs] = useState<string[] | null>(null);
 
   useEffect(() => {
-    const loadBotData = async () => {
-      try {
-        const [license, instances, centralResults] = await Promise.all([getBotLicense(), getBotInstances(), getGlobalResults()]);
-        setBotAccessMode(license?.licenseType === "FOUNDER" ? "founder" : "commercial");
-        setGlobalResults(centralResults);
-        const primary = instances?.[0];
+    let active = true;
 
-        if (!primary) {
-          return;
+    const load = async () => {
+      try {
+        const [botResponse, portalResponse] = await Promise.all([
+          fetch("/api/client/bot", { cache: "no-store" }),
+          fetch("/api/client/portal", { cache: "no-store" }),
+        ]);
+
+        if (active && portalResponse.ok) {
+          const portalPayload = (await portalResponse.json()) as { data: PortalSnapshot };
+          setAllowedPairs(portalPayload.data.plan.entitlements.allowedPairs ?? null);
         }
 
-        const totalWins = Math.max(0, primary.stats.winningTrades * Math.max(0, primary.stats.avgWin));
-        const totalLosses = Math.max(1, Math.abs(primary.stats.losingTrades * Math.min(0, primary.stats.avgLoss)));
-        const inferredProfitFactor = totalWins / totalLosses;
-
-        const baseBalance = 0;
-        const profit = Number(primary.stats.profitLoss ?? 0);
-        const equityValue = baseBalance + profit;
-
-        setMetrics({
-          rendimiento30d: `${profit >= 0 ? "+" : ""}${profit.toLocaleString("en-US", {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          })} USD`,
-          equity: `${equityValue.toLocaleString("en-US", {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          })} USD`,
-          balance: `${baseBalance.toLocaleString("en-US", {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-          })} USD`,
-          winRate: `${(primary.stats.winRate * 100).toFixed(1)}%`,
-          profitFactor: inferredProfitFactor.toFixed(2),
-          drawdown: "0%",
-          operaciones: String(primary.stats.totalTrades),
-          broker: license?.brokerConnected ?? "MT4 / MT5",
-          estado: primary.status === "running" ? "Licencia activa" : "Pendiente de instalacion",
-        });
-      } catch {
-        setBotAccessMode("commercial");
-        setMetrics({
-          rendimiento30d: "0 USD",
-          equity: "0 USD",
-          balance: "0 USD",
-          winRate: "0%",
-          profitFactor: "0",
-          drawdown: "0%",
-          operaciones: "0",
-          broker: "MT4 / MT5",
-          estado: "Inactivo",
-        });
+        if (active && botResponse.ok) {
+          const botPayload = (await botResponse.json()) as { data: BotPortalPayload };
+          setBotData(botPayload.data);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
-    loadBotData();
+    void load();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const botAccessHref = botAccessMode === "loading"
-    ? "#"
-    : botAccessMode === "founder"
-      ? "/dashboard"
-      : "/checkout?product=bot-carvipix-license";
-  const botAccessLabel = botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "QUIERO EL BOT";
+  const license = botData?.license ?? null;
+  const instances = botData?.instances ?? [];
+  const connections = botData?.connections ?? [];
+  const logs = botData?.logs ?? [];
+  const operations = botData?.operations ?? [];
+  const latestSignal = botData?.latestSignal ?? null;
+  const snapshot = botData?.snapshot ?? null;
 
-  const equityCurve = useMemo(() => {
-    const values = [35, 38, 44, 42, 48, 54, 51, 60, 63, 69, 73, 79, 84, 88, 94];
-    return values;
-  }, []);
+  const primaryInstance = instances[0] ?? null;
+  const latestConnection = connections[0] ?? null;
+  const latestOperation = operations[0] ?? null;
+  const hasBotAcquired = Boolean(license);
+  const platformLabel = latestConnection?.brokerType ?? license?.brokerConnected ?? "MT4 / MT5";
+  const connectionStatus = formatConnectionStatus(latestConnection?.connectionStatus ?? primaryInstance?.status);
+  const botOperationalStatus = formatBotStatus(primaryInstance?.status ?? latestConnection?.connectionStatus);
+  const pairsLabel = allowedPairs && allowedPairs.length > 0 ? allowedPairs.join(", ") : "Todos";
+
+  const resultsSummary = useMemo(() => {
+    const totalOperations = primaryInstance?.stats.totalTrades ?? operations.length;
+    const positiveOperations = primaryInstance?.stats.winningTrades ?? operations.filter((item) => item.pnl > 0).length;
+    const negativeOperations = primaryInstance?.stats.losingTrades ?? operations.filter((item) => item.pnl < 0).length;
+    const effectiveness = primaryInstance
+      ? `${(primaryInstance.stats.winRate * 100).toFixed(1)}%`
+      : totalOperations > 0
+        ? `${((positiveOperations / totalOperations) * 100).toFixed(1)}%`
+        : "0.0%";
+
+    return {
+      totalOperations,
+      positiveOperations,
+      negativeOperations,
+      effectiveness,
+      latestOperationLabel: latestOperation
+        ? `${latestOperation.symbol} · ${formatDecision(latestOperation.side)} · ${formatDateTime(latestOperation.executedAt)}`
+        : "Sin operaciones registradas",
+    };
+  }, [latestOperation, operations, primaryInstance]);
+
+  const currentOperation = useMemo(() => {
+    if (!latestOperation && !latestSignal) {
+      return null;
+    }
+
+    return {
+      symbol: latestOperation?.symbol ?? latestSignal?.symbol ?? primaryInstance?.symbol ?? "No disponible",
+      side: latestOperation?.side ?? latestSignal?.direction ?? "NONE",
+      entry: latestSignal?.entry ?? null,
+      stopLoss: latestSignal?.stopLoss ?? null,
+      takeProfit: latestSignal?.takeProfit ?? null,
+      status: latestOperation?.status ?? latestSignal?.status ?? primaryInstance?.status ?? "pending",
+      executedAt: latestOperation?.executedAt ?? latestSignal?.createdAt ?? null,
+    };
+  }, [latestOperation, latestSignal, primaryInstance]);
+
+  const recentActivity = useMemo<ActivityItem[]>(() => {
+    const items: ActivityItem[] = [];
+
+    if (latestConnection) {
+      items.push({
+        id: `connection-${latestConnection.id}`,
+        title: "Conexión",
+        summary: `${platformLabel} · ${connectionStatus}`,
+        occurredAt: latestConnection.heartbeatAt ?? latestConnection.updatedAt,
+      });
+    }
+
+    if (latestSignal && latestSignal.direction !== "NONE") {
+      items.push({
+        id: `signal-${latestSignal.signalId}`,
+        title: "Señal recibida",
+        summary: `${latestSignal.symbol} · ${formatDecision(latestSignal.direction)} · ${latestSignal.status}`,
+        occurredAt: latestSignal.createdAt,
+      });
+    }
+
+    if (latestOperation) {
+      items.push({
+        id: `operation-${latestOperation.id}`,
+        title: latestOperation.status.toLowerCase().includes("close") ? "Operación cerrada" : "Operación ejecutada",
+        summary: `${latestOperation.symbol} · ${formatDecision(latestOperation.side)} · ${latestOperation.status}`,
+        occurredAt: latestOperation.executedAt,
+      });
+    }
+
+    logs.forEach((log) => {
+      items.push({
+        id: log.id,
+        title: formatActivityTitle(log.eventType, log.message),
+        summary: log.message,
+        occurredAt: log.createdAt,
+      });
+    });
+
+    return items
+      .filter((item) => item.summary.trim().length > 0)
+      .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())
+      .slice(0, 5);
+  }, [connectionStatus, latestConnection, latestOperation, latestSignal, logs, platformLabel]);
+
+  const handleDownload = async () => {
+    try {
+      const response = await fetch("/api/client/bot/mt5/download-ea");
+      if (!response.ok) {
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "CARVIPIX_EA_MT5_V1.ex5";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      // Keep silent to preserve the current user flow.
+    }
+  };
 
   return (
     <main
@@ -213,62 +348,17 @@ export default function BotPage() {
       <div className="cv-workspace max-w-7xl">
         <DataSourceBanner />
       </div>
+
       <div className="bot-page-shell">
-        <section className="bot-hero" aria-label="Hero BOT CARVIPIX PRO">
-          <div className="hero-background-grid" />
-          <div className="hero-glow hero-glow-left" />
-          <div className="hero-glow hero-glow-right" />
+        <section className="section-shell hero-shell">
+          <div className="hero-top">
+            <div>
+              <CARVIPIXBadge variant="premium">BOT CARVIPIX</CARVIPIXBadge>
+              <h1 className="section-title">Centro operativo del Bot</h1>
+              <p className="section-copy">Supervisa licencia, conexión, actividad reciente y resultados sin simulaciones ni bloques comerciales repetidos.</p>
+            </div>
 
-          <div className="hero-content">
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <CARVIPIXBadge variant="premium">AUTOMATIZACION CUANTITATIVA PREMIUM</CARVIPIXBadge>
-              <h1 className="hero-title">Deja que la precision opere por ti cada minuto del mercado.</h1>
-              <p className="hero-subtitle">
-                BOT CARVIPIX PRO es un producto descargable: compras, recibes licencia y paquete de instalacion, y quedas listo para configurar tu terminal MT4/MT5.
-              </p>
-
-              <div className="hero-cta-row">
-                <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
-                  <CARVIPIXButton variant="premium" size="lg">
-                    {botAccessMode === "loading" ? "CONSULTANDO LICENCIA" : botAccessLabel}
-                  </CARVIPIXButton>
-                </Link>
-                <a href="#resultados-bot" className="hero-secondary-cta">
-                  Ver resultados
-                  <ArrowRight size={16} />
-                </a>
-              </div>
-
-              <div className="hero-metric-strip">
-                <div className="hero-mini-stat">
-                  <p>Rendimiento referencial</p>
-                  <strong>{metrics.rendimiento30d}</strong>
-                </div>
-                <div className="hero-mini-stat">
-                  <p>Win Rate referencial</p>
-                  <strong>{metrics.winRate}</strong>
-                </div>
-                <div className="hero-mini-stat">
-                  <p>Operaciones registradas</p>
-                  <strong>{metrics.operaciones}</strong>
-                </div>
-                <div className="hero-mini-stat">
-                  <p>Estado actual</p>
-                  <strong>{metrics.estado}</strong>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="hero-visual-wrap"
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.15 }}
-            >
+            <div className="hero-visual-wrap" aria-hidden="true">
               <div className="hero-orb-stage">
                 <div className="hero-orb-ring hero-orb-ring-1" />
                 <div className="hero-orb-ring hero-orb-ring-2" />
@@ -279,346 +369,203 @@ export default function BotPage() {
                 <div className="hero-orb-tag hero-orb-tag-right">RISK LAYER</div>
                 <div className="hero-orb-tag hero-orb-tag-bottom">DESCARGA EA</div>
               </div>
-
-              <CARVIPIXCard variant="premium" padding="16">
-                <div className="side-metrics-header">
-                  <span>Rendimiento</span>
-                  <CARVIPIXBadge variant="warning">Demo controlada</CARVIPIXBadge>
-                </div>
-                <div className="side-metrics-grid">
-                  <div>
-                    <p>Equity</p>
-                    <strong>{metrics.equity}</strong>
-                  </div>
-                  <div>
-                    <p>Profit Factor</p>
-                    <strong>{metrics.profitFactor}</strong>
-                  </div>
-                  <div>
-                    <p>Drawdown</p>
-                    <strong>{metrics.drawdown}</strong>
-                  </div>
-                  <div>
-                    <p>Broker</p>
-                    <strong>{metrics.broker}</strong>
-                  </div>
-                </div>
-              </CARVIPIXCard>
-            </motion.div>
+            </div>
           </div>
+
+          {loading ? (
+            <CARVIPIXCard variant="admin" padding="16" hover={false} className="status-card">
+              <p className="status-label">Estado</p>
+              <strong className="status-value">Cargando información operativa...</strong>
+            </CARVIPIXCard>
+          ) : !hasBotAcquired ? (
+            <CARVIPIXCard variant="premium" padding="16" hover={false} className="purchase-card">
+              <div>
+                <h2 className="card-heading">Bot CARVIPIX</h2>
+                <p className="card-copy">Automatiza las operaciones correspondientes a tu membresía cuando existan oportunidades válidas.</p>
+              </div>
+
+              <div className="purchase-row">
+                <div>
+                  <p className="status-label">Precio</p>
+                  <strong className="status-value">999 USD</strong>
+                </div>
+                <div className="action-row compact-actions">
+                  <Link href="/checkout?product=bot-carvipix-license" className="unstyled-link">
+                    <CARVIPIXButton variant="premium" size="lg">Comprar Bot CARVIPIX</CARVIPIXButton>
+                  </Link>
+                  <Link href="/servicios/bot" className="unstyled-link">
+                    <CARVIPIXButton variant="ghost" size="lg">Ver detalles</CARVIPIXButton>
+                  </Link>
+                </div>
+              </div>
+            </CARVIPIXCard>
+          ) : (
+            <div className="status-grid" id="estado-bot">
+              <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                <p className="status-label">Estado operativo</p>
+                <strong className="status-value">{botOperationalStatus}</strong>
+              </CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                <p className="status-label">Licencia</p>
+                <strong className="status-value">{license?.active ? "Activa" : "Inactiva"}</strong>
+              </CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                <p className="status-label">Plataforma</p>
+                <strong className="status-value">{platformLabel}</strong>
+              </CARVIPIXCard>
+              <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                <p className="status-label">Última comunicación</p>
+                <strong className="status-value status-value--sm">{formatDateTime(latestConnection?.heartbeatAt ?? latestConnection?.updatedAt)}</strong>
+              </CARVIPIXCard>
+            </div>
+          )}
         </section>
 
-        <section className="section-block">
-          <div className="section-heading">
-            <p>QUE HACE POR TI</p>
-            <h2>Tu operativa pasa de reaccionar a ejecutar con criterio continuo.</h2>
-          </div>
-          <div className="outcome-grid">
-            {OUTCOME_ITEMS.map((item, idx) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.4, delay: idx * 0.06 }}
-                >
-                  <CARVIPIXCard variant="info" padding="16">
-                    <div className="outcome-item">
-                      <span className="outcome-icon">
-                        <Icon size={18} />
-                      </span>
-                      <div>
-                        <h3>{item.title}</h3>
-                        <p>{item.description}</p>
-                      </div>
+        {hasBotAcquired ? (
+          <>
+            <section className="section-shell">
+              <div className="section-heading-inline">
+                <div>
+                  <p className="section-kicker">Estado principal</p>
+                  <h2 className="card-heading">Resumen operativo</h2>
+                </div>
+                <CARVIPIXBadge variant={license?.active ? "success" : "warning"}>{license?.active ? "Licencia validada" : "Licencia pendiente"}</CARVIPIXBadge>
+              </div>
+
+              <div className="summary-grid">
+                <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card">
+                  <div className="panel-row"><span>Bot adquirido</span><strong>{hasBotAcquired ? "Sí" : "No"}</strong></div>
+                  <div className="panel-row"><span>Plataforma</span><strong>{platformLabel}</strong></div>
+                  <div className="panel-row"><span>Conexión</span><strong>{connectionStatus}</strong></div>
+                  <div className="panel-row"><span>Pares habilitados</span><strong>{pairsLabel}</strong></div>
+                </CARVIPIXCard>
+
+                <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card">
+                  <div className="panel-row"><span>Instancias registradas</span><strong>{instances.length}</strong></div>
+                  <div className="panel-row"><span>Cuentas conectadas</span><strong>{snapshot?.connectedAccounts ?? connections.length}</strong></div>
+                  <div className="panel-row"><span>Bots operativos</span><strong>{snapshot?.runningInstances ?? 0}</strong></div>
+                  <div className="panel-row"><span>Última operación</span><strong className="status-value--sm">{resultsSummary.latestOperationLabel}</strong></div>
+                </CARVIPIXCard>
+              </div>
+            </section>
+
+            <section className="section-shell" id="instalacion-bot">
+              <div className="section-heading-inline">
+                <div>
+                  <p className="section-kicker">Instalación y conexión</p>
+                  <h2 className="card-heading">Checklist compacto</h2>
+                </div>
+              </div>
+
+              <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card compact-list">
+                <div className="panel-row"><span>Archivo entregado</span><strong>CARVIPIX_EA_MT5_V1.ex5</strong></div>
+                <div className="panel-row"><span>Licencia validada</span><strong>{license?.active ? "Sí" : "Pendiente"}</strong></div>
+                <div className="panel-row"><span>Instalación registrada</span><strong>{instances.length > 0 ? "Sí" : "Pendiente"}</strong></div>
+                <div className="panel-row"><span>MT5 conectado</span><strong>{platformLabel === "MT5" && connectionStatus === "Conectado" ? "Sí" : "Pendiente"}</strong></div>
+                <div className="panel-row"><span>Estado</span><strong>{license?.active && connectionStatus === "Conectado" ? "Listo" : "Pendiente"}</strong></div>
+              </CARVIPIXCard>
+            </section>
+
+            <section className="section-shell">
+              <div className="section-heading-inline">
+                <div>
+                  <p className="section-kicker">Operación actual</p>
+                  <h2 className="card-heading">Estado de ejecución</h2>
+                </div>
+              </div>
+
+              <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card">
+                {currentOperation && (currentOperation.side === "BUY" || currentOperation.side === "SELL") ? (
+                  <div className="operation-grid">
+                    <div className="panel-row"><span>Par</span><strong>{currentOperation.symbol}</strong></div>
+                    <div className="panel-row"><span>Dirección</span><strong>{formatDecision(currentOperation.side)}</strong></div>
+                    <div className="panel-row"><span>Entrada</span><strong>{formatNumericLevel(currentOperation.entry)}</strong></div>
+                    <div className="panel-row"><span>Stop Loss</span><strong>{formatNumericLevel(currentOperation.stopLoss)}</strong></div>
+                    <div className="panel-row"><span>Take Profit</span><strong>{formatNumericLevel(currentOperation.takeProfit)}</strong></div>
+                    <div className="panel-row"><span>Estado</span><strong>{currentOperation.status}</strong></div>
+                    <div className="panel-row operation-grid__wide"><span>Hora de ejecución</span><strong>{formatDateTime(currentOperation.executedAt)}</strong></div>
+                  </div>
+                ) : (
+                  <p className="empty-copy">El Bot está esperando una oportunidad válida.</p>
+                )}
+              </CARVIPIXCard>
+            </section>
+
+            <section className="section-shell">
+              <div className="section-heading-inline">
+                <div>
+                  <p className="section-kicker">Actividad reciente</p>
+                  <h2 className="card-heading">Últimos eventos relevantes</h2>
+                </div>
+              </div>
+
+              <div className="activity-list">
+                {recentActivity.length > 0 ? recentActivity.map((item) => (
+                  <CARVIPIXCard key={item.id} variant="info" padding="16" hover={false} className="activity-card">
+                    <div className="activity-icon"><Activity size={16} /></div>
+                    <div>
+                      <p className="activity-title">{item.title}</p>
+                      <p className="activity-summary">{item.summary}</p>
+                      <p className="activity-time">{formatDateTime(item.occurredAt)}</p>
                     </div>
                   </CARVIPIXCard>
-                </motion.div>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="section-block">
-          <div className="section-heading">
-            <p>EL CEREBRO DEL BOT</p>
-            <h2>Un pipeline inteligente que convierte ruido en decisiones operables.</h2>
-          </div>
-          <CARVIPIXCard variant="premium" padding="16">
-            <div className="brain-flow-wrap">
-              {BRAIN_FLOW.map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="brain-step">
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <strong>{step}</strong>
-                  </div>
-                  {index < BRAIN_FLOW.length - 1 ? <div className="brain-arrow">-&gt;</div> : null}
-                </React.Fragment>
-              ))}
-            </div>
-          </CARVIPIXCard>
-
-          <div className="mt-6 border-y border-white/10 py-6">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div>
-                <p className="text-xs font-semibold uppercase text-[#D4AF37]">Resultados probabilísticos históricos</p>
-                <h3 className="mt-2 text-xl font-bold">Perfiles Bot simulados</h3>
-                <p className="mt-2 max-w-3xl text-sm text-white/60">
-                  Son escenarios hipoteticos aislados. No representan clientes, licencias, instalaciones MT5 ni resultados reales de usuarios.
-                </p>
+                )) : (
+                  <CARVIPIXCard variant="info" padding="16" hover={false}>
+                    <p className="empty-copy">Todavía no hay actividad reciente visible.</p>
+                  </CARVIPIXCard>
+                )}
               </div>
-              <CARVIPIXBadge variant="warning">{globalResults?.profiles.botTotal ?? 0} perfiles simulados</CARVIPIXBadge>
-            </div>
-            {globalResults?.enabled && globalResults.simulation && globalResults.profiles.featured.length > 0 ? (
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {globalResults.profiles.featured.filter(profile => profile.isBotProfile).map(profile => (
-                  <div key={profile.profileId} className="border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <strong>{profile.displayName}</strong>
-                      <span className="text-xs text-[#D4AF37]">{profile.riskType}</span>
-                    </div>
-                    <p className="mt-3 text-2xl font-bold">${profile.currentBalance.toLocaleString("es-MX", { minimumFractionDigits: 2 })}</p>
-                    <p className="mt-1 text-xs text-white/55">{profile.operationsApplied} operaciones · DD {profile.maxDrawdownPct.toFixed(2)}%</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-5 text-sm text-white/60">La simulación probabilística está desactivada. No afecta instancias ni cuentas Bot reales.</p>
-            )}
-          </div>
-        </section>
+            </section>
 
-        <section className="section-block" id="resultados-bot">
-          <div className="section-heading">
-            <p>RESULTADOS</p>
-            <h2>Dashboard con foco en performance y control de riesgo.</h2>
-          </div>
-
-          <CARVIPIXCard variant="premium" padding="16">
-            <div className="results-grid">
-              <div className="results-stats">
-                <div className="metric-tile">
-                  <span>Equity</span>
-                  <strong>{metrics.equity}</strong>
+            <section className="section-shell">
+              <div className="section-heading-inline">
+                <div>
+                  <p className="section-kicker">Resumen de resultados del Bot</p>
+                  <h2 className="card-heading">Métricas operativas</h2>
                 </div>
-                <div className="metric-tile">
-                  <span>Balance</span>
-                  <strong>{metrics.balance}</strong>
-                </div>
-                <div className="metric-tile">
-                  <span>Win Rate referencial</span>
-                  <strong>{metrics.winRate}</strong>
-                </div>
-                <div className="metric-tile">
-                  <span>Profit Factor</span>
-                  <strong>{metrics.profitFactor}</strong>
-                </div>
-                <div className="metric-tile">
-                  <span>Drawdown</span>
-                  <strong>{metrics.drawdown}</strong>
-                </div>
-                <div className="metric-tile">
-                  <span>Operaciones registradas</span>
-                  <strong>{metrics.operaciones}</strong>
-                </div>
+                <Link href="/resultados" className="inline-link">Ver resultados completos del Bot</Link>
               </div>
 
-              <div className="equity-panel">
-                <div className="equity-panel-header">
-                  <h3>Equity Curve (30 dias)</h3>
-                  <span>Referencia visual</span>
-                </div>
-                <div className="equity-chart" role="img" aria-label="Grafico equity">
-                  {equityCurve.map((point, idx) => (
-                    <motion.div
-                      key={`${point}-${idx}`}
-                      className="equity-bar"
-                      initial={{ height: 8, opacity: 0 }}
-                      whileInView={{ height: `${point}%`, opacity: 1 }}
-                      viewport={{ once: true, amount: 0.4 }}
-                      transition={{ duration: 0.45, delay: idx * 0.03 }}
-                    />
-                  ))}
-                </div>
-                <p className="equity-note">Visualización ilustrativa. La activación real depende de infraestructura, validación y conexión broker.</p>
+              <div className="status-grid">
+                <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                  <p className="status-label">Operaciones ejecutadas</p>
+                  <strong className="status-value">{resultsSummary.totalOperations}</strong>
+                </CARVIPIXCard>
+                <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                  <p className="status-label">Positivas</p>
+                  <strong className="status-value">{resultsSummary.positiveOperations}</strong>
+                </CARVIPIXCard>
+                <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                  <p className="status-label">Negativas</p>
+                  <strong className="status-value">{resultsSummary.negativeOperations}</strong>
+                </CARVIPIXCard>
+                <CARVIPIXCard variant="statistics" padding="16" hover={false} className="status-card">
+                  <p className="status-label">Efectividad</p>
+                  <strong className="status-value">{resultsSummary.effectiveness}</strong>
+                </CARVIPIXCard>
               </div>
-            </div>
-          </CARVIPIXCard>
-        </section>
 
-        <section className="section-block">
-          <div className="section-heading">
-            <p>BOT EN ACCION</p>
-            <h2>Visualiza el formato de senales, entradas y ejecución prevista dentro del flujo del bot.</h2>
-          </div>
+              <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card">
+                <div className="panel-row"><span>Última operación</span><strong className="status-value--sm">{resultsSummary.latestOperationLabel}</strong></div>
+              </CARVIPIXCard>
+            </section>
 
-          <div className="action-grid">
-            <CARVIPIXCard variant="info" padding="16">
-              <h3 className="action-title">Flujo de ejecucion</h3>
-              <div className="action-feed">
-                {globalResults?.activity.length ? globalResults.activity.slice(0, 4).map((item, idx) => (
-                  <motion.div
-                    key={item.activityId}
-                    className="action-row"
-                    initial={{ opacity: 0, x: -14 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, amount: 0.4 }}
-                    transition={{ duration: 0.35, delay: idx * 0.08 }}
-                  >
-                    <div>
-                      <p className="action-symbol">{item.title}</p>
-                      <p className="action-levels">{item.summary}</p>
-                    </div>
-                    <CARVIPIXBadge variant="default">Registrado</CARVIPIXBadge>
-                  </motion.div>
-                )) : <p className="action-levels">Sin actividad oficial registrada todavia.</p>}
-              </div>
-            </CARVIPIXCard>
-
-            <CARVIPIXCard variant="premium" padding="16">
-              <h3 className="action-title">Ejecucion automatica</h3>
-              <div className="execution-stack">
-                <div className="execution-item">
-                  <span>Senal validada</span>
-                  <strong>XAUUSD Buy</strong>
-                </div>
-                <div className="execution-item">
-                  <span>Entrada</span>
-                  <strong>2338.45</strong>
-                </div>
-                <div className="execution-item">
-                  <span>Take Profit</span>
-                  <strong>2345.00</strong>
-                </div>
-                <div className="execution-item">
-                  <span>Stop Loss</span>
-                  <strong>2332.00</strong>
-                </div>
-                <div className="execution-item execution-item-highlight">
-                  <span>Estado</span>
-                  <strong>Activacion controlada requerida</strong>
-                </div>
-              </div>
-            </CARVIPIXCard>
-          </div>
-        </section>
-
-        <section className="section-block">
-          <div className="section-heading">
-            <p>COMPATIBILIDAD</p>
-            <h2>Preparado para integrarse en tu entorno de ejecucion profesional.</h2>
-          </div>
-          <div className="compat-grid">
-            <CARVIPIXCard variant="info" padding="16">
-              <div className="compat-card-title">
-                <Gauge size={20} />
-                <h3>Plataformas</h3>
-              </div>
-              <div className="compat-badges">
-                <CARVIPIXBadge variant="premium">MT4</CARVIPIXBadge>
-                <CARVIPIXBadge variant="premium">MT5</CARVIPIXBadge>
-              </div>
-              <p>Compatibilidad orientada a entornos MetaTrader soportados mediante instalacion y activacion guiadas.</p>
-            </CARVIPIXCard>
-
-            <CARVIPIXCard variant="info" padding="16">
-              <div className="compat-card-title">
-                <Activity size={20} />
-                <h3>Instalacion</h3>
-              </div>
-              <p>Proceso guiado en 3 pasos: descargar paquete, instalar EA y completar activacion asistida.</p>
-            </CARVIPIXCard>
-
-            <CARVIPIXCard variant="info" padding="16">
-              <div className="compat-card-title">
-                <TrendingUp size={20} />
-                <h3>Requisitos</h3>
-              </div>
-              <p>Terminal MT4/MT5 activo, conexion estable y configuracion minima de gestion de riesgo.</p>
-            </CARVIPIXCard>
-          </div>
-        </section>
-
-        <section className="section-block pricing-block">
-          <div className="section-heading">
-            <p>PRECIO</p>
-            <h2>Cuando ves el sistema completo, la decision se vuelve obvia.</h2>
-          </div>
-          <CARVIPIXCard variant="premium" padding="16">
-            <div className="price-layout">
-              <div>
-                <p className="price-label">BOT CARVIPIX PRO</p>
-                <h3 className="price-value">{botAccessMode === "founder" ? "INCLUIDO" : "999 USD"}</h3>
-                <p className="price-note">{botAccessMode === "founder" ? "Acceso permanente Founder. Sin pago ni renovación." : "Pago unico. Acceso de por vida a esta version del bot."}</p>
-              </div>
-              <div className="price-cta-wrap">
-                <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
-                  <CARVIPIXButton variant="premium" size="lg">
-                    {botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "COMENZAR AHORA"}
-                  </CARVIPIXButton>
+            <section className="section-shell actions-shell">
+              <div className="action-row">
+                <CARVIPIXButton variant="premium" size="lg" leftIcon={<Download size={16} />} onClick={handleDownload}>Descargar Bot</CARVIPIXButton>
+                <Link href="/bot-mt5" className="unstyled-link">
+                  <CARVIPIXButton variant="ghost" size="lg" leftIcon={<FileText size={16} />}>Guía de instalación</CARVIPIXButton>
+                </Link>
+                <a href="#estado-bot" className="unstyled-link">
+                  <CARVIPIXButton variant="ghost" size="lg" leftIcon={<ShieldCheck size={16} />}>Ver estado</CARVIPIXButton>
+                </a>
+                <Link href="/soporte" className="unstyled-link">
+                  <CARVIPIXButton variant="ghost" size="lg" leftIcon={<LifeBuoy size={16} />}>Solicitar asistencia</CARVIPIXButton>
                 </Link>
               </div>
-            </div>
-          </CARVIPIXCard>
-        </section>
-
-        <section className="section-block">
-          <div className="section-heading">
-            <p>PREGUNTAS FRECUENTES</p>
-            <h2>Resuelve dudas clave antes de activar tu sistema.</h2>
-          </div>
-          <div className="faq-wrap">
-            {FAQ_ITEMS.map((faq) => (
-              <details key={faq.q} className="faq-item">
-                <summary>{faq.q}</summary>
-                <p>{faq.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
-
-        <section className="section-block">
-          <div className="section-heading">
-            <p>GARANTIAS</p>
-            <h2>Soporte y evolucion para sostener una experiencia premium.</h2>
-          </div>
-          <div className="guarantee-grid">
-            {GUARANTEE_ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <CARVIPIXCard key={item.title} variant="info" padding="16">
-                  <div className="guarantee-item">
-                    <span className="guarantee-icon">
-                      <Icon size={18} />
-                    </span>
-                    <div>
-                      <h3>{item.title}</h3>
-                      <p>{item.description}</p>
-                    </div>
-                  </div>
-                </CARVIPIXCard>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="final-cta">
-          <CARVIPIXCard variant="premium" padding="16">
-            <div className="final-cta-inner">
-              <div>
-                <p>ULTIMO PASO</p>
-                <h2>Activa un sistema que opera con disciplina cuando tu no puedes.</h2>
-              </div>
-              <Link href={botAccessHref} className="unstyled-link" aria-disabled={botAccessMode === "loading"}>
-                <CARVIPIXButton variant="premium" size="lg">
-                  {botAccessMode === "founder" ? "LICENCIA FOUNDER ACTIVA" : "ACTIVAR BOT AHORA"}
-                </CARVIPIXButton>
-              </Link>
-            </div>
-          </CARVIPIXCard>
-        </section>
+            </section>
+          </>
+        ) : null}
       </div>
 
       <style jsx>{`
@@ -627,629 +574,341 @@ export default function BotPage() {
           max-width: 1180px;
           display: flex;
           flex-direction: column;
-          gap: 32px;
-          overflow-x: clip;
+          gap: 20px;
         }
 
-        .bot-hero {
-          position: relative;
-          overflow: clip;
-          border-radius: 28px;
-          border: 1px solid rgba(212, 175, 55, 0.24);
-          min-height: calc(100vh - 110px);
-          padding: 40px;
+        .section-shell {
+          border: 1px solid rgba(212, 175, 55, 0.18);
+          border-radius: 24px;
+          padding: 24px;
           background:
-            radial-gradient(circle at 18% 18%, rgba(20, 87, 180, 0.28), transparent 46%),
-            radial-gradient(circle at 84% 10%, rgba(212, 175, 55, 0.2), transparent 40%),
-            linear-gradient(160deg, #060b14 0%, #081224 54%, #04070f 100%);
+            radial-gradient(circle at 12% 18%, rgba(18, 86, 180, 0.16), transparent 28%),
+            linear-gradient(180deg, rgba(8, 10, 16, 0.96), rgba(5, 7, 11, 0.98));
         }
 
-        .hero-background-grid {
-          position: absolute;
-          inset: 0;
-          opacity: 0.24;
-          background-image:
-            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-          background-size: 34px 34px;
-          mask-image: radial-gradient(circle at center, black 36%, transparent 96%);
-        }
-
-        .hero-glow {
-          position: absolute;
-          width: 340px;
-          height: 340px;
-          border-radius: 50%;
-          filter: blur(55px);
-          opacity: 0.34;
-        }
-
-        .hero-glow-left {
-          background: rgba(17, 130, 255, 0.4);
-          left: -140px;
-          top: 18%;
-        }
-
-        .hero-glow-right {
-          background: rgba(212, 175, 55, 0.34);
-          right: -120px;
-          top: 12%;
-        }
-
-        .hero-content {
-          position: relative;
-          z-index: 1;
+        .hero-shell {
           display: grid;
-          grid-template-columns: 1.18fr 0.82fr;
-          gap: 28px;
+          gap: 18px;
+        }
+
+        .hero-top {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 280px;
+          gap: 24px;
           align-items: center;
-          min-height: 100%;
         }
 
-        .hero-title {
-          margin-top: 16px;
-          margin-bottom: 0;
-          font-size: clamp(2rem, 4.8vw, 4rem);
+        .section-title {
+          margin: 12px 0 0;
+          font-size: clamp(2rem, 4vw, 3rem);
           line-height: 1.04;
-          letter-spacing: -0.02em;
-          max-width: 680px;
         }
 
-        .hero-subtitle {
-          margin-top: 14px;
-          margin-bottom: 0;
-          font-size: clamp(1rem, 1.8vw, 1.2rem);
-          color: rgba(255, 255, 255, 0.82);
-          max-width: 640px;
+        .section-copy,
+        .card-copy,
+        .empty-copy,
+        .activity-summary,
+        .activity-time,
+        .inline-link {
+          color: rgba(255, 255, 255, 0.68);
         }
 
-        .hero-cta-row {
-          margin-top: 24px;
+        .section-heading-inline {
           display: flex;
           flex-wrap: wrap;
           align-items: center;
+          justify-content: space-between;
           gap: 14px;
+          margin-bottom: 16px;
         }
 
-        .hero-secondary-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          text-decoration: none;
-          color: rgba(255, 255, 255, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 12px;
-          padding: 11px 15px;
-          transition: all 180ms ease;
-          backdrop-filter: blur(8px);
-        }
-
-        .hero-secondary-cta:hover {
-          border-color: rgba(212, 175, 55, 0.5);
-          background: rgba(212, 175, 55, 0.1);
-          color: #ffffff;
-        }
-
-        .hero-metric-strip {
-          margin-top: 22px;
-          display: grid;
-          grid-template-columns: repeat(4, minmax(130px, 1fr));
-          gap: 10px;
-        }
-
-        .hero-mini-stat {
-          border-radius: 14px;
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          background: rgba(3, 12, 26, 0.65);
-          padding: 12px;
-          backdrop-filter: blur(10px);
-        }
-
-        .hero-mini-stat p {
+        .section-kicker {
           margin: 0;
           font-size: 0.74rem;
-          color: rgba(255, 255, 255, 0.6);
+          letter-spacing: 0.14em;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          color: rgba(212, 175, 55, 0.9);
         }
 
-        .hero-mini-stat strong {
-          display: block;
-          margin-top: 6px;
-          font-size: 1rem;
-          color: #ffffff;
-          line-height: 1.2;
+        .card-heading {
+          margin: 6px 0 0;
+          font-size: 1.5rem;
+        }
+
+        .status-grid,
+        .summary-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 14px;
         }
 
         .hero-visual-wrap {
           display: flex;
-          flex-direction: column;
-          gap: 14px;
+          justify-content: flex-end;
+          align-items: flex-start;
         }
 
         .hero-orb-stage {
           position: relative;
-          border-radius: 24px;
-          min-height: 350px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: radial-gradient(circle at 50% 38%, rgba(255, 208, 64, 0.16), rgba(2, 7, 15, 0.96) 58%);
+          width: min(100%, 280px);
+          aspect-ratio: 1 / 1;
+          border-radius: 20px;
+          border: 1px solid rgba(212, 175, 55, 0.22);
+          background:
+            radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.20), rgba(5, 10, 18, 0.96) 54%),
+            linear-gradient(180deg, rgba(5, 10, 18, 0.98), rgba(4, 8, 16, 1));
           display: flex;
           align-items: center;
           justify-content: center;
           overflow: hidden;
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
         }
 
         .hero-orb-ring {
           position: absolute;
-          border: 1px solid rgba(212, 175, 55, 0.45);
           border-radius: 50%;
+          border: 1px solid rgba(212, 175, 55, 0.28);
           animation: spin 18s linear infinite;
         }
 
         .hero-orb-ring-1 {
-          width: 250px;
-          height: 250px;
+          width: 64%;
+          height: 64%;
         }
 
         .hero-orb-ring-2 {
-          width: 300px;
-          height: 300px;
-          border-color: rgba(64, 174, 255, 0.45);
+          width: 78%;
+          height: 78%;
+          border-color: rgba(44, 146, 255, 0.45);
           animation-direction: reverse;
-          animation-duration: 22s;
+          animation-duration: 24s;
         }
 
         .hero-orb-core {
-          width: 128px;
-          height: 128px;
+          position: relative;
+          z-index: 1;
+          width: 92px;
+          height: 92px;
           border-radius: 50%;
-          background: linear-gradient(140deg, #101825, #0a101b 55%, #111f2f);
-          border: 1px solid rgba(255, 255, 255, 0.16);
           display: flex;
           align-items: center;
           justify-content: center;
           color: #d4af37;
+          background: linear-gradient(160deg, #0d1524, #0a1220 62%, #0f1c2b);
+          border: 1px solid rgba(255, 255, 255, 0.12);
           box-shadow:
-            0 0 0 8px rgba(212, 175, 55, 0.09),
-            0 0 48px rgba(212, 175, 55, 0.28);
-          animation: pulse 2.6s ease-in-out infinite;
-          z-index: 1;
+            0 0 0 10px rgba(212, 175, 55, 0.08),
+            0 0 48px rgba(212, 175, 55, 0.18);
+          animation: pulse 2.8s ease-in-out infinite;
         }
 
         .hero-orb-tag {
           position: absolute;
-          padding: 6px 10px;
+          z-index: 1;
           border-radius: 999px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(0, 0, 0, 0.5);
+          padding: 7px 12px;
           font-size: 0.68rem;
-          letter-spacing: 0.08em;
-          color: rgba(255, 255, 255, 0.84);
+          letter-spacing: 0.04em;
+          color: rgba(255, 255, 255, 0.9);
+          background: rgba(12, 14, 18, 0.88);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+          white-space: nowrap;
         }
 
         .hero-orb-tag-top {
-          top: 38px;
+          top: 18px;
           left: 50%;
           transform: translateX(-50%);
         }
 
         .hero-orb-tag-right {
-          right: 28px;
+          right: 10px;
           top: 50%;
           transform: translateY(-50%);
         }
 
         .hero-orb-tag-bottom {
+          bottom: 14px;
           left: 50%;
-          bottom: 26px;
           transform: translateX(-50%);
         }
 
-        .section-block {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
+        .summary-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .section-heading p {
+        .status-card,
+        .panel-card,
+        .purchase-card {
+          border: 1px solid rgba(212, 175, 55, 0.18) !important;
+          background: linear-gradient(180deg, rgba(10, 14, 24, 0.92), rgba(7, 9, 16, 0.96)) !important;
+        }
+
+        .status-label {
           margin: 0;
           font-size: 0.76rem;
-          letter-spacing: 0.14em;
-          color: rgba(212, 175, 55, 0.84);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.58);
         }
 
-        .section-heading h2 {
-          margin: 8px 0 0;
-          font-size: clamp(1.36rem, 2.8vw, 2rem);
+        .status-value {
+          display: block;
+          margin-top: 8px;
+          font-size: 1.32rem;
+          color: #fff;
           line-height: 1.2;
-          max-width: 820px;
         }
 
-        .outcome-grid {
-          display: grid;
-          grid-template-columns: repeat(5, minmax(0, 1fr));
-          gap: 12px;
+        .status-value--sm {
+          font-size: 0.96rem;
+          line-height: 1.45;
         }
 
-        .outcome-item,
-        .guarantee-item {
+        .panel-row {
           display: flex;
-          align-items: flex-start;
+          justify-content: space-between;
+          gap: 18px;
+          padding: 12px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.74);
+        }
+
+        .panel-row:first-child {
+          padding-top: 0;
+        }
+
+        .panel-row:last-child {
+          padding-bottom: 0;
+          border-bottom: none;
+        }
+
+        .panel-row strong {
+          color: #fff;
+          text-align: right;
+        }
+
+        .compact-list {
+          max-width: 760px;
+        }
+
+        .operation-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0 18px;
+        }
+
+        .operation-grid__wide {
+          grid-column: 1 / -1;
+        }
+
+        .activity-list {
+          display: grid;
           gap: 12px;
         }
 
-        .outcome-icon,
-        .guarantee-icon {
+        .activity-card {
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr);
+          gap: 12px;
+          align-items: flex-start;
+        }
+
+        .activity-icon {
           width: 34px;
           height: 34px;
           border-radius: 10px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(160deg, rgba(212, 175, 55, 0.2), rgba(12, 34, 66, 0.7));
-          color: #f3d169;
-          flex-shrink: 0;
+          color: #d4af37;
+          background: rgba(212, 175, 55, 0.12);
+          border: 1px solid rgba(212, 175, 55, 0.22);
         }
 
-        .outcome-item h3,
-        .guarantee-item h3 {
+        .activity-title {
           margin: 0;
-          font-size: 1rem;
-        }
-
-        .outcome-item p,
-        .guarantee-item p,
-        .compat-grid p {
-          margin: 8px 0 0;
-          color: rgba(255, 255, 255, 0.74);
-          font-size: 0.92rem;
-          line-height: 1.45;
-        }
-
-        .brain-flow-wrap {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .brain-step {
-          min-width: 138px;
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(7, 12, 20, 0.76);
-          padding: 12px;
-          text-align: center;
-        }
-
-        .brain-step span {
-          display: block;
-          font-size: 0.68rem;
-          color: rgba(255, 255, 255, 0.52);
-          letter-spacing: 0.08em;
-        }
-
-        .brain-step strong {
-          display: block;
-          margin-top: 6px;
-          color: #ffffff;
-          font-size: 0.9rem;
-        }
-
-        .brain-arrow {
-          color: rgba(212, 175, 55, 0.8);
           font-weight: 700;
+          color: #fff;
         }
 
-        .results-grid {
-          display: grid;
-          grid-template-columns: 1.05fr 0.95fr;
-          gap: 14px;
-        }
-
-        .results-stats {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 10px;
-        }
-
-        .metric-tile {
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(7, 14, 24, 0.78);
-          padding: 12px;
-        }
-
-        .metric-tile span {
-          font-size: 0.76rem;
-          color: rgba(255, 255, 255, 0.64);
-        }
-
-        .metric-tile strong {
-          display: block;
-          margin-top: 8px;
-          font-size: 1.22rem;
-        }
-
-        .equity-panel {
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(5, 11, 19, 0.82);
-          padding: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .equity-panel-header {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-          align-items: center;
-        }
-
-        .equity-panel-header h3 {
-          margin: 0;
-          font-size: 1rem;
-        }
-
-        .equity-panel-header span {
-          font-size: 0.72rem;
-          letter-spacing: 0.1em;
-          color: rgba(212, 175, 55, 0.88);
-        }
-
-        .equity-chart {
-          display: grid;
-          grid-template-columns: repeat(15, minmax(0, 1fr));
-          align-items: end;
-          gap: 6px;
-          min-height: 170px;
-          border-radius: 10px;
-          padding: 10px;
-          background: linear-gradient(180deg, rgba(17, 39, 75, 0.42), rgba(6, 12, 20, 0.2));
-        }
-
-        .equity-bar {
-          border-radius: 4px 4px 0 0;
-          background: linear-gradient(180deg, rgba(90, 214, 140, 0.96), rgba(17, 126, 76, 0.94));
-          min-height: 6px;
-        }
-
-        .equity-note {
-          margin: 0;
-          font-size: 0.78rem;
-          color: rgba(255, 255, 255, 0.58);
-        }
-
-        .action-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .action-title {
-          margin: 0;
-          font-size: 1.08rem;
-        }
-
-        .action-feed {
-          margin-top: 14px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-
-        .action-row {
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(7, 14, 24, 0.76);
-          padding: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-        }
-
-        .action-symbol {
-          margin: 0;
-          font-size: 0.92rem;
-          font-weight: 700;
-        }
-
-        .action-levels {
+        .activity-summary,
+        .activity-time {
           margin: 4px 0 0;
-          font-size: 0.78rem;
-          color: rgba(255, 255, 255, 0.62);
+          font-size: 0.92rem;
         }
 
-        .execution-stack {
-          margin-top: 14px;
+        .purchase-row,
+        .action-row {
           display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .execution-item {
-          border-radius: 10px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(8, 16, 29, 0.74);
-          padding: 10px;
-        }
-
-        .execution-item span {
-          display: block;
-          font-size: 0.72rem;
-          color: rgba(255, 255, 255, 0.55);
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-
-        .execution-item strong {
-          display: block;
-          margin-top: 6px;
-          font-size: 0.98rem;
-          color: #ffffff;
-        }
-
-        .execution-item-highlight {
-          border-color: rgba(98, 220, 151, 0.54);
-          box-shadow: 0 0 0 1px rgba(98, 220, 151, 0.22) inset;
-        }
-
-        .compat-grid,
-        .guarantee-grid {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-        }
-
-        .guarantee-grid {
-          grid-template-columns: repeat(4, minmax(0, 1fr));
-        }
-
-        .compat-card-title {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-        }
-
-        .compat-card-title h3 {
-          margin: 0;
-        }
-
-        .compat-badges {
-          margin-top: 12px;
-          display: flex;
-          gap: 8px;
-        }
-
-        .pricing-block {
-          padding-top: 6px;
-        }
-
-        .price-layout {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
           flex-wrap: wrap;
-        }
-
-        .price-label {
-          margin: 0;
-          font-size: 0.8rem;
-          letter-spacing: 0.12em;
-          color: rgba(255, 255, 255, 0.66);
-        }
-
-        .price-value {
-          margin: 8px 0 0;
-          font-size: clamp(2rem, 5vw, 3rem);
-          color: #f0c955;
-          line-height: 1;
-        }
-
-        .price-note {
-          margin: 8px 0 0;
-          color: rgba(255, 255, 255, 0.74);
-        }
-
-        .price-cta-wrap {
-          display: flex;
-          align-items: center;
-        }
-
-        .faq-wrap {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .faq-item {
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(8, 14, 23, 0.8);
-          padding: 0 14px;
-        }
-
-        .faq-item summary {
-          cursor: pointer;
-          list-style: none;
-          padding: 14px 0;
-          font-weight: 700;
-        }
-
-        .faq-item p {
-          margin: 0 0 14px;
-          color: rgba(255, 255, 255, 0.75);
-          line-height: 1.45;
-        }
-
-        .final-cta {
-          padding-top: 6px;
-          padding-bottom: 4px;
-        }
-
-        .final-cta-inner {
-          display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 16px;
-          flex-wrap: wrap;
         }
 
-        .final-cta-inner p {
-          margin: 0;
-          font-size: 0.78rem;
-          letter-spacing: 0.14em;
-          color: rgba(212, 175, 55, 0.86);
+        .compact-actions {
+          justify-content: flex-end;
         }
 
-        .final-cta-inner h2 {
-          margin: 8px 0 0;
-          font-size: clamp(1.35rem, 2.6vw, 2.2rem);
-          max-width: 760px;
-        }
-
-        .side-metrics-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
-        }
-
-        .side-metrics-header span {
-          font-size: 0.84rem;
-          color: rgba(255, 255, 255, 0.76);
-        }
-
-        .side-metrics-grid {
-          margin-top: 12px;
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
-        }
-
-        .side-metrics-grid p {
-          margin: 0;
-          color: rgba(255, 255, 255, 0.58);
-          font-size: 0.74rem;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-        }
-
-        .side-metrics-grid strong {
-          margin-top: 7px;
-          display: block;
-          font-size: 1rem;
-          color: #fff;
+        .actions-shell {
+          padding-top: 8px;
         }
 
         .unstyled-link {
           text-decoration: none;
-          color: inherit;
+        }
+
+        .inline-link {
+          text-decoration: none;
+          font-size: 0.92rem;
+        }
+
+        .inline-link:hover {
+          color: #fff;
+        }
+
+        @media (max-width: 980px) {
+          .hero-top {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-visual-wrap {
+            justify-content: center;
+          }
+
+          .status-grid,
+          .summary-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+
+        @media (max-width: 720px) {
+          .section-shell {
+            padding: 18px;
+          }
+
+          .status-grid,
+          .summary-grid,
+          .operation-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .hero-orb-stage {
+            width: min(100%, 240px);
+          }
+
+          .compact-actions,
+          .action-row,
+          .purchase-row {
+            justify-content: stretch;
+          }
+
+          .compact-actions :global(button),
+          .action-row :global(button) {
+            width: 100%;
+          }
         }
 
         @keyframes spin {
@@ -1267,98 +926,7 @@ export default function BotPage() {
             transform: scale(1);
           }
           50% {
-            transform: scale(1.05);
-          }
-        }
-
-        @media (max-width: 1140px) {
-          .hero-content {
-            grid-template-columns: 1fr;
-          }
-
-          .hero-orb-stage {
-            min-height: 290px;
-          }
-
-          .outcome-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .results-grid,
-          .action-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .guarantee-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-
-        @media (max-width: 860px) {
-          .bot-hero {
-            min-height: unset;
-            padding: 24px;
-          }
-
-          .hero-metric-strip {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .results-stats {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-
-          .compat-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .brain-flow-wrap {
-            justify-content: flex-start;
-          }
-
-          .brain-arrow {
-            width: 100%;
-            text-align: center;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .hero-title {
-            font-size: 2rem;
-          }
-
-          .hero-subtitle {
-            font-size: 0.95rem;
-          }
-
-          .hero-orb-tag-right {
-            right: 12px;
-          }
-
-          .hero-orb-tag-bottom {
-            bottom: 12px;
-          }
-
-          .outcome-grid,
-          .guarantee-grid,
-          .results-stats {
-            grid-template-columns: 1fr;
-          }
-
-          .side-metrics-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .hero-cta-row,
-          .price-layout,
-          .final-cta-inner {
-            align-items: stretch;
-          }
-
-          .hero-secondary-cta,
-          .price-cta-wrap .unstyled-link,
-          .final-cta .unstyled-link {
-            width: 100%;
+            transform: scale(1.03);
           }
         }
       `}</style>
