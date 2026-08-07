@@ -1,6 +1,37 @@
 import "server-only";
 
 import { backendDatabase } from "@/app/backend/core/database";
+import {
+  type ResolvedUserCommercialAccess,
+  resolveUserCommercialAccess,
+} from "@/app/backend/commercial/plan-entitlements-store";
+
+const MT5_DAILY_LIMIT_BY_PLAN = {
+  basic: 7,
+  advanced: 25,
+} as const;
+
+type Mt5OperableDecision = "BUY" | "SELL";
+type Mt5NonOperableDecision = "WAIT" | "NO_TRADE" | "CONDITIONAL_ENTRY" | "ENTRY_MISSED" | "NONE";
+
+export type Mt5CommercialDecision = Mt5OperableDecision | Mt5NonOperableDecision;
+
+export type Mt5CommercialGateResult = {
+  allowed: boolean;
+  reason:
+    | "ALLOWED"
+    | "NON_OPERABLE_DECISION"
+    | "LICENSE_INACTIVE"
+    | "MEMBERSHIP_INACTIVE"
+    | "PLAN_NOT_ALLOWED"
+    | "PAIR_NOT_ALLOWED"
+    | "PLAN_DAILY_LIMIT_REACHED";
+  userId?: string;
+  subscriptionPlan?: ResolvedUserCommercialAccess["subscriptionPlan"];
+  dailyLimit?: number;
+  consumedToday?: number;
+  alreadyCountedSignal?: boolean;
+};
 
 // ============================================================================
 // BOT MT5 EXECUTION SERVICE
@@ -114,6 +145,12 @@ async function ensureMt5RoutingSchema(): Promise<void> {
 // ============================================================================
 
 export class BotMT5Service {
+  constructor(
+    private readonly commercialAccessResolver: (
+      userId: string
+    ) => Promise<ResolvedUserCommercialAccess> = resolveUserCommercialAccess
+  ) {}
+
   // Obtener instalación
   async getInstallation(
     licenseId: string,
@@ -505,6 +542,168 @@ export class BotMT5Service {
       WHERE signal_id = $1
       `,
       [signalId]
+    );
+  }
+
+  async evaluateCommercialGate(input: {
+    licenseId: string;
+    signalId: string;
+    symbol: string;
+    decision: Mt5CommercialDecision;
+  }): Promise<Mt5CommercialGateResult> {
+    if (!backendDatabase.enabled) {
+      return { allowed: true, reason: "ALLOWED" };
+    }
+
+    const normalizedDecision = String(input.decision ?? "").trim().toUpperCase();
+    const isOperableDecision = normalizedDecision === "BUY" || normalizedDecision === "SELL";
+    if (!isOperableDecision) {
+      return { allowed: true, reason: "NON_OPERABLE_DECISION" };
+    }
+
+    const { rows: licenseRows } = await backendDatabase.query<{
+      user_id: string | null;
+      status: string | null;
+      expires_at: Date | null;
+    }>(
+      `
+      SELECT user_id, status, expires_at
+      FROM bot_mt5_licenses
+      WHERE license_id = $1
+      LIMIT 1
+      `,
+      [input.licenseId]
+    );
+
+    const license = licenseRows[0];
+    if (!license || !license.user_id) {
+      return { allowed: false, reason: "LICENSE_INACTIVE" };
+    }
+
+    const licenseActive =
+      String(license.status ?? "").toUpperCase() === "ACTIVE" &&
+      (!license.expires_at || new Date(license.expires_at) > new Date());
+
+    if (!licenseActive) {
+      return { allowed: false, reason: "LICENSE_INACTIVE", userId: license.user_id };
+    }
+
+    const commercialAccess = await this.commercialAccessResolver(license.user_id);
+    if (!commercialAccess.membershipActive) {
+      return {
+        allowed: false,
+        reason: "MEMBERSHIP_INACTIVE",
+        userId: commercialAccess.userId,
+        subscriptionPlan: commercialAccess.subscriptionPlan,
+      };
+    }
+
+    const planKey = commercialAccess.subscriptionPlan === "basic" || commercialAccess.subscriptionPlan === "advanced"
+      ? commercialAccess.subscriptionPlan
+      : "basic";
+    const dailyLimit = MT5_DAILY_LIMIT_BY_PLAN[planKey];
+    if (!dailyLimit) {
+      return {
+        allowed: false,
+        reason: "PLAN_NOT_ALLOWED",
+        userId: commercialAccess.userId,
+        subscriptionPlan: commercialAccess.subscriptionPlan,
+      };
+    }
+
+    const normalizedSymbol = String(input.symbol ?? "").trim().toUpperCase();
+    const allowedPairs = commercialAccess.entitlements.allowedPairs?.map((pair) => pair.toUpperCase()) ?? null;
+    if (allowedPairs && !allowedPairs.includes(normalizedSymbol)) {
+      return {
+        allowed: false,
+        reason: "PAIR_NOT_ALLOWED",
+        userId: commercialAccess.userId,
+        subscriptionPlan: commercialAccess.subscriptionPlan,
+        dailyLimit,
+      };
+    }
+
+    const { rows: usageRows } = await backendDatabase.query<{
+      consumed_today: number;
+      already_counted_signal: boolean;
+    }>(
+      `
+      SELECT
+        COUNT(DISTINCT s.signal_id)::int AS consumed_today,
+        COALESCE(BOOL_OR(s.signal_id = $2), false) AS already_counted_signal
+      FROM bot_mt5_signals s
+      INNER JOIN bot_mt5_licenses l ON l.license_id = s.license_id
+      WHERE l.user_id = $1
+        AND s.created_at >= DATE_TRUNC('day', NOW())
+        AND s.decision IN ('BUY', 'SELL')
+      `,
+      [commercialAccess.userId, input.signalId]
+    );
+
+    const consumedToday = Number(usageRows[0]?.consumed_today ?? 0);
+    const alreadyCountedSignal = Boolean(usageRows[0]?.already_counted_signal);
+
+    if (!alreadyCountedSignal && consumedToday >= dailyLimit) {
+      return {
+        allowed: false,
+        reason: "PLAN_DAILY_LIMIT_REACHED",
+        userId: commercialAccess.userId,
+        subscriptionPlan: commercialAccess.subscriptionPlan,
+        dailyLimit,
+        consumedToday,
+        alreadyCountedSignal,
+      };
+    }
+
+    return {
+      allowed: true,
+      reason: "ALLOWED",
+      userId: commercialAccess.userId,
+      subscriptionPlan: commercialAccess.subscriptionPlan,
+      dailyLimit,
+      consumedToday,
+      alreadyCountedSignal,
+    };
+  }
+
+  async recordCommercialGateBlock(input: {
+    licenseId: string;
+    signalId: string;
+    analysisId: string;
+    symbol: string;
+    decision: string;
+    reason: Mt5CommercialGateResult["reason"];
+    userId?: string;
+    subscriptionPlan?: string;
+    dailyLimit?: number;
+    consumedToday?: number;
+  }): Promise<void> {
+    if (!backendDatabase.enabled) {
+      return;
+    }
+
+    const auditId = `mt5-audit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await backendDatabase.query(
+      `
+      INSERT INTO bot_mt5_audit (id, installation_id, license_id, event_type, event_data, created_at)
+      VALUES ($1, NULL, $2, $3, $4::jsonb, NOW())
+      `,
+      [
+        auditId,
+        input.licenseId,
+        "COMMERCIAL_GATE_BLOCKED",
+        JSON.stringify({
+          reason: input.reason,
+          signal_id: input.signalId,
+          analysis_id: input.analysisId,
+          symbol: input.symbol,
+          decision: input.decision,
+          user_id: input.userId ?? null,
+          subscription_plan: input.subscriptionPlan ?? null,
+          daily_limit: input.dailyLimit ?? null,
+          consumed_today: input.consumedToday ?? null,
+        }),
+      ]
     );
   }
 
