@@ -85,8 +85,18 @@ export function getRuntimeStage(env: EnvRecord = process.env): RuntimeStage {
   return "development";
 }
 
+export function isVercelRuntime(env: EnvRecord = process.env): boolean {
+  const vercelFlag = readEnv(env, "VERCEL").toLowerCase();
+  const vercelEnv = readEnv(env, "VERCEL_ENV").toLowerCase();
+  return vercelFlag === "1" || vercelEnv.length > 0;
+}
+
 export function isStrictRuntime(env: EnvRecord = process.env): boolean {
   const stage = getRuntimeStage(env);
+  if (isVercelRuntime(env)) {
+    return false;
+  }
+
   return stage === "shadow" || stage === "production";
 }
 

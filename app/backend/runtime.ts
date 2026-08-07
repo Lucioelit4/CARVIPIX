@@ -4,7 +4,7 @@ import type { EcosystemServiceLayer } from "./contracts";
 import { NoopAuthorizationPort } from "./core/auth";
 import { InMemoryBackendCache } from "./core/cache";
 import { backendConfig } from "./core/config";
-import { assertCriticalEnvironment, isStrictRuntime } from "./core/config";
+import { assertCriticalEnvironment, isStrictRuntime, isVercelRuntime } from "./core/config";
 import { InMemoryEnterpriseAuditTrail } from "./core/enterprise-audit";
 import { InMemoryServiceEventBus } from "./core/event-bus";
 import { normalizeBackendError } from "./core/errors";
@@ -99,6 +99,7 @@ function instrumentService<TService extends object>(
 }
 
 const container = new ServiceContainer();
+const vercelRuntime = isVercelRuntime();
 if (isStrictRuntime()) {
   assertCriticalEnvironment();
 }
@@ -150,12 +151,18 @@ const ecosystemServices: EcosystemServiceLayer = {
   stats: instrumentService("stats", new StatsDomainService(), observability, logger),
 };
 
-const executionEngine = new CarvipixExecutionEngine(
-  buildDefaultExecutionEnginePorts({
-    ecosystemServices,
-    transitions: executionEngineTransitions,
-  })
-);
+const executionEngine = vercelRuntime
+  ? {
+      run: async (..._args: Parameters<CarvipixExecutionEngine["run"]>) => {
+        throw new Error("CARVIPIX_ENGINE_DISABLED_ON_VERCEL");
+      },
+    }
+  : new CarvipixExecutionEngine(
+      buildDefaultExecutionEnginePorts({
+        ecosystemServices,
+        transitions: executionEngineTransitions,
+      })
+    );
 
 let observerInitializationInFlight: Promise<void> | null = null;
 
@@ -169,7 +176,7 @@ function isBuildPhase(): boolean {
 }
 
 function ensureObserverRuntimeInitialization(): void {
-  if (isBuildPhase()) {
+  if (isBuildPhase() || vercelRuntime) {
     return;
   }
 
