@@ -901,6 +901,33 @@ export class MasterEventDispatcher {
         const activeLicenseIds = licenses.rows.map((row) => row.license_id).filter(Boolean);
 
         for (const licenseId of activeLicenseIds) {
+          const commercialGate = await botMT5Service.evaluateCommercialGate({
+            licenseId,
+            signalId: signal.signal_id,
+            symbol: signal.symbol,
+            decision: signal.direction,
+          });
+
+          if (!commercialGate.allowed) {
+            await botMT5Service.recordCommercialGateBlock({
+              licenseId,
+              signalId: signal.signal_id,
+              analysisId: signal.analysis_id,
+              symbol: signal.symbol,
+              decision: signal.direction,
+              reason: commercialGate.reason,
+              userId: commercialGate.userId,
+              subscriptionPlan: commercialGate.subscriptionPlan,
+              dailyLimit: commercialGate.dailyLimit,
+              consumedToday: commercialGate.consumedToday,
+            });
+
+            console.log(
+              `[DISPATCHER-BRAIN] MT5 BLOCK ${licenseId} ${signal.signal_id}: ${commercialGate.reason}`
+            );
+            continue;
+          }
+
           await botMT5Service.createSignal({
             signalId: signal.signal_id,
             analysisId: signal.analysis_id,

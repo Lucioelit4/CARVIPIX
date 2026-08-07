@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     await fs.writeFile(targetPath, normalized.data);
 
     const avatarUrl = `${AVATAR_PUBLIC_PREFIX}/${userKey}/${fileName}`;
-    const previousAvatarUrl = auth.user.avatar_url ?? null;
+    const previousAvatarUrl = (auth.user as { avatar_url?: string | null }).avatar_url ?? null;
 
     await updateUserAvatar(auth.user.id, avatarUrl);
     await removeOldAvatar(previousAvatarUrl, userKey, avatarUrl);

@@ -19,6 +19,7 @@ import {
   revokeSessionByHash as revokeLocalSessionByHash,
   revokeSession as revokeLocalSession,
   seedDemoStore,
+  updateUser as updateLocalUser,
   upsertMembership as upsertLocalMembership,
 } from "@/app/backend/core/local-auth-store";
 import { getFounderAccess } from "@/app/backend/founder-access/service";
@@ -327,6 +328,23 @@ export async function readSessionUser(token: string): Promise<AuthUserRow | null
   }
 
   return rows[0] ?? null;
+}
+
+export async function updateUserAvatar(userId: string, avatarUrl: string | null): Promise<void> {
+  if (!backendDatabase.enabled) {
+    await seedDemoStore();
+    await updateLocalUser(userId, { avatarUrl: avatarUrl ?? null } as never);
+    return;
+  }
+
+  await backendDatabase.query(
+    `
+    UPDATE users
+    SET avatar_url = $2
+    WHERE id = $1
+    `,
+    [userId, avatarUrl]
+  );
 }
 
 export async function revokeSession(token: string): Promise<void> {
