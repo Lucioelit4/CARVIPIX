@@ -26,16 +26,7 @@ function TraderNavigation() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[#D4AF37]/20 bg-[#060606]/95 backdrop-blur">
-        <div className="mx-auto hidden w-full max-w-6xl items-center justify-end gap-3 px-4 py-3 md:flex">
-          <div className="flex items-center gap-2">
-            <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2.5 py-1 text-xs font-semibold text-[#D4AF37]">
-              {unreadCount} nueva{unreadCount === 1 ? "" : "s"}
-            </span>
-            <InstallTraderButton compact />
-          </div>
-        </div>
-
+      <header className="relative z-40">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-2 px-4 py-2 md:hidden">
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2 py-1 text-[10px] font-semibold text-[#D4AF37]">
@@ -44,25 +35,34 @@ function TraderNavigation() {
             <InstallTraderButton compact />
           </div>
         </div>
-        <nav className="mx-auto hidden w-full max-w-6xl gap-2 overflow-x-auto px-4 pb-3 md:flex">
-          {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold transition ${
-                  active
-                    ? "border-[#D4AF37]/45 bg-[#D4AF37] text-black"
-                    : "border-white/15 bg-white/5 text-white/85 hover:border-[#D4AF37]/45 hover:text-[#D4AF37]"
-                }`}
-              >
-                <item.icon size={14} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+
+        <div className="mx-auto hidden w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 md:flex">
+          <nav className="flex min-w-0 gap-2 overflow-x-auto">
+            {NAV_ITEMS.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`inline-flex items-center gap-2 whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                    active
+                      ? "border-[#D4AF37]/45 bg-[#D4AF37] text-black"
+                      : "border-white/15 bg-white/5 text-white/85 hover:border-[#D4AF37]/45 hover:text-[#D4AF37]"
+                  }`}
+                >
+                  <item.icon size={14} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2.5 py-1 text-xs font-semibold text-[#D4AF37]">
+              {unreadCount} nueva{unreadCount === 1 ? "" : "s"}
+            </span>
+            <InstallTraderButton compact />
+          </div>
+        </div>
       </header>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#060606]/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur md:hidden">
