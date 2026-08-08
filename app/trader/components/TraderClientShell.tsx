@@ -27,11 +27,7 @@ function TraderNavigation() {
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-[#D4AF37]/20 bg-[#060606]/95 backdrop-blur">
-        <div className="mx-auto hidden w-full max-w-6xl items-center justify-between gap-3 px-4 py-3 md:flex">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">CARVIPIX Trader</p>
-            <p className="text-sm text-white/70">Alertas primero. Flujo minimo para decidir y abrir.</p>
-          </div>
+        <div className="mx-auto hidden w-full max-w-6xl items-center justify-end gap-3 px-4 py-3 md:flex">
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2.5 py-1 text-xs font-semibold text-[#D4AF37]">
               {unreadCount} nueva{unreadCount === 1 ? "" : "s"}
@@ -40,8 +36,7 @@ function TraderNavigation() {
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-2 md:hidden">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#D4AF37]">CARVIPIX Trader</p>
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-2 px-4 py-2 md:hidden">
           <div className="flex items-center gap-2">
             <span className="rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 px-2 py-1 text-[10px] font-semibold text-[#D4AF37]">
               {unreadCount}
