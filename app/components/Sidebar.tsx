@@ -13,7 +13,6 @@ import { resolveSidebarMembershipLabel, type SidebarMembership } from "./sidebar
 const menuItems = [
   { name: "Inicio", href: "/servicios" },
   { name: "Dashboard", href: "/dashboard" },
-  { name: "CARVIPIX Trader", href: "/trader" },
   { name: "Alertas en Vivo", href: "/alertas" },
   { name: "Resultados", href: "/resultados" },
   { name: "Análisis Diario", href: "/analisis" },

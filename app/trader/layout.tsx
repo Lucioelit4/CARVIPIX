@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import TraderClientShell from "./components/TraderClientShell";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "CARVIPIX Trader",
@@ -7,6 +7,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function TraderLayout({ children }: { children: React.ReactNode }) {
-  return <TraderClientShell>{children}</TraderClientShell>;
+export default function TraderLayout() {
+  redirect("/dashboard");
 }
