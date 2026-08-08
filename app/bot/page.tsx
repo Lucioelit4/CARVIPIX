@@ -449,48 +449,6 @@ export default function BotPage() {
               </div>
             </section>
 
-            <section className="section-shell" id="instalacion-bot">
-              <div className="section-heading-inline">
-                <div>
-                  <p className="section-kicker">Instalación y conexión</p>
-                  <h2 className="card-heading">Checklist compacto</h2>
-                </div>
-              </div>
-
-              <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card compact-list">
-                <div className="panel-row"><span>Archivo entregado</span><strong>CARVIPIX_EA_MT5_V1.ex5</strong></div>
-                <div className="panel-row"><span>Licencia validada</span><strong>{license?.active ? "Sí" : "Pendiente"}</strong></div>
-                <div className="panel-row"><span>Instalación registrada</span><strong>{instances.length > 0 ? "Sí" : "Pendiente"}</strong></div>
-                <div className="panel-row"><span>MT5 conectado</span><strong>{platformLabel === "MT5" && connectionStatus === "Conectado" ? "Sí" : "Pendiente"}</strong></div>
-                <div className="panel-row"><span>Estado</span><strong>{license?.active && connectionStatus === "Conectado" ? "Listo" : "Pendiente"}</strong></div>
-              </CARVIPIXCard>
-            </section>
-
-            <section className="section-shell">
-              <div className="section-heading-inline">
-                <div>
-                  <p className="section-kicker">Operación actual</p>
-                  <h2 className="card-heading">Estado de ejecución</h2>
-                </div>
-              </div>
-
-              <CARVIPIXCard variant="admin" padding="16" hover={false} className="panel-card">
-                {currentOperation && (currentOperation.side === "BUY" || currentOperation.side === "SELL") ? (
-                  <div className="operation-grid">
-                    <div className="panel-row"><span>Par</span><strong>{currentOperation.symbol}</strong></div>
-                    <div className="panel-row"><span>Dirección</span><strong>{formatDecision(currentOperation.side)}</strong></div>
-                    <div className="panel-row"><span>Entrada</span><strong>{formatNumericLevel(currentOperation.entry)}</strong></div>
-                    <div className="panel-row"><span>Stop Loss</span><strong>{formatNumericLevel(currentOperation.stopLoss)}</strong></div>
-                    <div className="panel-row"><span>Take Profit</span><strong>{formatNumericLevel(currentOperation.takeProfit)}</strong></div>
-                    <div className="panel-row"><span>Estado</span><strong>{currentOperation.status}</strong></div>
-                    <div className="panel-row operation-grid__wide"><span>Hora de ejecución</span><strong>{formatDateTime(currentOperation.executedAt)}</strong></div>
-                  </div>
-                ) : (
-                  <p className="empty-copy">El Bot está esperando una oportunidad válida.</p>
-                )}
-              </CARVIPIXCard>
-            </section>
-
             <section className="section-shell">
               <div className="section-heading-inline">
                 <div>
