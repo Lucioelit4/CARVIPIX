@@ -120,7 +120,6 @@ export default function TraderClientShell({ children }: { children: ReactNode })
                   className="rounded-2xl border border-[#D4AF37]/25 bg-black/40 p-2"
                   priority
                 />
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#D4AF37]">CARVIPIX Trader</p>
               </div>
             </div>
           ) : null}
