@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS observer_schedule_slot_claim;

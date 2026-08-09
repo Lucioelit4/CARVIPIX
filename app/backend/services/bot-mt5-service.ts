@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { backendDatabase } from "@/app/backend/core/database";
 import {
   type ResolvedUserCommercialAccess,
@@ -129,11 +130,39 @@ async function ensureMt5RoutingSchema(): Promise<void> {
       await backendDatabase.query("ALTER TABLE bot_mt5_installations ADD COLUMN IF NOT EXISTS canonical_symbol TEXT");
       await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS canonical_symbol TEXT");
       await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS signal_mode TEXT NOT NULL DEFAULT 'SHORT'");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS validity_minutes INTEGER");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS source TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS event_id TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals DROP CONSTRAINT IF EXISTS valid_entry_levels");
+      await backendDatabase.query(
+        `ALTER TABLE bot_mt5_signals ADD CONSTRAINT valid_entry_levels CHECK (
+          (decision = 'BUY' AND take_profit > entry AND entry > stop_loss)
+          OR (decision = 'SELL' AND stop_loss > entry AND entry > take_profit)
+          OR decision = 'NONE'
+        ) NOT VALID`
+      );
       await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS delivered_installation_id TEXT");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals ADD COLUMN IF NOT EXISTS acknowledged_at TIMESTAMPTZ");
+      await backendDatabase.query(
+        `CREATE TABLE IF NOT EXISTS bot_mt5_signal_runtime_events (
+          id TEXT PRIMARY KEY,
+          signal_id TEXT NOT NULL,
+          license_id TEXT NOT NULL,
+          installation_id TEXT,
+          stage TEXT NOT NULL,
+          ack_status TEXT,
+          detail TEXT,
+          payload JSONB,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`
+      );
+      await backendDatabase.query("CREATE INDEX IF NOT EXISTS idx_mt5_signal_runtime_signal ON bot_mt5_signal_runtime_events(signal_id, created_at)");
+      await backendDatabase.query("CREATE INDEX IF NOT EXISTS idx_mt5_signal_runtime_stage ON bot_mt5_signal_runtime_events(stage, created_at)");
       await backendDatabase.query("DROP INDEX IF EXISTS idx_bot_mt5_signals_signal_license_unique");
       await backendDatabase.query("CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_mt5_signals_signal_license_unique ON bot_mt5_signals(signal_id, license_id)");
       await backendDatabase.query("CREATE INDEX IF NOT EXISTS idx_bot_mt5_signals_route_queue ON bot_mt5_signals(license_id, canonical_symbol, status, created_at)");
       await backendDatabase.query("UPDATE bot_mt5_signals SET canonical_symbol = symbol WHERE canonical_symbol IS NULL");
+      await backendDatabase.query("ALTER TABLE bot_mt5_signals VALIDATE CONSTRAINT valid_entry_levels");
     })();
   }
 
@@ -222,7 +251,9 @@ export class BotMT5Service {
     accountNumber: number,
     brokerServer: string,
     magicNumber: number,
-    eaVersion: string
+    eaVersion: string,
+    brokerSymbol?: string,
+    canonicalSymbol?: string
   ): Promise<BotMT5Installation> {
     const id = `mt5-inst-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -276,8 +307,8 @@ export class BotMT5Service {
         accountHash,
         accountNumber,
         brokerServer,
-        null,
-        null,
+        brokerSymbol?.trim() || null,
+        canonicalSymbol?.trim().toUpperCase() || null,
         magicNumber,
         eaVersion,
         "ACTIVE",
@@ -545,6 +576,89 @@ export class BotMT5Service {
     );
   }
 
+  async acknowledgeSignal(input: {
+    signalId: string;
+    licenseId: string;
+    status: string;
+    installationId?: string;
+  }): Promise<"PENDING" | "DELIVERED" | "EXECUTED" | "EXPIRED" | "REJECTED"> {
+    if (!backendDatabase.enabled) {
+      return "DELIVERED";
+    }
+
+    await ensureMt5RoutingSchema();
+
+    const ackStatus = String(input.status ?? "").trim().toUpperCase();
+    let nextStatus: "PENDING" | "DELIVERED" | "EXECUTED" | "EXPIRED" | "REJECTED" = "DELIVERED";
+
+    if (ackStatus === "EXECUTED" || ackStatus === "DRY_RUN_EXECUTED") {
+      nextStatus = "EXECUTED";
+    } else if (ackStatus === "EXPIRED") {
+      nextStatus = "EXPIRED";
+    } else if (ackStatus.startsWith("REJECT") || ackStatus.includes("FAILED") || ackStatus.includes("MISMATCH")) {
+      nextStatus = "REJECTED";
+    }
+
+    const result = await backendDatabase.query(
+      `
+      UPDATE bot_mt5_signals
+      SET
+        status = CASE
+          WHEN status = 'EXECUTED' THEN status
+          ELSE $1
+        END,
+        delivered_at = COALESCE(delivered_at, NOW()),
+        acknowledged_at = COALESCE(acknowledged_at, NOW()),
+        delivered_installation_id = COALESCE($4, delivered_installation_id)
+      WHERE signal_id = $2
+        AND license_id = $3
+      `,
+      [nextStatus, input.signalId, input.licenseId, input.installationId ?? null]
+    );
+
+    if (!result.rowCount) {
+      throw new Error(`ACK_NOT_PERSISTED signal_id=${input.signalId} license_id=${input.licenseId}`);
+    }
+
+    return nextStatus;
+  }
+
+  async recordSignalRuntimeEvent(input: {
+    signalId: string;
+    licenseId: string;
+    stage: string;
+    installationId?: string;
+    ackStatus?: string;
+    detail?: string;
+    payload?: Record<string, unknown>;
+  }): Promise<void> {
+    if (!backendDatabase.enabled) {
+      return;
+    }
+
+    await ensureMt5RoutingSchema();
+
+    const id = `mt5-evt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await backendDatabase.query(
+      `
+      INSERT INTO bot_mt5_signal_runtime_events
+        (id, signal_id, license_id, installation_id, stage, ack_status, detail, payload, created_at)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, NOW())
+      `,
+      [
+        id,
+        input.signalId,
+        input.licenseId,
+        input.installationId ?? null,
+        String(input.stage ?? "").trim().toUpperCase(),
+        input.ackStatus ? String(input.ackStatus).trim().toUpperCase() : null,
+        input.detail ?? null,
+        JSON.stringify(input.payload ?? {}),
+      ]
+    );
+  }
+
   async evaluateCommercialGate(input: {
     licenseId: string;
     signalId: string;
@@ -711,9 +825,14 @@ export class BotMT5Service {
   async createSignal(signal: {
     signalId: string;
     analysisId: string;
+    eventId: string;
     licenseId: string;
     symbol: string;
     direction: "BUY" | "SELL" | "NONE";
+    horizon: "SHORT" | "MEDIUM" | "EXTENDED" | null;
+    validityMinutes: number | null;
+    expiresAt: string | null;
+    source: "CADP_V2" | "CADP_V3_HISTORICAL_BRAIN";
     entry: number;
     stopLoss: number;
     takeProfit: number;
@@ -724,46 +843,73 @@ export class BotMT5Service {
       return;
     }
 
-    try {
-      const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 horas
-      const signature = `SIG-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await ensureMt5RoutingSchema();
 
-      // Intenta crear si la tabla existe
-      try {
-        await backendDatabase.query(
-          `
-          INSERT INTO bot_mt5_signals 
-            (signal_id, analysis_id, license_id, symbol, decision, entry, 
-             stop_loss, take_profit, risk_reward, signature, expires_at, status, created_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'PENDING', NOW())
-          `,
-          [
-            signal.signalId,
-            signal.analysisId,
-            signal.licenseId,
-            signal.symbol,
-            signal.direction,
-            signal.entry,
-            signal.stopLoss,
-            signal.takeProfit,
-            signal.riskReward,
-            signature,
-            expiresAt
-          ]
-        );
+    if (!signal.expiresAt || !Number.isFinite(Date.parse(signal.expiresAt))) {
+      throw new Error(`MT5_SIGNAL_EXPIRY_REQUIRED:${signal.signalId}`);
+    }
 
-        console.log(`[BOT-MT5] ✓ Signal insertada: ${signal.signalId} para ${signal.symbol} ${signal.direction}`);
-      } catch (tableError) {
-        const tableErrorMessage = tableError instanceof Error ? tableError.message : String(tableError);
-        if (tableErrorMessage.includes('does not exist')) {
-          console.log(`[BOT-MT5] ⚠️  Tabla bot_mt5_signals no existe, signal en memoria: ${signal.signalId}`);
-        } else {
-          throw tableError;
-        }
+    const canonicalSymbol = signal.symbol.trim().toUpperCase();
+    const expiresAt = new Date(signal.expiresAt);
+    const identity = [
+      signal.signalId,
+      signal.analysisId,
+      signal.eventId,
+      signal.licenseId,
+      canonicalSymbol,
+      signal.direction,
+      signal.entry,
+      signal.stopLoss,
+      signal.takeProfit,
+      signal.horizon ?? "",
+      signal.validityMinutes ?? "",
+      expiresAt.toISOString(),
+      signal.source,
+    ].join("|");
+    const digest = createHash("sha256").update(identity).digest("hex");
+    const id = `mt5-sig-${digest.slice(0, 24)}`;
+    const signature = `SHA256:${digest}`;
+
+    const inserted = await backendDatabase.query<{ license_id: string }>(
+      `
+      INSERT INTO bot_mt5_signals
+        (id, signal_id, analysis_id, event_id, license_id, symbol, canonical_symbol,
+         decision, entry, stop_loss, take_profit, risk_reward, signature, expires_at,
+         signal_mode, validity_minutes, source, status, created_at)
+      VALUES
+        ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $10, $11, $12, $13,
+         $14, $15, $16, 'PENDING', NOW())
+      ON CONFLICT (signal_id) DO NOTHING
+      RETURNING license_id
+      `,
+      [
+        id,
+        signal.signalId,
+        signal.analysisId,
+        signal.eventId,
+        signal.licenseId,
+        canonicalSymbol,
+        signal.direction,
+        signal.entry,
+        signal.stopLoss,
+        signal.takeProfit,
+        signal.riskReward,
+        signature,
+        expiresAt,
+        signal.horizon ?? "SHORT",
+        signal.validityMinutes,
+        signal.source,
+      ]
+    );
+
+    if (!inserted.rowCount) {
+      const existing = await backendDatabase.query<{ license_id: string }>(
+        "SELECT license_id FROM bot_mt5_signals WHERE signal_id = $1 LIMIT 1",
+        [signal.signalId]
+      );
+      if (existing.rows[0]?.license_id !== signal.licenseId) {
+        throw new Error(`MT5_SIGNAL_LICENSE_CONFLICT:${signal.signalId}`);
       }
-    } catch (error) {
-      console.error(`[BOT-MT5] Error creando signal: ${error}`);
-      // No lanzar error para no afectar el flujo principal
     }
   }
 }

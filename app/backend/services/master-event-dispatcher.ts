@@ -817,14 +817,19 @@ export class MasterEventDispatcher {
     signal_id: string;
     analysis_id: string;
     symbol: string;
+    decision: "ENTER_BUY" | "ENTER_SELL";
     direction: "BUY" | "SELL" | "NONE";
+    horizon: "SHORT" | "MEDIUM" | "EXTENDED" | null;
+    validity_minutes: number | null;
+    expires_at: string | null;
+    source: "CADP_V2" | "CADP_V3_HISTORICAL_BRAIN";
     entry: number;
     stop_loss: number;
     take_profit: number;
     quality: "A+" | "A" | "B" | "C";
     confidence: number;
     risk_reward: number;
-  }): Promise<{ success: boolean; eventId?: string; error?: string }> {
+  }, options: { sendTelegram?: boolean } = {}): Promise<{ success: boolean; eventId?: string; error?: string }> {
     
     // Recargar estado desde BD (en caso de reinicio)
     await this.loadBrainState();
@@ -870,13 +875,15 @@ export class MasterEventDispatcher {
       this.activeCycles.set(event.event_id, cycle);
       
       // 4. ENVIAR A TELEGRAM
-      try {
-        const telegramResult = await this.sendToTelegram(event);
-        if (telegramResult.ok && telegramResult.message_id) {
-          cycle.telegramMessageId = telegramResult.message_id;
+      if (options.sendTelegram !== false) {
+        try {
+          const telegramResult = await this.sendToTelegram(event);
+          if (telegramResult.ok && telegramResult.message_id) {
+            cycle.telegramMessageId = telegramResult.message_id;
+          }
+        } catch (error) {
+          console.error(`[DISPATCHER-BRAIN] Error enviando a Telegram:`, error);
         }
-      } catch (error) {
-        console.error(`[DISPATCHER-BRAIN] Error enviando a Telegram:`, error);
       }
       
       // 5. ENVIAR AL BOT
@@ -931,9 +938,14 @@ export class MasterEventDispatcher {
           await botMT5Service.createSignal({
             signalId: signal.signal_id,
             analysisId: signal.analysis_id,
+            eventId: event.event_id,
             licenseId,
             symbol: signal.symbol,
             direction: signal.direction,
+            horizon: signal.horizon,
+            validityMinutes: signal.validity_minutes,
+            expiresAt: signal.expires_at,
+            source: signal.source,
             entry: signal.entry,
             stopLoss: signal.stop_loss,
             takeProfit: signal.take_profit,
@@ -942,6 +954,7 @@ export class MasterEventDispatcher {
         }
       } catch (error) {
         console.error(`[DISPATCHER-BRAIN] Error creando signal para MT5:`, error);
+        throw error;
       }
       
       this.lastSignal = await realSignalLifecycleService.ensureLatestMasterSignalRegistered();

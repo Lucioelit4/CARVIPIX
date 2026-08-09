@@ -8,20 +8,26 @@ import type { CanonicalSymbol, ProximityToEntry, AdaptiveStateV3, PreAnalysisTri
 import { ALL_CANONICAL_SYMBOLS } from "./instrumentRegistry";
 import { idempotencyStore } from "./idempotencyStore";
 
+export const FIXED_SLOT_INTERVAL_MINUTES = 15;
+export const FIXED_SLOT_INTERVAL_MS = FIXED_SLOT_INTERVAL_MINUTES * 60_000;
+
+const DEFAULT_ACTIVE_SYMBOLS: CanonicalSymbol[] = ["XAUUSD", "BTCUSD", "EURUSD", "GBPUSD"];
+const FIXED_SYMBOL_OFFSETS_MINUTES: Readonly<Record<CanonicalSymbol, number>> = {
+  XAUUSD: 0,
+  BTCUSD: 3,
+  EURUSD: 6,
+  GBPUSD: 9,
+  USDJPY: 0,
+  AUDUSD: 0,
+  USDCHF: 0,
+};
+
 export type RecheckSchedule = {
   canonical_symbol: CanonicalSymbol;
   next_review_at_ms: number;
   proximity: ProximityToEntry;
   recheck_minutes: number;
   wake_up_triggers: AdaptiveStateV3["wake_up_triggers"];
-};
-
-const PROXIMITY_TO_MINUTES: Record<ProximityToEntry, number> = {
-  IMMEDIATE:  5,
-  NEAR:      10,
-  DEVELOPING: 15,
-  FAR:       30,
-  INVALID:   60,
 };
 
 interface WatchedLevel {
@@ -34,8 +40,28 @@ interface WatchedLevel {
 export class AdaptiveScheduler {
   private readonly schedules = new Map<CanonicalSymbol, RecheckSchedule>();
   private readonly watchedLevels: WatchedLevel[] = [];
+  private readonly activeSymbols = new Set<CanonicalSymbol>();
   private analysisCallback: ((symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason) => Promise<void>) | null = null;
   private tickInterval: ReturnType<typeof setInterval> | null = null;
+
+  static getSymbolOffsetMinutes(symbol: CanonicalSymbol): number {
+    return FIXED_SYMBOL_OFFSETS_MINUTES[symbol];
+  }
+
+  static computeSlotStartUtcMs(symbol: CanonicalSymbol, nowMs: number): number {
+    const shifted = nowMs - AdaptiveScheduler.getSymbolOffsetMinutes(symbol) * 60_000;
+    return Math.floor(shifted / FIXED_SLOT_INTERVAL_MS) * FIXED_SLOT_INTERVAL_MS
+      + AdaptiveScheduler.getSymbolOffsetMinutes(symbol) * 60_000;
+  }
+
+  static computeNextSlotUtcMs(symbol: CanonicalSymbol, nowMs: number): number {
+    return AdaptiveScheduler.computeSlotStartUtcMs(symbol, nowMs) + FIXED_SLOT_INTERVAL_MS;
+  }
+
+  static computeCurrentOrNextSlotUtcMs(symbol: CanonicalSymbol, nowMs: number, graceMs = 60_000): number {
+    const slotStart = AdaptiveScheduler.computeSlotStartUtcMs(symbol, nowMs);
+    return nowMs - slotStart <= graceMs ? slotStart : slotStart + FIXED_SLOT_INTERVAL_MS;
+  }
 
   /** Register the analysis callback — called by ShadowFlowV3 */
   setAnalysisCallback(cb: (symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason) => Promise<void>): void {
@@ -43,13 +69,17 @@ export class AdaptiveScheduler {
   }
 
   /** Initialize schedules for all instruments (IMMEDIATE on first startup to trigger first analysis) */
-  initialize(nowMs = Date.now()): void {
-    for (const symbol of ALL_CANONICAL_SYMBOLS) {
+  initialize(nowMs = Date.now(), symbols: CanonicalSymbol[] = DEFAULT_ACTIVE_SYMBOLS): void {
+    this.schedules.clear();
+    this.activeSymbols.clear();
+    const configuredSymbols = symbols.length > 0 ? symbols : ALL_CANONICAL_SYMBOLS;
+    for (const symbol of configuredSymbols) {
+      this.activeSymbols.add(symbol);
       this.schedules.set(symbol, {
         canonical_symbol: symbol,
-        next_review_at_ms: nowMs, // ✅ FIXED: Schedule immediately for first analysis cycle
+        next_review_at_ms: AdaptiveScheduler.computeCurrentOrNextSlotUtcMs(symbol, nowMs),
         proximity: "IMMEDIATE",
-        recheck_minutes: 5,
+        recheck_minutes: FIXED_SLOT_INTERVAL_MINUTES,
         wake_up_triggers: [],
       });
     }
@@ -57,12 +87,11 @@ export class AdaptiveScheduler {
 
   /** Update schedule after receiving adaptive_state from ChatGPT */
   updateFromAdaptiveState(symbol: CanonicalSymbol, state: AdaptiveStateV3, nowMs = Date.now()): void {
-    const minutes = state.recheck_minutes;
     this.schedules.set(symbol, {
       canonical_symbol: symbol,
-      next_review_at_ms: nowMs + minutes * 60000,
+      next_review_at_ms: AdaptiveScheduler.computeNextSlotUtcMs(symbol, nowMs),
       proximity: state.proximity_to_entry,
-      recheck_minutes: minutes,
+      recheck_minutes: FIXED_SLOT_INTERVAL_MINUTES,
       wake_up_triggers: state.wake_up_triggers,
     });
 
@@ -101,6 +130,11 @@ export class AdaptiveScheduler {
     for (const [symbol, schedule] of this.schedules.entries()) {
       if (nowMs >= schedule.next_review_at_ms) {
         due.push({ symbol, reason: "SCHEDULED_RECHECK" });
+        this.schedules.set(symbol, {
+          ...schedule,
+          next_review_at_ms: AdaptiveScheduler.computeNextSlotUtcMs(symbol, nowMs),
+          recheck_minutes: FIXED_SLOT_INTERVAL_MINUTES,
+        });
       }
     }
 
@@ -109,15 +143,17 @@ export class AdaptiveScheduler {
 
   /** Wake up specific instrument due to an event */
   wakeUp(symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason, nowMs = Date.now()): void {
+    if (!this.activeSymbols.has(symbol)) return;
+
     // Increment scenario version so idempotency key changes
     idempotencyStore.incrementScenarioVersion(symbol);
 
-    // Schedule immediate review
+    // Event context is retained, but execution remains aligned to the symbol's fixed slot.
     this.schedules.set(symbol, {
       canonical_symbol: symbol,
-      next_review_at_ms: nowMs, // Immediately
+      next_review_at_ms: AdaptiveScheduler.computeCurrentOrNextSlotUtcMs(symbol, nowMs),
       proximity: "IMMEDIATE",
-      recheck_minutes: 5,
+      recheck_minutes: FIXED_SLOT_INTERVAL_MINUTES,
       wake_up_triggers: [],
     });
   }
@@ -125,7 +161,7 @@ export class AdaptiveScheduler {
   /** Wake up all instruments when H1 or M30 closes */
   wakeUpAll(reason: PreAnalysisTriggerReason): void {
     const nowMs = Date.now();
-    for (const symbol of ALL_CANONICAL_SYMBOLS) {
+    for (const symbol of this.activeSymbols) {
       this.wakeUp(symbol, reason, nowMs);
     }
   }

@@ -40,7 +40,7 @@ export interface StoredAnalysis {
   dispatch_errors?: Record<string, string>;
 
   // Estado
-  status: "COMPLETED" | "SKIPPED_BEFORE_AI" | "REUSED_PREVIOUS_ANALYSIS" | "AI_ERROR" | "DISPATCH_ERROR";
+  status: "COMPLETED" | "SKIPPED_BEFORE_AI" | "REUSED_PREVIOUS_ANALYSIS" | "SKIPPED_DUPLICATE_WAIT" | "AI_ERROR" | "DISPATCH_ERROR";
   skip_reason?: string;
 
   // Paper trading impact (si aplica)
@@ -59,6 +59,10 @@ export interface StoredAnalysis {
   // Metadatos
   worker_id?: string;
   data_source?: string; // "TWELVE_DATA", "MOCK", etc.
+  scenario_signature?: string;
+  recorded_at_ms?: number;
+  reuse_of_analysis_id?: string;
+  reuse_reason?: string;
 }
 
 export class AnalysisStore {

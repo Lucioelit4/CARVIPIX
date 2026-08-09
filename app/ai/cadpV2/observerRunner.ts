@@ -9,51 +9,94 @@ import { ShadowFlowV3 } from "./shadowFlowV3";
 import { adaptiveScheduler } from "./schedulerAdaptativo";
 import { observerV3 } from "./observerV3";
 import { paperTradeMonitor } from "./paperTradeMonitor";
-import { ALL_CANONICAL_SYMBOLS } from "./instrumentRegistry";
 import {
   initializePipelineWithRealData,
   OFFICIAL_MARKET_DATA_SYMBOLS,
   refreshPipelineWithRealData,
 } from "./realDataIngestionService";
 import { logCertificationCycle } from "@/app/lib/services/certificationLogService";
+import { analysisCycleControl, buildMarketAvailability } from "./analysisCycleControl";
+import { observerRuntimeLease } from "./observerRuntimeLease";
+import { observerScheduleSlotClaim } from "./observerScheduleSlotClaim";
 import type { CanonicalSymbol, PreAnalysisTriggerReason } from "./typesMaestroV3";
 
 let shadowFlowInstance: ShadowFlowV3 | null = null;
 let runnerActive = false;
+let bootInFlight = false;
+let observerLeaseOwnerId: string | null = null;
+let leaseRenewTimer: ReturnType<typeof setInterval> | null = null;
+let refreshTimer: ReturnType<typeof setInterval> | null = null;
+let priceTrackerTimer: ReturnType<typeof setInterval> | null = null;
 
-/** Cost daily limit — stops new analyses if exceeded */
-const DAILY_COST_LIMIT_USD = 15;
 const MARKET_DATA_REFRESH_MS = 4 * 60 * 1000;
+const OBSERVER_LEASE_RENEW_MS = 45_000;
 const officialMarketDataSymbols = new Set<CanonicalSymbol>(OFFICIAL_MARKET_DATA_SYMBOLS);
 
-function isDailyBudgetExceeded(): boolean {
-  const state = observerV3.getObserverState();
-  const dailyCost = state.daily_summary?.openai_cost_total_usd ?? 0;
-  return dailyCost >= DAILY_COST_LIMIT_USD;
+function resolveLeaseOwnerId(): string {
+  const deploymentId = process.env.RAILWAY_DEPLOYMENT_ID
+    || process.env.VERCEL_DEPLOYMENT_ID
+    || process.env.HOSTNAME
+    || "local";
+  return `${deploymentId}-${process.pid}`;
+}
+
+function clearRuntimeTimers(): void {
+  if (leaseRenewTimer) clearInterval(leaseRenewTimer);
+  if (refreshTimer) clearInterval(refreshTimer);
+  if (priceTrackerTimer) clearInterval(priceTrackerTimer);
+  leaseRenewTimer = null;
+  refreshTimer = null;
+  priceTrackerTimer = null;
 }
 
 async function runAnalysisCycle(
   shadowFlow: ShadowFlowV3,
+  ownerId: string,
   symbol: CanonicalSymbol,
   reason: PreAnalysisTriggerReason,
 ): Promise<void> {
   if (!runnerActive) return;
-
-  if (isDailyBudgetExceeded()) {
-    console.warn(`[ObserverRunner] Daily budget exceeded ($${DAILY_COST_LIMIT_USD}). Skipping ${symbol}.`);
-    return;
-  }
 
   if (shadowFlow.isCircuitOpen()) {
     console.warn(`[ObserverRunner] Circuit open. Skipping ${symbol}.`);
     return;
   }
 
-  const result = await shadowFlow.analyzeInstrument(symbol, reason);
-  console.log(`[ObserverRunner] ${symbol} | ${result.status} | ${result.decision ?? "—"} | $${result.cost_usd.toFixed(4)}`);
+  const lease = await observerRuntimeLease.getSnapshot();
+  if (!lease || lease.ownerId !== ownerId || lease.expired) {
+    console.warn(`[ObserverRunner] Lease ownership missing. Skipping ${symbol}.`);
+    return;
+  }
 
-  // ── CERTIFICATION LOGGING (only for completed cycles)
-  if (result.status === "COMPLETED") {
+  const nowUtcMs = Date.now();
+  const lastClosedCandleTs = shadowFlow.pipeline
+    .getRecentCandles(symbol as never, "5M", 2)
+    .filter((candle) => candle.complete)
+    .at(-1)?.timestamp ?? null;
+  const cycleEvaluation = analysisCycleControl.evaluate({
+    symbol,
+    nowUtcMs,
+    lastClosedCandleTs,
+    market: buildMarketAvailability(symbol, nowUtcMs),
+  });
+  if (!cycleEvaluation.allowed) {
+    console.log(`[ObserverRunner] ${symbol} | ${cycleEvaluation.reason} | ${cycleEvaluation.detail}`);
+    return;
+  }
+
+  const slot = await observerScheduleSlotClaim.claim({ symbol, ownerId, nowMs: nowUtcMs, triggerReason: reason });
+  if (!slot.acquired) {
+    console.log(`[ObserverRunner] ${symbol} | SKIPPED_DUPLICATE | slot=${slot.slotStartUtcMs}`);
+    return;
+  }
+
+  analysisCycleControl.enter(symbol, nowUtcMs);
+  try {
+    const result = await shadowFlow.analyzeInstrument(symbol, reason);
+    console.log(`[ObserverRunner] ${symbol} | ${result.status} | ${result.decision ?? "—"} | $${result.cost_usd.toFixed(4)}`);
+
+    // ── CERTIFICATION LOGGING (only for completed cycles)
+    if (result.status === "COMPLETED") {
     try {
       const paperState = paperTradeMonitor.getAccountState();
       
@@ -112,6 +155,9 @@ async function runAnalysisCycle(
     } catch (err) {
       console.error(`[CertificationLog] Error registrando ciclo: ${err}`);
     }
+    }
+  } finally {
+    analysisCycleControl.leave(symbol, lastClosedCandleTs);
   }
 }
 
@@ -121,22 +167,38 @@ export interface ObserverRunnerStartOptions {
 }
 
 export function startObserverRunner(options: ObserverRunnerStartOptions): void {
-  if (runnerActive) {
-    console.log("[ObserverRunner] Already running.");
+  if (runnerActive || bootInFlight) {
+    console.log("[ObserverRunner] Already running or booting.");
     return;
   }
 
-  runnerActive = true;
+  bootInFlight = true;
   shadowFlowInstance = new ShadowFlowV3(options.pipeline, options.indicators);
+  observerLeaseOwnerId = resolveLeaseOwnerId();
+  const ownerId = observerLeaseOwnerId;
 
-  observerV3.markRunning(true);
-  adaptiveScheduler.initialize();
-
-  console.log("[ObserverRunner] Starting Maestro V3 with REAL DATA from Twelve Data.");
-
-  // Load real data before enabling any analysis cycle.
   (async () => {
     try {
+      const acquired = await observerRuntimeLease.acquire(ownerId);
+      if (!acquired) {
+        console.warn("[ObserverRunner] Another runtime owns the Observer lease.");
+        return;
+      }
+
+      runnerActive = true;
+      observerV3.markRunning(true);
+      adaptiveScheduler.initialize();
+      leaseRenewTimer = setInterval(async () => {
+        try {
+          const stillOwner = await observerRuntimeLease.heartbeat(ownerId);
+          if (!stillOwner) stopObserverRunner(false);
+        } catch (error) {
+          console.error("[ObserverRunner] Lease heartbeat failed:", error instanceof Error ? error.message : String(error));
+          stopObserverRunner(false);
+        }
+      }, OBSERVER_LEASE_RENEW_MS);
+
+      console.log("[ObserverRunner] Starting Maestro V3 with REAL DATA from Twelve Data.");
       const ingestionResult = await initializePipelineWithRealData(options.pipeline, options.indicators);
 
       if (ingestionResult.success) {
@@ -153,7 +215,7 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
 
       adaptiveScheduler.startTicker(async (symbol: CanonicalSymbol, reason: PreAnalysisTriggerReason) => {
         if (shadowFlowInstance && officialMarketDataSymbols.has(symbol)) {
-          await runAnalysisCycle(shadowFlowInstance, symbol, reason);
+          await runAnalysisCycle(shadowFlowInstance, ownerId, symbol, reason);
         }
       });
 
@@ -164,13 +226,12 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
         if (!shadowFlowInstance || !runnerActive) {
           break;
         }
-        await runAnalysisCycle(shadowFlowInstance, symbol, reason);
+        await runAnalysisCycle(shadowFlowInstance, ownerId, symbol, reason);
       }
 
       let refreshActive = false;
-      const refreshTimer = setInterval(async () => {
+      refreshTimer = setInterval(async () => {
         if (!runnerActive) {
-          clearInterval(refreshTimer);
           return;
         }
         if (refreshActive) {
@@ -194,20 +255,24 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
         "[ObserverRunner] Initialization error:",
         err instanceof Error ? err.message : String(err)
       );
+      runnerActive = false;
+      observerV3.markRunning(false);
+      clearRuntimeTimers();
+    } finally {
+      bootInFlight = false;
     }
   })();
 
   // ── Paper trade price tracking (every 30 seconds)
-  const priceTracker = setInterval(async () => {
+  priceTrackerTimer = setInterval(async () => {
     if (!runnerActive) {
-      clearInterval(priceTracker);
       return;
     }
 
     // Get real prices from pipeline if available (only Asset types)
     const prices: Partial<Record<CanonicalSymbol, number>> = {};
     for (const symbol of OFFICIAL_MARKET_DATA_SYMBOLS) {
-      const m5Candles = options.pipeline.getRecentCandles(symbol as any, "5M", 1);
+      const m5Candles = options.pipeline.getRecentCandles(symbol, "5M", 1);
       if (m5Candles && m5Candles.length > 0) {
         prices[symbol] = m5Candles[0].close;
       }
@@ -218,11 +283,19 @@ export function startObserverRunner(options: ObserverRunnerStartOptions): void {
   }, 30_000);
 }
 
-export function stopObserverRunner(): void {
+export function stopObserverRunner(releaseRuntimeLease = true): void {
   runnerActive = false;
+  bootInFlight = false;
+  clearRuntimeTimers();
   adaptiveScheduler.stopTicker();
   observerV3.markRunning(false);
   shadowFlowInstance = null;
+  analysisCycleControl.reset();
+  const ownerId = observerLeaseOwnerId;
+  observerLeaseOwnerId = null;
+  if (releaseRuntimeLease && ownerId) {
+    void observerRuntimeLease.release(ownerId);
+  }
   console.log("[ObserverRunner] Stopped.");
 }
 

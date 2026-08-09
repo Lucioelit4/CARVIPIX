@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
     const accountHash = String(body.account_hash ?? "").trim();
     const accountNumber = Number(body.account_number ?? 0);
     const brokerServer = String(body.broker_server ?? "").trim();
+    const brokerSymbol = String(body.broker_symbol ?? body.symbol ?? "").trim();
+    const canonicalSymbol = String(body.canonical_symbol ?? "").trim().toUpperCase();
     const magicNumber = Number(body.magic_number ?? 0);
     const eaVersion = String(body.ea_version ?? "1.0.0").trim();
 
@@ -72,7 +74,9 @@ export async function POST(request: NextRequest) {
         accountNumber,
         brokerServer,
         magicNumber,
-        eaVersion
+        eaVersion,
+        brokerSymbol,
+        canonicalSymbol
       );
 
       return NextResponse.json(

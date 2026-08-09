@@ -838,8 +838,10 @@ void ExecuteSignal(Signal &signal) {
   bool success = false;
   
   while (retries < 3 && !success) {
-    if (!OrderSend(request, result)) {
-      Print("[ERROR] OrderSend falló. Intento " + IntegerToString(retries + 1));
+    bool sent = OrderSend(request, result);
+    bool broker_accepted = result.retcode == TRADE_RETCODE_DONE || result.retcode == TRADE_RETCODE_DONE_PARTIAL;
+    if (!sent || !broker_accepted) {
+      Print("[ERROR] OrderSend falló. Intento " + IntegerToString(retries + 1) + " retcode=" + IntegerToString((int)result.retcode));
       Sleep(1000);
       retries++;
     } else {
@@ -904,16 +906,11 @@ bool ValidateLicense() {
 }
 
 bool ValidateSignature(Signal &signal) {
-  // Implementación simplificada
-  // En producción, usar HMAC SHA256
-  if (signal.signature == "") {
-    return false;
-  }
-  return true;
+  return StringFind(signal.signature, "SHA256:") == 0 && StringLen(signal.signature) == 71;
 }
 
 bool ValidateRisk(Signal &signal) {
-  double risk_points = signal.entry - signal.stop_loss;
+  double risk_points = MathAbs(signal.entry - signal.stop_loss);
   if (risk_points <= 0) {
     return false;
   }
@@ -946,7 +943,7 @@ double CalculateLotSize(Signal &signal) {
   if (RISK_MODE == "RISK_PERCENT") {
     double balance = AccountInfoDouble(ACCOUNT_BALANCE);
     double risk_amount = (balance * MAX_RISK_PERCENT) / 100.0;
-    double risk_points = signal.entry - signal.stop_loss;
+    double risk_points = MathAbs(signal.entry - signal.stop_loss);
     double pip_value = SymbolInfoDouble(signal.symbol, SYMBOL_TRADE_TICK_VALUE);
     
     double lot_size = risk_amount / (risk_points * pip_value);

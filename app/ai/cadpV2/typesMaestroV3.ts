@@ -27,6 +27,18 @@ export type CadpDecisionV3 =
   | "DATA_INSUFFICIENT"
   | "NEWS_VERIFICATION_REQUIRED";
 
+export type CadpDecisionContractV3 =
+  | "ENTER_BUY"
+  | "ENTER_SELL"
+  | "WAIT"
+  | "NO_TRADE";
+
+export type CadpHorizonV3 = "SHORT" | "MEDIUM" | "EXTENDED";
+
+export type CadpQualityV3 = "A_PLUS" | "A" | "B" | "NOT_APPLICABLE";
+
+export type CadpConfidenceV3 = "HIGH" | "MEDIUM" | "LOW";
+
 export type ProximityToEntry =
   | "IMMEDIATE"    // recheck: 5 min
   | "NEAR"         // recheck: 10 min
@@ -70,7 +82,8 @@ export type SkipReason =
   | "CRITICAL_GAP"
   | "MARKET_CLOSED"
   | "INDICATORS_UNAVAILABLE"
-  | "IDEMPOTENT_REUSE";
+  | "IDEMPOTENT_REUSE"
+  | "SKIPPED_DUPLICATE_WAIT";
 
 export type PaperTradeResult = "WIN" | "LOSS" | "EXPIRED" | "CANCELLED" | "OPEN";
 
@@ -476,7 +489,7 @@ export interface ExpedienteMaestroV3 {
 // ─── Respuesta Maestra (6 bloques) ───────────────────────────────────────────
 
 export interface MasterDecision {
-  decision: CadpDecisionV3;
+  decision: CadpDecisionContractV3;
   direction: "BUY" | "SELL" | "NEUTRAL" | null;
   strategy_selected: string | null;
   conviction: "LOW" | "MEDIUM" | "HIGH";
@@ -573,6 +586,21 @@ export interface ResponseMetaV3 {
 }
 
 export interface RespuestaMaestraV3 {
+  decision: CadpDecisionContractV3;
+  direction: "BUY" | "SELL" | "NEUTRAL";
+  horizon: CadpHorizonV3;
+  quality: CadpQualityV3;
+  confidence: CadpConfidenceV3;
+  entry_price: number | null;
+  stop_loss: number | null;
+  take_profit: number | null;
+  risk_reward: number | null;
+  decisive_evidence: string[];
+  opposing_evidence: string[];
+  critical_veto: string | null;
+  missing_condition: string | null;
+  technical_explanation: string;
+  public_explanation: string;
   master_decision: MasterDecision;
   analysis_private: AnalysisPrivateV3;
   analysis_public: AnalysisPublicV3;
@@ -625,6 +653,7 @@ export interface PaperTrade {
   stop_loss: number;
   take_profit: number;
   risk_reward_ratio: number;
+  validity_minutes: number;
   opened_at: string;
   closed_at: string | null;
   exit_price: number | null;

@@ -57,6 +57,7 @@ export class IdempotencyStore {
   private readonly store = new Map<string, StoredEntry>();
   /** Scenario version counter per canonical symbol */
   private readonly scenarioVersions = new Map<CanonicalSymbol, number>();
+  private readonly executionLocks = new Map<string, Promise<void>>();
   /** TTL for idempotency entries: 2 hours */
   private readonly ttlMs = 2 * 60 * 60 * 1000;
 
@@ -115,6 +116,24 @@ export class IdempotencyStore {
   /** Register a completed analysis */
   register(fullKey: string, analysisId: string): void {
     this.store.set(fullKey, { full_key: fullKey, created_at: Date.now(), analysis_id: analysisId });
+  }
+
+  async acquireExecutionLock(fullKey: string): Promise<() => void> {
+    const previous = this.executionLocks.get(fullKey);
+    let releaseCurrent!: () => void;
+    const current = new Promise<void>((resolve) => {
+      releaseCurrent = resolve;
+    });
+    this.executionLocks.set(fullKey, current);
+    if (previous) await previous;
+
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      if (this.executionLocks.get(fullKey) === current) this.executionLocks.delete(fullKey);
+      releaseCurrent();
+    };
   }
 
   /**

@@ -10,6 +10,7 @@
 
 import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
 import type { IndicatorFramework } from "../../engine/data/indicatorFramework";
+import type { Asset } from "../../engine/types/marketData";
 import type { CanonicalSymbol } from "./typesMaestroV3";
 import { TwelveDataTimeSeriesService } from "../../backend/data-platform/providers/twelve-data/timeSeries";
 import { getTwelveDataRuntimeConfig, isTwelveDataOfficialEnabled } from "../../backend/data-platform/providers/twelve-data/config";
@@ -28,7 +29,7 @@ const SYMBOL_MAPPING: Record<CanonicalSymbol, string> = {
   USDCHF: "USD/CHF",
 };
 
-export const OFFICIAL_MARKET_DATA_SYMBOLS: CanonicalSymbol[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
+export const OFFICIAL_MARKET_DATA_SYMBOLS: Asset[] = ["XAUUSD", "EURUSD", "GBPUSD", "BTCUSD"];
 
 interface IngestionOptions {
   h1OutputSize?: number;

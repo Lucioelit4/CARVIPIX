@@ -11,18 +11,14 @@ import type {
   RespuestaMaestraV3,
 } from "./typesMaestroV3";
 import { getInstrument } from "./instrumentRegistry";
+import { CADP_V3_EXTENDED_MAX_MINUTES } from "./responseContractV3";
 
 const INITIAL_BALANCE_USD = 10_000;
 const RISK_PER_TRADE_PCT = 1; // 1% risk per trade
-const OPERATION_EXPIRY_MINUTES = 240; // 4 hours max before EXPIRED
+const DEFAULT_OPERATION_EXPIRY_MINUTES = 240;
 
 function generateId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
-/** Pips between two prices for a given instrument */
-function calcPips(priceA: number, priceB: number, pipValue: number): number {
-  return Math.abs(priceA - priceB) / pipValue;
 }
 
 /** Estimated USD P&L for a paper trade (simplified — no lot sizing without broker) */
@@ -84,6 +80,10 @@ export class PaperTradeMonitor {
       stop_loss: order_plan.stop_loss,
       take_profit: order_plan.take_profit,
       risk_reward_ratio: order_plan.risk_reward_ratio ?? 0,
+      validity_minutes: Math.min(
+        order_plan.validity_minutes ?? DEFAULT_OPERATION_EXPIRY_MINUTES,
+        CADP_V3_EXTENDED_MAX_MINUTES,
+      ),
       opened_at: new Date().toISOString(),
       closed_at: null,
       exit_price: null,
@@ -105,7 +105,7 @@ export class PaperTradeMonitor {
     const nowMs = Date.now();
     this.account.openai_cost_total_usd += openaiCostUsd;
 
-    for (const [id, trade] of this.trades.entries()) {
+    for (const trade of this.trades.values()) {
       if (trade.result !== "OPEN") continue;
 
       const currentPrice = currentPrices[trade.canonical_symbol];
@@ -127,7 +127,7 @@ export class PaperTradeMonitor {
       // Check expiry
       const openedMs = new Date(trade.opened_at).getTime();
       const elapsed = (nowMs - openedMs) / 60000;
-      const expired = elapsed >= OPERATION_EXPIRY_MINUTES;
+      const expired = elapsed >= trade.validity_minutes;
 
       if (tpHit || slHit || expired) {
         const exitPrice = tpHit ? trade.take_profit : slHit ? trade.stop_loss : currentPrice;
@@ -137,7 +137,6 @@ export class PaperTradeMonitor {
         const pnlUsd = estimatePnlUsd(Math.abs(pnlPips), trade.direction, tpHit ? "WIN" : "LOSS", this.account.current_balance_usd);
 
         const slPips = Math.abs(trade.entry_price - trade.stop_loss) / pipValue;
-        const _tpPips = Math.abs(trade.take_profit - trade.entry_price) / pipValue;
         const rrAchieved = slPips > 0 ? pnlPips / slPips : null;
 
         trade.closed_at = new Date().toISOString();

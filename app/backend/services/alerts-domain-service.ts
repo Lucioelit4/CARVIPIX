@@ -52,7 +52,7 @@ function mapLifecycleStatusToAlertStatus(status: RealSignalLifecycleRecord["stat
   return "resolved";
 }
 
-function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAlertRecord {
+export function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAlertRecord {
   const direction = record.decision === "ENTER_SELL" ? "Venta" : record.decision === "ENTER_BUY" ? "Compra" : "Condicional";
   const modelConfidence = Number(record.metadata.modelConfidence ?? (record.status === "ACTIVE" ? 84 : record.status === "CONDITIONAL" ? 72 : 60));
   const tags = Array.isArray(record.metadata.tags)
@@ -64,7 +64,7 @@ function mapLifecycleRecordToAlert(record: RealSignalLifecycleRecord): ServiceAl
     type: "signal",
     symbol: record.symbol,
     title: `${direction} ${record.symbol}`,
-    description: `Señal real ${record.classification} (${record.analysisId})`,
+    description: `Señal CARVIPIX basada en el análisis ${record.analysisId}`,
     priority: record.status === "ACTIVE" ? "high" : record.status === "CONDITIONAL" ? "medium" : "low",
     status: mapLifecycleStatusToAlertStatus(record.status),
     timestamp: record.signalTimestamp,

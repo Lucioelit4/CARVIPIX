@@ -154,6 +154,23 @@ function decisionFromDirection(direction: "BUY" | "SELL" | "NONE"): RealSignalDe
   return "WAIT";
 }
 
+function decisionFromMasterSignal(record: MasterSignalRecord): RealSignalDecision {
+  const decision = record.signal.decision;
+  if (
+    decision === "ENTER_BUY"
+    || decision === "ENTER_SELL"
+    || decision === "WAIT"
+    || decision === "NO_TRADE"
+    || decision === "CONDITIONAL_ENTRY"
+    || decision === "ENTRY_MISSED"
+    || decision === "DATA_INSUFFICIENT"
+    || decision === "NEWS_VERIFICATION_REQUIRED"
+  ) {
+    return decision;
+  }
+  return decisionFromDirection(record.signal.direction);
+}
+
 function defaultStatusForDecision(decision: RealSignalDecision): RealSignalLifecycleStatus {
   if (decision === "CONDITIONAL_ENTRY") {
     return "CONDITIONAL";
@@ -190,7 +207,7 @@ function buildLifecycleTags(input: {
 
 export class RealSignalLifecycleService {
   async upsertFromMasterSignalRecord(record: MasterSignalRecord): Promise<RealSignalLifecycleRecord | null> {
-    const decision = decisionFromDirection(record.signal.direction);
+    const decision = decisionFromMasterSignal(record);
     const dataOrigin = normalizeDataOrigin(process.env.CARVIPIX_DATA_CLASSIFICATION);
     return this.upsertSignal({
       signalId: record.signal_id,
@@ -202,7 +219,9 @@ export class RealSignalLifecycleService {
       takeProfit: record.signal.take_profit,
       strategyId: record.signal.selected_strategy_id,
       status: defaultStatusForDecision(decision),
-      source: "CADP_V2_MASTER_SIGNAL",
+      source: record.signal.source === "CADP_V3_HISTORICAL_BRAIN"
+        ? "CADP_V3_HISTORICAL_BRAIN"
+        : "CADP_V2_MASTER_SIGNAL",
       dataOrigin,
       trackingAccount: "UNASSIGNED",
       signalTimestamp: new Date(record.created_at),
@@ -211,6 +230,9 @@ export class RealSignalLifecycleService {
         netRR: record.signal.calculated_net_rr,
         analysisProfile: record.signal.analysis_profile,
         expiresAt: record.signal.expires_at,
+        horizon: record.signal.horizon,
+        validityMinutes: record.signal.validity_minutes,
+        decisionContract: record.signal.decision,
         shadowStatus: record.signal.status,
         tags: buildLifecycleTags({
           decision,

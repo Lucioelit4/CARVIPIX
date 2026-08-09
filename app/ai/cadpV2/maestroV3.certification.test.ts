@@ -6,7 +6,7 @@
  */
 
 import assert from "node:assert/strict";
-import { buildMockPipelineAndIndicators, buildStaleDataPipeline } from "./testHarness";
+import { buildMockPipelineAndIndicators, buildSparseFreshDataPipeline, buildStaleDataPipeline } from "./testHarness";
 import { MaestroV3SnapshotBuilder } from "./snapshotBuilderV3";
 import { NarrativeContextBuilder } from "./narrativeContextBuilder";
 import { ExecutiveSummaryBuilder } from "./executiveSummaryBuilder";
@@ -15,8 +15,9 @@ import { MaestroV3Verifier } from "./verifierV3";
 import { idempotencyStore } from "./idempotencyStore";
 import { scenarioMemoryStore } from "./scenarioMemoryStore";
 import { disparadorModulos } from "./disparadorModulos";
-import { paperTradeMonitor } from "./paperTradeMonitor";
+import { PaperTradeMonitor, paperTradeMonitor } from "./paperTradeMonitor";
 import { ALL_CANONICAL_SYMBOLS, getAuthorizedStrategies } from "./instrumentRegistry";
+import { IndicatorFramework } from "../../engine/data/indicatorFramework";
 import type {
   RespuestaMaestraV3,
   PaperAccountState,
@@ -40,10 +41,29 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
 }
 
 function buildMockResponse(decision: RespuestaMaestraV3["master_decision"]["decision"]): RespuestaMaestraV3 {
+  const isEntry = decision === "ENTER_BUY" || decision === "ENTER_SELL";
+  const isSell = decision === "ENTER_SELL";
+  const direction = decision === "ENTER_BUY" ? "BUY" : decision === "ENTER_SELL" ? "SELL" : "NEUTRAL";
+
   return {
+    decision,
+    direction,
+    horizon: "SHORT",
+    quality: decision === "NO_TRADE" ? "NOT_APPLICABLE" : "A",
+    confidence: "MEDIUM",
+    entry_price: isEntry ? 2435.20 : null,
+    stop_loss: isEntry ? (isSell ? 2440.00 : 2430.50) : null,
+    take_profit: isEntry ? (isSell ? 2425.00 : 2445.00) : null,
+    risk_reward: isEntry ? 2.08 : null,
+    decisive_evidence: ["EMA20>EMA50>EMA200 on H1"],
+    opposing_evidence: ["High impact news in 45 min"],
+    critical_veto: decision === "NO_TRADE" ? "Critical market structure conflict" : null,
+    missing_condition: decision === "WAIT" ? "M5 candle must close above 2436.50" : null,
+    technical_explanation: "The evidence supports the selected decision under the documented rules.",
+    public_explanation: "CARVIPIX mantiene una lectura prudente basada en las condiciones observadas.",
     master_decision: {
       decision,
-      direction: decision === "ENTER_BUY" ? "BUY" : decision === "ENTER_SELL" ? "SELL" : "NEUTRAL",
+      direction,
       strategy_selected: decision === "NO_TRADE" ? "CARVIPIX_NO_TRADE_V1" : "CARVIPIX_MTF_TREND_PULLBACK_XAUUSD_V1",
       conviction: "MEDIUM",
       probability_estimated: decision === "ENTER_BUY" ? 68 : decision === "WAIT" ? 45 : null,
@@ -80,9 +100,9 @@ function buildMockResponse(decision: RespuestaMaestraV3["master_decision"]["deci
       entry_price: 2435.20,
       entry_zone_min: 2434.80,
       entry_zone_max: 2435.60,
-      stop_loss: 2430.50,
+      stop_loss: isSell ? 2440.00 : 2430.50,
       stop_loss_anchor: "Structure low M30",
-      take_profit: 2445.00,
+      take_profit: isSell ? 2425.00 : 2445.00,
       take_profit_anchor: "Resistance H1",
       risk_reward_ratio: 2.08,
       validity_minutes: 30,
@@ -90,7 +110,7 @@ function buildMockResponse(decision: RespuestaMaestraV3["master_decision"]["deci
     } : null,
     adaptive_state: {
       proximity_to_entry: decision === "ENTER_BUY" ? "IMMEDIATE" : decision === "WAIT" ? "NEAR" : "FAR",
-      recheck_minutes: decision === "ENTER_BUY" ? 5 : decision === "WAIT" ? 10 : 30,
+      recheck_minutes: 15,
       watch_conditions: [{ condition: "EMA20 must hold", level: 2431.24, timeframe: "H1" }],
       wake_up_triggers: [
         { trigger: "NEW_H1_CLOSE", level: null, description: "Analyze on next H1 close" },
@@ -143,6 +163,24 @@ function buildMockPaperAccount(): PaperAccountState {
     openai_cost_total_usd: 0,
     last_updated: new Date().toISOString(),
   };
+}
+
+function seededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function extractJsonSection(prompt: string, title: string): Record<string, unknown> {
+  const marker = `### ${title}\n`;
+  const start = prompt.indexOf(marker);
+  assert.notEqual(start, -1, `${title} missing`);
+  const bodyStart = start + marker.length;
+  const bodyEnd = prompt.indexOf("\n### ", bodyStart);
+  assert.notEqual(bodyEnd, -1, `${title} terminator missing`);
+  return JSON.parse(prompt.slice(bodyStart, bodyEnd).trim()) as Record<string, unknown>;
 }
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
@@ -229,18 +267,72 @@ async function runAllTests(): Promise<void> {
     assert.ok(summary.missing_items.some(m => m.includes("NOT_BROKER_VERIFIED")));
   });
 
-  await test("1.8 Prompt V3 contiene las 16 secciones + Pregunta Maestra", async () => {
-    const partial = builtExpediente!.expediente;
+  await test("1.8 Prompt SMART reproduce las 5 secciones históricas", async () => {
+    const fixtureNow = Date.UTC(2026, 6, 15, 12, 0, 0);
+    const fixtureData = buildMockPipelineAndIndicators("XAUUSD", {
+      now: fixtureNow,
+      random: seededRandom(0x5ca1ab1e),
+    });
+    const fixtureSnapshot = await new MaestroV3SnapshotBuilder(
+      fixtureData.pipeline,
+      fixtureData.indicators,
+    ).build({
+      analysis_id: "forensic-smart-xauusd-v1",
+      signal_id: "forensic-smart-signal-v1",
+      canonical_symbol: "XAUUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+      nowUtc: fixtureNow,
+    });
+    const partial = fixtureSnapshot.expediente;
     const narrative = narrativeBuilder.build(partial);
     const withNarrative = { ...partial, narrative_context: narrative };
     const summary = summaryBuilder.build(withNarrative);
     const expediente = { ...withNarrative, executive_summary: summary };
 
-    const { prompt_text, section_order } = promptBuilder.build(expediente);
-    assert.equal(section_order.length, 16, `Expected 16 sections, got ${section_order.length}`);
-    assert.ok(prompt_text.includes("Pregunta Maestra"), "Pregunta Maestra missing");
-    assert.ok(prompt_text.includes("EXPEDIENTE MAESTRO CARVIPIX V3"), "Header missing");
+    const firstBuild = promptBuilder.build(expediente, { smartExpedientEnabled: true });
+    const secondBuild = promptBuilder.build(expediente, { smartExpedientEnabled: true });
+    const { prompt_text, prompt_hash, section_order } = firstBuild;
+    assert.equal(prompt_hash, secondBuild.prompt_hash, "SMART prompt hash is not deterministic");
+    console.log(`     SMART fixture hash: ${prompt_hash}`);
+    assert.equal(prompt_hash, "6331d2ba911055165fc8e5305d15dec167d80dcf9c38250f00b20a472e471d63");
+    assert.deepEqual(section_order, [
+      "1. Identidad y trazabilidad",
+      "2. Contexto estable",
+      "3. Cambios nuevos",
+      "4. Estado actual indispensable",
+      "5. Resumen ejecutivo",
+    ]);
+    assert.ok(prompt_text.includes("EXPEDIENTE MAESTRO CARVIPIX V3 (SMART)"), "SMART header missing");
+    assert.ok(!prompt_text.includes("6. Contexto previo"), "Modern section leaked into SMART prompt");
+    assert.match(prompt_text, /"horizon"\s*:\s*"SHORT \| MEDIUM \| EXTENDED"/, "Production horizon schema missing");
+    assert.ok(prompt_text.includes("duración estimada máxima de 20 horas"), "EXTENDED 20-hour rule missing");
+    assert.ok(prompt_text.includes("PREGUNTA MAESTRA"), "PREGUNTA MAESTRA missing");
     assert.ok(prompt_text.includes("XAUUSD"), "Symbol missing");
+
+    const stableContext = extractJsonSection(prompt_text, "2. Contexto estable");
+    assert.deepEqual(Object.keys(stableContext), [
+      "symbol", "trend_h1", "trend_m30", "zones_h1", "zones_m30", "previous_decision", "previous_state",
+    ]);
+
+    const changes = extractJsonSection(prompt_text, "3. Cambios nuevos");
+    assert.deepEqual(Object.keys(changes), ["trigger_reason", "description", "delta"]);
+
+    const indispensable = extractJsonSection(prompt_text, "4. Estado actual indispensable");
+    assert.deepEqual(Object.keys(indispensable), [
+      "quality", "market_h1", "market_m30", "market_m5", "volatility_and_session", "news_and_risk", "authorized_strategies",
+    ]);
+    const h1 = indispensable.market_h1 as Record<string, unknown>;
+    const m30 = indispensable.market_m30 as Record<string, unknown>;
+    const m5 = indispensable.market_m5 as Record<string, unknown>;
+    assert.deepEqual(Object.keys(h1), ["ema20", "ema50", "ema200", "atr", "adx", "last_closed"]);
+    assert.deepEqual(Object.keys(m30), ["ema20", "ema50", "ema200", "atr", "adx", "last_closed"]);
+    assert.deepEqual(Object.keys(m5), ["ema20", "ema50", "ema200", "atr", "adx", "mid_price", "last_closed"]);
+    assert.equal((h1.last_closed as unknown[]).length, 8);
+    assert.equal((m30.last_closed as unknown[]).length, 8);
+    assert.equal((m5.last_closed as unknown[]).length, 12);
+    assert.ok(prompt_text.includes('"recheck_minutes": "5 | 10 | 15 | 30 | 60"'));
+    assert.ok(prompt_text.includes("Una condición ideal nunca bloquea por sí sola."));
+    assert.ok(prompt_text.includes("EMAs/ADX/ATR son evidencia de apoyo y calidad, no vetos automáticos."));
   });
 
   // ═══════════════════════════════════════════════════════════════════
@@ -268,6 +360,45 @@ async function runAllTests(): Promise<void> {
     assert.equal(eur.expediente.identity.canonical_symbol, "EURUSD");
   });
 
+  await test("2.2 Delta no reutiliza ATR de otro instrumento", async () => {
+    scenarioMemoryStore.save({
+      analysis_id: "xau-isolation-prev",
+      signal_id: "xau-isolation-signal",
+      canonical_symbol: "XAUUSD",
+      timestamp_iso: new Date().toISOString(),
+      timestamp_ms: Date.now(),
+      decision: "WAIT",
+      scenario_classification: "DEVELOPING",
+      probability_estimated: 50,
+      conviction: "MEDIUM",
+      order_plan: null,
+      adaptive_state: {
+        proximity_to_entry: "NEAR",
+        recheck_minutes: 10,
+        watch_conditions: [],
+        wake_up_triggers: [],
+        missing_for_entry: null,
+        atr: 111.11,
+      },
+      scenario_type_key: "xau-isolation",
+      scenario_first_seen_ms: Date.now(),
+      strategy_version: "1.0.0",
+      prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
+    } as never);
+
+    const { pipeline: eurPipeline, indicators: eurIndicators } = buildMockPipelineAndIndicators("EURUSD");
+    const eurBuilder = new MaestroV3SnapshotBuilder(eurPipeline, eurIndicators);
+    const result = await eurBuilder.build({
+      analysis_id: "eur-isolation-current",
+      signal_id: "eur-isolation-signal",
+      canonical_symbol: "EURUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+    });
+
+    assert.equal(result.expediente.delta.atr_change.previous, null);
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   console.log("\n§3 — CALIDAD: Filtros previos a OpenAI");
   // ═══════════════════════════════════════════════════════════════════
@@ -286,7 +417,7 @@ async function runAllTests(): Promise<void> {
     assert.ok(skip !== null, "Expected skip_before_ai to be set for stale data");
   });
 
-  await test("3.2 REUSED_PREVIOUS_ANALYSIS con misma clave de idempotencia", async () => {
+  await test("3.2 SCHEDULED_RECHECK no reutiliza análisis con la misma firma", async () => {
     const result1 = await snapshotBuilder.build({
       analysis_id: "cert-idem-001",
       signal_id: "sig-idem-001",
@@ -297,7 +428,7 @@ async function runAllTests(): Promise<void> {
     // Register in idempotency store
     idempotencyStore.register(result1.idempotency_key.full_key, "cert-idem-001");
 
-    // Build again — same context should be flagged as reuse
+    // A valid scheduled turn must build a new expediente even with the same context.
     const result2 = await snapshotBuilder.build({
       analysis_id: "cert-idem-002",
       signal_id: "sig-idem-002",
@@ -305,7 +436,7 @@ async function runAllTests(): Promise<void> {
       trigger_reason: "SCHEDULED_RECHECK",
     });
 
-    assert.equal(result2.expediente.quality.skip_before_ai?.skip_reason, "IDEMPOTENT_REUSE");
+    assert.equal(result2.expediente.quality.skip_before_ai, null);
   });
 
   await test("3.3 Scenario version increment genera nueva clave", async () => {
@@ -327,12 +458,114 @@ async function runAllTests(): Promise<void> {
     );
   });
 
+  await test("3.4 Población fresca 1/1/1 conserva comportamiento histórico", async () => {
+    const { pipeline: sparse, indicators: sparseIndicators } = buildSparseFreshDataPipeline("XAUUSD");
+    const sparseBuilder = new MaestroV3SnapshotBuilder(sparse, sparseIndicators);
+    const result = await sparseBuilder.build({
+      analysis_id: "cert-sparse-001",
+      signal_id: "sig-sparse-001",
+      canonical_symbol: "XAUUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+    });
+
+    assert.equal(result.expediente.quality.skip_before_ai, null);
+  });
+
+  await test("3.5 Datos antiguos utilizables son contexto, no veto automático", async () => {
+    const fixtureNow = Date.UTC(2026, 6, 15, 12, 0, 0);
+    const fixture = buildMockPipelineAndIndicators("XAUUSD", {
+      now: fixtureNow,
+      random: seededRandom(0x5ca1ab1e),
+    });
+    const builder = new MaestroV3SnapshotBuilder(fixture.pipeline, fixture.indicators);
+    const result = await builder.build({
+      analysis_id: "cert-stale-context",
+      signal_id: "sig-stale-context",
+      canonical_symbol: "XAUUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+      nowUtc: fixtureNow + 6 * 60 * 60 * 1000,
+    });
+    assert.equal(result.expediente.quality.data_fresh, false);
+    assert.equal(result.expediente.quality.skip_before_ai, null);
+  });
+
+  await test("3.6 Indicadores parciales son contexto, no veto automático", async () => {
+    const fixtureNow = Date.UTC(2026, 6, 15, 12, 0, 0);
+    const fixture = buildMockPipelineAndIndicators("XAUUSD", {
+      now: fixtureNow,
+      random: seededRandom(0x5ca1ab1e),
+    });
+    const builder = new MaestroV3SnapshotBuilder(fixture.pipeline, new IndicatorFramework());
+    const result = await builder.build({
+      analysis_id: "cert-partial-indicators",
+      signal_id: "sig-partial-indicators",
+      canonical_symbol: "XAUUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+      nowUtc: fixtureNow,
+    });
+    assert.equal(result.expediente.quality.indicators_available.ema20, false);
+    assert.equal(result.expediente.quality.skip_before_ai, null);
+  });
+
+  await test("3.7 WAIT previo + 15 minutos sin vela nueva permite nueva evaluación", async () => {
+    const fixtureNow = Date.UTC(2026, 6, 15, 12, 0, 0);
+    scenarioMemoryStore.save({
+      analysis_id: "historical-wait-15m",
+      signal_id: "historical-wait-signal",
+      canonical_symbol: "GBPUSD",
+      timestamp_iso: new Date(fixtureNow - 15 * 60_000).toISOString(),
+      timestamp_ms: fixtureNow - 15 * 60_000,
+      decision: "WAIT",
+      scenario_classification: "ACTIVE",
+      probability_estimated: 55,
+      conviction: "MEDIUM",
+      order_plan: null,
+      adaptive_state: {
+        proximity_to_entry: "NEAR",
+        recheck_minutes: 15,
+        watch_conditions: [],
+        wake_up_triggers: [],
+        missing_for_entry: "M5 must confirm the nearby level",
+      },
+      scenario_type_key: "GBPUSD:ACTIVE",
+      scenario_first_seen_ms: fixtureNow - 60 * 60_000,
+      strategy_version: "1.0.0",
+      prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
+    });
+    const fixture = buildMockPipelineAndIndicators("GBPUSD", {
+      now: fixtureNow,
+      random: seededRandom(0x15a17),
+    });
+    const builder = new MaestroV3SnapshotBuilder(fixture.pipeline, fixture.indicators);
+    const result = await builder.build({
+      analysis_id: "historical-recheck-15m",
+      signal_id: "historical-recheck-signal",
+      canonical_symbol: "GBPUSD",
+      trigger_reason: "SCHEDULED_RECHECK",
+      nowUtc: fixtureNow,
+    });
+
+    assert.equal(result.expediente.previous_context.previous_decision, "WAIT");
+    assert.equal(result.expediente.previous_context.minutes_since_previous, 15);
+    assert.equal(result.expediente.delta.new_closed_candle.H1, false);
+    assert.equal(result.expediente.delta.new_closed_candle.M30, false);
+    assert.equal(result.expediente.delta.new_closed_candle.M5, false);
+    assert.equal(result.expediente.quality.skip_before_ai, null);
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   console.log("\n§4 — VERIFIER: Validación de Respuesta Maestra");
   // ═══════════════════════════════════════════════════════════════════
 
   await test("4.1 Verifier acepta respuesta ENTER_BUY correcta", () => {
     const response = buildMockResponse("ENTER_BUY");
+    const result = verifier.verify(response);
+    assert.equal(result.valid, true, `Errors: ${result.errors.join(", ")}`);
+  });
+
+  await test("4.1b Verifier acepta respuesta ENTER_SELL correcta", () => {
+    const response = buildMockResponse("ENTER_SELL");
     const result = verifier.verify(response);
     assert.equal(result.valid, true, `Errors: ${result.errors.join(", ")}`);
   });
@@ -388,6 +621,67 @@ async function runAllTests(): Promise<void> {
     const result = verifier.verify(response);
     assert.equal(result.valid, false);
     assert.ok(result.errors.includes("ENTRY_PRICE_OR_ZONE_REQUIRED"));
+  });
+
+  await test("4.9 Verifier rechaza estados fuera del contrato ejecutable", () => {
+    const response = buildMockResponse("WAIT");
+    (response as unknown as Record<string, unknown>)["decision"] = "CONDITIONAL_ENTRY";
+    (response.master_decision as unknown as Record<string, unknown>)["decision"] = "CONDITIONAL_ENTRY";
+    const result = verifier.verify(response);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.includes("INVALID_TOP_DECISION:CONDITIONAL_ENTRY"));
+    assert.ok(result.errors.includes("INVALID_DECISION:CONDITIONAL_ENTRY"));
+  });
+
+  await test("4.10 Verifier rechaza decisiones superior y anidada incoherentes", () => {
+    const response = buildMockResponse("WAIT");
+    (response as unknown as Record<string, unknown>)["decision"] = "NO_TRADE";
+    const result = verifier.verify(response);
+    assert.equal(result.valid, false);
+    assert.ok(result.errors.includes("DECISION_MISMATCH_TOP_VS_MASTER"));
+  });
+
+  await test("4.11 Verifier acepta horizonte EXTENDED", () => {
+    const response = buildMockResponse("WAIT");
+    (response as unknown as Record<string, unknown>)["horizon"] = "EXTENDED";
+    const result = verifier.verify(response);
+    assert.equal(result.valid, true, result.errors.join(", "));
+  });
+
+  await test("4.12 Verifier acepta exactamente SHORT, MEDIUM y EXTENDED", () => {
+    for (const horizon of ["SHORT", "MEDIUM", "EXTENDED"] as const) {
+      const response = buildMockResponse("WAIT");
+      response.horizon = horizon;
+      assert.equal(verifier.verify(response).valid, true, horizon);
+    }
+    const response = buildMockResponse("WAIT");
+    (response as unknown as Record<string, unknown>)["horizon"] = "SWING";
+    assert.equal(verifier.verify(response).valid, false);
+  });
+
+  await test("4.13 EXTENDED hasta 20h no es rechazado por duración", () => {
+    const response = buildMockResponse("ENTER_BUY");
+    response.horizon = "EXTENDED";
+    response.order_plan!.validity_minutes = 2400;
+    const result = verifier.verify(response);
+    assert.equal(result.valid, true, result.errors.join(", "));
+    assert.equal(result.repaired?.order_plan?.validity_minutes, 1200);
+  });
+
+  await test("4.14 Verifier rechaza geometría BUY/SELL incoherente", () => {
+    const badBuy = buildMockResponse("ENTER_BUY");
+    badBuy.stop_loss = badBuy.entry_price;
+    assert.ok(verifier.verify(badBuy).errors.includes("ENTER_BUY_STOP_LOSS_MUST_BE_BELOW_ENTRY"));
+
+    const badSell = buildMockResponse("ENTER_SELL");
+    badSell.take_profit = badSell.entry_price;
+    assert.ok(verifier.verify(badSell).errors.includes("ENTER_SELL_TAKE_PROFIT_MUST_BE_BELOW_ENTRY"));
+  });
+
+  await test("4.15 Verifier conserva recheck adaptativo del schema productivo", () => {
+    const response = buildMockResponse("WAIT");
+    response.adaptive_state.recheck_minutes = 10;
+    assert.equal(verifier.verify(response).valid, true);
   });
 
   // ═══════════════════════════════════════════════════════════════════
@@ -568,6 +862,24 @@ async function runAllTests(): Promise<void> {
     assert.equal(state.initial_balance_usd, 10000);
   });
 
+  await test("6.6 EXTENDED permanece abierto 20h y expira después", () => {
+    const monitor = new PaperTradeMonitor();
+    const response = buildMockResponse("ENTER_BUY");
+    response.horizon = "EXTENDED";
+    response.order_plan!.validity_minutes = 1200;
+    const trade = monitor.openTrade(response, "XAUUSD", "cert-paper-extended");
+    assert.ok(trade);
+    assert.equal(trade.validity_minutes, 1200);
+
+    trade.opened_at = new Date(Date.now() - 5 * 60 * 60_000).toISOString();
+    monitor.tick({ XAUUSD: trade.entry_price });
+    assert.equal(trade.result, "OPEN");
+
+    trade.opened_at = new Date(Date.now() - 1201 * 60_000).toISOString();
+    monitor.tick({ XAUUSD: trade.entry_price });
+    assert.equal(trade.result, "EXPIRED");
+  });
+
   // ═══════════════════════════════════════════════════════════════════
   console.log("\n§7 — ESTRATEGIAS: Mapa oficial por instrumento");
   // ═══════════════════════════════════════════════════════════════════
@@ -640,6 +952,7 @@ async function runAllTests(): Promise<void> {
       scenario_first_seen_ms: Date.now() - 25 * 60 * 1000,
       strategy_version: "1.0.0",
       prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
     });
 
     const latest = scenarioMemoryStore.getLatest("XAUUSD");
@@ -679,6 +992,7 @@ async function runAllTests(): Promise<void> {
       scenario_first_seen_ms: Date.now() - 30 * 60 * 1000,
       strategy_version: "1.0.0",
       prompt_version: "CARVIPIX_MASTER_ANALYST_PROMPT_V1_DRAFT",
+      analysis_valid: true,
     });
 
     const evolution = scenarioMemoryStore.buildDecisionEvolution("XAUUSD", 8);
@@ -752,8 +1066,8 @@ async function runAllTests(): Promise<void> {
     const expediente = { ...withNarrative, executive_summary: summary };
     const { prompt_text } = promptBuilder.build(expediente);
 
-    assert.ok(prompt_text.includes("autorización para aprobar ENTER_BUY o ENTER_SELL"));
-    assert.ok(prompt_text.includes("NO_TRADE no es la respuesta predeterminada"));
+    assert.ok(prompt_text.includes("usar cuando la operación sea defendible ahora, aunque no perfecta"));
+    assert.ok(prompt_text.includes("NO_TRADE: solo con veto crítico"));
   });
 
   // ═══════════════════════════════════════════════════════════════════

@@ -221,8 +221,8 @@ export class ObserverV3 {
     const decisions = completed.map(r => r.response_raw?.master_decision.decision);
     const signals_buy = decisions.filter(d => d === "ENTER_BUY").length;
     const signals_sell = decisions.filter(d => d === "ENTER_SELL").length;
-    const signals_wait = decisions.filter(d => d === "WAIT" || d === "CONDITIONAL_ENTRY" || d === "ENTRY_MISSED").length;
-    const signals_no_trade = decisions.filter(d => d === "NO_TRADE" || d === "DATA_INSUFFICIENT" || d === "NEWS_VERIFICATION_REQUIRED").length;
+    const signals_wait = decisions.filter(d => d === "WAIT").length;
+    const signals_no_trade = decisions.filter(d => d === "NO_TRADE").length;
 
     const totalCostToday = completed.reduce((sum, r) => sum + r.cost_usd, 0);
     const avgTokens = completed.length > 0
@@ -241,7 +241,7 @@ export class ObserverV3 {
       symbolCounts[s]!.cost_usd += r.cost_usd;
       const dec = r.response_raw?.master_decision.decision;
       if (dec === "ENTER_BUY" || dec === "ENTER_SELL") symbolCounts[s]!.signals++;
-      if (dec === "NO_TRADE" || dec === "DATA_INSUFFICIENT") symbolCounts[s]!.no_trade++;
+      if (dec === "NO_TRADE") symbolCounts[s]!.no_trade++;
     }
 
     const mostActiveSymbol = Object.entries(symbolCounts)

@@ -3,7 +3,20 @@
  * Verifica que el JSON recibido cumple el esquema de la Respuesta Maestra V3.
  */
 
-import type { RespuestaMaestraV3, CadpDecisionV3, ProximityToEntry } from "./typesMaestroV3";
+import type {
+  RespuestaMaestraV3,
+  CadpDecisionContractV3,
+  CadpConfidenceV3,
+  CadpHorizonV3,
+  CadpQualityV3,
+  ProximityToEntry,
+} from "./typesMaestroV3";
+import {
+  CADP_V3_DECISIONS,
+  CADP_V3_EXTENDED_MAX_MINUTES,
+  CADP_V3_HORIZONS,
+  CADP_V3_RECHECK_MINUTES,
+} from "./responseContractV3";
 
 export interface VerifierV3Result {
   valid: boolean;
@@ -11,13 +24,14 @@ export interface VerifierV3Result {
   repaired: RespuestaMaestraV3 | null;
 }
 
-const VALID_DECISIONS = new Set<CadpDecisionV3>([
-  "ENTER_BUY", "ENTER_SELL", "WAIT", "CONDITIONAL_ENTRY",
-  "NO_TRADE", "ENTRY_MISSED", "DATA_INSUFFICIENT", "NEWS_VERIFICATION_REQUIRED",
-]);
+const VALID_DECISIONS = new Set<CadpDecisionContractV3>(CADP_V3_DECISIONS);
+
+const VALID_HORIZON = new Set<CadpHorizonV3>(CADP_V3_HORIZONS);
+const VALID_QUALITY = new Set<CadpQualityV3>(["A_PLUS", "A", "B", "NOT_APPLICABLE"]);
+const VALID_CONFIDENCE = new Set<CadpConfidenceV3>(["HIGH", "MEDIUM", "LOW"]);
 
 const VALID_PROXIMITY = new Set<ProximityToEntry>(["IMMEDIATE", "NEAR", "DEVELOPING", "FAR", "INVALID"]);
-const VALID_RECHECK = new Set([5, 10, 15, 30, 60]);
+const VALID_RECHECK = new Set<number>(CADP_V3_RECHECK_MINUTES);
 const VALID_VISUAL_STATE = new Set(["MUY_FAVORABLE", "FAVORABLE", "NEUTRAL", "COMPLICADO", "ALTO_RIESGO", "SIN_MERCADO"]);
 const VALID_SCENARIO = new Set(["NEW", "DEVELOPING", "NEAR_ENTRY", "READY", "ACTIVE", "INVALIDATED", "EXPIRED", "NO_SETUP"]);
 const VALID_CONVICTION = new Set(["LOW", "MEDIUM", "HIGH"]);
@@ -42,12 +56,42 @@ export class MaestroV3Verifier {
       return { valid: false, errors: ["RESPONSE_NOT_OBJECT"], repaired: null };
     }
 
+    const topDecision = raw["decision"];
+    if (!VALID_DECISIONS.has(topDecision as CadpDecisionContractV3)) {
+      errors.push(`INVALID_TOP_DECISION:${String(topDecision)}`);
+    }
+
+    const topDirection = raw["direction"];
+    if (topDirection !== "BUY" && topDirection !== "SELL" && topDirection !== "NEUTRAL") {
+      errors.push(`INVALID_TOP_DIRECTION:${String(topDirection)}`);
+    }
+
+    if (!VALID_HORIZON.has(raw["horizon"] as CadpHorizonV3)) {
+      errors.push(`INVALID_HORIZON:${String(raw["horizon"])}`);
+    }
+    if (!VALID_QUALITY.has(raw["quality"] as CadpQualityV3)) {
+      errors.push(`INVALID_QUALITY:${String(raw["quality"])}`);
+    }
+    if (!VALID_CONFIDENCE.has(raw["confidence"] as CadpConfidenceV3)) {
+      errors.push(`INVALID_CONFIDENCE:${String(raw["confidence"])}`);
+    }
+    if (!Array.isArray(raw["decisive_evidence"])) errors.push("MISSING_FIELD:decisive_evidence");
+    if (!Array.isArray(raw["opposing_evidence"])) errors.push("MISSING_FIELD:opposing_evidence");
+    if (!isStringOrNull(raw["critical_veto"])) errors.push("INVALID_FIELD:critical_veto");
+    if (!isStringOrNull(raw["missing_condition"])) errors.push("INVALID_FIELD:missing_condition");
+    if (typeof raw["technical_explanation"] !== "string" || raw["technical_explanation"].trim().length < 10) {
+      errors.push("INVALID_FIELD:technical_explanation");
+    }
+    if (typeof raw["public_explanation"] !== "string" || raw["public_explanation"].trim().length < 10) {
+      errors.push("INVALID_FIELD:public_explanation");
+    }
+
     // ── Bloque 1: master_decision
     if (!isObject(raw["master_decision"])) {
       errors.push("MISSING_BLOCK:master_decision");
     } else {
       const md = raw["master_decision"] as Record<string, unknown>;
-      if (!VALID_DECISIONS.has(md["decision"] as CadpDecisionV3)) {
+      if (!VALID_DECISIONS.has(md["decision"] as CadpDecisionContractV3)) {
         errors.push(`INVALID_DECISION:${String(md["decision"])}`);
       }
       if (!VALID_CONVICTION.has(md["conviction"] as string)) {
@@ -95,11 +139,11 @@ export class MaestroV3Verifier {
       ? (raw["master_decision"] as Record<string, unknown>)["decision"] as string
       : "";
 
-    const requiresOrderPlan = decision === "ENTER_BUY" || decision === "ENTER_SELL" || decision === "CONDITIONAL_ENTRY";
+    const requiresOrderPlan = decision === "ENTER_BUY" || decision === "ENTER_SELL";
 
     if (requiresOrderPlan) {
       if (!isObject(raw["order_plan"])) {
-        errors.push("MISSING_BLOCK:order_plan (required for ENTER/CONDITIONAL)");
+        errors.push("MISSING_BLOCK:order_plan (required for ENTER)");
       } else {
         const op = raw["order_plan"] as Record<string, unknown>;
         if (!isNumberOrNull(op["stop_loss"])) errors.push("MISSING_FIELD:order_plan.stop_loss");
@@ -107,6 +151,9 @@ export class MaestroV3Verifier {
         const hasEntryPrice = typeof op["entry_price"] === "number";
         const hasEntryZone = typeof op["entry_zone_min"] === "number" && typeof op["entry_zone_max"] === "number";
         if (!hasEntryPrice && !hasEntryZone) errors.push("ENTRY_PRICE_OR_ZONE_REQUIRED");
+        if (typeof op["risk_reward_ratio"] !== "number" || op["risk_reward_ratio"] <= 0) {
+          errors.push("ORDER_PLAN_POSITIVE_RISK_REWARD_REQUIRED");
+        }
         if (isObject(raw["master_decision"])) {
           const dir = (raw["master_decision"] as Record<string, unknown>)["direction"];
           if (dir === "BUY" || dir === "SELL") {
@@ -116,6 +163,48 @@ export class MaestroV3Verifier {
           }
         }
       }
+    } else if (raw["order_plan"] !== null) {
+      errors.push("ORDER_PLAN_MUST_BE_NULL_FOR_NON_ENTRY");
+    }
+
+    if (decision === "ENTER_BUY" || decision === "ENTER_SELL") {
+      if (typeof raw["entry_price"] !== "number") errors.push("ENTRY_PRICE_REQUIRED_FOR_ENTRY");
+      if (typeof raw["stop_loss"] !== "number") errors.push("STOP_LOSS_REQUIRED_FOR_ENTRY");
+      if (typeof raw["take_profit"] !== "number") errors.push("TAKE_PROFIT_REQUIRED_FOR_ENTRY");
+      if (typeof raw["risk_reward"] !== "number" || raw["risk_reward"] <= 0) errors.push("POSITIVE_RISK_REWARD_REQUIRED_FOR_ENTRY");
+      if (raw["quality"] === "NOT_APPLICABLE") errors.push("QUALITY_NOT_APPLICABLE_NOT_ALLOWED_FOR_ENTRY");
+      if (raw["critical_veto"] !== null) errors.push("CRITICAL_VETO_MUST_BE_NULL_FOR_ENTRY");
+      if (raw["missing_condition"] !== null) errors.push("MISSING_CONDITION_MUST_BE_NULL_FOR_ENTRY");
+      if (raw["direction"] !== "BUY" && raw["direction"] !== "SELL") errors.push("ENTRY_REQUIRES_DIRECTIONAL_SIDE");
+
+      const entry = raw["entry_price"];
+      const stopLoss = raw["stop_loss"];
+      const takeProfit = raw["take_profit"];
+      if (decision === "ENTER_BUY") {
+        if (raw["direction"] !== "BUY") errors.push("ENTER_BUY_REQUIRES_BUY_DIRECTION");
+        if (typeof entry === "number" && typeof stopLoss === "number" && stopLoss >= entry) errors.push("ENTER_BUY_STOP_LOSS_MUST_BE_BELOW_ENTRY");
+        if (typeof entry === "number" && typeof takeProfit === "number" && takeProfit <= entry) errors.push("ENTER_BUY_TAKE_PROFIT_MUST_BE_ABOVE_ENTRY");
+      }
+      if (decision === "ENTER_SELL") {
+        if (raw["direction"] !== "SELL") errors.push("ENTER_SELL_REQUIRES_SELL_DIRECTION");
+        if (typeof entry === "number" && typeof stopLoss === "number" && stopLoss <= entry) errors.push("ENTER_SELL_STOP_LOSS_MUST_BE_ABOVE_ENTRY");
+        if (typeof entry === "number" && typeof takeProfit === "number" && takeProfit >= entry) errors.push("ENTER_SELL_TAKE_PROFIT_MUST_BE_BELOW_ENTRY");
+      }
+    }
+
+    if (decision === "WAIT") {
+      if (typeof raw["missing_condition"] !== "string" || raw["missing_condition"].trim().length < 10) {
+        errors.push("WAIT_REQUIRES_CONCRETE_MISSING_CONDITION");
+      }
+      if (raw["critical_veto"] !== null) errors.push("WAIT_CRITICAL_VETO_MUST_BE_NULL");
+      if (raw["quality"] === "NOT_APPLICABLE") errors.push("WAIT_QUALITY_NOT_APPLICABLE_FORBIDDEN");
+    }
+
+    if (decision === "NO_TRADE") {
+      if (typeof raw["critical_veto"] !== "string" || raw["critical_veto"].trim().length < 5) {
+        errors.push("NO_TRADE_REQUIRES_CRITICAL_VETO");
+      }
+      if (raw["quality"] !== "NOT_APPLICABLE") errors.push("NO_TRADE_REQUIRES_NOT_APPLICABLE_QUALITY");
     }
 
     // ── Bloque 5: adaptive_state
@@ -143,10 +232,43 @@ export class MaestroV3Verifier {
       if (typeof ao["scenario_narrative"] !== "string") errors.push("MISSING_FIELD:analyst_observations.scenario_narrative");
     }
 
+    if (isObject(raw["master_decision"])) {
+      const md = raw["master_decision"] as Record<string, unknown>;
+      if (raw["decision"] !== md["decision"]) errors.push("DECISION_MISMATCH_TOP_VS_MASTER");
+      if (raw["direction"] !== md["direction"]) errors.push("DIRECTION_MISMATCH_TOP_VS_MASTER");
+    }
+
+    if (isObject(raw["analysis_private"])) {
+      const analysisPrivate = raw["analysis_private"] as Record<string, unknown>;
+      if (Array.isArray(raw["decisive_evidence"]) && Array.isArray(analysisPrivate["decisive_evidence"])) {
+        if (raw["decisive_evidence"].length === 0 && analysisPrivate["decisive_evidence"].length > 0) {
+          errors.push("DECISIVE_EVIDENCE_TOP_EMPTY");
+        }
+      }
+      if (Array.isArray(raw["opposing_evidence"]) && Array.isArray(analysisPrivate["opposing_evidence"])) {
+        if (raw["opposing_evidence"].length === 0 && analysisPrivate["opposing_evidence"].length > 0) {
+          errors.push("OPPOSING_EVIDENCE_TOP_EMPTY");
+        }
+      }
+    }
+
     if (errors.length > 0) {
       return { valid: false, errors, repaired: null };
     }
 
-    return { valid: true, errors: [], repaired: raw as unknown as RespuestaMaestraV3 };
+    const repaired = raw as unknown as RespuestaMaestraV3;
+    if (
+      repaired.horizon === "EXTENDED"
+      && repaired.order_plan
+      && typeof repaired.order_plan.validity_minutes === "number"
+      && repaired.order_plan.validity_minutes > CADP_V3_EXTENDED_MAX_MINUTES
+    ) {
+      repaired.order_plan = {
+        ...repaired.order_plan,
+        validity_minutes: CADP_V3_EXTENDED_MAX_MINUTES,
+      };
+    }
+
+    return { valid: true, errors: [], repaired };
   }
 }

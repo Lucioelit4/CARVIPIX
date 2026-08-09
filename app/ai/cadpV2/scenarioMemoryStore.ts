@@ -7,6 +7,7 @@
 import type {
   CanonicalSymbol,
   CadpDecisionV3,
+  CadpHorizonV3,
   ScenarioClassification,
   AdaptiveStateV3,
   OrderPlanV3,
@@ -43,6 +44,18 @@ export interface ScenarioMemoryEntry {
 
   strategy_version: string;
   prompt_version: string;
+
+  scenario_signature?: string;
+  expediente_version?: string;
+  brain_model?: string;
+  expires_at_ms?: number;
+  analysis_valid: boolean;
+  analysis_public_explanation?: string;
+  analysis_technical_explanation?: string;
+  analysis_summary?: string;
+  horizon?: CadpHorizonV3;
+  quality?: "A_PLUS" | "A" | "B" | "NOT_APPLICABLE";
+  confidence?: "HIGH" | "MEDIUM" | "LOW";
 }
 
 export interface ScenarioSnapshot {

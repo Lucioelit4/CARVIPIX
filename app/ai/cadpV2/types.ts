@@ -290,6 +290,18 @@ export interface CadpShadowSignal {
   signal_id: string;
   analysis_id: string;
   symbol: Asset;
+  decision:
+    | "ENTER_BUY"
+    | "ENTER_SELL"
+    | "WAIT"
+    | "NO_TRADE"
+    | "CONDITIONAL_ENTRY"
+    | "ENTRY_MISSED"
+    | "DATA_INSUFFICIENT"
+    | "NEWS_VERIFICATION_REQUIRED";
+  horizon: "SHORT" | "MEDIUM" | "EXTENDED" | null;
+  validity_minutes: number | null;
+  source: "CADP_V2" | "CADP_V3_HISTORICAL_BRAIN";
   analysis_profile: typeof CADP_V1_PROFILE;
   selected_strategy_id: string;
   direction: "BUY" | "SELL" | "NONE";

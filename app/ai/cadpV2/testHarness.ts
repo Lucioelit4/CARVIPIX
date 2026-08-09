@@ -21,23 +21,23 @@ export function generateSyntheticCandles(
   tfMs: number,
   startTs: number,
   volatility = 0.003, // 0.3% per candle
+  random: () => number = Math.random,
+  now = Date.now(),
 ): Array<Omit<Candle, "asset" | "timeframe">> {
   const candles: Array<Omit<Candle, "asset" | "timeframe">> = [];
   let price = basePrice;
-  const now = Date.now();
-
   for (let i = 0; i < count; i++) {
     const ts = startTs + i * tfMs;
     const isOpen = ts + tfMs > now; // Last candle might be open
 
     // Simulate market movement — gentle uptrend with noise
     const trend = i < count * 0.6 ? 0.0002 : -0.0001; // Pullback after impulse
-    const noise = (Math.random() - 0.5) * volatility;
+    const noise = (random() - 0.5) * volatility;
     const changeMultiplier = 1 + trend + noise;
     const open = price;
     const close = price * changeMultiplier;
-    const high = Math.max(open, close) * (1 + Math.random() * 0.001);
-    const low = Math.min(open, close) * (1 - Math.random() * 0.001);
+    const high = Math.max(open, close) * (1 + random() * 0.001);
+    const low = Math.min(open, close) * (1 - random() * 0.001);
     price = close;
 
     candles.push({
@@ -46,7 +46,7 @@ export function generateSyntheticCandles(
       high: Number(high.toFixed(2)),
       low: Number(low.toFixed(2)),
       close: Number(close.toFixed(2)),
-      volume: Math.floor(Math.random() * 1000) + 100,
+      volume: Math.floor(random() * 1000) + 100,
       complete: !isOpen,
     });
   }
@@ -54,29 +54,33 @@ export function generateSyntheticCandles(
   return candles;
 }
 
-export function buildMockPipelineAndIndicators(asset: Asset = "XAUUSD"): {
+export function buildMockPipelineAndIndicators(
+  asset: Asset = "XAUUSD",
+  options: { now?: number; random?: () => number } = {},
+): {
   pipeline: MarketDataPipeline;
   indicators: IndicatorFramework;
 } {
   const pipeline = new MarketDataPipeline();
   const indicators = new IndicatorFramework();
 
-  const now = Date.now();
+  const now = options.now ?? Date.now();
+  const random = options.random ?? Math.random;
   const H1_MS = 60 * 60 * 1000;
   const M30_MS = 30 * 60 * 1000;
   const M5_MS = 5 * 60 * 1000;
 
   // Generate 120 H1 candles (5 days of hourly data)
   const h1Start = now - 120 * H1_MS;
-  const h1Candles = generateSyntheticCandles(120, XAUUSD_BASE_PRICE, H1_MS, h1Start, 0.004);
+  const h1Candles = generateSyntheticCandles(120, XAUUSD_BASE_PRICE, H1_MS, h1Start, 0.004, random, now);
 
   // Generate 120 M30 candles (2.5 days)
   const m30Start = now - 120 * M30_MS;
-  const m30Candles = generateSyntheticCandles(120, XAUUSD_BASE_PRICE, M30_MS, m30Start, 0.002);
+  const m30Candles = generateSyntheticCandles(120, XAUUSD_BASE_PRICE, M30_MS, m30Start, 0.002, random, now);
 
   // Generate 144 M5 candles (12 hours)
   const m5Start = now - 144 * M5_MS;
-  const m5Candles = generateSyntheticCandles(144, XAUUSD_BASE_PRICE, M5_MS, m5Start, 0.0008);
+  const m5Candles = generateSyntheticCandles(144, XAUUSD_BASE_PRICE, M5_MS, m5Start, 0.0008, random, now);
 
   // Feed all candles into pipeline and indicators
   for (const c of h1Candles) {
@@ -115,6 +119,33 @@ export function buildStaleDataPipeline(asset: Asset = "XAUUSD"): {
     const fullCandle = { ...c, asset, timeframe: "1H" as const };
     pipeline.ingestCandle(fullCandle, "1H");
     indicators.update(asset, "1H", fullCandle);
+  }
+
+  return { pipeline, indicators };
+}
+
+export function buildSparseFreshDataPipeline(asset: Asset = "XAUUSD"): {
+  pipeline: MarketDataPipeline;
+  indicators: IndicatorFramework;
+} {
+  const pipeline = new MarketDataPipeline();
+  const indicators = new IndicatorFramework();
+  const now = Date.now();
+  const timeframes = [
+    { timeframe: "1H" as const, durationMs: 60 * 60 * 1000 },
+    { timeframe: "30M" as const, durationMs: 30 * 60 * 1000 },
+    { timeframe: "5M" as const, durationMs: 5 * 60 * 1000 },
+  ];
+
+  for (const { timeframe, durationMs } of timeframes) {
+    const candle = {
+      ...generateSyntheticCandles(1, XAUUSD_BASE_PRICE, durationMs, now - durationMs)[0],
+      asset,
+      timeframe,
+      complete: true,
+    };
+    pipeline.ingestCandle(candle, timeframe);
+    indicators.update(asset, timeframe, candle);
   }
 
   return { pipeline, indicators };

@@ -37,6 +37,8 @@ import {
   StatsDomainService,
 } from "./services/system-domain-services";
 import { masterSignalStore } from "@/app/ai/cadpV2/masterSignalStore";
+import { masterEventDispatcher } from "./services/master-event-dispatcher";
+import { publishMasterSignal } from "./services/master-signal-publisher";
 import { realSignalLifecycleService } from "./services/real-signal-lifecycle-service";
 import { initializeMaestroV3Observer, isMaestroV3ObserverReady } from "@/app/ai/cadpV2/observerInitializer";
 
@@ -208,7 +210,19 @@ function ensureObserverRuntimeInitialization(): void {
 ensureObserverRuntimeInitialization();
 
 masterSignalStore.setPublishHandler(async (record) => {
-  await realSignalLifecycleService.upsertFromMasterSignalRecord(record);
+  try {
+    await publishMasterSignal(record, {
+      lifecycle: realSignalLifecycleService,
+      dispatcher: masterEventDispatcher,
+    });
+  } catch (error) {
+    logger.error("master-signal.publish", "Master signal downstream publication failed", undefined, {
+      signalId: record.signal_id,
+      analysisId: record.analysis_id,
+      errorMessage: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 });
 
 container.register("config", backendConfig);

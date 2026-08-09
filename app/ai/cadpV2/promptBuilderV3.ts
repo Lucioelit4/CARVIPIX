@@ -6,6 +6,7 @@
 
 import { createHash } from "node:crypto";
 import type { ExpedienteMaestroV3 } from "./typesMaestroV3";
+import { CADP_V3_DECISIONS, CADP_V3_DIRECTIONS, CADP_V3_HORIZONS, CADP_V3_RECHECK_MINUTES } from "./responseContractV3";
 
 export interface PromptV3Assembly {
   prompt_text: string;
@@ -15,10 +16,29 @@ export interface PromptV3Assembly {
   estimated_tokens: number;
 }
 
+export interface PromptV3BuildOptions {
+  smartExpedientEnabled?: boolean;
+}
+
 /** Response schema for ChatGPT — strict JSON */
 const RESPONSE_SCHEMA_V3 = JSON.stringify({
+  decision: CADP_V3_DECISIONS.join(" | "),
+  direction: CADP_V3_DIRECTIONS.join(" | "),
+  horizon: CADP_V3_HORIZONS.join(" | "),
+  quality: "A_PLUS | A | B | NOT_APPLICABLE",
+  confidence: "HIGH | MEDIUM | LOW",
+  entry_price: "number | null",
+  stop_loss: "number | null",
+  take_profit: "number | null",
+  risk_reward: "number | null",
+  decisive_evidence: ["string (objective evidence that supports decision)"],
+  opposing_evidence: ["string (objective evidence against decision)"],
+  critical_veto: "string | null",
+  missing_condition: "string | null",
+  technical_explanation: "string (internal explanation for audit)",
+  public_explanation: "string (3-5 lines, client-ready, no promises)",
   master_decision: {
-    decision: "ENTER_BUY | ENTER_SELL | WAIT | CONDITIONAL_ENTRY | NO_TRADE | ENTRY_MISSED | DATA_INSUFFICIENT | NEWS_VERIFICATION_REQUIRED",
+    decision: "ENTER_BUY | ENTER_SELL | WAIT | NO_TRADE",
     direction: "BUY | SELL | NEUTRAL | null",
     strategy_selected: "string | null",
     conviction: "LOW | MEDIUM | HIGH",
@@ -48,7 +68,7 @@ const RESPONSE_SCHEMA_V3 = JSON.stringify({
     public_warning: "string | null",
   },
   order_plan: {
-    _note: "null if decision is not ENTER_BUY, ENTER_SELL, or CONDITIONAL_ENTRY",
+    _note: "null if decision is WAIT or NO_TRADE",
     entry_type: "MARKET | LIMIT | STOP",
     entry_price: "number | null",
     entry_zone_min: "number | null",
@@ -63,7 +83,7 @@ const RESPONSE_SCHEMA_V3 = JSON.stringify({
   },
   adaptive_state: {
     proximity_to_entry: "IMMEDIATE | NEAR | DEVELOPING | FAR | INVALID",
-    recheck_minutes: "5 | 10 | 15 | 30 | 60",
+    recheck_minutes: CADP_V3_RECHECK_MINUTES.join(" | "),
     watch_conditions: [{ condition: "string", level: "number | null", timeframe: "H1 | M30 | M5 | null" }],
     wake_up_triggers: [{
       trigger: "NEW_H1_CLOSE | NEW_M30_CLOSE | PRICE_REACHES_LEVEL | NEW_HIGH_IMPACT_NEWS_DETECTED | ATR_SPIKE | PAPER_TRADE_CLOSED",
@@ -82,32 +102,96 @@ const RESPONSE_SCHEMA_V3 = JSON.stringify({
 
 const MASTER_QUESTION = `Eres el Analista Principal de CARVIPIX. Analiza exclusivamente el instrumento incluido en este expediente.
 
-Cada afirmación debe basarse en la información comprobada proporcionada. Nunca inventes datos, precios, noticias ni niveles que no estén en el expediente.
+Tu función es analizar el expediente real de mercado y encontrar oportunidades técnicamente defendibles que un trader profesional podría ejecutar con una gestión de riesgo responsable.
 
-Usa conjuntamente:
-• Contexto actual + delta desde análisis anterior
-• Mercado general (H1) 
-• Estructura intermedia (M30)
-• Gatillo (M5)
-• Coherencia multi-temporalidad
-• Volatilidad, liquidez, sesión
-• Noticias y riesgos
-• Validez temporal del escenario
-• Resumen ejecutivo
+No debes buscar una operación perfecta.
 
-Integra todo esto como UN ÚNICO análisis coherente. No evalúes cada elemento por separado.
+Tu prioridad es preservar el capital, pero sin caer en una prudencia excesiva que impida aprovechar oportunidades reales.
 
-Si CARVIPIX_MAESTRO_DISCRETIONARY_V1 aparece en las estrategias autorizadas, tienes autorización para aprobar ENTER_BUY o ENTER_SELL basándote en el expediente completo. NO_TRADE no es la respuesta predeterminada: úsala solamente cuando tu análisis determine que no existe una entrada válida o que el riesgo la invalida.
+No operes con miedo ni por impulso. Opera cuando exista evidencia suficiente y no exista un veto técnico crítico.
 
-Tu pregunta: ¿Existe una entrada válida AHORA? ¿El escenario se aproxima? ¿Continúa desarrollándose? ¿Debe rechazarse?
+CARVIPIX evalúa dos modalidades operativas dentro del mismo análisis.
 
-Si existe entrada: Entrega una señal vigente, defendible y completa.
-Si falta una condición: Indica exactamente cuál.
-Si el escenario es inválido o datos insuficientes: Recházalo claramente.
+1) Operación corta: conserva la estrategia actual de horizonte corto y medio, utilizando H1 para contexto, M30 para estructura y M5 para ejecución.
 
-Explica brevemente qué factores fueron decisivos, cuál es el riesgo principal y qué tendría que cambiar para modificar tu decisión.
+2) Operación extendida: además de la modalidad corta, identifica oportunidades técnicamente defendibles que puedan permanecer abiertas durante varias horas, con una duración estimada máxima de 20 horas.
 
-probability_estimated representa tu evaluación analítica de qué tan sólida es la confluencia de factores observados. No es una garantía de resultado. Basa el número en la evidencia del expediente, no en tu entrenamiento previo de otros mercados.
+La operación extendida solo debe considerarse cuando exista una estructura clara, continuidad probable del movimiento, espacio suficiente hasta el objetivo, Stop Loss técnico válido y relación riesgo-beneficio adecuada.
+
+No clasifiques una operación como extendida únicamente porque exista tendencia. Debe haber evidencia suficiente de que el escenario puede sostenerse durante varias horas sin depender de movimientos no confirmados.
+
+Evalúa ambas modalidades dentro de una sola consulta. No realices análisis separados.
+
+La señal debe clasificarse como:
+• SHORT: oportunidad corta.
+• MEDIUM: oportunidad de duración intermedia.
+• EXTENDED: oportunidad extendida con duración estimada de hasta 20 horas.
+
+Si existen oportunidades válidas en más de una modalidad, selecciona la que tenga mejor calidad técnica y relación riesgo-beneficio. No fuerces una operación extendida cuando la estrategia corta sea más defendible.
+
+Toda decisión debe basarse exclusivamente en los datos reales del expediente generado por CARVIPIX desde la API oficial.
+Debes utilizar: OHLC reales, velas cerradas y vigentes, timestamps normalizados, contexto H1, estructura M30 (y M45 solo si existe explícitamente en el expediente), ejecución M5, EMAs e indicadores, volatilidad, zonas técnicas y relación riesgo-beneficio.
+No debes inventar precios, velas ni movimientos no presentes.
+No utilices imágenes ilustrativas como fuente principal.
+
+Marco de razonamiento:
+• H1 define contexto y dirección principal.
+• M30 valida estructura y zona.
+• M5 valida ejecución.
+• EMAs/ADX/ATR son evidencia de apoyo y calidad, no vetos automáticos.
+• Soporte/resistencia/ruptura/rechazo/retroceso/impulso son contexto.
+• Riesgo-beneficio y Stop Loss técnico son requisitos operativos.
+
+Definición de evidencia suficiente para ENTER_BUY/ENTER_SELL:
+1) Existe dirección o hipótesis clara.
+2) La estructura intermedia no contradice de manera crítica.
+3) M5 ofrece al menos una confirmación principal defendible.
+4) Existe Stop Loss técnico que invalida la hipótesis sin quedar dentro de ruido normal.
+5) Existe relación riesgo-beneficio adecuada.
+6) No existe veto crítico.
+
+No exijas simultáneamente todas las confirmaciones posibles.
+Las condiciones ideales aumentan confianza, pero no son obligatorias.
+Una condición ideal nunca bloquea por sí sola.
+Los conflictos menores reducen calidad/confianza.
+Solo un conflicto crítico invalida operación.
+
+Gestión de riesgo:
+• Se asume riesgo de 1%-2% del capital por operación.
+• No muevas SL arbitrariamente para mejorar R:R.
+• Si el SL técnicamente válido es demasiado amplio para la modalidad seleccionada, responde NO_TRADE.
+
+Decisiones permitidas:
+• ENTER_BUY
+• ENTER_SELL
+• WAIT
+• NO_TRADE
+
+Reglas de decisión:
+• ENTER_BUY/ENTER_SELL: usar cuando la operación sea defendible ahora, aunque no perfecta.
+• WAIT: solo si existe oportunidad potencial y falta condición concreta/cercana; debes indicar exactamente qué confirmación, en qué temporalidad, en qué nivel/zona y qué cambiaría decisión.
+• NO_TRADE: solo con veto crítico (datos incompletos/obsoletos, mercado cerrado, noticia crítica inmediata, costo anormal, estructura caótica, R:R insuficiente, SL inválido o demasiado amplio, entrada demasiado extendida, conflicto crítico).
+
+Contrato obligatorio:
+• decision, direction, horizon, quality, confidence
+• entry_price, stop_loss, take_profit, risk_reward
+• decisive_evidence, opposing_evidence
+• critical_veto, missing_condition
+• technical_explanation, public_explanation
+
+Reglas de contrato:
+• BUY/SELL requieren entrada, SL, TP y R:R válidos.
+• WAIT requiere missing_condition concreta.
+• NO_TRADE requiere critical_veto.
+• public_explanation siempre obligatoria (3-5 líneas, profesional, sin promesas).
+• Toda decisión debe indicar claramente si corresponde a SHORT, MEDIUM o EXTENDED.
+
+Política obligatoria de comunicación pública (public_explanation y analysis_public):
+• Habla siempre como CARVIPIX.
+• Usa formulaciones como: "CARVIPIX detecta...", "El análisis de CARVIPIX muestra...", "CARVIPIX mantiene este escenario en observación...".
+• Explica brevemente por qué existe o no existe entrada, sin razonamiento interno completo.
+• No menciones ChatGPT, OpenAI, inteligencia artificial, API, proveedores de datos, prompts, modelos, indicadores internos, módulos, validadores, arquitectura o fuentes técnicas.
+• Mantén lenguaje profesional, claro y útil para cliente final.
 
 Responde ÚNICAMENTE en el formato JSON solicitado por CARVIPIX. No incluyas texto fuera del esquema.`;
 
@@ -122,7 +206,11 @@ function estimateTokens(text: string): number {
 }
 
 export class MaestroV3PromptBuilder {
-  build(expediente: ExpedienteMaestroV3): PromptV3Assembly {
+  build(expediente: ExpedienteMaestroV3, options?: PromptV3BuildOptions): PromptV3Assembly {
+    if (options?.smartExpedientEnabled) {
+      return this.buildSmart(expediente);
+    }
+
     const sections: Array<{ title: string; content: unknown }> = [
       { title: "1. Identidad y trazabilidad", content: expediente.identity },
       { title: "2. Calidad del expediente", content: expediente.quality },
@@ -179,6 +267,109 @@ export class MaestroV3PromptBuilder {
       prompt_hash,
       prompt_cache_key,
       section_order: sections.map(s => s.title),
+      estimated_tokens: estimateTokens(prompt_text),
+    };
+  }
+
+  private buildSmart(expediente: ExpedienteMaestroV3): PromptV3Assembly {
+    const stableContext = {
+      symbol: expediente.identity.canonical_symbol,
+      trend_h1: expediente.multi_timeframe.structure_direction.h1,
+      trend_m30: expediente.multi_timeframe.structure_direction.m30,
+      zones_h1: {
+        support: expediente.market_h1.support_zones.slice(-2),
+        resistance: expediente.market_h1.resistance_zones.slice(-2),
+      },
+      zones_m30: {
+        support: expediente.market_m30.support_zones.slice(-2),
+        resistance: expediente.market_m30.resistance_zones.slice(-2),
+      },
+      previous_decision: expediente.previous_context.previous_decision,
+      previous_state: expediente.previous_context.previous_scenario_state,
+    };
+
+    const changes = {
+      trigger_reason: expediente.pre_analysis_trigger.trigger_reason,
+      description: expediente.pre_analysis_trigger.change_description,
+      delta: expediente.delta,
+    };
+
+    const indispensableState = {
+      quality: expediente.quality,
+      market_h1: {
+        ema20: expediente.market_h1.ema20,
+        ema50: expediente.market_h1.ema50,
+        ema200: expediente.market_h1.ema200,
+        atr: expediente.market_h1.atr,
+        adx: expediente.market_h1.adx,
+        last_closed: expediente.market_h1.closed_candles.slice(-8),
+      },
+      market_m30: {
+        ema20: expediente.market_m30.ema20,
+        ema50: expediente.market_m30.ema50,
+        ema200: expediente.market_m30.ema200,
+        atr: expediente.market_m30.atr,
+        adx: expediente.market_m30.adx,
+        last_closed: expediente.market_m30.closed_candles.slice(-8),
+      },
+      market_m5: {
+        ema20: expediente.market_m5.ema20,
+        ema50: expediente.market_m5.ema50,
+        ema200: expediente.market_m5.ema200,
+        atr: expediente.market_m5.atr,
+        adx: expediente.market_m5.adx,
+        mid_price: expediente.market_m5.mid_price,
+        last_closed: expediente.market_m5.closed_candles.slice(-12),
+      },
+      volatility_and_session: expediente.volatility_and_session,
+      news_and_risk: expediente.news_and_risk,
+      authorized_strategies: expediente.authorized_strategies,
+    };
+
+    const sections: Array<{ title: string; content: unknown }> = [
+      { title: "1. Identidad y trazabilidad", content: expediente.identity },
+      { title: "2. Contexto estable", content: stableContext },
+      { title: "3. Cambios nuevos", content: changes },
+      { title: "4. Estado actual indispensable", content: indispensableState },
+      { title: "5. Resumen ejecutivo", content: this.buildSummaryText(expediente.executive_summary) },
+    ];
+
+    const dataSections = sections.map((section) => serializeSection(section.title, section.content)).join("\n");
+    const prompt_text = [
+      "# EXPEDIENTE MAESTRO CARVIPIX V3 (SMART)",
+      `# Instrumento: ${expediente.identity.canonical_symbol} | Análisis: ${expediente.identity.analysis_id}`,
+      `# Versión: ${expediente.identity.version_expediente} | Modelo: ${expediente.identity.model_openai}`,
+      "",
+      dataSections,
+      "",
+      "---",
+      "",
+      "### Esquema JSON oficial de respuesta",
+      RESPONSE_SCHEMA_V3,
+      "",
+      "---",
+      "",
+      "### PREGUNTA MAESTRA",
+      MASTER_QUESTION,
+      "",
+      "NOTA: Reevaluar por cambio material detectado. No asumas datos externos ni memoria fuera del expediente.",
+    ].join("\n");
+
+    const prompt_hash = createHash("sha256").update(prompt_text).digest("hex");
+    const staticPart = [
+      "SMART",
+      expediente.identity.version_expediente,
+      expediente.identity.version_prompt,
+      JSON.stringify(expediente.authorized_strategies),
+      RESPONSE_SCHEMA_V3,
+      MASTER_QUESTION,
+    ].join("|");
+
+    return {
+      prompt_text,
+      prompt_hash,
+      prompt_cache_key: createHash("sha256").update(staticPart).digest("hex"),
+      section_order: sections.map((section) => section.title),
       estimated_tokens: estimateTokens(prompt_text),
     };
   }

@@ -12,6 +12,7 @@ import type { MarketDataPipeline } from "../../engine/data/marketDataPipeline";
 import type { Asset } from "../../engine/types/marketData";
 import { getOpenAIRuntimeConfig } from "../openAIConfig";
 import { getOpenAIRetryAfterMs, OpenAIAdapterV2 } from "./openAIAdapterV2";
+import { getCadpV3OptimizationFlags } from "./config";
 import { CadpCostManager } from "./costManager";
 import { MaestroV3SnapshotBuilder } from "./snapshotBuilderV3";
 import { NarrativeContextBuilder } from "./narrativeContextBuilder";
@@ -29,6 +30,8 @@ import { telegramNotificationService } from "./telegramNotificationService";
 import { CadpMasterSignalBuilder } from "./masterSignalBuilder";
 import { masterSignalStore } from "./masterSignalStore";
 import { OpenAICircuitBreaker } from "./openAICircuitBreaker";
+import { findReusableWait } from "./waitDeduplication";
+import { CADP_V3_DECISIONS, CADP_V3_DIRECTIONS, CADP_V3_HORIZONS, CADP_V3_RECHECK_MINUTES } from "./responseContractV3";
 import type {
   CanonicalSymbol,
   PreAnalysisTriggerReason,
@@ -39,7 +42,7 @@ import type { ScenarioMemoryEntry } from "./scenarioMemoryStore";
 interface ShadowFlowV3Result {
   analysis_id: string;
   canonical_symbol: CanonicalSymbol;
-  status: "COMPLETED" | "SKIPPED_BEFORE_AI" | "REUSED_PREVIOUS_ANALYSIS" | "AI_ERROR";
+  status: "COMPLETED" | "SKIPPED_BEFORE_AI" | "REUSED_PREVIOUS_ANALYSIS" | "SKIPPED_DUPLICATE_WAIT" | "AI_ERROR";
   decision: string | null;
   cost_usd: number;
   latency_ms: number;
@@ -77,8 +80,11 @@ export class ShadowFlowV3 {
     const started = Date.now();
     const analysis_id = `anal-${canonical_symbol}-${Date.now()}-${randomUUID()}`;
     const signal_id = `sig-${canonical_symbol}-${Date.now()}-${randomUUID()}`;
+    let releaseExecutionLock: (() => void) | null = null;
 
     try {
+      const optimizationFlags = getCadpV3OptimizationFlags();
+
       // ── PASO 1: Build snapshot (Secciones 1-13 + trigger)
       const { expediente: partialExpediente, idempotency_key } = await this.snapshotBuilder.build({
         analysis_id,
@@ -86,6 +92,73 @@ export class ShadowFlowV3 {
         canonical_symbol,
         trigger_reason,
       });
+
+      releaseExecutionLock = await idempotencyStore.acquireExecutionLock(idempotency_key.full_key);
+      const reusableWait = trigger_reason !== "SCHEDULED_RECHECK" && optimizationFlags.ANALYSIS_TEMPORAL_MEMORY_ENABLED
+        ? findReusableWait({
+          candidates: analysisStore.getBySymbol(canonical_symbol, 500).map((record) => ({
+          analysis_id: record.analysis_id,
+          canonical_symbol: record.canonical_symbol,
+          status: record.status,
+          response_valid: record.response_valid,
+          decision: record.respuesta_maestra?.master_decision.decision ?? null,
+          scenario_signature: record.scenario_signature,
+          recorded_at_ms: record.recorded_at_ms,
+          timestamp_utc_ms: record.timestamp_utc_ms,
+          respuesta_maestra: record.respuesta_maestra,
+        })),
+          symbol: canonical_symbol,
+          scenarioSignature: idempotency_key.full_key,
+          ttlMs: 30 * 60 * 1000,
+        })
+        : undefined;
+
+      if (reusableWait?.respuesta_maestra) {
+        const skip = {
+          skip_reason: "SKIPPED_DUPLICATE_WAIT" as const,
+          detail: `Reused WAIT analysis ${reusableWait.analysis_id} with identical scenario signature.`,
+        };
+
+        observerV3.recordSkipped({
+          analysis_id,
+          signal_id,
+          canonical_symbol,
+          skip,
+          expediente: partialExpediente as ExpedienteMaestroV3,
+        });
+        analysisStore.record({
+          analysis_id,
+          signal_id,
+          canonical_symbol,
+          timestamp_utc_ms: partialExpediente.identity.timestamp_utc_ms,
+          trigger_reason,
+          expediente: partialExpediente as ExpedienteMaestroV3,
+          prompt_text: "",
+          prompt_hash: "",
+          estimated_tokens: 0,
+          respuesta_maestra: reusableWait.respuesta_maestra,
+          response_latency_ms: 0,
+          response_cost_usd: 0,
+          response_valid: true,
+          dispatch_result: null,
+          status: "SKIPPED_DUPLICATE_WAIT",
+          skip_reason: skip.skip_reason,
+          reuse_of_analysis_id: reusableWait.analysis_id,
+          reuse_reason: "IDENTICAL_WAIT_SCENARIO_WITHIN_TTL",
+          scenario_signature: idempotency_key.full_key,
+          paper_balance_before_usd: paperTradeMonitor.getAccountState().current_balance_usd,
+          paper_balance_after_usd: paperTradeMonitor.getAccountState().current_balance_usd,
+        });
+
+        return {
+          analysis_id,
+          canonical_symbol,
+          status: "SKIPPED_DUPLICATE_WAIT",
+          decision: "WAIT",
+          cost_usd: 0,
+          latency_ms: Date.now() - started,
+        };
+      }
 
       // ── PASO 2: Quality gate — ¿Debe skipearse antes de llamar a AI?
       if (partialExpediente.quality.skip_before_ai !== null) {
@@ -135,8 +208,10 @@ export class ShadowFlowV3 {
       const executive_summary = this.summaryBuilder.build(expedienteWithNarrative);
       const expediente: ExpedienteMaestroV3 = { ...expedienteWithNarrative, executive_summary };
 
-      // ── PASO 4: Build prompt (16 secciones + Pregunta Maestra)
-        const { prompt_text, prompt_hash } = this.promptBuilder.build(expediente);
+      // ── PASO 4: Build historical smart expediente + Pregunta Maestra
+      const { prompt_text, prompt_hash } = this.promptBuilder.build(expediente, {
+        smartExpedientEnabled: optimizationFlags.SMART_EXPEDIENT_ENABLED,
+      });
 
       // ── PASO 5: Call OpenAI
       const config = getOpenAIRuntimeConfig();
@@ -300,6 +375,17 @@ export class ShadowFlowV3 {
         scenario_first_seen_ms: scenarioFirstSeen,
         strategy_version: "1.0.0",
         prompt_version: expediente.identity.version_prompt,
+        scenario_signature: idempotency_key.full_key,
+        expediente_version: expediente.identity.version_expediente,
+        brain_model: config.model,
+        expires_at_ms: Date.now() + 30 * 60 * 1000,
+        analysis_valid: true,
+        analysis_public_explanation: response.public_explanation,
+        analysis_technical_explanation: response.technical_explanation,
+        analysis_summary: response.analysis_private.analysis_summary,
+        horizon: response.horizon,
+        quality: response.quality,
+        confidence: response.confidence,
       };
       scenarioMemoryStore.save(memoryEntry);
 
@@ -392,6 +478,8 @@ export class ShadowFlowV3 {
         paper_balance_before_usd: 10000, // Initial account balance
         paper_balance_after_usd: paperAccount.current_balance_usd,
         paper_pnl_usd: paperAccount.current_balance_usd - 10000,
+        scenario_signature: idempotency_key.full_key,
+        recorded_at_ms: Date.now(),
       });
 
       return {
@@ -403,7 +491,7 @@ export class ShadowFlowV3 {
         latency_ms: analysisRecord.latency_ms,
       };
 
-    } catch (err) {
+    } catch {
       this.openAICircuit.recordFailure();
       return {
         analysis_id,
@@ -413,6 +501,8 @@ export class ShadowFlowV3 {
         cost_usd: 0,
         latency_ms: Date.now() - started,
       };
+    } finally {
+      releaseExecutionLock?.();
     }
   }
 
@@ -428,11 +518,26 @@ export class ShadowFlowV3 {
     return {
       type: "object",
       properties: {
+        decision: { type: "string", enum: [...CADP_V3_DECISIONS] },
+        direction: { type: "string", enum: [...CADP_V3_DIRECTIONS] },
+        horizon: { type: "string", enum: [...CADP_V3_HORIZONS] },
+        quality: { type: "string", enum: ["A_PLUS", "A", "B", "NOT_APPLICABLE"] },
+        confidence: { type: "string", enum: ["HIGH", "MEDIUM", "LOW"] },
+        entry_price: { type: ["number", "null"] },
+        stop_loss: { type: ["number", "null"] },
+        take_profit: { type: ["number", "null"] },
+        risk_reward: { type: ["number", "null"] },
+        decisive_evidence: { type: "array", items: { type: "string" } },
+        opposing_evidence: { type: "array", items: { type: "string" } },
+        critical_veto: { type: ["string", "null"] },
+        missing_condition: { type: ["string", "null"] },
+        technical_explanation: { type: "string" },
+        public_explanation: { type: "string" },
         master_decision: {
           type: "object",
           additionalProperties: false,
           properties: {
-            decision: { type: "string" },
+            decision: { type: "string", enum: [...CADP_V3_DECISIONS] },
             direction: { type: ["string", "null"] },
             strategy_selected: { type: ["string", "null"] },
             conviction: { type: "string" },
@@ -540,7 +645,7 @@ export class ShadowFlowV3 {
           additionalProperties: false,
           properties: {
             proximity_to_entry: { type: "string" },
-            recheck_minutes: { type: "number" },
+            recheck_minutes: { type: "number", enum: [...CADP_V3_RECHECK_MINUTES] },
             watch_conditions: {
               type: "array",
               items: {
@@ -590,7 +695,29 @@ export class ShadowFlowV3 {
           required: ["summary", "scenario_narrative", "key_observation"],
         },
       },
-      required: ["master_decision", "analysis_private", "analysis_public", "order_plan", "adaptive_state", "analyst_observations"],
+      required: [
+        "decision",
+        "direction",
+        "horizon",
+        "quality",
+        "confidence",
+        "entry_price",
+        "stop_loss",
+        "take_profit",
+        "risk_reward",
+        "decisive_evidence",
+        "opposing_evidence",
+        "critical_veto",
+        "missing_condition",
+        "technical_explanation",
+        "public_explanation",
+        "master_decision",
+        "analysis_private",
+        "analysis_public",
+        "order_plan",
+        "adaptive_state",
+        "analyst_observations",
+      ],
       additionalProperties: false,
     };
   }
