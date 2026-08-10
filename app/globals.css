@@ -505,9 +505,25 @@ a.cv-button {
 }
 
 .cv-app-shell {
-  background:
-    radial-gradient(circle at top right, rgba(212, 175, 55, 0.06), transparent 40%),
-    #030303;
+  position: relative;
+  isolation: isolate;
+  background-color: #030303;
+}
+
+.cv-app-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(160deg, rgba(2, 4, 8, 0.62) 0%, rgba(3, 8, 16, 0.58) 34%, rgba(5, 10, 20, 0.54) 62%, rgba(2, 5, 10, 0.64) 100%),
+    radial-gradient(circle at 20% 16%, rgba(212, 175, 55, 0.38), transparent 40%),
+    radial-gradient(circle at 84% 24%, rgba(36, 82, 138, 0.4), transparent 43%),
+    url("/media/themes/carvipix-client-ambient-theme.png");
+  background-size: cover, 62% 66%, 66% 70%, 100% auto;
+  background-position: center, left 8% top 7%, right 4% top 12%, center top;
+  background-repeat: no-repeat;
 }
 
 .cv-page-content {
@@ -588,10 +604,41 @@ a.cv-button {
 }
 
 .cv-trader-shell {
-  background:
-    radial-gradient(circle at 10% -10%, rgba(212, 175, 55, 0.12), transparent 30%),
-    radial-gradient(circle at 90% 0%, rgba(36, 70, 120, 0.2), transparent 32%),
-    #030303;
+  position: relative;
+  isolation: isolate;
+  background-color: #030303;
+}
+
+.cv-trader-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(165deg, rgba(2, 4, 8, 0.58) 0%, rgba(5, 10, 20, 0.54) 46%, rgba(2, 6, 12, 0.62) 100%),
+    radial-gradient(circle at 13% 13%, rgba(212, 175, 55, 0.4), transparent 40%),
+    radial-gradient(circle at 86% 20%, rgba(34, 76, 128, 0.42), transparent 44%),
+    url("/media/themes/carvipix-client-ambient-theme.png");
+  background-size: cover, 64% 68%, 68% 72%, 100% auto;
+  background-position: center, left 7% top 8%, right 6% top 14%, center top;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 1279px) {
+  .cv-app-shell::before,
+  .cv-trader-shell::before {
+    background-size: cover, 72% 62%, 78% 68%, 106% auto;
+    background-position: center, left 10% top 8%, right 7% top 13%, center top;
+  }
+}
+
+@media (max-width: 767px) {
+  .cv-app-shell::before,
+  .cv-trader-shell::before {
+    background-size: cover, 92% 56%, 98% 62%, 112% auto;
+    background-position: center, left 14% top 9%, right 4% top 16%, center top;
+  }
 }
 
 .cv-trader-page {

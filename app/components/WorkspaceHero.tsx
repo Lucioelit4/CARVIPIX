@@ -2,6 +2,7 @@
 
 import { Bell, Search, ShieldCheck } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useGlobalAlertsCenter } from "./alerts/GlobalAlertsCenterProvider";
 import { formatRelativeAgeLabel, getFreshnessTone, getOutcomeTone } from "@/app/alertas/alertas-view-model";
@@ -9,8 +10,8 @@ import InstallTraderButton from "./pwa/InstallTraderButton";
 
 const routeTitles: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
-    title: "Dashboard CARVIPIX",
-    subtitle: "Bienvenido de vuelta. Centro operativo premium con acceso a toda la plataforma.",
+    title: "Panel principal",
+    subtitle: "Tu centro de acceso a alertas, resultados, automatizacion y servicios de CARVIPIX.",
   },
   "/alertas": {
     title: "Alertas en Vivo",
@@ -70,6 +71,7 @@ function normalizePath(pathname: string): string {
 export default function WorkspaceHero() {
   const pathname = usePathname();
   const routeKey = normalizePath(pathname);
+  const isDashboardRoute = routeKey === "/dashboard";
   const panelRef = useRef<HTMLDivElement | null>(null);
   const {
     alerts,
@@ -92,6 +94,7 @@ export default function WorkspaceHero() {
   }, [routeKey]);
 
   const visibleAlerts = useMemo(() => alerts.slice(0, 6), [alerts]);
+  const kickerLabel = isDashboardRoute ? "Plataforma CARVIPIX" : "Plataforma premium";
 
   useEffect(() => {
     if (!panelOpen) {
@@ -115,10 +118,49 @@ export default function WorkspaceHero() {
   }, [panelOpen, closePanel]);
 
   return (
-    <section className="cv-workspace pt-4 sm:pt-6 lg:pt-8">
-      <div className="cv-toolbar">
+    <section className={`cv-workspace pt-4 sm:pt-6 lg:pt-8 ${isDashboardRoute ? "relative overflow-hidden" : ""}`}>
+      {isDashboardRoute ? (
+        <>
+          <Image
+            src="/media/dashboard/dashboard-hero-texture.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[72%_center] sm:object-[68%_center]"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(2, 5, 12, 0.96) 0%, rgba(2, 5, 12, 0.86) 40%, rgba(2, 5, 12, 0.54) 70%, rgba(2, 5, 12, 0.28) 100%)",
+            }}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(2, 5, 12, 0.70) 0%, transparent 28%, transparent 72%, rgba(2, 5, 12, 0.82) 100%)",
+            }}
+          />
+          <div className="absolute inset-0 bg-[#02050c]/24 sm:bg-[#02050c]/14" />
+        </>
+      ) : null}
+
+      <div
+        className="relative z-10 cv-toolbar"
+        style={
+          isDashboardRoute
+            ? {
+                background: "linear-gradient(180deg, rgba(8, 12, 20, 0.30), rgba(8, 12, 20, 0.12))",
+                borderColor: "rgba(212, 175, 55, 0.20)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
+              }
+            : undefined
+        }
+      >
         <div className="min-w-0">
-          <p className="cv-kicker">Plataforma premium</p>
+          <p className="cv-kicker">{kickerLabel}</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">{content.title}</h1>
           <p className="mt-2 max-w-3xl text-sm text-[#B5B5B5] sm:text-base">{content.subtitle}</p>
         </div>

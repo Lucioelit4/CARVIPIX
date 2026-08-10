@@ -58,11 +58,6 @@ export default function AppShell({ children }: AppShellProps) {
   return (
     <GlobalAlertsCenterProvider>
       <PwaRuntimeController />
-      {!isAdminRoute && !isServiciosLandingRoute ? (
-        <div className="fixed bottom-4 right-4 z-[85]">
-          <InstallTraderButton />
-        </div>
-      ) : null}
       <Sidebar />
       <div className="cv-app-shell flex min-h-screen flex-1 flex-col pt-[76px] lg:ml-72 lg:pt-0">
         <WorkspaceHero />

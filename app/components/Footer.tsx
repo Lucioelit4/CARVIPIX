@@ -12,7 +12,7 @@ export default function Footer() {
               CARVIPIX
             </h3>
             <p className="text-sm text-zinc-400">
-              Plataforma tecnologica para traders con herramientas, automatizacion y contenido operativo.
+              Plataforma de trading que integra alertas de mercado, analisis, automatizacion y herramientas para acompanar al trader desde un solo ecosistema.
             </p>
           </div>
 
@@ -27,7 +27,7 @@ export default function Footer() {
                   href="/trust-center"
                   className="text-[#B5B5B5] transition hover:text-[#F4C542]"
                 >
-                  CARVIPIX Transparency & Trust Center
+                  Centro de Transparencia y Confianza
                 </Link>
               </li>
               <li>
@@ -121,7 +121,7 @@ export default function Footer() {
         {/* Disclaimer */}
         <div className="border-t border-[#2A2A2A] pt-6">
           <p className="text-xs leading-relaxed text-[#B5B5B5]">
-            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas y servicios informativos. El trading implica riesgo significativo y CARVIPIX no garantiza resultados especificos. Si necesitas una evaluacion legal, fiscal o financiera individual, consulta a un profesional independiente.
+            <strong>Aviso importante:</strong> CARVIPIX proporciona herramientas tecnologicas, informacion y servicios relacionados con los mercados financieros. El trading implica riesgos y los resultados pasados no garantizan resultados futuros. Para asesoramiento financiero, fiscal o legal personalizado, consulta a un profesional independiente.
           </p>
         </div>
 

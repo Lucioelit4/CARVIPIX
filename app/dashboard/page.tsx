@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Bell, Bot, RefreshCw, ShieldCheck } from "lucide-react";
 
 import { CARVIPIXBadge, CARVIPIXButton, CARVIPIXCard } from "@/app/design-system";
@@ -264,14 +265,13 @@ export default function DashboardPage() {
   return (
     <main className="dashboard-shell min-h-screen text-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1420px] space-y-6">
-        <section className="cv-hero rounded-3xl border border-[#D4AF37]/35 p-6 lg:p-7">
+        <section className="cv-hero fade-in-surface rounded-3xl border border-[#D4AF37]/35 p-6 lg:p-7">
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr] xl:items-stretch">
             <div className="flex flex-col gap-4">
               <div>
-                <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">CENTRO DE CONTROL OPERATIVO</p>
+                <p className="text-xs uppercase tracking-[0.26em] text-[#D4AF37]">TU ESPACIO CARVIPIX</p>
                 <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-4xl">{planDisplayName}</h1>
-                <p className="mt-3 max-w-3xl text-sm text-white/70">Tu espacio central para supervisar alertas, el estado del bot y el rendimiento de tu membresía.</p>
-                <p className="mt-2 max-w-3xl text-sm text-white/60">Consulta la actividad operativa, los recursos disponibles y la evolución de tus resultados desde un único panel.</p>
+                <p className="mt-3 max-w-3xl text-sm text-white/70">Consulta tus alertas, resultados, herramientas disponibles y el estado de tus servicios desde un solo lugar.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <CARVIPIXBadge variant={portal.plan.membershipActive ? "success" : "warning"}>
@@ -288,8 +288,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">Resumen de cuenta</p>
+            <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card fade-in-surface">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#D4AF37]">RESUMEN DE CUENTA</p>
               <div className="mt-4 space-y-2 text-sm text-white/75">
                 <p>Plan activo: <span className="text-white">{portal.plan.officialPlan}</span></p>
                 <p>Estado de la membresía: <span className="text-white">{portal.plan.membershipActive ? "Activa" : "Inactiva"}</span></p>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
             ].map((item) => {
               const Icon = item.icon;
               return (
-                <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+                <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false} className="fade-in-surface">
                   <div className="flex items-center justify-between text-[#D4AF37]">
                     <p className="text-xs text-white/60">{item.label}</p>
                     <Icon className="h-4 w-4" />
@@ -327,30 +327,50 @@ export default function DashboardPage() {
         {error && <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold">Alerta destacada</h2>
-            {latestAlert ? (
-              <div className="mt-4 space-y-2 text-sm">
-                <p className="text-white"><span className="text-white/60">Par:</span> {latestAlert.symbol}</p>
-                <p className="text-white"><span className="text-white/60">Resumen:</span> {latestAlert.title}</p>
-                <p className="text-white/75">{latestAlert.description}</p>
-                <p className="text-white/50">{formatDateTime(latestAlert.timestamp)}</p>
-              </div>
-            ) : (
-              <div className="mt-4 space-y-2">
-                <p className="text-white font-medium">No hay una alerta activa en este momento.</p>
-                <p className="text-sm text-white/65">CARVIPIX continúa monitoreando el mercado en busca de oportunidades válidas y oportunas.</p>
-              </div>
-            )}
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className={`cv-card cv-alert-surface fade-in-surface relative overflow-hidden ${latestAlert ? "cv-alert-surface--active" : ""}`}>
+            <Image
+              src="/media/dashboard/dashboard-alert-surface.png"
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 50vw, 100vw"
+              className="pointer-events-none object-cover object-left-bottom opacity-28"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#05070f]/96 via-[#05070f]/88 to-[#05070f]/60" />
+            <div className="relative z-10">
+              <h2 className="text-xl font-semibold">Alerta destacada</h2>
+              {latestAlert ? (
+                <div className="mt-4 space-y-2 text-sm">
+                  <p className="text-white"><span className="text-white/60">Par:</span> {latestAlert.symbol}</p>
+                  <p className="text-white"><span className="text-white/60">Resumen:</span> {latestAlert.title}</p>
+                  <p className="text-white/75">{latestAlert.description}</p>
+                  <p className="text-white/50">{formatDateTime(latestAlert.timestamp)}</p>
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  <p className="text-white font-medium">No hay una alerta activa en este momento.</p>
+                  <p className="text-sm text-white/65">CARVIPIX analiza continuamente las condiciones del mercado. Cuando se identifique una oportunidad que cumpla con los criterios establecidos, aparecerá aquí.</p>
+                </div>
+              )}
+            </div>
           </CARVIPIXCard>
 
-          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card">
-            <h2 className="text-xl font-semibold">Estado operativo del Bot</h2>
-            <div className="mt-4 space-y-2 text-sm text-white/75">
-              <p>Plataforma: <span className="text-white">{portal.bot.license?.brokerConnected ?? "Sin vincular"}</span></p>
-              <p>Conexión: <span className="text-white">{connectionStatusLabel}</span></p>
-              <p>Comunicación con el bot: <span className="text-white">{communicationStatusLabel}</span></p>
-              <p>Última actividad registrada: <span className="text-white">{latestBotLog ? formatDateTime(latestBotLog.createdAt) : "Sin actividad reciente"}</span></p>
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card cv-bot-surface fade-in-surface relative overflow-hidden">
+            <Image
+              src="/media/dashboard/dashboard-bot-surface.png"
+              alt=""
+              fill
+              sizes="(min-width: 1280px) 50vw, 100vw"
+              className="pointer-events-none object-cover object-right opacity-34"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#05070f]/94 via-[#05070f]/76 to-[#05070f]/36" />
+            <div className="relative z-10 max-w-[74%] sm:max-w-[70%]">
+              <h2 className="text-xl font-semibold">Estado del Bot CARVIPIX</h2>
+              <div className="mt-4 space-y-2 text-sm text-white/75">
+                <p>Plataforma: <span className="text-white">{portal.bot.license?.brokerConnected ?? "Sin vincular"}</span></p>
+                <p>Conexión: <span className="text-white">{connectionStatusLabel}</span></p>
+                <p>Comunicación con el bot: <span className="text-white">{communicationStatusLabel}</span></p>
+                <p>Última actividad registrada: <span className="text-white">{latestBotLog ? formatDateTime(latestBotLog.createdAt) : "Sin actividad reciente"}</span></p>
+              </div>
             </div>
           </CARVIPIXCard>
         </section>
@@ -358,7 +378,7 @@ export default function DashboardPage() {
         <section className="border-y border-white/10 py-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">ACTIVIDAD OFICIAL</p>
               <h2 className="mt-2 text-2xl font-semibold">Rendimiento de alertas</h2>
               <p className="mt-2 text-sm text-white/65">Resultados de las alertas oficiales cerradas de CARVIPIX y su desempeño operativo.</p>
             </div>
@@ -368,12 +388,12 @@ export default function DashboardPage() {
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: weeklyMetricLabel, value: weeklyMetricValue },
-              { label: "Objetivos alcanzados", value: String(globalResults?.alerts.takeProfits ?? 0) },
-              { label: "Stop Loss alcanzados", value: String(globalResults?.alerts.stopLosses ?? 0) },
-              { label: "Efectividad de alertas", value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%` },
+              { label: weeklyMetricLabel, value: weeklyMetricValue, tone: "total" },
+              { label: "Objetivos alcanzados", value: String(globalResults?.alerts.takeProfits ?? 0), tone: "positive" },
+              { label: "Stop Loss alcanzados", value: String(globalResults?.alerts.stopLosses ?? 0), tone: "negative" },
+              { label: "Efectividad de alertas", value: `${globalResults?.alerts.winRate.toFixed(1) ?? "0.0"}%`, tone: "winrate" },
             ].map((item) => (
-              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false} className={`metric-card metric-card--${item.tone}`}>
                 <p className="text-xs text-white/60">{item.label}</p>
                 <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
               </CARVIPIXCard>
@@ -384,8 +404,8 @@ export default function DashboardPage() {
         <section className="border-y border-white/10 py-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Actividad oficial</p>
-              <h2 className="mt-2 text-2xl font-semibold">Rendimiento operativo del Bot</h2>
+              <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">ACTIVIDAD DEL BOT</p>
+              <h2 className="mt-2 text-2xl font-semibold">Rendimiento del Bot CARVIPIX</h2>
               <p className="mt-2 text-sm text-white/65">Actividad y resultados de las operaciones ejecutadas por el Bot CARVIPIX.</p>
             </div>
             <CARVIPIXButton variant="ghost" size="sm" leftIcon={<RefreshCw className="w-4 h-4" />} onClick={() => void refreshPortal()}>
@@ -399,7 +419,7 @@ export default function DashboardPage() {
               { label: "Cuentas conectadas", value: String(botConnections.length) },
               { label: "Operaciones ejecutadas", value: String(portal.operations.length) },
             ].map((item) => (
-              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false}>
+              <CARVIPIXCard key={item.label} variant="statistics" padding="16" hover={false} className="fade-in-surface">
                 <p className="text-xs text-white/60">{item.label}</p>
                 <p className="mt-3 text-3xl font-bold text-white">{item.value}</p>
               </CARVIPIXCard>
@@ -413,13 +433,24 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/alertas")}>Ver alertas</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/bot")}>Estado operativo del Bot</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/resultados")}>Ver resultados</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/membresia")}>Gestionar membresía</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/soporte")}>Centro de soporte</CARVIPIXButton>
-          <CARVIPIXButton variant="ghost" onClick={() => router.push("/servicios")}>Explorar servicios</CARVIPIXButton>
+        <section className="grid gap-6 xl:grid-cols-2">
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card fade-in-surface">
+            <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Accesos principales</p>
+            <div className="mt-4 grid gap-3">
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/alertas")}>Ver alertas</CARVIPIXButton>
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/resultados")}>Ver resultados</CARVIPIXButton>
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/bot")}>Mi Bot CARVIPIX</CARVIPIXButton>
+            </div>
+          </CARVIPIXCard>
+
+          <CARVIPIXCard variant="admin" padding="16" hover={false} className="cv-card fade-in-surface">
+            <p className="text-xs uppercase tracking-[0.22em] text-[#D4AF37]">Cuenta y asistencia</p>
+            <div className="mt-4 grid gap-3">
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/membresia")}>Gestionar membresía</CARVIPIXButton>
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/soporte")}>Centro de soporte</CARVIPIXButton>
+              <CARVIPIXButton className="quick-access-btn" variant="ghost" onClick={() => router.push("/servicios")}>Explorar servicios</CARVIPIXButton>
+            </div>
+          </CARVIPIXCard>
         </section>
       </div>
       <style jsx>{`
@@ -432,8 +463,13 @@ export default function DashboardPage() {
 
         .cv-hero {
           background:
+            linear-gradient(120deg, rgba(3, 3, 3, 0.78) 0%, rgba(3, 3, 3, 0.46) 46%, rgba(3, 3, 3, 0.72) 100%),
+            url('/media/dashboard/dashboard-hero-texture.png'),
             linear-gradient(148deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.03) 28%, rgba(8, 10, 14, 0.92) 62%),
             linear-gradient(180deg, rgba(8, 8, 8, 0.95), rgba(5, 5, 7, 0.98));
+          background-size: cover, cover, auto, auto;
+          background-position: 72% center, 72% center, center, center;
+          background-repeat: no-repeat;
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
@@ -450,7 +486,101 @@ export default function DashboardPage() {
           box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.04);
         }
 
+        .cv-alert-surface,
+        .cv-bot-surface {
+          border-color: rgba(212, 175, 55, 0.25) !important;
+          box-shadow: 0 22px 42px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .cv-alert-surface--active {
+          border-color: rgba(212, 175, 55, 0.45) !important;
+          box-shadow: 0 24px 48px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(212, 175, 55, 0.18) inset !important;
+        }
+
+        .metric-card {
+          position: relative;
+          overflow: hidden;
+          border: 1px solid rgba(212, 175, 55, 0.16) !important;
+          background: linear-gradient(180deg, rgba(12, 12, 12, 0.92), rgba(7, 7, 7, 0.96)) !important;
+          transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .metric-card::after {
+          content: "";
+          position: absolute;
+          inset: auto -15% -40% auto;
+          width: 160px;
+          height: 160px;
+          border-radius: 999px;
+          background: radial-gradient(circle, rgba(212, 175, 55, 0.18), transparent 68%);
+          pointer-events: none;
+        }
+
+        .metric-card--positive,
+        .metric-card--winrate {
+          border-color: rgba(212, 175, 55, 0.36) !important;
+          box-shadow: 0 18px 40px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(212, 175, 55, 0.14) inset;
+        }
+
+        .metric-card--positive p:last-child,
+        .metric-card--winrate p:last-child {
+          color: #f8e7b5;
+          font-size: 2.35rem;
+        }
+
+        .metric-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 20px 42px rgba(0, 0, 0, 0.38);
+        }
+
+        .metric-card--negative {
+          border-color: rgba(255, 255, 255, 0.08) !important;
+          opacity: 0.9;
+        }
+
+        .quick-access-btn {
+          justify-content: flex-start !important;
+          border: 1px solid rgba(212, 175, 55, 0.24) !important;
+          background: linear-gradient(135deg, rgba(12, 12, 12, 0.96), rgba(8, 8, 8, 0.96)) !important;
+          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+          transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .quick-access-btn:hover {
+          border-color: rgba(212, 175, 55, 0.42) !important;
+          box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(212, 175, 55, 0.18) inset;
+          transform: translateY(-1px);
+        }
+
+        .fade-in-surface {
+          animation: fadeUp 280ms ease both;
+        }
+
+        @keyframes fadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         @media (max-width: 768px) {
+          .cv-hero {
+            background-position: 82% center, 82% center, center, center;
+          }
+
+          .cv-bot-surface > div.relative {
+            max-width: 100%;
+          }
+
+          .metric-card--positive p:last-child,
+          .metric-card--winrate p:last-child {
+            font-size: 2rem;
+          }
+
           .cv-hero-visual {
             min-height: 180px;
           }
