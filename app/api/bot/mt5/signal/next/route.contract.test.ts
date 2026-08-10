@@ -88,3 +88,31 @@ test("signal-next rejects polling without installation identity", async () => {
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: "Parámetro requerido: installation_id" });
 });
+
+test("signal-next keeps blocking an installation without broker mapping", async () => {
+  const calls: Array<{ sql: string; params: unknown[] }> = [];
+  const request = new NextRequest(
+    "http://localhost/api/bot/mt5/signal/next?license_id=LIC-1&installation_id=INST-1&signal_mode=SHORT",
+  );
+
+  const response = await handleSignalNext(
+    { licenseId: "LIC-1", installationId: "INST-1", signalMode: "SHORT" },
+    request,
+    {
+      authenticate: async () => ({ ok: true as const, licenseKey: "LIC-1", userId: "USER-1" }),
+      query: (async (sql: string, params: unknown[] = []) => {
+        calls.push({ sql, params });
+        if (sql.includes("FROM bot_mt5_licenses")) {
+          return { rows: [{ id: "LICENSE-ROW-1" }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      }) as never,
+      getCertificationMode: async () => null,
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { has_signal: false, message: "No hay señales pendientes" });
+  assert.match(calls[1].sql, /NULLIF\(i\.broker_symbol, ''\) IS NOT NULL/);
+  assert.deepEqual(calls[1].params, ["LIC-1", "INST-1", "SHORT"]);
+});

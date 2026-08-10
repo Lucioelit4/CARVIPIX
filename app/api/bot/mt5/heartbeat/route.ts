@@ -21,6 +21,8 @@ export async function POST(request: NextRequest) {
   const balance = Number(body.balance ?? 0);
   const accountHash = String(body.account_hash ?? "").trim();
   const brokerServer = String(body.broker_server ?? "").trim();
+  const brokerSymbol = String(body.broker_symbol ?? "").trim();
+  const canonicalSymbol = String(body.canonical_symbol ?? "").trim();
 
   if (auth.licenseKey !== licenseId) {
     return NextResponse.json({ error: "Token inválido" }, { status: 401 });
@@ -43,11 +45,13 @@ export async function POST(request: NextRequest) {
       equity,
       balance,
       accountHash,
-      brokerServer
+      brokerServer,
+      brokerSymbol,
+      canonicalSymbol
     );
 
     return NextResponse.json({ success: true, received: true }, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Error registrando heartbeat", success: false },
       { status: 500 }

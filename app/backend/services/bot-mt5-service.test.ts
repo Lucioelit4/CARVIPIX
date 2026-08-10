@@ -150,3 +150,121 @@ test("acknowledgeSignal maps EA acceptance and OrderSend success", async () => {
     (backendDatabase.query as unknown) = originalQuery;
   }
 });
+
+test("recordHeartbeat persists broker mapping and preserves canonical MULTI", async () => {
+  const originalQuery = backendDatabase.query.bind(backendDatabase);
+  const enabledDescriptor = Object.getOwnPropertyDescriptor(backendDatabase, "enabled");
+  const calls: Array<{ sql: string; params: unknown[] }> = [];
+
+  Object.defineProperty(backendDatabase, "enabled", { configurable: true, get: () => true });
+  (backendDatabase.query as unknown) = async (sql: string, params: unknown[] = []) => {
+    calls.push({ sql, params });
+    return { rows: [], rowCount: 1 };
+  };
+
+  try {
+    const service = new BotMT5Service();
+    await service.recordHeartbeat(
+      "LIC-1",
+      "INST-1",
+      "1.0.0",
+      "READY",
+      0,
+      10000,
+      10000,
+      "ACCOUNT-HASH",
+      "Broker-Demo",
+      "XAUUSD.sml",
+      "multi",
+    );
+
+    const update = calls.find(call => call.sql.includes("UPDATE bot_mt5_installations"));
+    assert.ok(update);
+    assert.deepEqual(update.params, ["LIC-1", "INST-1", "XAUUSD.sml", "multi"]);
+    assert.match(update.sql, /broker_symbol = COALESCE\(NULLIF\(BTRIM\(\$3\), ''\), broker_symbol\)/);
+    assert.match(update.sql, /canonical_symbol = COALESCE\(NULLIF\(UPPER\(BTRIM\(\$4\)\), ''\), canonical_symbol\)/);
+    const setClause = update.sql.split("WHERE")[0];
+    assert.doesNotMatch(setClause, /account_hash\s*=/);
+    assert.doesNotMatch(setClause, /license_id\s*=/);
+  } finally {
+    if (enabledDescriptor) Object.defineProperty(backendDatabase, "enabled", enabledDescriptor);
+    (backendDatabase.query as unknown) = originalQuery;
+  }
+});
+
+test("recordHeartbeat without symbols preserves existing mapping", async () => {
+  const originalQuery = backendDatabase.query.bind(backendDatabase);
+  const enabledDescriptor = Object.getOwnPropertyDescriptor(backendDatabase, "enabled");
+  const calls: Array<{ sql: string; params: unknown[] }> = [];
+
+  Object.defineProperty(backendDatabase, "enabled", { configurable: true, get: () => true });
+  (backendDatabase.query as unknown) = async (sql: string, params: unknown[] = []) => {
+    calls.push({ sql, params });
+    return { rows: [], rowCount: 1 };
+  };
+
+  try {
+    const service = new BotMT5Service();
+    await service.recordHeartbeat(
+      "LIC-1",
+      "INST-1",
+      "1.0.0",
+      "READY",
+      0,
+      10000,
+      10000,
+      "ACCOUNT-HASH",
+      "Broker-Demo",
+    );
+
+    const update = calls.find(call => call.sql.includes("UPDATE bot_mt5_installations"));
+    assert.ok(update);
+    assert.deepEqual(update.params, ["LIC-1", "INST-1", "", ""]);
+    assert.match(update.sql, /COALESCE\(NULLIF\(BTRIM\(\$3\), ''\), broker_symbol\)/);
+    assert.match(update.sql, /COALESCE\(NULLIF\(UPPER\(BTRIM\(\$4\)\), ''\), canonical_symbol\)/);
+  } finally {
+    if (enabledDescriptor) Object.defineProperty(backendDatabase, "enabled", enabledDescriptor);
+    (backendDatabase.query as unknown) = originalQuery;
+  }
+});
+
+test("recordHeartbeat retries update one installation without degrading identity", async () => {
+  const originalQuery = backendDatabase.query.bind(backendDatabase);
+  const enabledDescriptor = Object.getOwnPropertyDescriptor(backendDatabase, "enabled");
+  const calls: Array<{ sql: string; params: unknown[] }> = [];
+
+  Object.defineProperty(backendDatabase, "enabled", { configurable: true, get: () => true });
+  (backendDatabase.query as unknown) = async (sql: string, params: unknown[] = []) => {
+    calls.push({ sql, params });
+    return { rows: [], rowCount: 1 };
+  };
+
+  try {
+    const service = new BotMT5Service();
+    const heartbeat = () => service.recordHeartbeat(
+      "LIC-1",
+      "INST-1",
+      "1.0.0",
+      "READY",
+      0,
+      10000,
+      10000,
+      "ACCOUNT-HASH",
+      "Broker-Demo",
+      "XAUUSD.sd",
+      "MULTI",
+    );
+
+    await heartbeat();
+    await heartbeat();
+
+    const installationUpdates = calls.filter(call => call.sql.includes("UPDATE bot_mt5_installations"));
+    const installationInserts = calls.filter(call => call.sql.includes("INSERT INTO bot_mt5_installations"));
+    assert.equal(installationUpdates.length, 2);
+    assert.equal(installationInserts.length, 0);
+    assert.deepEqual(installationUpdates[0].params, installationUpdates[1].params);
+  } finally {
+    if (enabledDescriptor) Object.defineProperty(backendDatabase, "enabled", enabledDescriptor);
+    (backendDatabase.query as unknown) = originalQuery;
+  }
+});

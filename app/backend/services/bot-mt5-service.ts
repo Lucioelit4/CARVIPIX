@@ -505,13 +505,17 @@ export class BotMT5Service {
     equity: number,
     balance: number,
     accountHash: string,
-    brokerServer: string
+    brokerServer: string,
+    brokerSymbol?: string,
+    canonicalSymbol?: string
   ): Promise<void> {
     const id = `mt5-hb-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     if (!backendDatabase.enabled) {
       return;
     }
+
+    await ensureMt5RoutingSchema();
 
     await backendDatabase.query(
       `
@@ -537,10 +541,12 @@ export class BotMT5Service {
     await backendDatabase.query(
       `
       UPDATE bot_mt5_installations
-      SET last_heartbeat = NOW()
+      SET last_heartbeat = NOW(),
+          broker_symbol = COALESCE(NULLIF(BTRIM($3), ''), broker_symbol),
+          canonical_symbol = COALESCE(NULLIF(UPPER(BTRIM($4)), ''), canonical_symbol)
       WHERE license_id = $1 AND installation_id = $2
       `,
-      [licenseId, installationId]
+      [licenseId, installationId, brokerSymbol ?? "", canonicalSymbol ?? ""]
     );
   }
 
