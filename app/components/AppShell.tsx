@@ -18,8 +18,10 @@ export default function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isAdminRoute = pathname.startsWith("/admin");
   const isServiciosLandingRoute = pathname === "/servicios";
+  const isPrivateAccessRoute = pathname === "/acceso-privado";
   const isStandaloneRoute =
     pathname === "/" ||
+    isPrivateAccessRoute ||
     pathname === "/servicios" ||
     pathname.startsWith("/servicios/") ||
     pathname.startsWith("/checkout") ||
@@ -45,7 +47,7 @@ export default function AppShell({ children }: AppShellProps) {
     return (
       <>
         <PwaRuntimeController />
-        {!isAdminRoute && !isServiciosLandingRoute ? (
+        {!isAdminRoute && !isServiciosLandingRoute && !isPrivateAccessRoute ? (
           <div className="fixed bottom-4 right-4 z-[85]">
             <InstallTraderButton />
           </div>
